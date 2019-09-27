@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>ofdrw-core</artifactId>
-    <description>根据《GB/T 33190-2016 电子文件存储与交换格式版式文档》实现的ODF文档结构。</description>
+    <description>根据《GB/T 33190-2016 电子文件存储与交换格式版式文档》实现的OFD文档结构。</description>
     <dependencies>
         <dependency>
             <groupId>org.dom4j</groupId>
