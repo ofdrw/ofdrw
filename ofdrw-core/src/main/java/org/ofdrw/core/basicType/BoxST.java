@@ -13,7 +13,7 @@ package org.ofdrw.core.basicType;
  * @author 权观宇
  * @since 2019-09-28 11:05:06
  */
-public class BoxString {
+public class BoxST {
 
     /**
      * 左上角 x坐标
@@ -40,7 +40,7 @@ public class BoxString {
     private Double height = 0d;
 
 
-    public BoxString(double topLeftX, double topLeftY, double width, double height) {
+    public BoxST(double topLeftX, double topLeftY, double width, double height) {
         this.topLeftX = topLeftX;
         this.topLeftY = topLeftY;
         if (width <= 0) {
@@ -58,7 +58,7 @@ public class BoxString {
         return topLeftX;
     }
 
-    public BoxString setTopLeftX(Double topLeftX) {
+    public BoxST setTopLeftX(Double topLeftX) {
         this.topLeftX = topLeftX;
         return this;
     }
@@ -67,7 +67,7 @@ public class BoxString {
         return topLeftY;
     }
 
-    public BoxString setTopLeftY(Double topLeftY) {
+    public BoxST setTopLeftY(Double topLeftY) {
         this.topLeftY = topLeftY;
         return this;
     }
@@ -76,7 +76,7 @@ public class BoxString {
         return width;
     }
 
-    public BoxString setWidth(Double width) {
+    public BoxST setWidth(Double width) {
         this.width = width;
         return this;
     }
@@ -85,7 +85,7 @@ public class BoxString {
         return height;
     }
 
-    public BoxString setHeight(Double height) {
+    public BoxST setHeight(Double height) {
         this.height = height;
         return this;
     }
@@ -95,8 +95,8 @@ public class BoxString {
      *
      * @return 左上角坐标
      */
-    public PosString getTopLeftPos() {
-        return new PosString(this.topLeftX, this.topLeftY);
+    public PosST getTopLeftPos() {
+        return new PosST(this.topLeftX, this.topLeftY);
     }
 
     @Override

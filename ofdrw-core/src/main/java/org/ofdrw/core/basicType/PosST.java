@@ -8,7 +8,7 @@ package org.ofdrw.core.basicType;
  * <p>
  * ————《GB/T 33190-2016》 表 2 基本数据类型
  */
-public class PosString {
+public class PosST {
 
     /**
      * X坐标
@@ -23,7 +23,7 @@ public class PosString {
      */
     private Double y = 0d;
 
-    public PosString(double x, double y) {
+    public PosST(double x, double y) {
         this.x = x;
         this.y = y;
     }
@@ -32,7 +32,7 @@ public class PosString {
         return x;
     }
 
-    public PosString setX(Double x) {
+    public PosST setX(Double x) {
         this.x = x;
         return this;
     }
@@ -41,7 +41,7 @@ public class PosString {
         return y;
     }
 
-    public PosString setY(Double y) {
+    public PosST setY(Double y) {
         this.y = y;
         return this;
     }

@@ -11,18 +11,18 @@ package org.ofdrw.core.basicType;
  * @author 权观宇
  * @since 2019-09-28 10:50:03
  */
-public class IDString {
+public class IDST {
 
     /**
      * 标识符，默认为无符号标识符
      */
     private Long id = 0L;
 
-    public IDString(long id) {
+    public IDST(long id) {
         this.id = id;
     }
 
-    public IDString(String idStr) {
+    public IDST(String idStr) {
         this.id = Long.valueOf(idStr);
     }
 
@@ -30,7 +30,7 @@ public class IDString {
         return id;
     }
 
-    public IDString setId(Long id) {
+    public IDST setId(Long id) {
         this.id = id;
         return this;
     }

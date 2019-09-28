@@ -1,7 +1,5 @@
 package org.ofdrw.core.basicType;
 
-import java.net.URI;
-
 /**
  * 包结构内文件的路径，“.”表示当前路径，“..”表示符路径
  * <p>
@@ -21,13 +19,13 @@ import java.net.URI;
  * @author 权观宇
  * @since 2019-09-28 10:40:33
  */
-public class LocString {
+public class LocST {
     /**
      * 路径
      */
     private String loc;
 
-    public LocString(String path) {
+    public LocST(String path) {
         this.loc = path;
     }
 
@@ -35,7 +33,7 @@ public class LocString {
         return loc;
     }
 
-    public LocString setLoc(String loc) {
+    public LocST setLoc(String loc) {
         this.loc = loc;return this;
     }
 

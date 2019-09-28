@@ -13,19 +13,19 @@ package org.ofdrw.core.basicType;
  * @author 权观宇
  * @since 2019-09-28 10:52:01
  */
-public class RefIDString {
+public class RefIDST {
 
-    private IDString ref;
+    private IDST ref;
 
-    public RefIDString(IDString ref) {
+    public RefIDST(IDST ref) {
         this.ref = ref;
     }
 
-    public IDString getRefId() {
+    public IDST getRefId() {
         return ref;
     }
 
-    public RefIDString setRefId(IDString ref) {
+    public RefIDST setRefId(IDST ref) {
         this.ref = ref;
         return this;
     }

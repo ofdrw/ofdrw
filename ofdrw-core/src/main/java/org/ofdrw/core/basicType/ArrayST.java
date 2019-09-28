@@ -15,7 +15,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2019-09-28 10:40:37
  */
-public class ArrayString {
+public class ArrayST {
 
     /**
      * 元素收容
@@ -23,7 +23,7 @@ public class ArrayString {
     private List<Object> array = new ArrayList<Object>();
 
 
-    public ArrayString(String[] arr) {
+    public ArrayST(String[] arr) {
         array = new ArrayList<Object>(arr.length);
         for (String item : arr) {
             if (item == null || item.length() == 0) {
@@ -34,7 +34,7 @@ public class ArrayString {
     }
 
 
-    public ArrayString add(Object item) {
+    public ArrayST add(Object item) {
         this.array.add(item);
         return this;
     }
@@ -43,7 +43,7 @@ public class ArrayString {
         return array;
     }
 
-    public ArrayString setArray(List<Object> array) {
+    public ArrayST setArray(List<Object> array) {
         this.array = array;
         return this;
     }
