@@ -4,6 +4,7 @@ import org.dom4j.Namespace;
 
 /**
  * 静态变量
+ *
  * @author 权观宇
  * @since 2019-09-27 10:22:57
  */
@@ -18,7 +19,10 @@ public class Const {
      * ————《GB/T 33190-2016》 7.1 命名空间
      */
     public static final String OFD_VALUE = "ofd";
-    public static final String OFD_PREFIX = "ofd:";
+    /**
+     * OFD命名空间
+     */
+    public static final String OFD_Q = "ofd:";
 
     /**
      * 使用命名空间为 http://www.ofdspec.org/2016，其表示符应为 ofd。
