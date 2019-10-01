@@ -1,7 +1,8 @@
 package org.ofdrw.core.structure.versions;
 
-import org.ofdrw.core.basicType.LocST;
-import org.ofdrw.core.structure.BasicObjectElement;
+import org.dom4j.Element;
+import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.core.structure.OFDElement;
 
 /**
  * 表 70 版本描述入口
@@ -9,7 +10,12 @@ import org.ofdrw.core.structure.BasicObjectElement;
  * @author 权观宇
  * @since 2019-09-29 10:40:02
  */
-public class Version extends BasicObjectElement {
+public class Version extends OFDElement {
+
+    public Version(Element proxy) {
+        super(proxy);
+    }
+
 
     public Version() {
         super("Version");
@@ -23,7 +29,7 @@ public class Version extends BasicObjectElement {
      * @param index 版本号
      * @param baseLoc 指向包内的版本描述文件
      */
-    public Version(String id, int index, LocST baseLoc) {
+    public Version(String id, int index, ST_Loc baseLoc) {
         this();
         this.setID(id)
                 .setIndex(index)
@@ -32,8 +38,7 @@ public class Version extends BasicObjectElement {
 
     /**
      * 【必选】
-     * 设置
-     * 版本标识
+     * 设置版本标识
      *
      * @param id 版本标识 （不含特殊字符，字符串）
      * @return this
@@ -45,7 +50,7 @@ public class Version extends BasicObjectElement {
 
     /**
      * 【必选】
-     *
+     * 获取版本标识
      * @return 版本标识
      */
     public String getID() {
@@ -107,7 +112,7 @@ public class Version extends BasicObjectElement {
      * @param baseLoc 版本描述文件路径
      * @return this
      */
-    public Version setBaseLoc(LocST baseLoc) {
+    public Version setBaseLoc(ST_Loc baseLoc) {
         this.addAttribute("BaseLoc", baseLoc.toString());
         return this;
     }
@@ -118,8 +123,13 @@ public class Version extends BasicObjectElement {
      *
      * @return 版本描述文件路径
      */
-    public LocST getBaseLoc() {
+    public ST_Loc getBaseLoc() {
         String value = this.attributeValue("BaseLoc");
-        return value == null ? null : new LocST(value);
+        return value == null ? null : new ST_Loc(value);
+    }
+
+    @Override
+    public String getQualifiedName() {
+        return "ofd:Version";
     }
 }

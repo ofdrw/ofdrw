@@ -19,13 +19,13 @@ package org.ofdrw.core.basicType;
  * @author 权观宇
  * @since 2019-09-28 10:40:33
  */
-public class LocST {
+public class ST_Loc extends STBase {
     /**
      * 路径
      */
     private String loc;
 
-    public LocST(String path) {
+    public ST_Loc(String path) {
         this.loc = path;
     }
 
@@ -33,7 +33,7 @@ public class LocST {
         return loc;
     }
 
-    public LocST setLoc(String loc) {
+    public ST_Loc setLoc(String loc) {
         this.loc = loc;return this;
     }
 
@@ -41,4 +41,6 @@ public class LocST {
     public String toString() {
         return loc;
     }
+
+
 }

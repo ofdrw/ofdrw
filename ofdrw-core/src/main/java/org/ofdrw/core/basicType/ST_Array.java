@@ -1,5 +1,8 @@
 package org.ofdrw.core.basicType;
 
+import org.ofdrw.core.structure.SimpleTypeElement;
+
+import javax.xml.bind.Element;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +18,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2019-09-28 10:40:37
  */
-public class ArrayST {
+public class ST_Array extends STBase {
 
     /**
      * 元素收容
@@ -23,7 +26,7 @@ public class ArrayST {
     private List<Object> array = new ArrayList<Object>();
 
 
-    public ArrayST(String[] arr) {
+    public ST_Array(String[] arr) {
         array = new ArrayList<Object>(arr.length);
         for (String item : arr) {
             if (item == null || item.length() == 0) {
@@ -34,7 +37,7 @@ public class ArrayST {
     }
 
 
-    public ArrayST add(Object item) {
+    public ST_Array add(Object item) {
         this.array.add(item);
         return this;
     }
@@ -43,10 +46,11 @@ public class ArrayST {
         return array;
     }
 
-    public ArrayST setArray(List<Object> array) {
+    public ST_Array setArray(List<Object> array) {
         this.array = array;
         return this;
     }
+
 
     @Override
     public String toString() {
@@ -57,7 +61,6 @@ public class ArrayST {
             }
             sb.append(item);
         }
-
         return sb.toString();
     }
 }

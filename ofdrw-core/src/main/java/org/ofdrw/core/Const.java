@@ -2,6 +2,8 @@ package org.ofdrw.core;
 
 import org.dom4j.Namespace;
 
+import java.time.format.DateTimeFormatter;
+
 /**
  * 静态变量
  *
@@ -30,4 +32,9 @@ public class Const {
      */
     public static final Namespace OFD_NAMESPACE = new Namespace("ofd", OFD_NAMESPACE_URI);
     public static final Namespace OFD_NAMESPACE_DEFAULT = new Namespace("", OFD_NAMESPACE_URI);
+
+    /**
+     * xs:date 类型日期格式化
+     */
+    public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 }

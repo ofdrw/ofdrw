@@ -13,19 +13,19 @@ package org.ofdrw.core.basicType;
  * @author 权观宇
  * @since 2019-09-28 10:52:01
  */
-public class RefIDST {
+public class ST_RefID extends STBase {
 
-    private IDST ref;
+    private ST_ID ref;
 
-    public RefIDST(IDST ref) {
+    public ST_RefID(ST_ID ref) {
         this.ref = ref;
     }
 
-    public IDST getRefId() {
+    public ST_ID getRefId() {
         return ref;
     }
 
-    public RefIDST setRefId(IDST ref) {
+    public ST_RefID setRefId(ST_ID ref) {
         this.ref = ref;
         return this;
     }

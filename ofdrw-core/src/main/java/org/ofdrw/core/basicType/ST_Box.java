@@ -13,7 +13,7 @@ package org.ofdrw.core.basicType;
  * @author 权观宇
  * @since 2019-09-28 11:05:06
  */
-public class BoxST {
+public class ST_Box extends STBase {
 
     /**
      * 左上角 x坐标
@@ -40,7 +40,7 @@ public class BoxST {
     private Double height = 0d;
 
 
-    public BoxST(double topLeftX, double topLeftY, double width, double height) {
+    public ST_Box(double topLeftX, double topLeftY, double width, double height) {
         this.topLeftX = topLeftX;
         this.topLeftY = topLeftY;
         if (width <= 0) {
@@ -58,7 +58,7 @@ public class BoxST {
         return topLeftX;
     }
 
-    public BoxST setTopLeftX(Double topLeftX) {
+    public ST_Box setTopLeftX(Double topLeftX) {
         this.topLeftX = topLeftX;
         return this;
     }
@@ -67,7 +67,7 @@ public class BoxST {
         return topLeftY;
     }
 
-    public BoxST setTopLeftY(Double topLeftY) {
+    public ST_Box setTopLeftY(Double topLeftY) {
         this.topLeftY = topLeftY;
         return this;
     }
@@ -76,7 +76,7 @@ public class BoxST {
         return width;
     }
 
-    public BoxST setWidth(Double width) {
+    public ST_Box setWidth(Double width) {
         this.width = width;
         return this;
     }
@@ -85,7 +85,7 @@ public class BoxST {
         return height;
     }
 
-    public BoxST setHeight(Double height) {
+    public ST_Box setHeight(Double height) {
         this.height = height;
         return this;
     }
@@ -95,8 +95,8 @@ public class BoxST {
      *
      * @return 左上角坐标
      */
-    public PosST getTopLeftPos() {
-        return new PosST(this.topLeftX, this.topLeftY);
+    public ST_Pos getTopLeftPos() {
+        return new ST_Pos(this.topLeftX, this.topLeftY);
     }
 
     @Override
