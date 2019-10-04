@@ -1,7 +1,7 @@
-package org.ofdrw.core.structure.ofd.docInfo;
+package org.ofdrw.core.basicStructure.ofd.docInfo;
 
 import org.dom4j.Element;
-import org.ofdrw.core.structure.OFDElement;
+import org.ofdrw.core.basicStructure.OFDElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +47,7 @@ public class Keywords extends OFDElement {
      * @return 关键字列表
      */
     public List<String> getKeywords() {
-        List<Element> elements = this.elements();
+        List<Element> elements = this.getOFDElements("Keywords");
         List<String> res = new ArrayList<>(elements.size());
         elements.forEach(item -> res.add(item.getText()));
         return res;

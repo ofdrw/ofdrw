@@ -1,7 +1,7 @@
-package org.ofdrw.core.structure.ofd;
+package org.ofdrw.core.basicStructure.ofd;
 
 import org.dom4j.Element;
-import org.ofdrw.core.structure.OFDElement;
+import org.ofdrw.core.basicStructure.OFDElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -102,7 +102,7 @@ public class OFD extends OFDElement {
      * @return 文件对象入口（如果有多个则获取第一个）
      */
     public DocBody getDocBody() {
-        return new DocBody(this.elements().get(0));
+        return new DocBody(this.getOFDElements("DocBody").get(0));
     }
 
 
@@ -112,7 +112,7 @@ public class OFD extends OFDElement {
      * @return 所有文档入口
      */
     public List<DocBody> getDocBodies() {
-        List<Element> src = this.elements();
+        List<Element> src = this.getOFDElements("DocBody");
         List<DocBody> res = new ArrayList<>(src.size());
         src.forEach(item -> res.add(new DocBody(item)));
         return res;

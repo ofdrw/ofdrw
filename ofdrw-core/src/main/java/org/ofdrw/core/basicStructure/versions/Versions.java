@@ -1,7 +1,7 @@
-package org.ofdrw.core.structure.versions;
+package org.ofdrw.core.basicStructure.versions;
 
 import org.dom4j.Element;
-import org.ofdrw.core.structure.OFDElement;
+import org.ofdrw.core.basicStructure.OFDElement;
 
 /**
  * 一个OFD文档可能有多个版本

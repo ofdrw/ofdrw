@@ -29,6 +29,18 @@ public class ST_Loc extends STBase {
         this.loc = path;
     }
 
+    /**
+     * 获取路径实例
+     * @param loc
+     * @return 实例或null
+     */
+    public static ST_Loc getInstance(String loc) {
+        if (loc == null || loc.trim().length() == 0) {
+            return null;
+        }
+        return new ST_Loc(loc.trim());
+    }
+
     public String getLoc() {
         return loc;
     }

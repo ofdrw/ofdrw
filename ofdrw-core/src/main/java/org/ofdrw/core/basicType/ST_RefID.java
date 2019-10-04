@@ -21,6 +21,20 @@ public class ST_RefID extends STBase {
         this.ref = ref;
     }
 
+    /**
+     * 获取 ST_RefID 实例如果参数非法则返还null
+     *
+     * @param idStr 被引用的ID字符串
+     * @return 实例 或 null
+     */
+    public static ST_RefID getInstance(String idStr) {
+        if (idStr == null || idStr.trim().length() == 0) {
+            return null;
+        }
+        return new ST_RefID(ST_ID.getInstance(idStr.trim()));
+    }
+
+
     public ST_ID getRefId() {
         return ref;
     }

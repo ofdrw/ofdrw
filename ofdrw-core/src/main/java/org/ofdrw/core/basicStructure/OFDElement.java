@@ -1,8 +1,13 @@
-package org.ofdrw.core.structure;
+package org.ofdrw.core.basicStructure;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
 import org.ofdrw.core.Const;
+import org.ofdrw.core.basicType.STBase;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -44,7 +49,7 @@ public abstract class OFDElement extends DefaultElementProxy {
      * @param value 元素文本
      * @return this
      */
-    public OFDElement addOFDEntity(String name, String value) {
+    public OFDElement addOFDEntity(String name, Serializable value) {
         this.add(new SimpleTypeElement(name, value));
         return this;
     }
@@ -68,6 +73,16 @@ public abstract class OFDElement extends DefaultElementProxy {
     public String getOFDElementText(String name) {
         Element element = getOFDElement(name);
         return element == null ? null : element.getText();
+    }
+
+    /**
+     * 获取 指定名称OFD元素集合
+     *
+     * @param name OFD元素名称
+     * @return 指定名称OFD元素集合
+     */
+    public List<Element> getOFDElements(String name) {
+        return this.elements(new QName(name, Const.OFD_NAMESPACE));
     }
 
     /**

@@ -1,4 +1,4 @@
-package org.ofdrw.core.structure;
+package org.ofdrw.core.basicStructure;
 
 import org.dom4j.*;
 import org.dom4j.tree.DefaultElement;

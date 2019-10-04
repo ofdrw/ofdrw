@@ -1,7 +1,7 @@
-package org.ofdrw.core.structure.ofd.docInfo;
+package org.ofdrw.core.basicStructure.ofd.docInfo;
 
 import org.dom4j.Element;
-import org.ofdrw.core.structure.OFDElement;
+import org.ofdrw.core.basicStructure.OFDElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +53,7 @@ public class CustomDatas extends OFDElement {
      * @return 自定义元数据集合
      */
     public List<CustomData> getCustomDatas() {
-        List<Element> elements = this.elements();
+        List<Element> elements = this.getOFDElements("CustomDatas");
         List<CustomData> res = new ArrayList<>(elements.size());
         elements.forEach(item -> res.add(new CustomData(item)));
         return res;

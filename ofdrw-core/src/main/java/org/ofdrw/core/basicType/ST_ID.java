@@ -2,10 +2,10 @@ package org.ofdrw.core.basicType;
 
 /**
  * 标识，无符号整数，应在文档内唯一。0标识无效标识符
- *
+ * <p>
  * 示例：
  * <code>1000</code>
- *
+ * <p>
  * ————《GB/T 33190-2016》 表 2 基本数据类型
  *
  * @author 权观宇
@@ -23,8 +23,22 @@ public class ST_ID extends STBase {
     }
 
     public ST_ID(String idStr) {
-        this.id = Long.valueOf(idStr);
+        this.id = Long.parseLong(idStr);
     }
+
+    /**
+     * 获取 ST_ID 实例如果参数非法则返还null
+     *
+     * @param idStr ID字符串
+     * @return 实例 或 null
+     */
+    public static ST_ID getInstance(String idStr) {
+        if (idStr == null || idStr.trim().length() == 0) {
+            return null;
+        }
+        return new ST_ID(idStr.trim());
+    }
+
 
     public Long getId() {
         return id;

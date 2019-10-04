@@ -1,4 +1,4 @@
-package org.ofdrw.core.structure.ofd.docInfo;
+package org.ofdrw.core.basicStructure.ofd.docInfo;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;

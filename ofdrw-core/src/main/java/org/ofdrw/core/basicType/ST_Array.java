@@ -1,8 +1,5 @@
 package org.ofdrw.core.basicType;
 
-import org.ofdrw.core.structure.SimpleTypeElement;
-
-import javax.xml.bind.Element;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,11 +20,23 @@ public class ST_Array extends STBase {
     /**
      * 元素收容
      */
-    private List<Object> array = new ArrayList<Object>();
+    private List<String> array = new ArrayList<>();
 
+
+    /**
+     * 获取 ST_Array 实例如果参数非法则返还null
+     * @param arrStr 数字字符串
+     * @return 实例 或 null
+     */
+    public static ST_Array getInstance(String arrStr) {
+        if (arrStr == null || arrStr.trim().length() == 0) {
+            return null;
+        }
+        return new ST_Array(arrStr.trim().split(" "));
+    }
 
     public ST_Array(String[] arr) {
-        array = new ArrayList<Object>(arr.length);
+        array = new ArrayList<>(arr.length);
         for (String item : arr) {
             if (item == null || item.length() == 0) {
                 throw new IllegalArgumentException("数组元素为空");
@@ -37,16 +46,17 @@ public class ST_Array extends STBase {
     }
 
 
-    public ST_Array add(Object item) {
+    public ST_Array add(String item) {
         this.array.add(item);
         return this;
     }
 
-    public List<Object> getArray() {
+    public List<String> getArray() {
         return array;
     }
 
-    public ST_Array setArray(List<Object> array) {
+
+    public ST_Array setArray(List<String> array) {
         this.array = array;
         return this;
     }

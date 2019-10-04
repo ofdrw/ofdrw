@@ -1,10 +1,10 @@
-package org.ofdrw.core.structure.ofd;
+package org.ofdrw.core.basicStructure.ofd;
 
 import org.dom4j.Element;
 import org.ofdrw.core.basicType.ST_Loc;
-import org.ofdrw.core.structure.OFDElement;
-import org.ofdrw.core.structure.ofd.docInfo.CT_DocInfo;
-import org.ofdrw.core.structure.versions.Versions;
+import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
+import org.ofdrw.core.basicStructure.versions.Versions;
 
 /**
  * 文件对象入口，可以存在多个，以便在一个文档中包含多个版式文档

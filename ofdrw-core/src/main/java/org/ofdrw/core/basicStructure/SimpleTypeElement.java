@@ -1,4 +1,6 @@
-package org.ofdrw.core.structure;
+package org.ofdrw.core.basicStructure;
+
+import java.io.Serializable;
 
 /**
  * 简单类型元素对象，用于承载 Text
@@ -14,7 +16,7 @@ public class SimpleTypeElement extends OFDElement {
      * @param name 元素名称
      * @param obj  元素值对象（可toString 序列化为字符串）
      */
-    public SimpleTypeElement(String name, Object obj) {
+    public SimpleTypeElement(String name, Serializable obj) {
         super(name);
         this.setText(obj.toString());
     }

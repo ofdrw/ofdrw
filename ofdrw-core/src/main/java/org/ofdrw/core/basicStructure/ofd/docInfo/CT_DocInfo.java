@@ -1,9 +1,9 @@
-package org.ofdrw.core.structure.ofd.docInfo;
+package org.ofdrw.core.basicStructure.ofd.docInfo;
 
 import org.dom4j.Element;
 import org.ofdrw.core.Const;
 import org.ofdrw.core.basicType.ST_Loc;
-import org.ofdrw.core.structure.OFDElement;
+import org.ofdrw.core.basicStructure.OFDElement;
 
 import java.time.LocalDate;
 import java.util.UUID;

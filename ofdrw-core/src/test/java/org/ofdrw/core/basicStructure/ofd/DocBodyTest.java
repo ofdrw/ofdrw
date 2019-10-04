@@ -1,13 +1,10 @@
-package org.ofdrw.core.structure.ofd;
+package org.ofdrw.core.basicStructure.ofd;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
 import org.ofdrw.core.basicType.ST_Loc;
-import org.ofdrw.core.structure.ofd.docInfo.CT_DocInfo;
-import org.ofdrw.core.structure.ofd.docInfo.CT_DocInfoTest;
-import org.ofdrw.core.structure.versions.VersionsTest;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfoTest;
+import org.ofdrw.core.basicStructure.versions.VersionsTest;
 
 public class DocBodyTest {
 

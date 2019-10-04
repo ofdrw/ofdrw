@@ -1,9 +1,7 @@
-package org.ofdrw.core.structure.ofd;
+package org.ofdrw.core.basicStructure.ofd;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class OFDTest {
     public static OFD ofdCase(){

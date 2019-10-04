@@ -28,6 +28,24 @@ public class ST_Pos extends STBase {
         this.y = y;
     }
 
+    /**
+     * 获取 ST_Pos 实例如果参数非法则返还null
+     *
+     * @param arrStr 数字字符串
+     * @return 实例 或 null
+     */
+    public static ST_Pos getInstance(String arrStr) {
+        if (arrStr == null || arrStr.trim().length() == 0) {
+            return null;
+        }
+        String[] values = arrStr.trim().split(" ");
+
+        if (values.length != 2) {
+            return null;
+        }
+        return new ST_Pos(Double.parseDouble(values[0]), Double.parseDouble(values[1]));
+    }
+
     public Double getX() {
         return x;
     }
@@ -48,6 +66,6 @@ public class ST_Pos extends STBase {
 
     @Override
     public String toString() {
-        return (x + " " + y);
+        return (fmt(x) + " " + fmt(y));
     }
 }

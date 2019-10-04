@@ -54,6 +54,27 @@ public class ST_Box extends STBase {
     }
 
 
+    /**
+     * 获取 ST_Box 实例如果参数非法则返还null
+     *
+     * @param arrStr 数字字符串
+     * @return 实例 或 null
+     */
+    public static ST_Box getInstance(String arrStr) {
+        if (arrStr == null || arrStr.trim().length() == 0) {
+            return null;
+        }
+        String[] values = arrStr.trim().split(" ");
+
+        if (values.length != 4) {
+            return null;
+        }
+        return new ST_Box(Double.parseDouble(values[0]),
+                Double.parseDouble(values[1]),
+                Double.parseDouble(values[2]),
+                Double.parseDouble(values[3]));
+    }
+
     public Double getTopLeftX() {
         return topLeftX;
     }
@@ -101,6 +122,6 @@ public class ST_Box extends STBase {
 
     @Override
     public String toString() {
-        return topLeftX + " " + topLeftY + " " + width + " " + height;
+        return fmt(topLeftX) + " " + fmt(topLeftY) + " " + fmt(width) + " " + fmt(height);
     }
 }

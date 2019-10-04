@@ -1,8 +1,8 @@
-package org.ofdrw.core.structure.versions;
+package org.ofdrw.core.basicStructure.versions;
 
 import org.dom4j.Element;
 import org.ofdrw.core.basicType.ST_Loc;
-import org.ofdrw.core.structure.OFDElement;
+import org.ofdrw.core.basicStructure.OFDElement;
 
 /**
  * 表 70 版本描述入口
@@ -119,7 +119,7 @@ public class Version extends OFDElement {
 
     /**
      * 【必选】
-     * 设置 指向包内的版本描述文件
+     * 设置 指向包内 的版本描述文件
      *
      * @return 版本描述文件路径
      */

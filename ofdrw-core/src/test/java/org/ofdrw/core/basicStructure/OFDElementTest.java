@@ -1,11 +1,7 @@
-package org.ofdrw.core.structure;
+package org.ofdrw.core.basicStructure;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
-
-import javax.management.openmbean.SimpleType;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class OFDElementTest {
 

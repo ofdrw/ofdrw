@@ -1,4 +1,4 @@
-package org.ofdrw.core.structure.ofd.docInfo;
+package org.ofdrw.core.basicStructure.ofd.docInfo;
 
 /**
  * 文档分类
