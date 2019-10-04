@@ -4,9 +4,6 @@ import org.dom4j.Element;
 import org.dom4j.QName;
 import org.ofdrw.core.Const;
 
-import java.util.ArrayList;
-import java.util.List;
-
 
 /**
  * 文件根节点
@@ -71,5 +68,15 @@ public abstract class OFDElement extends DefaultElementProxy {
     public String getOFDElementText(String name) {
         Element element = getOFDElement(name);
         return element == null ? null : element.getText();
+    }
+
+    /**
+     * OFD元素采用OFD的命名空间，所以直接调用代理对象
+     *
+     * @return 元素全名（含有前缀）
+     */
+    @Override
+    public String getQualifiedName() {
+        return this.proxy.getQualifiedName();
     }
 }

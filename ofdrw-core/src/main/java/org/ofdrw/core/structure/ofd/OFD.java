@@ -120,6 +120,6 @@ public class OFD extends OFDElement {
 
     @Override
     public String getQualifiedName() {
-        return "odf:OFD";
+        return "ofd:OFD";
     }
 }

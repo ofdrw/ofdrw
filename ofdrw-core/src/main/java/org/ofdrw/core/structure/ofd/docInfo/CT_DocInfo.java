@@ -277,7 +277,7 @@ public class CT_DocInfo extends OFDElement {
      */
     public CT_DocInfo addKeyword(String keyword) {
         Keywords keywords = getKeywords();
-        if (keyword == null) {
+        if (keywords == null) {
             keywords = new Keywords();
             this.add(keywords);
         }

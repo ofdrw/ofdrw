@@ -19,7 +19,8 @@ public class SimpleTypeElement extends OFDElement {
         this.setText(obj.toString());
     }
 
+    @Override
     public String getQualifiedName() {
-        return this.proxy.getName();
+        return this.proxy.getQualifiedName();
     }
 }
