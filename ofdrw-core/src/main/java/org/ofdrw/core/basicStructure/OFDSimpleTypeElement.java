@@ -8,7 +8,7 @@ import java.io.Serializable;
  * @author 权观宇
  * @since 2019-10-01 03:22:42
  */
-public class SimpleTypeElement extends OFDElement {
+public class OFDSimpleTypeElement extends OFDElement {
 
     /**
      * 创建一个带有文本元素
@@ -16,7 +16,7 @@ public class SimpleTypeElement extends OFDElement {
      * @param name 元素名称
      * @param obj  元素值对象（可toString 序列化为字符串）
      */
-    public SimpleTypeElement(String name, Serializable obj) {
+    public OFDSimpleTypeElement(String name, Serializable obj) {
         super(name);
         this.setText(obj.toString());
     }

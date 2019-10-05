@@ -19,6 +19,9 @@ public class ST_ID extends STBase {
     private Long id = 0L;
 
     public ST_ID(long id) {
+        if (id <= 0) {
+            throw new NumberFormatException("ID 必须大于 0");
+        }
         this.id = id;
     }
 

@@ -45,6 +45,13 @@ public class ST_Array extends STBase {
         }
     }
 
+    public ST_Array(double[] arr) {
+        array = new ArrayList<>(arr.length);
+        for (double item : arr) {
+            array.add(Double.toString(item));
+        }
+    }
+
 
     public ST_Array add(String item) {
         this.array.add(item);
@@ -61,6 +68,13 @@ public class ST_Array extends STBase {
         return this;
     }
 
+    /**
+     * 数组长度
+     * @return 数组长度
+     */
+    public int size(){
+        return this.array.size();
+    }
 
     @Override
     public String toString() {

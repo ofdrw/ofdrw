@@ -1,4 +1,4 @@
-package org.ofdrw.core.basicStructure.versions;
+package org.ofdrw.core.versions;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;

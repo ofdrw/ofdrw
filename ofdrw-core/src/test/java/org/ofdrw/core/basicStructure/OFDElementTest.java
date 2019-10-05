@@ -10,7 +10,7 @@ class OFDElementTest {
     void addOFDEntity() {
 
         TestTool.genXml("AddST", doc -> {
-            SimpleTypeElement stEle = new SimpleTypeElement("Name", "Value");
+            OFDSimpleTypeElement stEle = new OFDSimpleTypeElement("Name", "Value");
             stEle.addOFDEntity("SubName", "value2");
             doc.add(stEle);
         });

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfoTest;
-import org.ofdrw.core.basicStructure.versions.VersionsTest;
+import org.ofdrw.core.versions.VersionsTest;
 
 public class DocBodyTest {
 

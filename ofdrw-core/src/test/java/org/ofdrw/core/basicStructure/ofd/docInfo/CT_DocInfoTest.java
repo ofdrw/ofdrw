@@ -6,6 +6,7 @@ import org.ofdrw.core.basicType.ST_Loc;
 
 import java.time.LocalDate;
 
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CT_DocInfoTest {
 

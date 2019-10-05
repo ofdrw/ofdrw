@@ -1,9 +1,11 @@
 package org.ofdrw;
 
 import org.dom4j.Document;
+import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
+import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
 import java.io.File;
@@ -18,7 +20,26 @@ public class TestTool {
     private static final String TEST_DEST = "./target";
 
     /**
+     * 读入文件验证
+     * @param name 文件
+     * @param fn 验证方法
+     */
+    public static void validate(String name, Consumer<Element> fn) {
+        try {
+            SAXReader reader = new SAXReader();
+            String filePath = TEST_DEST + File.separator + name + ".xml";
+            Document document = reader.read(filePath);
+            fn.accept(document.getRootElement());
+        } catch (DocumentException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+
+    /**
      * 生成XML 并打印打控制台
+     *
      * @param name 文件名称
      * @param call 元素添加方法
      */
@@ -43,7 +64,8 @@ public class TestTool {
 
     /**
      * 加入待测试元素，生成XML 并打印打控制台
-     * @param name 文件名称
+     *
+     * @param name    文件名称
      * @param element 元素
      */
     public static void genXml(String name, Element element) {

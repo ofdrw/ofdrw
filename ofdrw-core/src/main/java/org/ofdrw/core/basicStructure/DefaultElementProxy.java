@@ -382,10 +382,12 @@ public abstract class DefaultElementProxy implements Element {
         return this.proxy.attributeValue(qName, defaultValue);
     }
 
+    @Deprecated
     public void setAttributeValue(String name, String value) {
         this.proxy.setAttributeValue(name, value);
     }
 
+    @Deprecated
     public void setAttributeValue(QName qName, String value) {
         this.proxy.setAttributeValue(qName, value);
     }

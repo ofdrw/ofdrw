@@ -1,4 +1,4 @@
-package org.ofdrw.core.basicStructure.versions;
+package org.ofdrw.core.versions;
 
 import org.dom4j.Element;
 import org.ofdrw.core.basicStructure.OFDElement;

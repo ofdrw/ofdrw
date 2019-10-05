@@ -3,10 +3,8 @@ package org.ofdrw.core.basicStructure;
 import org.dom4j.Element;
 import org.dom4j.QName;
 import org.ofdrw.core.Const;
-import org.ofdrw.core.basicType.STBase;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -50,7 +48,7 @@ public abstract class OFDElement extends DefaultElementProxy {
      * @return this
      */
     public OFDElement addOFDEntity(String name, Serializable value) {
-        this.add(new SimpleTypeElement(name, value));
+        this.add(new OFDSimpleTypeElement(name, value));
         return this;
     }
 

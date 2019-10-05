@@ -1,6 +1,6 @@
 package org.ofdrw.core.basicType;
 
-import org.ofdrw.core.basicStructure.SimpleTypeElement;
+import org.ofdrw.core.basicStructure.OFDSimpleTypeElement;
 
 import java.io.Serializable;
 
@@ -19,8 +19,8 @@ public abstract class STBase implements Serializable {
      * @param name 指定名称
      * @return 简单类型元素，<code><名称>ST_ 类型的toString</名称></code>
      */
-    public SimpleTypeElement getElement(String name) {
-        return new SimpleTypeElement(name, this.toString());
+    public OFDSimpleTypeElement getElement(String name) {
+        return new OFDSimpleTypeElement(name, this.toString());
     }
 
     /**
