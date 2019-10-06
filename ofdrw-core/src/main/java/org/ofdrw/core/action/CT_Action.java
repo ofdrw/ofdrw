@@ -20,16 +20,16 @@ import java.util.List;
  * @author 权观宇
  * @since 2019-10-05 11:34:07
  */
-public class Action extends OFDElement {
-    public Action(Element proxy) {
+public class CT_Action extends OFDElement {
+    public CT_Action(Element proxy) {
         super(proxy);
     }
 
-    public Action() {
+    public CT_Action() {
         super("Action");
     }
 
-    public Action(EventType type, ActionEntity action) {
+    public CT_Action(EventType type, ActionEntity action) {
         this();
         this.setEvent(type)
                 .setAction(action);
@@ -44,7 +44,7 @@ public class Action extends OFDElement {
      * @param event 事件类型
      * @return this
      */
-    public Action setEvent(EventType event) {
+    public CT_Action setEvent(EventType event) {
         this.addAttribute("Event", event.toString());
         return this;
     }
@@ -70,7 +70,7 @@ public class Action extends OFDElement {
      * @param region 多个复杂区域为该链接对象的启动区域
      * @return this
      */
-    public Action setRegion(CT_Region region) {
+    public CT_Action setRegion(CT_Region region) {
         this.add(region);
         return this;
     }
@@ -95,7 +95,7 @@ public class Action extends OFDElement {
      * @param action 动作
      * @return this
      */
-    public Action setAction(ActionEntity action) {
+    public CT_Action setAction(ActionEntity action) {
         this.add(action);
         return this;
     }

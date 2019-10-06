@@ -1,7 +1,11 @@
 package org.ofdrw.core.basicStructure.outlines;
 
 import org.dom4j.Element;
+import org.ofdrw.core.action.Actions;
 import org.ofdrw.core.basicStructure.OFDElement;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 大纲节点
@@ -18,6 +22,11 @@ public class CT_OutlineElem extends OFDElement {
 
     public CT_OutlineElem() {
         super("OutlineElem");
+    }
+
+    public CT_OutlineElem(String title) {
+        this();
+        this.setTitle(title);
     }
 
     /**
@@ -110,6 +119,55 @@ public class CT_OutlineElem extends OFDElement {
         return Boolean.parseBoolean(str);
     }
 
-    // TODO 2019-10-5 11:26:30 Actions
+    /**
+     * 【可选】
+     * 设置 当此大纲节点被激活时执行的动作序列
+     *
+     * @param actions 动作序列
+     * @return this
+     */
+    public CT_OutlineElem setActions(Actions actions) {
+        this.add(actions);
+        return this;
+    }
 
+    /**
+     * 【可选】
+     * 获取 当此大纲节点被激活时执行的动作序列
+     *
+     * @return 动作序列，可能为null
+     */
+    public Actions getActions() {
+        Element e = this.getOFDElement("Actions");
+        return e == null ? null : new Actions(e);
+    }
+
+    /**
+     * 【可选】
+     * 增加 大纲子节点
+     * <p>
+     * 该节点的子大纲节点。层层嵌套，形成树状结构
+     *
+     * @param outlineElem 大纲子节点
+     * @return this
+     */
+    public CT_OutlineElem addOutlineElem(CT_OutlineElem outlineElem) {
+        this.add(outlineElem);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 获取 该大纲下所有子节点
+     * <p>
+     * 该节点的子大纲节点。层层嵌套，形成树状结构
+     *
+     * @return 该大纲下所有子节点
+     */
+    public List<CT_OutlineElem> getOutlineElems() {
+        List<Element> elements = this.getOFDElements("OutlineElem");
+        List<CT_OutlineElem> res = new ArrayList<>(elements.size());
+        elements.forEach(item -> res.add(new CT_OutlineElem(item)));
+        return res;
+    }
 }

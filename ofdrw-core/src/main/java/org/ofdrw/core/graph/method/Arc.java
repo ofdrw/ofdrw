@@ -2,6 +2,7 @@ package org.ofdrw.core.graph.method;
 
 import org.dom4j.Element;
 import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Pos;
 
@@ -101,7 +102,7 @@ public class Arc extends Command {
      */
     public Arc setRotationAngle(double rotationAngle) {
         rotationAngle %= 360.0d;
-        this.addAttribute("RotationAngle", Double.toString(rotationAngle));
+        this.addAttribute("RotationAngle", STBase.fmt(rotationAngle));
         return this;
     }
 

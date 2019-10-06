@@ -1,6 +1,7 @@
 package org.ofdrw.core.action.actionType.actionGoto;
 
 import org.dom4j.Element;
+import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_RefID;
 
 
@@ -76,7 +77,7 @@ public class CT_Dest extends GotoTarget {
      * @return this
      */
     public CT_Dest setLeft(double left) {
-        this.addOFDEntity("Left", Double.toString(left));
+        this.addOFDEntity("Left", STBase.fmt(left));
         return this;
     }
 
@@ -107,7 +108,7 @@ public class CT_Dest extends GotoTarget {
      * @return this
      */
     public CT_Dest setRight(double right) {
-        this.addOFDEntity("Right", Double.toString(right));
+        this.addOFDEntity("Right", STBase.fmt(right));
         return this;
     }
 
@@ -138,7 +139,7 @@ public class CT_Dest extends GotoTarget {
      * @return this
      */
     public CT_Dest setTop(double top) {
-        this.addOFDEntity("Top", Double.toString(top));
+        this.addOFDEntity("Top", STBase.fmt(top));
         return this;
     }
 
@@ -168,7 +169,7 @@ public class CT_Dest extends GotoTarget {
      * @return this
      */
     public CT_Dest setBottom(double bottom) {
-        this.addOFDEntity("Bottom", Double.toString(bottom));
+        this.addOFDEntity("Bottom", STBase.fmt(bottom));
         return this;
     }
 
@@ -199,7 +200,7 @@ public class CT_Dest extends GotoTarget {
      * @return this
      */
     public CT_Dest setZoom(double zoom) {
-        this.addOFDEntity("Zoom", Double.toString(zoom));
+        this.addOFDEntity("Zoom", STBase.fmt(zoom));
         return this;
     }
 

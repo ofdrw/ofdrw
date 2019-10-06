@@ -48,7 +48,7 @@ public class ST_Array extends STBase {
     public ST_Array(double[] arr) {
         array = new ArrayList<>(arr.length);
         for (double item : arr) {
-            array.add(Double.toString(item));
+            array.add(STBase.fmt(item));
         }
     }
 

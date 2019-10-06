@@ -2,6 +2,7 @@ package org.ofdrw.core.basicStructure.doc;
 
 import org.dom4j.Element;
 import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.basicStructure.outlines.Outlines;
 import org.ofdrw.core.basicStructure.page.tree.Pages;
 
 /**
@@ -76,5 +77,27 @@ public class Document extends OFDElement {
         return e == null ? null : new Pages(e);
     }
 
-    // TODO 2019-10-5 11:10:09 Outlines
+    /**
+     * 【可选】
+     * 设置 大纲
+     *
+     * @param outlines 大纲
+     * @return this
+     */
+    public Document setOutlines(Outlines outlines) {
+        this.add(outlines);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 获取 大纲
+     *
+     * @return 大纲
+     */
+    public Outlines getOutlines() {
+        Element e = this.getOFDElement("Outlines");
+        return e == null ? null : new Outlines(e);
+    }
+    // TODO 2019-10-6 20:02:54 Permissions
 }
