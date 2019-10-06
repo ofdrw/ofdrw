@@ -10,7 +10,7 @@ import org.dom4j.Element;
  * @author 权观宇
  * @since 2019-10-05 09:41:15
  */
-public class URI extends ActionType {
+public class URI extends ActionEntity {
     public URI(Element proxy) {
         super(proxy);
     }

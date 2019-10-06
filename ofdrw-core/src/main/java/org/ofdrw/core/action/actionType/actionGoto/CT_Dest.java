@@ -1,7 +1,6 @@
 package org.ofdrw.core.action.actionType.actionGoto;
 
 import org.dom4j.Element;
-import org.ofdrw.core.action.actionType.GotoTarget;
 import org.ofdrw.core.basicType.ST_RefID;
 
 

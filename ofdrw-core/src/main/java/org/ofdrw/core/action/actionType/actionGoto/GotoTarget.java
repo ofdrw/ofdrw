@@ -1,4 +1,4 @@
-package org.ofdrw.core.action.actionType;
+package org.ofdrw.core.action.actionType.actionGoto;
 
 import org.dom4j.Element;
 import org.ofdrw.core.basicStructure.OFDElement;

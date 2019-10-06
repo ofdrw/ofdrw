@@ -1,8 +1,7 @@
 package org.ofdrw.core.action.actionType.actionGoto;
 
 import org.dom4j.Element;
-import org.ofdrw.core.action.actionType.ActionType;
-import org.ofdrw.core.action.actionType.GotoTarget;
+import org.ofdrw.core.action.actionType.ActionEntity;
 
 import java.util.List;
 
@@ -15,7 +14,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2019-10-05 08:33:55
  */
-public class Goto extends ActionType {
+public class Goto extends ActionEntity {
     public Goto(Element proxy) {
         super(proxy);
     }

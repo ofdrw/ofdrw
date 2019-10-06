@@ -11,13 +11,13 @@ import org.ofdrw.core.basicStructure.OFDElement;
  * @author 权观宇
  * @since 2019-10-05 08:31:15
  */
-public abstract class ActionType extends OFDElement {
+public abstract class ActionEntity extends OFDElement {
 
-    public ActionType(Element proxy) {
+    public ActionEntity(Element proxy) {
         super(proxy);
     }
 
-    public ActionType(String name) {
+    public ActionEntity(String name) {
         super(name);
     }
 }

@@ -13,7 +13,7 @@ import org.ofdrw.core.basicType.ST_RefID;
  * @author 权观宇
  * @since 2019-10-05 09:48:46
  */
-public class Sound extends ActionType {
+public class Sound extends ActionEntity {
     public Sound(Element proxy) {
         super(proxy);
     }
