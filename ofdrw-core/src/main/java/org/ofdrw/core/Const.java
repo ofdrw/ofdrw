@@ -37,4 +37,10 @@ public class Const {
      * xs:date 类型日期格式化
      */
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    /**
+     * xs:dateTime 类型时间日期格式化
+     */
+    public static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'hh:mm:ss");
+
+
 }

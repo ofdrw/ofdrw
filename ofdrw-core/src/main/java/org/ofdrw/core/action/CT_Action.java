@@ -96,6 +96,7 @@ public class CT_Action extends OFDElement {
      * @return this
      */
     public CT_Action setAction(ActionEntity action) {
+        this.removeOFDElemByNames("URI", "Sound", "GotoA", "Movie", "Goto");
         this.add(action);
         return this;
     }

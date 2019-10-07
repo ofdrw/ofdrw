@@ -5,6 +5,7 @@ import org.dom4j.QName;
 import org.ofdrw.core.Const;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -81,6 +82,35 @@ public abstract class OFDElement extends DefaultElementProxy {
      */
     public List<Element> getOFDElements(String name) {
         return this.elements(new QName(name, Const.OFD_NAMESPACE));
+    }
+
+
+    /**
+     * 根据 OFD元素的名称删除节点内所有匹配的OFD元素
+     *
+     * @param names 需要被删除元素名称序列
+     * @return 被删除的所有OFD元素
+     */
+    public List<Element> removeOFDElemByNames(String... names) {
+        List<Element> deleteElements = new LinkedList<>();
+        if (names == null) {
+            return null;
+        }
+        // 遍历所有需要被删除的名称
+        for (String name : names) {
+            if (name == null || name.trim().length() == 0) {
+                continue;
+            }
+            // 根据名字获取指定类型的元素
+            for (Element toBeDelete : this.getOFDElements(name)) {
+                if (toBeDelete == null) {
+                    continue;
+                }
+                this.remove(toBeDelete);
+                deleteElements.add(toBeDelete);
+            }
+        }
+        return deleteElements;
     }
 
     /**

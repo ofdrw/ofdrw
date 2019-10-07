@@ -41,6 +41,7 @@ public class Goto extends ActionEntity {
      * @return this
      */
     public Goto setDest(CT_Dest dest) {
+        this.removeOFDElemByNames("Bookmark", "Dest");
         this.add(dest);
         return this;
     }
@@ -54,6 +55,7 @@ public class Goto extends ActionEntity {
      * @return this
      */
     public Goto setBookmark(String name) {
+        this.removeOFDElemByNames("Bookmark", "Dest");
         this.add(new Bookmark(name));
         return this;
     }

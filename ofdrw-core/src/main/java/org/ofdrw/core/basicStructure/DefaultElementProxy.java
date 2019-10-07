@@ -578,6 +578,12 @@ public abstract class DefaultElementProxy implements Element {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o instanceof DefaultElementProxy) {
+            o = ((DefaultElementProxy) o).proxy;
+        }
         return proxy.equals(o);
     }
 }
