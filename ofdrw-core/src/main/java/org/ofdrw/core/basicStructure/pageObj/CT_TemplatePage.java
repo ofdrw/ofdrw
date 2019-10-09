@@ -1,4 +1,4 @@
-package org.ofdrw.core.basicStructure.page;
+package org.ofdrw.core.basicStructure.pageObj;
 
 import org.dom4j.Element;
 import org.ofdrw.core.basicStructure.OFDElement;

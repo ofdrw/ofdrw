@@ -2,7 +2,7 @@ package org.ofdrw.core.basicStructure.doc;
 
 import org.dom4j.Element;
 import org.ofdrw.core.basicStructure.OFDElement;
-import org.ofdrw.core.basicStructure.page.CT_TemplatePage;
+import org.ofdrw.core.basicStructure.pageObj.CT_TemplatePage;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.basicType.ST_RefID;

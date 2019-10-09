@@ -1,11 +1,10 @@
-package org.ofdrw.core.basicStructure.page;
+package org.ofdrw.core.basicStructure.pageTree;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
+import org.ofdrw.core.basicStructure.pageObj.CT_TemplatePage;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class CT_TemplatePageTest {
 

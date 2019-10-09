@@ -3,16 +3,12 @@ package org.ofdrw.core.basicStructure.doc;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
 import org.ofdrw.core.action.ActionsTest;
-import org.ofdrw.core.basicStructure.doc.bookmark.Bookmarks;
 import org.ofdrw.core.basicStructure.doc.bookmark.BookmarksTest;
 import org.ofdrw.core.basicStructure.doc.permission.CT_PermissionTest;
 import org.ofdrw.core.basicStructure.doc.vpreferences.CT_VPreferencesTest;
-import org.ofdrw.core.basicStructure.outlines.Outlines;
 import org.ofdrw.core.basicStructure.outlines.OutlinesTest;
-import org.ofdrw.core.basicStructure.page.tree.PagesTest;
+import org.ofdrw.core.basicStructure.pageTree.tree.PagesTest;
 import org.ofdrw.core.basicType.ST_Loc;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class DocumentTest {
     public static Document documentCase() {

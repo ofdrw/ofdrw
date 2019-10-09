@@ -2,13 +2,10 @@ package org.ofdrw.core.basicStructure.doc;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
-import org.ofdrw.core.basicStructure.page.CT_TemplatePage;
-import org.ofdrw.core.basicStructure.page.CT_TemplatePageTest;
+import org.ofdrw.core.basicStructure.pageTree.CT_TemplatePageTest;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.basicType.ST_RefID;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class CT_CommonDataTest {
 

@@ -1,9 +1,9 @@
-package org.ofdrw.core.basicStructure.page.tree;
+package org.ofdrw.core.basicStructure.pageTree.tree;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.ofdrw.core.basicStructure.pageTree.Page;
+import org.ofdrw.core.basicStructure.pageTree.Pages;
 
 public class PagesTest {
 

@@ -7,7 +7,7 @@ import org.ofdrw.core.basicStructure.doc.bookmark.Bookmarks;
 import org.ofdrw.core.basicStructure.doc.permission.CT_Permission;
 import org.ofdrw.core.basicStructure.doc.vpreferences.CT_VPreferences;
 import org.ofdrw.core.basicStructure.outlines.Outlines;
-import org.ofdrw.core.basicStructure.page.tree.Pages;
+import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicType.ST_Loc;
 
 /**
