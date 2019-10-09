@@ -3,10 +3,12 @@ package org.ofdrw.core.basicStructure.doc;
 import org.dom4j.Element;
 import org.ofdrw.core.action.Actions;
 import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.basicStructure.doc.bookmark.Bookmarks;
 import org.ofdrw.core.basicStructure.doc.permission.CT_Permission;
 import org.ofdrw.core.basicStructure.doc.vpreferences.CT_VPreferences;
 import org.ofdrw.core.basicStructure.outlines.Outlines;
 import org.ofdrw.core.basicStructure.page.tree.Pages;
+import org.ofdrw.core.basicType.ST_Loc;
 
 /**
  * 文档根节点
@@ -176,5 +178,136 @@ public class Document extends OFDElement {
         return e == null ? null : new CT_VPreferences(e);
     }
 
-    // TODO 2019-10-7 23:00:54 Bookmarks
+
+    /**
+     * 【可选】
+     * 设置 文档的书签集，包含一组书签
+     * <p>
+     * 7.5 文档根节点 表 5 文档根节点属性
+     *
+     * @param bookmarks 文档的书签集
+     * @return this
+     */
+    public Document setBookmarks(Bookmarks bookmarks) {
+        this.add(bookmarks);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 获取 文档的书签集，包含一组书签
+     * <p>
+     * 7.5 文档根节点 表 5 文档根节点属性
+     *
+     * @return 文档的书签集
+     */
+    public Bookmarks getBookmarks() {
+        Element e = this.getOFDElement("Bookmarks");
+        return e == null ? null : new Bookmarks(e);
+    }
+
+    /**
+     * 【可选】
+     * 设置 指向注释列表的文件
+     * <p>
+     * 有关注释描述见第 15 章
+     *
+     * @param annotations 指向注释列表的文件路径
+     * @return this
+     */
+    public Document setAnnotations(ST_Loc annotations) {
+        this.addOFDEntity("Annotations", annotations.toString());
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 获取 指向注释列表的文件
+     * <p>
+     * 有关注释描述见第 15 章
+     *
+     * @return 指向注释列表的文件路径
+     */
+    public ST_Loc getAnnotations() {
+        return ST_Loc.getInstance(this.getOFDElementText("Annotations"));
+    }
+
+    /**
+     * 【可选】
+     * 设置 指向自定义标引列表文件
+     * <p>
+     * 有关自定义标引描述见第 16 章
+     *
+     * @param customTags 指向自定义标引列表文件路径
+     * @return this
+     */
+    public Document setCustomTags(ST_Loc customTags) {
+        this.addOFDEntity("CustomTags", customTags.toString());
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 获取 指向自定义标引列表文件
+     * <p>
+     * 有关自定义标引描述见第 16 章
+     *
+     * @return 指向自定义标引列表文件路径
+     */
+    public ST_Loc getCustomTags() {
+        return ST_Loc.getInstance(this.getOFDElementText("CustomTags"));
+    }
+
+    /**
+     * 【可选】
+     * 设置 指向附件列表文件
+     * <p>
+     * 有关附件描述见第 20 章
+     *
+     * @param attachments 指向附件列表文件路径
+     * @return this
+     */
+    public Document setAttachments(ST_Loc attachments) {
+        this.addOFDEntity("Attachments", attachments.toString());
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 获取 指向附件列表文件
+     * <p>
+     * 有关附件描述见第 20 章
+     *
+     * @return 指向附件列表文件路径
+     */
+    public ST_Loc getAttachments() {
+        return ST_Loc.getInstance(this.getOFDElementText("Attachments"));
+    }
+
+    /**
+     * 【可选】
+     * 设置 指向扩展列表文件
+     * <p>
+     * 有关扩展列表文件见第 17 章
+     *
+     * @param extensions 指向扩展列表文件路径
+     * @return this
+     */
+    public Document setExtensions(ST_Loc extensions) {
+        this.addOFDEntity("Extensions", extensions.toString());
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 设置 指向扩展列表文件
+     * <p>
+     * 有关扩展列表文件见第 17 章
+     *
+     * @return 指向扩展列表文件路径
+     */
+    public ST_Loc getExtensions() {
+        return ST_Loc.getInstance(this.getOFDElementText("Extensions"));
+    }
+
 }

@@ -5,7 +5,7 @@ import org.ofdrw.TestTool;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class OutlinesTest {
+public class OutlinesTest {
 
     public static Outlines outlinesCase() {
         return new Outlines()
