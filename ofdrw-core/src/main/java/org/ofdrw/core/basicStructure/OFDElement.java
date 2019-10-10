@@ -3,6 +3,7 @@ package org.ofdrw.core.basicStructure;
 import org.dom4j.Element;
 import org.dom4j.QName;
 import org.ofdrw.core.Const;
+import org.ofdrw.core.basicType.ST_ID;
 
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -112,6 +113,68 @@ public abstract class OFDElement extends DefaultElementProxy {
         }
         return deleteElements;
     }
+
+
+//    /**
+//     * 【可选】
+//     * <p>
+//     * 设置 OFD对象标识，无符号整数，应在文档内唯一。
+//     * <p>
+//     * 0标识无效标识符
+//     *
+//     * @param objId OFD对象标识
+//     * @return this
+//     */
+//    public OFDElement setObjID(Long objId) {
+//        this.addAttribute("ID", objId.toString());
+//        return this;
+//    }
+//
+//    /**
+//     * 【可选】
+//     * <p>
+//     * 设置 OFD对象标识，无符号整数，应在文档内唯一。
+//     * <p>
+//     * 0标识无效标识符
+//     *
+//     * @return OFD对象标识，null表示对象标识不存在
+//     */
+//    public Long getObjID() {
+//        String str = this.attributeValue("ID");
+//        if (str == null || str.trim().length() == 0) {
+//            return null;
+//        }
+//        return Long.parseLong(str);
+//    }
+
+    /**
+     * 【可选】
+     * <p>
+     * 设置 OFD对象标识，无符号整数，应在文档内唯一。
+     * <p>
+     * 0标识无效标识符
+     *
+     * @param objId OFD对象标识
+     * @return this
+     */
+    public OFDElement setObjID(ST_ID objId) {
+        this.addAttribute("ID", objId.toString());
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * <p>
+     * 设置 OFD对象标识，无符号整数，应在文档内唯一。
+     * <p>
+     * 0标识无效标识符
+     *
+     * @return OFD对象标识，null表示对象标识不存在
+     */
+    public ST_ID getObjID() {
+        return ST_ID.getInstance(this.attributeValue("ID"));
+    }
+
 
     /**
      * OFD元素采用OFD的命名空间，所以直接调用代理对象
