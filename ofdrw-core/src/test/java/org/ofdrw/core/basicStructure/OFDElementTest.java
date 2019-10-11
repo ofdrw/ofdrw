@@ -2,6 +2,7 @@ package org.ofdrw.core.basicStructure;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
+import org.ofdrw.core.OFDSimpleTypeElement;
 
 class OFDElementTest {
 

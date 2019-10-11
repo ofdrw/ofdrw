@@ -1,7 +1,6 @@
 package org.ofdrw.core.graph.method;
 
 import org.dom4j.Element;
-import org.ofdrw.core.basicStructure.OFDElement;
 import org.ofdrw.core.basicType.ST_Pos;
 
 /**

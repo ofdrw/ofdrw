@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
 import org.ofdrw.core.action.ActionsTest;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class CT_OutlineElemTest {
 
     public static CT_OutlineElem outlineElemCase() {

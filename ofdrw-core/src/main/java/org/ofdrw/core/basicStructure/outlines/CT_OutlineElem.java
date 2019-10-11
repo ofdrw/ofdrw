@@ -2,7 +2,7 @@ package org.ofdrw.core.basicStructure.outlines;
 
 import org.dom4j.Element;
 import org.ofdrw.core.action.Actions;
-import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.OFDElement;
 
 import java.util.ArrayList;
 import java.util.List;

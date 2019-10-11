@@ -1,6 +1,7 @@
 package org.ofdrw.core.action.actionType.actionGoto;
 
 import org.dom4j.Element;
+import org.ofdrw.core.OFDElement;
 
 /**
  * 跳转的目的书签
@@ -10,7 +11,7 @@ import org.dom4j.Element;
  * @author 权观宇
  * @since 2019-10-05 09:10:51
  */
-public class Bookmark extends GotoTarget {
+public class Bookmark extends OFDElement implements OFDGotoTarget {
     public Bookmark(Element proxy) {
         super(proxy);
     }

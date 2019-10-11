@@ -2,7 +2,7 @@ package org.ofdrw.core.basicStructure.doc;
 
 import org.dom4j.Element;
 import org.ofdrw.core.action.Actions;
-import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.doc.bookmark.Bookmarks;
 import org.ofdrw.core.basicStructure.doc.permission.CT_Permission;
 import org.ofdrw.core.basicStructure.doc.vpreferences.CT_VPreferences;

@@ -1,4 +1,4 @@
-package org.ofdrw.core.basicStructure;
+package org.ofdrw.core;
 
 import java.io.Serializable;
 

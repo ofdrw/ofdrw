@@ -2,7 +2,7 @@ package org.ofdrw.core.basicStructure.doc.bookmark;
 
 import org.dom4j.Element;
 import org.ofdrw.core.action.actionType.actionGoto.CT_Dest;
-import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.OFDElement;
 
 /**
  * 本标准支持书签，可以将常用位置定义为书签，

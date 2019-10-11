@@ -1,7 +1,8 @@
 package org.ofdrw.core.basicStructure.pageObj;
 
 import org.dom4j.Element;
-import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.action.Actions;
+import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicType.ST_Loc;
 
@@ -21,6 +22,9 @@ import java.util.List;
  * @since 2019-10-09 09:38:35
  */
 public class Page extends OFDElement {
+
+    // TODO 2019-10-11 17:53:53 test case
+
     public Page(Element proxy) {
         super(proxy);
     }
@@ -126,5 +130,59 @@ public class Page extends OFDElement {
         return res;
     }
 
-    // TODO 2019-10-10 18:31:10 Content
+
+    /**
+     * 【可选】
+     * 设置 页面内容描述，该节点不存在时，标识空白页
+     *
+     * @param content 页面内容
+     * @return this
+     */
+    public Page setContent(Content content) {
+        this.add(content);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 获取 页面内容描述，该节点不存在时，标识空白页
+     *
+     * @return 页面内容
+     */
+    public Content getContent() {
+        Element e = this.getOFDElement("Content");
+        return e == null ? null : new Content(e);
+    }
+
+
+    /**
+     * 【可选】
+     * 设置 与页面关联的动作序列。
+     * <p>
+     * 当存在多个 Action对象时，所有动作依次执行。
+     * <p>
+     * 动作列表的动作与页面关联，事件类型为 PO（页面打开，见表 52 事件类型）
+     *
+     * @param actions 动作序列
+     * @return this
+     */
+    public Page setActions(Actions actions) {
+        this.add(actions);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 设置 与页面关联的动作序列。
+     * <p>
+     * 当存在多个 Action对象时，所有动作依次执行。
+     * <p>
+     * 动作列表的动作与页面关联，事件类型为 PO（页面打开，见表 52 事件类型）
+     *
+     * @return 动作序列
+     */
+    public Actions getActions() {
+        Element e = this.getOFDElement("Actions");
+        return e == null ? null : new Actions(e);
+    }
 }

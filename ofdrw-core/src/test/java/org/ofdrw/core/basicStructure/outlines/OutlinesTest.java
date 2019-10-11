@@ -3,8 +3,6 @@ package org.ofdrw.core.basicStructure.outlines;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 public class OutlinesTest {
 
     public static Outlines outlinesCase() {

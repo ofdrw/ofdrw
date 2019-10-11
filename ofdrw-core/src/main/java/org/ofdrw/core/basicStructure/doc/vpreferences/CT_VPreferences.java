@@ -1,7 +1,7 @@
 package org.ofdrw.core.basicStructure.doc.vpreferences;
 
 import org.dom4j.Element;
-import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.doc.vpreferences.zoom.Zoom;
 import org.ofdrw.core.basicStructure.doc.vpreferences.zoom.ZoomMode;
 import org.ofdrw.core.basicStructure.doc.vpreferences.zoom.ZoomScale;

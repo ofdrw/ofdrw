@@ -1,7 +1,6 @@
 package org.ofdrw.core.graph.method;
 
 import org.dom4j.Element;
-import org.ofdrw.core.basicStructure.OFDElement;
 
 /**
  * 自动闭合到当前路径的起始点，并以该点为当前点

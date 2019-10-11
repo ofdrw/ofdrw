@@ -1,13 +1,8 @@
 package org.ofdrw.core.action;
 
 import org.dom4j.Element;
-import org.ofdrw.core.action.actionType.ActionEntity;
-import org.ofdrw.core.action.actionType.GotoA;
-import org.ofdrw.core.action.actionType.Sound;
-import org.ofdrw.core.action.actionType.URI;
-import org.ofdrw.core.action.actionType.actionGoto.Goto;
-import org.ofdrw.core.action.actionType.actionMovie.Movie;
-import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.action.actionType.OFDAction;
+import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.graph.CT_Region;
 
 import java.util.List;
@@ -29,7 +24,7 @@ public class CT_Action extends OFDElement {
         super("Action");
     }
 
-    public CT_Action(EventType type, ActionEntity action) {
+    public CT_Action(EventType type, OFDAction action) {
         this();
         this.setEvent(type)
                 .setAction(action);
@@ -95,7 +90,7 @@ public class CT_Action extends OFDElement {
      * @param action 动作
      * @return this
      */
-    public CT_Action setAction(ActionEntity action) {
+    public CT_Action setAction(OFDAction action) {
         this.removeOFDElemByNames("URI", "Sound", "GotoA", "Movie", "Goto");
         this.add(action);
         return this;
@@ -110,26 +105,12 @@ public class CT_Action extends OFDElement {
      *
      * @return 动作实体
      */
-    public ActionEntity getAction() {
+    public OFDAction getAction() {
         List<Element> elements = this.elements();
         if (elements == null || elements.isEmpty()) {
             throw new IllegalArgumentException("错误的Action结构，没有任何子节点");
         }
         Element e = elements.get(0);
-        String qName = e.getQualifiedName();
-        switch (qName) {
-            case "ofd:Goto":
-                return new Goto(e);
-            case "ofd:URI":
-                return new URI(e);
-            case "ofd:GotoA":
-                return new GotoA(e);
-            case "ofd:Sound":
-                return new Sound(e);
-            case "Movies":
-                return new Movie(e);
-            default:
-                throw new IllegalArgumentException("未知的动作类型：" + qName);
-        }
+        return OFDAction.getInstance(e);
     }
 }

@@ -1,7 +1,7 @@
 package org.ofdrw.core.basicStructure.pageObj;
 
 import org.dom4j.Element;
-import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.core.basicType.ST_RefID;
 

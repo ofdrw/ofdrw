@@ -2,7 +2,7 @@ package org.ofdrw.core.versions;
 
 import org.dom4j.Element;
 import org.ofdrw.core.basicType.ST_Loc;
-import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.OFDElement;
 
 /**
  * 表 70 版本描述入口

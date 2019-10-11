@@ -1,7 +1,7 @@
 package org.ofdrw.core.basicStructure.ofd.docInfo;
 
 import org.dom4j.Element;
-import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.OFDElement;
 
 /**
  * 用户自定义元数据，可以指定一个名称及其对应的值

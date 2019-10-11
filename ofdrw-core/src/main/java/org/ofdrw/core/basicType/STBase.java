@@ -1,6 +1,6 @@
 package org.ofdrw.core.basicType;
 
-import org.ofdrw.core.basicStructure.OFDSimpleTypeElement;
+import org.ofdrw.core.OFDSimpleTypeElement;
 
 import java.io.Serializable;
 

@@ -1,6 +1,7 @@
 package org.ofdrw.core.action.actionType;
 
 import org.dom4j.Element;
+import org.ofdrw.core.OFDElement;
 
 /**
  * 附件动作
@@ -12,7 +13,7 @@ import org.dom4j.Element;
  * @author 权观宇
  * @since 2019-10-05 09:33:45
  */
-public class GotoA extends ActionEntity {
+public class GotoA extends OFDElement implements OFDAction {
     public GotoA(Element proxy) {
         super(proxy);
     }

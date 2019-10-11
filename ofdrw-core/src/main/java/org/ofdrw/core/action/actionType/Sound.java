@@ -1,6 +1,7 @@
 package org.ofdrw.core.action.actionType;
 
 import org.dom4j.Element;
+import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.ST_RefID;
 
 /**
@@ -13,7 +14,7 @@ import org.ofdrw.core.basicType.ST_RefID;
  * @author 权观宇
  * @since 2019-10-05 09:48:46
  */
-public class Sound extends ActionEntity {
+public class Sound extends OFDElement implements OFDAction {
     public Sound(Element proxy) {
         super(proxy);
     }

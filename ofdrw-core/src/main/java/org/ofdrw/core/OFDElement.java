@@ -1,8 +1,7 @@
-package org.ofdrw.core.basicStructure;
+package org.ofdrw.core;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
-import org.ofdrw.core.Const;
 import org.ofdrw.core.basicType.ST_ID;
 
 import java.io.Serializable;

@@ -1,7 +1,7 @@
 package org.ofdrw.core.graph;
 
 import org.dom4j.Element;
-import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.OFDElement;
 
 import java.util.ArrayList;
 import java.util.List;

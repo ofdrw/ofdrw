@@ -2,7 +2,7 @@ package org.ofdrw.core.basicStructure.ofd;
 
 import org.dom4j.Element;
 import org.ofdrw.core.basicType.ST_Loc;
-import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
 import org.ofdrw.core.versions.Versions;
 

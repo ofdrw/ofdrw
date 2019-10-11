@@ -1,7 +1,8 @@
 package org.ofdrw.core.action.actionType.actionMovie;
 
 import org.dom4j.Element;
-import org.ofdrw.core.action.actionType.ActionEntity;
+import org.ofdrw.core.action.actionType.OFDAction;
+import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.ST_RefID;
 
 /**
@@ -12,7 +13,7 @@ import org.ofdrw.core.basicType.ST_RefID;
  * @author 权观宇
  * @since 2019-10-06 05:51:40
  */
-public class Movie extends ActionEntity {
+public class Movie extends OFDElement implements OFDAction {
     public Movie(Element proxy) {
         super(proxy);
     }

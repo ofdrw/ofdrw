@@ -1,7 +1,7 @@
 package org.ofdrw.core.basicStructure.doc.permission;
 
 import org.dom4j.Element;
-import org.ofdrw.core.basicStructure.OFDElement;
+import org.ofdrw.core.OFDElement;
 
 /**
  * 本标准支持设置文档权限声明（Permission）节点，以达到文档防扩散等应用目的。

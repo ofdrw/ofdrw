@@ -1,6 +1,7 @@
 package org.ofdrw.core.action.actionType.actionGoto;
 
 import org.dom4j.Element;
+import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_RefID;
 
@@ -13,7 +14,7 @@ import org.ofdrw.core.basicType.ST_RefID;
  * @author 权观宇
  * @since 2019-10-05 08:38:08
  */
-public class CT_Dest extends GotoTarget {
+public class CT_Dest extends OFDElement implements OFDGotoTarget {
     public CT_Dest(Element proxy) {
         super(proxy);
     }
