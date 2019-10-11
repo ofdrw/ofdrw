@@ -52,7 +52,7 @@ public enum PageMode {
      * @return 实例
      */
     public static PageMode getInstance(String mode) {
-        mode = mode.trim();
+        mode = mode == null ? "" : mode.trim();
         switch (mode) {
             case "":
             case "None":

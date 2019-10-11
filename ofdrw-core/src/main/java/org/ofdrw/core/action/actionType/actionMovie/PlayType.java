@@ -33,6 +33,7 @@ public enum PlayType {
      * @return 实例
      */
     public static PlayType getInstance(String type) {
+        type = type == null ? "" : type.trim();
         switch (type) {
             case "Play":
                 return Play;

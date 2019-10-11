@@ -39,6 +39,7 @@ public enum DestType {
      * @return 实例
      */
     public static DestType getInstance(String type) {
+        type = type == null ? "" : type.trim();
         switch (type) {
             case "XYZ":
                 return XYZ;

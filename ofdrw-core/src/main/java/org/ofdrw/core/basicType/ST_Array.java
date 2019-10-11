@@ -25,6 +25,7 @@ public class ST_Array extends STBase {
 
     /**
      * 获取 ST_Array 实例如果参数非法则返还null
+     *
      * @param arrStr 数字字符串
      * @return 实例 或 null
      */
@@ -70,21 +71,19 @@ public class ST_Array extends STBase {
 
     /**
      * 数组长度
+     *
      * @return 数组长度
      */
-    public int size(){
+    public int size() {
         return this.array.size();
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (Object item : array) {
-            if (sb.length() > 1) {
-                sb.append(" ");
-            }
-            sb.append(item);
+        for (String item : array) {
+            sb.append(' ').append(item);
         }
-        return sb.toString();
+        return sb.toString().trim();
     }
 }

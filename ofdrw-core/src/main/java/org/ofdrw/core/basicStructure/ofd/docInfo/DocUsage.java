@@ -32,6 +32,7 @@ public enum DocUsage {
      * @return 实例
      */
     public static DocUsage getInstance(String usage) {
+        usage = usage == null ? "" : usage.trim();
         switch (usage) {
             case "Normal":
                 return Normal;

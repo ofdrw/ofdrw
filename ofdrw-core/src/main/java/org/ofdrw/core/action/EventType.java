@@ -30,6 +30,7 @@ public enum EventType {
      * @throws IllegalArgumentException 未知类型事件
      */
     public static EventType getInstance(String event) {
+        event = event == null ? "" : event.trim();
         switch (event) {
             case "DO":
                 return DO;

@@ -2,7 +2,7 @@ package org.ofdrw.core.basicStructure.doc.vpreferences;
 
 /**
  * 页面布局
- *
+ * <p>
  * 7.5 表 9 视图首选项
  *
  * @author 权观宇
@@ -36,7 +36,8 @@ public enum PageLayout {
     TwoColumnR;
 
     public static PageLayout getInstance(String pageLayout) {
-        pageLayout = pageLayout.trim();
+        pageLayout = pageLayout == null ? "" : pageLayout.trim();
+
         switch (pageLayout) {
             case "":
             case "OnePage":

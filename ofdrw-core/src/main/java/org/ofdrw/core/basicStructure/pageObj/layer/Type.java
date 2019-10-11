@@ -49,6 +49,7 @@ public enum Type {
      * @return 图层类型
      */
     public static Type getInstance(String type) {
+        type = (type == null)? "" : type.trim();
         switch (type) {
             case "Body":
                 return Body;
