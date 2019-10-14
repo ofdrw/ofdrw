@@ -3,6 +3,7 @@ package org.ofdrw.core.pageDescription.color.pattern;
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.ST_Array;
+import org.ofdrw.core.pageDescription.color.color.ColorClusterType;
 
 /**
  * 底纹
@@ -14,7 +15,7 @@ import org.ofdrw.core.basicType.ST_Array;
  * @author 权观宇
  * @since 2019-10-12 08:14:58
  */
-public class CT_Pattern extends OFDElement {
+public class CT_Pattern extends OFDElement implements ColorClusterType {
 
     // TODO 2019-10-12 21:20:35 test case
 
