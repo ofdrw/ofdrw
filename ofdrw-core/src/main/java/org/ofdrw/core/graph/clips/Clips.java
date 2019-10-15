@@ -1,4 +1,4 @@
-package org.ofdrw.core.graph;
+package org.ofdrw.core.graph.clips;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
@@ -16,6 +16,8 @@ import org.ofdrw.core.OFDElement;
  * @since 2019-10-14 08:00:02
  */
 public class Clips extends OFDElement {
+    // TODO 2019-10-15 20:33:39 Clip
+
     public Clips(Element proxy) {
         super(proxy);
     }
@@ -23,6 +25,4 @@ public class Clips extends OFDElement {
     public Clips() {
         super("Clips");
     }
-
-    // TODO 2019-10-14 20:00:37 Clip
 }
