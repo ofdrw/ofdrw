@@ -1,4 +1,4 @@
-package org.ofdrw.core.graph;
+package org.ofdrw.core.graph.tight;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;

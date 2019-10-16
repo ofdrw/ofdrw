@@ -1,9 +1,9 @@
-package org.ofdrw.core.graph;
+package org.ofdrw.core.graph.tight;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.ST_Pos;
-import org.ofdrw.core.graph.method.*;
+import org.ofdrw.core.graph.tight.method.*;
 
 import java.util.ArrayList;
 import java.util.List;

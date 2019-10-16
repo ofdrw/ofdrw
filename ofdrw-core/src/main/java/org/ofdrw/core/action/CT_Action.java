@@ -3,7 +3,7 @@ package org.ofdrw.core.action;
 import org.dom4j.Element;
 import org.ofdrw.core.action.actionType.OFDAction;
 import org.ofdrw.core.OFDElement;
-import org.ofdrw.core.graph.CT_Region;
+import org.ofdrw.core.graph.tight.CT_Region;
 
 import java.util.List;
 

@@ -1,11 +1,10 @@
-package org.ofdrw.core.graph;
+package org.ofdrw.core.pageDescription;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.action.Actions;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
-import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 

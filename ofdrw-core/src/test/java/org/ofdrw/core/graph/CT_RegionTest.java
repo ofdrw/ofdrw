@@ -2,8 +2,7 @@ package org.ofdrw.core.graph;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.ofdrw.core.graph.tight.CT_Region;
 
 public class CT_RegionTest {
     public static CT_Region regionCase(){

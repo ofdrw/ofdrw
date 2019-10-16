@@ -1,4 +1,4 @@
-package org.ofdrw.core.graph.clips;
+package org.ofdrw.core.pageDescription.clips;
 
 import org.dom4j.Element;
 

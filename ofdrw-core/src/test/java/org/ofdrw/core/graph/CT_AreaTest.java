@@ -2,11 +2,9 @@ package org.ofdrw.core.graph;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
-import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Pos;
-import org.ofdrw.core.graph.method.*;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.ofdrw.core.graph.tight.method.*;
+import org.ofdrw.core.graph.tight.CT_Area;
 
 public class CT_AreaTest {
 
