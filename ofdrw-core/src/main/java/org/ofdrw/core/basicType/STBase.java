@@ -29,9 +29,10 @@ public abstract class STBase implements Serializable {
      * @return 没有小数点的整数字符串
      */
     public static String fmt(double d) {
-        if (d == (long) d)
+        if (d == (long) d) {
             return String.format("%d", (long) d);
-        else
+        } else {
             return String.format("%s", d);
+        }
     }
 }

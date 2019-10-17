@@ -39,6 +39,24 @@ public class CT_Color extends OFDElement {
     }
 
     /**
+     * RGB颜色值
+     * <p>
+     * 其中颜色空间（CT_ColorSpace）的通道使用位数（BitsPerComponent）为 8
+     * <p>
+     * 采用10进制表示方式
+     *
+     * @param r 红色 0~255
+     * @param g 绿色 0~255
+     * @param b 蓝色 0~255
+     * @return RGB 颜色
+     */
+    public static CT_Color rgb(int r, int g, int b) {
+        return new CT_Color()
+                .setValue(new ST_Array(r,g,b))
+                .setAlpha(255);
+    }
+
+    /**
      * 【可选 属性】
      * 设置 颜色值
      * <p>

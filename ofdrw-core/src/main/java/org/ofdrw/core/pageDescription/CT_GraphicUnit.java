@@ -20,7 +20,7 @@ import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
  * @author 权观宇
  * @since 2019-10-14 07:32:38
  */
-public class CT_GraphicUnit extends OFDElement {
+public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElement {
     public CT_GraphicUnit(Element proxy) {
         super(proxy);
     }
@@ -39,12 +39,12 @@ public class CT_GraphicUnit extends OFDElement {
      * @param boundary 外接矩形
      * @return this
      */
-    public CT_GraphicUnit setBoundary(ST_Box boundary) {
+    public T setBoundary(ST_Box boundary) {
         if (boundary == null) {
             throw new IllegalArgumentException("外接矩形不能为空");
         }
         this.addAttribute("Boundary", boundary.toString());
-        return this;
+        return (T) this;
     }
 
     /**
@@ -67,12 +67,12 @@ public class CT_GraphicUnit extends OFDElement {
      * @param name 图元对象的名字
      * @return this
      */
-    public CT_GraphicUnit setGraphicName(String name) {
+    public T setGraphicName(String name) {
         if (name == null || name.trim().length() == 0) {
-            return this;
+            return (T) this;
         }
         this.addAttribute("Name", name);
-        return this;
+        return (T) this;
     }
 
     /**
@@ -92,9 +92,9 @@ public class CT_GraphicUnit extends OFDElement {
      * @param visible true - 可见；false - 不见
      * @return this
      */
-    public CT_GraphicUnit setVisible(Boolean visible) {
+    public T setVisible(Boolean visible) {
         this.addAttribute("Visible", visible.toString());
-        return this;
+        return (T) this;
     }
 
     /**
@@ -121,9 +121,9 @@ public class CT_GraphicUnit extends OFDElement {
      * @param lineWidth 绘制路径时使用的线宽
      * @return this
      */
-    public CT_GraphicUnit setLineWidth(Double lineWidth) {
+    public T setLineWidth(Double lineWidth) {
         this.addAttribute("LineWidth", lineWidth.toString());
-        return this;
+        return (T) this;
     }
 
     /**
@@ -153,9 +153,9 @@ public class CT_GraphicUnit extends OFDElement {
      * @param cap 线端点样式
      * @return this
      */
-    public CT_GraphicUnit setCap(LineCapType cap) {
+    public T setCap(LineCapType cap) {
         this.addAttribute("Cap", cap.toString());
-        return this;
+        return (T) this;
     }
 
     /**
@@ -183,9 +183,9 @@ public class CT_GraphicUnit extends OFDElement {
      * @param join 线条连接样式
      * @return this
      */
-    public CT_GraphicUnit setJoin(LineJoinType join) {
+    public T setJoin(LineJoinType join) {
         this.addAttribute("Join", join.toString());
-        return this;
+        return (T) this;
     }
 
     /**
@@ -216,9 +216,9 @@ public class CT_GraphicUnit extends OFDElement {
      * @param miterLimit Join的截断值长度
      * @return this
      */
-    public CT_GraphicUnit setMiterLimit(Double miterLimit) {
+    public T setMiterLimit(Double miterLimit) {
         this.addAttribute("MiterLimit", miterLimit.toString());
-        return this;
+        return (T) this;
     }
 
     /**
@@ -258,9 +258,9 @@ public class CT_GraphicUnit extends OFDElement {
      * @param dashOffset 线条虚线开始位置
      * @return this
      */
-    public CT_GraphicUnit setDashOffset(Double dashOffset) {
+    public T setDashOffset(Double dashOffset) {
         this.addAttribute("DashOffset", dashOffset.toString());
-        return this;
+        return (T) this;
     }
 
     /**
@@ -303,9 +303,9 @@ public class CT_GraphicUnit extends OFDElement {
      * @param dashPattern 线条虚线的重复样式的数组中共含两个值，第一个值代表虚线的线段的长度，第二个值代表虚线间隔的长度。
      * @return this
      */
-    public CT_GraphicUnit setDashPattern(ST_Array dashPattern) {
+    public T setDashPattern(ST_Array dashPattern) {
         this.addAttribute("DashPattern", dashPattern.toString());
-        return this;
+        return (T) this;
     }
 
     /**
@@ -340,7 +340,7 @@ public class CT_GraphicUnit extends OFDElement {
      * @param alpha 图元对象透明度，取值区间为 [0,255]
      * @return this
      */
-    public CT_GraphicUnit setAlpha(Integer alpha) {
+    public T setAlpha(Integer alpha) {
         if (alpha == null || alpha < 0) {
             alpha = 0;
         }
@@ -348,7 +348,7 @@ public class CT_GraphicUnit extends OFDElement {
             alpha = 255;
         }
         this.addAttribute("Alpha", alpha.toString());
-        return this;
+        return (T) this;
     }
 
     /**
@@ -379,9 +379,9 @@ public class CT_GraphicUnit extends OFDElement {
      * @param actions 图元对象的动作序列
      * @return this
      */
-    public CT_GraphicUnit setActions(Actions actions) {
+    public T setActions(Actions actions) {
         this.add(actions);
-        return this;
+        return (T) this;
     }
 
     /**

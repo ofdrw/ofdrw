@@ -1,5 +1,6 @@
 package org.ofdrw.core.basicType;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,20 +37,23 @@ public class ST_Array extends STBase {
         return new ST_Array(arrStr.trim().split(" "));
     }
 
-    public ST_Array(String[] arr) {
-        array = new ArrayList<>(arr.length);
-        for (String item : arr) {
-            if (item == null || item.length() == 0) {
-                throw new IllegalArgumentException("数组元素为空");
-            }
-            array.add(item);
-        }
-    }
+    public ST_Array(Serializable... arr) {
 
-    public ST_Array(double[] arr) {
+        if (arr == null) {
+            throw new IllegalArgumentException("参数不能为空");
+        }
         array = new ArrayList<>(arr.length);
-        for (double item : arr) {
-            array.add(STBase.fmt(item));
+
+        for (Serializable item : arr) {
+            if (item instanceof String || item == null) {
+                String str = (String) item;
+                if (item == null || str.trim().length() == 0) {
+                    throw new IllegalArgumentException("数组元素为空");
+                } else {
+                    item = str;
+                }
+            }
+            array.add(item.toString());
         }
     }
 
@@ -61,6 +65,28 @@ public class ST_Array extends STBase {
 
     public List<String> getArray() {
         return array;
+    }
+
+    /**
+     * 获取浮点数组
+     *
+     * @return 浮点数组
+     */
+    public Double[] toDouble() {
+        return this.array.stream()
+                .map(Double::parseDouble)
+                .toArray(Double[]::new);
+    }
+
+    /**
+     * 获取整形数组
+     *
+     * @return 整形数组
+     */
+    public Integer[] toInt() {
+        return this.array.stream()
+                .map(Integer::parseInt)
+                .toArray(Integer[]::new);
     }
 
 

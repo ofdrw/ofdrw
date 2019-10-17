@@ -47,6 +47,15 @@ public class AbbreviatedData extends OFDElement {
     }
 
     /**
+     * 刷新元素
+     *
+     * 默认情况下，每次调用C都将会刷新元素内容
+     */
+    public void flush(){
+        this.setText(this.toString());
+    }
+
+    /**
      * 定义自绘制图形边线的起始点坐标 （x，y）
      *
      * @param x 目标点 x
@@ -243,6 +252,8 @@ public class AbbreviatedData extends OFDElement {
      */
     public AbbreviatedData close() {
         dataQueue.add(new String[]{"C"});
+        // 重新设置元素内容
+        this.flush();
         return this;
     }
 

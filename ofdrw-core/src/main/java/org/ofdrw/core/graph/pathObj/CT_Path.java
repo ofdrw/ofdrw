@@ -14,14 +14,13 @@ import org.ofdrw.core.pageDescription.color.color.CT_Color;
  * @author 权观宇
  * @since 2019-10-16 08:21:58
  */
-public class CT_Path extends CT_GraphicUnit {
-    // TODO 2019-10-16 22:25:14 CT_Path 测试 依赖于 CT_GraphicUnit 测试
+public class CT_Path extends CT_GraphicUnit<CT_Path> {
 
     public CT_Path(Element proxy) {
         super(proxy);
     }
 
-    public CT_Path(String name) {
+    public CT_Path() {
         super("Path");
     }
 

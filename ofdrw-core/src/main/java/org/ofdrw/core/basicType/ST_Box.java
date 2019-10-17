@@ -1,5 +1,7 @@
 package org.ofdrw.core.basicType;
 
+import java.io.Serializable;
+
 /**
  * 矩形区域，以空格分割，前两个值代表了该矩形的
  * 左上角的坐标，后两个值依次表示该矩形的宽和高，
@@ -51,6 +53,31 @@ public class ST_Box extends STBase {
             throw new IllegalArgumentException("height 应大于0");
         }
         this.height = height;
+    }
+
+    /**
+     * 通用构造
+     *
+     * @param arr 任意类型可序列化参数
+     */
+    public ST_Box(Serializable... arr) {
+        if (arr == null) {
+            throw new IllegalArgumentException("参数不能为空");
+        }
+        if (arr.length == 4) {
+            throw new IllegalArgumentException("Box 必须元素个数等4");
+        }
+
+        this.topLeftX = Double.parseDouble(arr[0].toString());
+        this.topLeftY = Double.parseDouble(arr[1].toString());
+        if (width <= 0) {
+            throw new IllegalArgumentException("width 应大于0");
+        }
+        this.width = Double.parseDouble(arr[2].toString());
+        if (height <= 0) {
+            throw new IllegalArgumentException("height 应大于0");
+        }
+        this.height = Double.parseDouble(arr[3].toString());
     }
 
 

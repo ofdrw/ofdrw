@@ -8,10 +8,10 @@ public class AbbreviatedDataTest {
 
     public static AbbreviatedData abbreviatedDataCase() {
         return new AbbreviatedData()
-                .M(0, 0)
-                .L(200, 0)
-                .L(200, 150)
-                .L(0, 150)
+                .M(50, 50)
+                .L(250, 50)
+                .L(250, 200)
+                .L(50, 200)
                 .C();
     }
     @Test
@@ -19,6 +19,6 @@ public class AbbreviatedDataTest {
         AbbreviatedData data = abbreviatedDataCase();
 
         System.out.println(data);
-        assertTrue("M 0 0 L 200 0 L 200 150 L 0 150 C".equals(data.toString()));
+        assertTrue("M 50 50 L 250 50 L 250 200 L 50 200 C".equals(data.toString()));
     }
 }
