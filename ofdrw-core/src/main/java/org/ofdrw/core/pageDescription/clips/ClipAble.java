@@ -1,6 +1,7 @@
 package org.ofdrw.core.pageDescription.clips;
 
 import org.dom4j.Element;
+import org.ofdrw.core.graph.pathObj.CT_Path;
 
 /**
  * 可裁剪对象
@@ -21,7 +22,7 @@ public interface ClipAble extends Element {
         ClipAble res = null;
         switch (qName) {
             case "Path":
-                // TODO 2019-10-15 20:23:32 Path
+                res = new CT_Path(e);
                 break;
             case "Text":
                 // TODO 2019-10-15 20:23:49 Text

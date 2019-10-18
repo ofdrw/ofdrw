@@ -3,6 +3,9 @@ package org.ofdrw.core.pageDescription.clips;
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 裁剪区
  * <p>
@@ -26,5 +29,37 @@ public class CT_Clip extends OFDElement {
         super("Clip");
     }
 
-    // TODO 2019-10-15 20:16:30 Area
+    /**
+     * 【必选】
+     * 增加 裁剪区域
+     * <p>
+     * 用一个图形对象或文字对象来描述裁剪区的一个组成部分，
+     * 最终裁剪区是这些区域的并集。
+     *
+     * @param area 裁剪区域
+     * @return this
+     */
+    public CT_Clip addArea(Area area) {
+        if (area == null) {
+            return this;
+        }
+        this.add(area);
+        return this;
+    }
+
+    /**
+     * 【必选】
+     * 设置 裁剪区域
+     * <p>
+     * 用一个图形对象或文字对象来描述裁剪区的一个组成部分，
+     * 最终裁剪区是这些区域的并集。
+     *
+     * @return 裁剪区域
+     */
+    public List<Area> getAreas() {
+        List<Element> elements = this.getOFDElements("Area");
+        List<Area> res = new ArrayList<>(elements.size());
+        elements.forEach(item -> res.add(new Area(item)));
+        return res;
+    }
 }

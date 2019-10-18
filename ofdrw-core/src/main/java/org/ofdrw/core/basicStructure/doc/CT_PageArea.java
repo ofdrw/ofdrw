@@ -31,7 +31,7 @@ public class CT_PageArea extends OFDElement {
      * @return this
      */
     public CT_PageArea setPhysicalBox(ST_Box physicalBox) {
-        this.addOFDEntity("PhysicalBox", physicalBox.toString());
+        this.setOFDEntity("PhysicalBox", physicalBox.toString());
         return this;
     }
 
@@ -60,7 +60,7 @@ public class CT_PageArea extends OFDElement {
      * @return this
      */
     public CT_PageArea setApplicationBox(ST_Box applicationBox) {
-        this.addOFDEntity("ApplicationBox", applicationBox.toString());
+        this.setOFDEntity("ApplicationBox", applicationBox.toString());
         return this;
     }
 
@@ -97,7 +97,7 @@ public class CT_PageArea extends OFDElement {
      * @return this
      */
     public CT_PageArea setContentBox(ST_Box contentBox) {
-        this.addOFDEntity("ContentBox", contentBox);
+        this.setOFDEntity("ContentBox", contentBox);
         return this;
     }
 
@@ -133,7 +133,7 @@ public class CT_PageArea extends OFDElement {
      * @return this
      */
     public CT_PageArea setBleedBox(ST_Box bleedBox) {
-        this.addOFDEntity("BleedBox", bleedBox);
+        this.setOFDEntity("BleedBox", bleedBox);
         return this;
     }
 

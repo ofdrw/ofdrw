@@ -18,7 +18,7 @@ public class CT_PathTest {
                 .setRule(Rule.NonZero)
                 .setStrokeColor(CT_Color.rgb(0,0,0))
                 .setAbbreviatedData(AbbreviatedDataTest.abbreviatedDataCase())
-                .setBoundary(new ST_Box(47, 47, 153, 203))
+                .setBoundary(new ST_Box(47, 47, 156, 206))
                 .setGraphicName("FirstPath")
                 .setVisible(true)
                 .setLineWidth(2d)

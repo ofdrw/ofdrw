@@ -17,8 +17,6 @@ import java.util.List;
  */
 public class Area extends OFDElement {
 
-    // TODO 2019-10-15 20:32:18 case test
-
     public Area(Element proxy) {
         super(proxy);
     }

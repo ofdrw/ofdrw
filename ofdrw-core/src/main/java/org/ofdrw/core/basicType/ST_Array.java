@@ -23,6 +23,18 @@ public class ST_Array extends STBase {
      */
     private List<String> array = new ArrayList<>();
 
+    /**
+     * 获取一个单位矩阵变换参数
+     *
+     * @return 单位CTM举证
+     */
+    public static ST_Array unitCTM() {
+        return new ST_Array(new String[]{
+                "1", "0", // 0
+                "0", "1", // 0
+                "0", "0"  // 1
+        });
+    }
 
     /**
      * 获取 ST_Array 实例如果参数非法则返还null

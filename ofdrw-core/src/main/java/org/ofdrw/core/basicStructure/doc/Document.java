@@ -216,7 +216,7 @@ public class Document extends OFDElement {
      * @return this
      */
     public Document setAnnotations(ST_Loc annotations) {
-        this.addOFDEntity("Annotations", annotations.toString());
+        this.setOFDEntity("Annotations", annotations.toString());
         return this;
     }
 
@@ -242,7 +242,7 @@ public class Document extends OFDElement {
      * @return this
      */
     public Document setCustomTags(ST_Loc customTags) {
-        this.addOFDEntity("CustomTags", customTags.toString());
+        this.setOFDEntity("CustomTags", customTags.toString());
         return this;
     }
 
@@ -268,7 +268,7 @@ public class Document extends OFDElement {
      * @return this
      */
     public Document setAttachments(ST_Loc attachments) {
-        this.addOFDEntity("Attachments", attachments.toString());
+        this.setOFDEntity("Attachments", attachments.toString());
         return this;
     }
 
@@ -294,7 +294,7 @@ public class Document extends OFDElement {
      * @return this
      */
     public Document setExtensions(ST_Loc extensions) {
-        this.addOFDEntity("Extensions", extensions.toString());
+        this.setOFDEntity("Extensions", extensions.toString());
         return this;
     }
 

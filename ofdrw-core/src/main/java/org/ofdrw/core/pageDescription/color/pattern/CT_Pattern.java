@@ -242,11 +242,7 @@ public class CT_Pattern extends OFDElement implements ColorClusterType {
     public CT_Pattern setCTM(ST_Array ctm) {
         if (ctm == null) {
             // 单位矩阵
-            ctm = new ST_Array(new String[]{
-                    "1", "0", // 0
-                    "0", "1", // 0
-                    "0", "0"  // 1
-            });
+            ctm = ST_Array.unitCTM();
         }
 
         this.addAttribute("CTM", ctm.toString());

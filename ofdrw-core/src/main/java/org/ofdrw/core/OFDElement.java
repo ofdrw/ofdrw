@@ -54,6 +54,24 @@ public abstract class OFDElement extends DefaultElementProxy {
     }
 
     /**
+     * 设置OFD参数
+     *
+     * 如果参数已经存在则修改参数
+     * @param name 元素名称
+     * @param value 元素文本
+     * @return this
+     */
+    public OFDElement setOFDEntity(String name, Serializable value) {
+        Element e = this.getOFDElement(name);
+        if (e == null) {
+            return addOFDEntity(name, value);
+        }else {
+            e.setText(value.toString());
+            return this;
+        }
+    }
+
+    /**
      * 获取OFD的元素
      *
      * @param name OFD元素名称
@@ -113,38 +131,6 @@ public abstract class OFDElement extends DefaultElementProxy {
         return deleteElements;
     }
 
-
-//    /**
-//     * 【可选】
-//     * <p>
-//     * 设置 OFD对象标识，无符号整数，应在文档内唯一。
-//     * <p>
-//     * 0标识无效标识符
-//     *
-//     * @param objId OFD对象标识
-//     * @return this
-//     */
-//    public OFDElement setObjID(Long objId) {
-//        this.addAttribute("ID", objId.toString());
-//        return this;
-//    }
-//
-//    /**
-//     * 【可选】
-//     * <p>
-//     * 设置 OFD对象标识，无符号整数，应在文档内唯一。
-//     * <p>
-//     * 0标识无效标识符
-//     *
-//     * @return OFD对象标识，null表示对象标识不存在
-//     */
-//    public Long getObjID() {
-//        String str = this.attributeValue("ID");
-//        if (str == null || str.trim().length() == 0) {
-//            return null;
-//        }
-//        return Long.parseLong(str);
-//    }
 
     /**
      * 【可选】

@@ -105,7 +105,7 @@ public class DocBody extends OFDElement {
      * @return this
      */
     public DocBody setSignatures(ST_Loc signatures) {
-        this.addOFDEntity("Signatures", signatures.toString());
+        this.setOFDEntity("Signatures", signatures.toString());
         return this;
     }
 
@@ -124,6 +124,7 @@ public class DocBody extends OFDElement {
     }
 
 
+    @Override
     public String getQualifiedName() {
         return "ofd:DocBody";
     }

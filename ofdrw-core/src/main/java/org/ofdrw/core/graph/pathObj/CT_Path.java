@@ -2,6 +2,7 @@ package org.ofdrw.core.graph.pathObj;
 
 import org.dom4j.Element;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
+import org.ofdrw.core.pageDescription.clips.ClipAble;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 
 /**
@@ -14,7 +15,7 @@ import org.ofdrw.core.pageDescription.color.color.CT_Color;
  * @author 权观宇
  * @since 2019-10-16 08:21:58
  */
-public class CT_Path extends CT_GraphicUnit<CT_Path> {
+public class CT_Path extends CT_GraphicUnit<CT_Path>  implements ClipAble {
 
     public CT_Path(Element proxy) {
         super(proxy);
@@ -189,6 +190,7 @@ public class CT_Path extends CT_GraphicUnit<CT_Path> {
         if (abbreviatedData == null) {
             return this;
         }
+        this.removeOFDElemByNames("AbbreviatedData");
         this.add(abbreviatedData);
         return this;
     }

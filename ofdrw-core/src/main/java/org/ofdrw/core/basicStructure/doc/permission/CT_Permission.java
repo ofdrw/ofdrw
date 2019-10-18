@@ -31,7 +31,7 @@ public class CT_Permission extends OFDElement {
      * @return this
      */
     public CT_Permission setEdit(boolean edit) {
-        this.addOFDEntity("Edit", Boolean.toString(edit));
+        this.setOFDEntity("Edit", Boolean.toString(edit));
         return this;
     }
 
@@ -61,7 +61,7 @@ public class CT_Permission extends OFDElement {
      * @return this
      */
     public CT_Permission setAnnot(boolean annot) {
-        this.addOFDEntity("Annot", Boolean.toString(annot));
+        this.setOFDEntity("Annot", Boolean.toString(annot));
         return this;
     }
 
@@ -92,7 +92,7 @@ public class CT_Permission extends OFDElement {
      * @return this
      */
     public CT_Permission setExport(boolean export) {
-        this.addOFDEntity("Export", Boolean.toString(export));
+        this.setOFDEntity("Export", Boolean.toString(export));
         return this;
     }
 
@@ -122,7 +122,7 @@ public class CT_Permission extends OFDElement {
      * @return this
      */
     public CT_Permission setSignature(boolean signature) {
-        this.addOFDEntity("Signature", Boolean.toString(signature));
+        this.setOFDEntity("Signature", Boolean.toString(signature));
         return this;
     }
 
@@ -152,7 +152,7 @@ public class CT_Permission extends OFDElement {
      * @return this
      */
     public CT_Permission setWatermark(boolean watermark) {
-        this.addOFDEntity("Watermark", Boolean.toString(watermark));
+        this.setOFDEntity("Watermark", Boolean.toString(watermark));
         return this;
     }
 
@@ -182,7 +182,7 @@ public class CT_Permission extends OFDElement {
      * @return this
      */
     public CT_Permission setPrintScreen(boolean printScreen) {
-        this.addOFDEntity("PrintScreen", Boolean.toString(printScreen));
+        this.setOFDEntity("PrintScreen", Boolean.toString(printScreen));
         return this;
     }
 

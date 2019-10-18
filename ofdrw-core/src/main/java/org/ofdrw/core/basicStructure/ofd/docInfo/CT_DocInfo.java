@@ -32,7 +32,7 @@ public class CT_DocInfo extends OFDElement {
      * @return this
      */
     public CT_DocInfo setDocID(UUID docID) {
-        this.addOFDEntity("DocID", docID.toString());
+        this.setOFDEntity("DocID", docID.toString());
         return this;
     }
 
@@ -64,7 +64,7 @@ public class CT_DocInfo extends OFDElement {
      * @return this
      */
     public CT_DocInfo setTile(String title) {
-        this.addOFDEntity("Title", title);
+        this.setOFDEntity("Title", title);
         return this;
     }
 
@@ -86,7 +86,7 @@ public class CT_DocInfo extends OFDElement {
      * @return this
      */
     public CT_DocInfo setAuthor(String author) {
-        this.addOFDEntity("Author", author);
+        this.setOFDEntity("Author", author);
         return this;
     }
 
@@ -108,7 +108,7 @@ public class CT_DocInfo extends OFDElement {
      * @return this
      */
     public CT_DocInfo setSubject(String subject) {
-        this.addOFDEntity("Subject", subject);
+        this.setOFDEntity("Subject", subject);
         return this;
     }
 
@@ -130,7 +130,7 @@ public class CT_DocInfo extends OFDElement {
      * @return this
      */
     public CT_DocInfo setAbstract(String abstractTxt) {
-        this.addOFDEntity("Abstract", abstractTxt);
+        this.setOFDEntity("Abstract", abstractTxt);
         return this;
     }
 
@@ -152,7 +152,7 @@ public class CT_DocInfo extends OFDElement {
      * @return this
      */
     public CT_DocInfo setCreationDate(LocalDate creationDate) {
-        this.addOFDEntity("CreationDate", creationDate.toString());
+        this.setOFDEntity("CreationDate", creationDate.toString());
         return this;
     }
 
@@ -175,7 +175,7 @@ public class CT_DocInfo extends OFDElement {
      * @return this
      */
     public CT_DocInfo setModDate(LocalDate modDate) {
-        this.addOFDEntity("ModDate", modDate.toString());
+        this.setOFDEntity("ModDate", modDate.toString());
         return this;
     }
 
@@ -209,10 +209,10 @@ public class CT_DocInfo extends OFDElement {
      */
     public CT_DocInfo setDocUsage(DocUsage docUsage) {
         if (docUsage == null) {
-            this.addOFDEntity("DocUsage", DocUsage.Normal.toString());
+            this.setOFDEntity("DocUsage", DocUsage.Normal.toString());
 
         } else {
-            this.addOFDEntity("DocUsage", docUsage.toString());
+            this.setOFDEntity("DocUsage", docUsage.toString());
         }
         return this;
     }
@@ -304,7 +304,7 @@ public class CT_DocInfo extends OFDElement {
      * @return this
      */
     public CT_DocInfo setCreator(String creator) {
-        this.addOFDEntity("Creator", creator);
+        this.setOFDEntity("Creator", creator);
         return this;
     }
 
@@ -326,7 +326,7 @@ public class CT_DocInfo extends OFDElement {
      * @return this
      */
     public CT_DocInfo setCreatorVersion(String creatorVersion) {
-        this.addOFDEntity("CreatorVersion", creatorVersion);
+        this.setOFDEntity("CreatorVersion", creatorVersion);
         return this;
     }
 

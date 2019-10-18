@@ -39,7 +39,7 @@ public class CT_CommonData extends OFDElement {
      * @return this
      */
     public CT_CommonData setMaxUnitID(ST_ID maxUnitID) {
-        this.addOFDEntity("MaxUnitID", maxUnitID);
+        this.setOFDEntity("MaxUnitID", maxUnitID);
         return this;
     }
 
@@ -87,7 +87,7 @@ public class CT_CommonData extends OFDElement {
      * @return this
      */
     public CT_CommonData setPublicRes(ST_Loc publicRes) {
-        this.addOFDEntity("PublicRes", publicRes);
+        this.setOFDEntity("PublicRes", publicRes);
         return this;
     }
 
@@ -116,7 +116,7 @@ public class CT_CommonData extends OFDElement {
      * @return this
      */
     public CT_CommonData setDocumentRes(ST_Loc documentRes) {
-        this.addOFDEntity("DocumentRes", documentRes);
+        this.setOFDEntity("DocumentRes", documentRes);
         return this;
     }
 
@@ -173,7 +173,7 @@ public class CT_CommonData extends OFDElement {
      * @return this
      */
     public CT_CommonData setDefaultCS(ST_RefID defaultCS) {
-        this.addOFDEntity("DefaultCS", defaultCS);
+        this.setOFDEntity("DefaultCS", defaultCS);
         return this;
     }
 

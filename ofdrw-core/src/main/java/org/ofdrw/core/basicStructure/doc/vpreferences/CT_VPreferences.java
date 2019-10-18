@@ -41,7 +41,7 @@ public class CT_VPreferences extends OFDElement {
         if (pageMode == null) {
             pageMode = PageMode.None;
         }
-        this.addOFDEntity("PageMode", pageMode.toString());
+        this.setOFDEntity("PageMode", pageMode.toString());
         return this;
     }
 
@@ -76,7 +76,7 @@ public class CT_VPreferences extends OFDElement {
      */
     public CT_VPreferences setPageLayout(PageLayout pageLayout) {
         pageLayout = pageLayout == null ? PageLayout.OneColumn : pageLayout;
-        this.addOFDEntity("PageLayout", pageLayout.toString());
+        this.setOFDEntity("PageLayout", pageLayout.toString());
         return this;
     }
 
@@ -109,7 +109,7 @@ public class CT_VPreferences extends OFDElement {
      * @return this
      */
     public CT_VPreferences setTabDisplay(TabDisplay tabDisplay) {
-        this.addOFDEntity("TabDisplay", tabDisplay.toString());
+        this.setOFDEntity("TabDisplay", tabDisplay.toString());
         return this;
     }
 
@@ -140,7 +140,7 @@ public class CT_VPreferences extends OFDElement {
      * @return this
      */
     public CT_VPreferences setHideToolbar(boolean hideToolbar) {
-        this.addOFDEntity("HideToolbar", Boolean.toString(hideToolbar));
+        this.setOFDEntity("HideToolbar", Boolean.toString(hideToolbar));
         return this;
     }
 
@@ -171,7 +171,7 @@ public class CT_VPreferences extends OFDElement {
      * @return this
      */
     public CT_VPreferences setHideMenubar(boolean hideMenubar) {
-        this.addOFDEntity("HideMenubar", Boolean.toString(hideMenubar));
+        this.setOFDEntity("HideMenubar", Boolean.toString(hideMenubar));
         return this;
     }
 
@@ -202,7 +202,7 @@ public class CT_VPreferences extends OFDElement {
      * @return this
      */
     public CT_VPreferences setHideWindowUI(boolean hideMenubar) {
-        this.addOFDEntity("HideWindowUI", Boolean.toString(hideMenubar));
+        this.setOFDEntity("HideWindowUI", Boolean.toString(hideMenubar));
         return this;
     }
 

@@ -54,7 +54,7 @@ public class CT_Dest extends OFDElement implements OFDGotoTarget {
      * @return this
      */
     public CT_Dest setPageID(ST_RefID pageId) {
-        this.addOFDEntity("PageID", pageId.toString());
+        this.setOFDEntity("PageID", pageId.toString());
         return this;
     }
 
@@ -78,7 +78,7 @@ public class CT_Dest extends OFDElement implements OFDGotoTarget {
      * @return this
      */
     public CT_Dest setLeft(double left) {
-        this.addOFDEntity("Left", STBase.fmt(left));
+        this.setOFDEntity("Left", STBase.fmt(left));
         return this;
     }
 
@@ -109,7 +109,7 @@ public class CT_Dest extends OFDElement implements OFDGotoTarget {
      * @return this
      */
     public CT_Dest setRight(double right) {
-        this.addOFDEntity("Right", STBase.fmt(right));
+        this.setOFDEntity("Right", STBase.fmt(right));
         return this;
     }
 
@@ -140,7 +140,7 @@ public class CT_Dest extends OFDElement implements OFDGotoTarget {
      * @return this
      */
     public CT_Dest setTop(double top) {
-        this.addOFDEntity("Top", STBase.fmt(top));
+        this.setOFDEntity("Top", STBase.fmt(top));
         return this;
     }
 
@@ -170,7 +170,7 @@ public class CT_Dest extends OFDElement implements OFDGotoTarget {
      * @return this
      */
     public CT_Dest setBottom(double bottom) {
-        this.addOFDEntity("Bottom", STBase.fmt(bottom));
+        this.setOFDEntity("Bottom", STBase.fmt(bottom));
         return this;
     }
 
@@ -201,7 +201,7 @@ public class CT_Dest extends OFDElement implements OFDGotoTarget {
      * @return this
      */
     public CT_Dest setZoom(double zoom) {
-        this.addOFDEntity("Zoom", STBase.fmt(zoom));
+        this.setOFDEntity("Zoom", STBase.fmt(zoom));
         return this;
     }
 
