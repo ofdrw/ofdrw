@@ -5,6 +5,7 @@ import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.clips.ClipAble;
+import org.ofdrw.core.pageDescription.color.color.CT_Color;
 
 /**
  * 文字对象
@@ -327,5 +328,68 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
         return Boolean.parseBoolean(str);
     }
 
-    // TODO 2019-10-18 22:05:29 FillColor
+
+    /**
+     * 【可选】
+     * 设置 填充颜色
+     * <p>
+     * 默认为黑色
+     *
+     * @param fillColor 填充颜色
+     * @return this
+     */
+    public CT_Text setFillColor(CT_Color fillColor) {
+        if (fillColor == null) {
+            return this;
+        }
+        this.add(fillColor);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 获取 填充颜色
+     * <p>
+     * 默认为黑色
+     *
+     * @return 填充颜色，null表示黑色
+     */
+    public CT_Color getFillColor() {
+        Element e = this.getOFDElement("FillColor");
+        return e == null ? null : new CT_Color(e);
+    }
+
+
+    /**
+     * 【可选】
+     * 设置 勾边颜色
+     * <p>
+     * 默认为透明色
+     *
+     * @param strokeColor 勾边颜色
+     * @return this
+     */
+    public CT_Text setStrokeColor(CT_Color strokeColor) {
+        if (strokeColor == null) {
+            return this;
+        }
+        this.add(strokeColor);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 获取 勾边颜色
+     * <p>
+     * 默认为透明色
+     *
+     * @return 勾边颜色，null为透明色
+     */
+    public CT_Color getStrokeColor() {
+        Element e = this.getOFDElement("StrokeColor");
+        return e == null ? null : new CT_Color(e);
+    }
+
+    // TODO 2019-10-19 19:00:37 CGTransform
+
 }
