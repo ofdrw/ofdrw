@@ -3,8 +3,7 @@ package org.ofdrw.core.text.transform;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
 import org.ofdrw.core.basicType.ST_Array;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.ofdrw.core.text.CT_CGTransfrom;
 
 public class CT_CGTransfromTest {
 

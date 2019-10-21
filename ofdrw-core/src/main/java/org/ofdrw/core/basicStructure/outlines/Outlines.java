@@ -3,10 +3,7 @@ package org.ofdrw.core.basicStructure.outlines;
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Spliterator;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -46,6 +43,9 @@ public class Outlines extends OFDElement implements Iterable<CT_OutlineElem> {
      */
     public List<CT_OutlineElem> getOutlineElems() {
         List<Element> elements = this.getOFDElements("OutlineElem");
+        if(elements == null || elements.size() == 0){
+            return Collections.emptyList();
+        }
         List<CT_OutlineElem> res = new ArrayList<>(elements.size());
         elements.forEach(item -> res.add(new CT_OutlineElem(item)));
         return res;

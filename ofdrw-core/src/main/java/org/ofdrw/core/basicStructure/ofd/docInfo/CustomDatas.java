@@ -4,6 +4,7 @@ import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -54,6 +55,9 @@ public class CustomDatas extends OFDElement {
      */
     public List<CustomData> getCustomDatas() {
         List<Element> elements = this.getOFDElements("CustomDatas");
+        if(elements == null || elements.size() == 0){
+            return Collections.emptyList();
+        }
         List<CustomData> res = new ArrayList<>(elements.size());
         elements.forEach(item -> res.add(new CustomData(item)));
         return res;

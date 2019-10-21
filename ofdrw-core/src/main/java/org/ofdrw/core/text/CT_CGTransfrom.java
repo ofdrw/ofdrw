@@ -1,4 +1,4 @@
-package org.ofdrw.core.text.transform;
+package org.ofdrw.core.text;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;

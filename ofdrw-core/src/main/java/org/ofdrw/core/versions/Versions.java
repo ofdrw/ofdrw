@@ -4,6 +4,7 @@ import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -49,6 +50,9 @@ public class Versions extends OFDElement {
      */
     public List<Version> getVersions() {
         List<Element> elements = this.getOFDElements("Version");
+        if(elements == null || elements.size() == 0){
+            return Collections.emptyList();
+        }
         List<Version> res = new ArrayList<>(elements.size());
         elements.forEach(item -> res.add(new Version(item)));
         return res;

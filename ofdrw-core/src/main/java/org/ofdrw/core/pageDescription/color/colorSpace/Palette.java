@@ -5,6 +5,7 @@ import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.ST_Array;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -80,6 +81,9 @@ public class Palette extends OFDElement {
      */
     public List<CV> getCVs() {
         List<Element> elements = this.getOFDElements("CV");
+        if(elements == null || elements.size() == 0){
+            return Collections.emptyList();
+        }
         List<CV> res = new ArrayList<>(elements.size());
         elements.forEach(item -> res.add(new CV(item)));
         return res;

@@ -4,6 +4,7 @@ import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -43,6 +44,9 @@ public class Bookmarks extends OFDElement {
      */
     public List<Bookmark> getBookmarks() {
         List<Element> elements = this.getOFDElements("Bookmark");
+        if(elements == null || elements.size() == 0){
+            return Collections.emptyList();
+        }
         List<Bookmark> res = new ArrayList<>(elements.size());
         elements.forEach(item -> res.add(new Bookmark(item)));
         return res;

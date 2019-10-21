@@ -6,6 +6,11 @@ import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.clips.ClipAble;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.text.CT_CGTransfrom;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * 文字对象
@@ -390,6 +395,41 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
         return e == null ? null : new CT_Color(e);
     }
 
-    // TODO 2019-10-19 19:00:37 CGTransform
+    /**
+     * 【可选】
+     * 增加  指定字符编码到字符索引之间的变换关系
+     * <p>
+     * 描述见 11.4 字符变换
+     *
+     * @param cgTransform 字符编码到字符索引之间的变换关系
+     * @return this
+     */
+    public CT_Text addCGTransform(CT_CGTransfrom cgTransform) {
+        if (cgTransform == null) {
+            return this;
+        }
+        this.add(cgTransform);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 获取  指定字符编码到字符索引之间的变换关系序列
+     * <p>
+     * 描述见 11.4 字符变换
+     *
+     * @return 字符编码到字符索引之间的变换关系序列
+     */
+    public List<CT_CGTransfrom> getCGTransforms() {
+        List<Element> elements = this.getOFDElements("CGTransform");
+        if(elements == null || elements.size() == 0){
+            return Collections.emptyList();
+        }
+        List<CT_CGTransfrom> res = new ArrayList<>(elements.size());
+        elements.forEach(item -> res.add(new CT_CGTransfrom(item)));
+        return res;
+    }
+
+    // TODO 2019-10-21 21:27:26 TextCode
 
 }

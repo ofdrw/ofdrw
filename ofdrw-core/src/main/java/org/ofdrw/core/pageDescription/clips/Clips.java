@@ -4,6 +4,7 @@ import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -57,6 +58,9 @@ public class Clips extends OFDElement {
      */
     public List<CT_Clip> getClips() {
         List<Element> elements = this.getOFDElements("Clip");
+        if(elements == null || elements.size() == 0){
+            return Collections.emptyList();
+        }
         List<CT_Clip> res = new ArrayList<>(elements.size());
         elements.forEach(item -> res.add(new CT_Clip(item)));
         return res;

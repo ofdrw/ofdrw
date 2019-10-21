@@ -5,6 +5,7 @@ import org.ofdrw.core.action.Actions;
 import org.ofdrw.core.OFDElement;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -166,6 +167,9 @@ public class CT_OutlineElem extends OFDElement {
      */
     public List<CT_OutlineElem> getOutlineElems() {
         List<Element> elements = this.getOFDElements("OutlineElem");
+        if(elements == null || elements.size() == 0){
+            return Collections.emptyList();
+        }
         List<CT_OutlineElem> res = new ArrayList<>(elements.size());
         elements.forEach(item -> res.add(new CT_OutlineElem(item)));
         return res;

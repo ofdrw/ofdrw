@@ -1,5 +1,6 @@
 package org.ofdrw.core;
 
+import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.dom4j.QName;
 import org.ofdrw.core.basicType.ST_ID;
@@ -55,9 +56,10 @@ public abstract class OFDElement extends DefaultElementProxy {
 
     /**
      * 设置OFD参数
-     *
+     * <p>
      * 如果参数已经存在则修改参数
-     * @param name 元素名称
+     *
+     * @param name  元素名称
      * @param value 元素文本
      * @return this
      */
@@ -65,7 +67,7 @@ public abstract class OFDElement extends DefaultElementProxy {
         Element e = this.getOFDElement(name);
         if (e == null) {
             return addOFDEntity(name, value);
-        }else {
+        } else {
             e.setText(value.toString());
             return this;
         }
@@ -79,6 +81,20 @@ public abstract class OFDElement extends DefaultElementProxy {
      */
     public Element getOFDElement(String name) {
         return this.element(new QName(name, Const.OFD_NAMESPACE));
+    }
+
+    /**
+     * 如果属性存在则删除
+     *
+     * @param name 属性名
+     * @return true 删除成功；false 删除失败，可能是由于属性不存在
+     */
+    public boolean removeAttr(String name) {
+        Attribute a = this.attribute("X");
+        if (a != null) {
+            return this.remove(a);
+        }
+        return false;
     }
 
     /**

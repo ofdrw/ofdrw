@@ -6,6 +6,7 @@ import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicType.ST_ID;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -60,6 +61,9 @@ public class Content extends OFDElement {
      */
     public List<CT_Layer> getLayers() {
         List<Element> elements = this.getOFDElements("Layer");
+        if(elements == null || elements.size() == 0){
+            return Collections.emptyList();
+        }
         List<CT_Layer> res = new ArrayList<>(elements.size());
         elements.forEach(item -> res.add(new CT_Layer(item)));
         return res;
