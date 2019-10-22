@@ -88,7 +88,8 @@ public class Sound extends OFDElement implements OFDAction {
      */
     public Sound setRepeat(Boolean repeat) {
         if (repeat == null) {
-            repeat = false;
+            this.removeAttr("Repeat");
+            return this;
         }
         this.addAttribute("Repeat", Boolean.toString(repeat));
         return this;
@@ -125,7 +126,8 @@ public class Sound extends OFDElement implements OFDAction {
      */
     public Sound setSynchronous(Boolean synchronous) {
         if (synchronous == null) {
-            synchronous = false;
+            this.removeAttr("Synchronous");
+            return this;
         }
         this.addAttribute("Synchronous", Boolean.toString(synchronous));
         return this;

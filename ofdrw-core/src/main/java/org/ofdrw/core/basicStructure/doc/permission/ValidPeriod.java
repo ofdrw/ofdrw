@@ -43,6 +43,10 @@ public class ValidPeriod extends OFDElement {
      * @return this
      */
     public ValidPeriod setStartDate(LocalDateTime startDate) {
+        if (startDate == null) {
+            this.removeAttr("StartDate");
+            return this;
+        }
         this.addAttribute("StartDate", startDate.format(Const.DATETIME_FORMATTER));
         return this;
     }
@@ -70,6 +74,10 @@ public class ValidPeriod extends OFDElement {
      * @return this
      */
     public ValidPeriod setEndDate(LocalDateTime endDate) {
+        if (endDate == null) {
+            this.removeAttr("EndDate");
+            return this;
+        }
         this.addAttribute("EndDate", endDate.format(Const.DATETIME_FORMATTER));
         return this;
     }

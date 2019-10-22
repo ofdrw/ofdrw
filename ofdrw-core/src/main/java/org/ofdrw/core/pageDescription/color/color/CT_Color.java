@@ -52,7 +52,7 @@ public class CT_Color extends OFDElement {
      */
     public static CT_Color rgb(int r, int g, int b) {
         return new CT_Color()
-                .setValue(new ST_Array(r,g,b))
+                .setValue(new ST_Array(r, g, b))
                 .setAlpha(255);
     }
 
@@ -77,6 +77,10 @@ public class CT_Color extends OFDElement {
      * @return this
      */
     public CT_Color setValue(ST_Array value) {
+        if (value == null) {
+            this.removeAttr("Value");
+            return this;
+        }
         this.addAttribute("Value", value.toString());
         return this;
     }
@@ -115,7 +119,12 @@ public class CT_Color extends OFDElement {
      * @return this
      */
     public CT_Color setIndex(Integer index) {
-        if (index == null || index < 0) {
+        if (index == null) {
+            this.removeAttr("Index");
+            return this;
+        }
+
+        if (index < 0) {
             throw new NumberFormatException("调色板中颜色的编号，必须为非负整数");
         }
         this.addAttribute("Index", index.toString());
@@ -153,6 +162,10 @@ public class CT_Color extends OFDElement {
      * @return this
      */
     public CT_Color setColorSpace(ST_RefID colorSpace) {
+        if (colorSpace == null) {
+            this.removeAttr("ColorSpace");
+            return this;
+        }
         this.addAttribute("ColorSpace", colorSpace.toString());
         return this;
     }
@@ -182,7 +195,8 @@ public class CT_Color extends OFDElement {
      */
     public CT_Color setAlpha(Integer alpha) {
         if (alpha == null) {
-            alpha = 0;
+            this.removeAttr("Alpha");
+            return this;
         } else if (alpha < 0) {
             alpha = 0;
         } else if (alpha > 255) {

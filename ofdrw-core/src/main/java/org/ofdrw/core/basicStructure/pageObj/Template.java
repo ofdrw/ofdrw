@@ -63,7 +63,10 @@ public class Template extends OFDElement {
      * @return this
      */
     public Template setZOrder(Type zOrder) {
-        zOrder = zOrder == null ? Type.Background : zOrder;
+        if (zOrder == null) {
+            this.removeAttr("ZOrder");
+            return this;
+        }
         this.addAttribute("ZOrder", zOrder.toString());
         return this;
     }

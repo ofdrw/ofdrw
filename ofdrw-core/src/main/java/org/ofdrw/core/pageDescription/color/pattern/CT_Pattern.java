@@ -2,6 +2,7 @@ package org.ofdrw.core.pageDescription.color.pattern;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.pageDescription.color.color.ColorClusterType;
 
@@ -67,7 +68,7 @@ public class CT_Pattern extends OFDElement implements ColorClusterType {
         if (height == null) {
             throw new IllegalArgumentException("底纹单元高度不能为空");
         }
-        this.addAttribute("Height", height.toString());
+        this.addAttribute("Height", STBase.fmt(height));
         return this;
     }
 
@@ -98,11 +99,15 @@ public class CT_Pattern extends OFDElement implements ColorClusterType {
      * @return this
      */
     public CT_Pattern setXStep(Double xStep) {
+        if (xStep == null) {
+            this.removeAttr("XStep");
+            return this;
+        }
         Double width = getWidth();
-        if (xStep == null || xStep < width) {
+        if (xStep < width) {
             xStep = width;
         }
-        this.addAttribute("XStep", xStep.toString());
+        this.addAttribute("XStep", STBase.fmt(xStep));
         return this;
     }
 
@@ -138,11 +143,15 @@ public class CT_Pattern extends OFDElement implements ColorClusterType {
      * @return this
      */
     public CT_Pattern setYStep(Double yStep) {
+        if (yStep == null) {
+            this.removeAttr("YStep");
+            return this;
+        }
         Double height = getHeight();
-        if (yStep == null || yStep < height) {
+        if (yStep < height) {
             yStep = height;
         }
-        this.addAttribute("YStep", yStep.toString());
+        this.addAttribute("YStep", STBase.fmt(yStep));
         return this;
     }
 
@@ -179,7 +188,8 @@ public class CT_Pattern extends OFDElement implements ColorClusterType {
      */
     public CT_Pattern setReflectMethod(ReflectMethod reflectMethod) {
         if (reflectMethod == null) {
-            reflectMethod = ReflectMethod.Normal;
+            this.removeAttr("ReflectMethod");
+            return this;
         }
         this.addAttribute("ReflectMethod", reflectMethod.toString());
         return this;
@@ -210,7 +220,8 @@ public class CT_Pattern extends OFDElement implements ColorClusterType {
      */
     public CT_Pattern setRelativeTo(RelativeTo relativeTo) {
         if (relativeTo == null) {
-            relativeTo = RelativeTo.Object;
+            this.removeAttr("RelativeTo");
+            return this;
         }
         this.addAttribute("RelativeTo", relativeTo.toString());
         return this;
@@ -241,8 +252,8 @@ public class CT_Pattern extends OFDElement implements ColorClusterType {
      */
     public CT_Pattern setCTM(ST_Array ctm) {
         if (ctm == null) {
-            // 单位矩阵
-            ctm = ST_Array.unitCTM();
+            this.removeAttr("CTM");
+            return this;
         }
 
         this.addAttribute("CTM", ctm.toString());

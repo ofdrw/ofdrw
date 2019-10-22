@@ -2,6 +2,7 @@ package org.ofdrw.core.pageDescription.drawParam;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_RefID;
 
@@ -80,10 +81,14 @@ public class CT_DrawParam extends OFDElement {
      * @throws NumberFormatException 线宽必须是非负浮点数
      */
     public CT_DrawParam setLineWidth(Double lineWidth) {
-        if (lineWidth == null || lineWidth < 0) {
+        if (lineWidth == null) {
+            this.removeAttr("LineWidth");
+            return this;
+        }
+        if (lineWidth < 0) {
             throw new NumberFormatException("线宽必须是非负浮点数");
         }
-        this.addAttribute("LineWidth", lineWidth.toString());
+        this.addAttribute("LineWidth", STBase.fmt(lineWidth));
         return this;
     }
 
@@ -119,6 +124,10 @@ public class CT_DrawParam extends OFDElement {
      * @return this
      */
     public CT_DrawParam setJoin(LineJoinType join) {
+        if (join == null) {
+            this.removeAttr("Join");
+            return this;
+        }
         this.addAttribute("Join", join.toString());
         return this;
     }
@@ -145,6 +154,10 @@ public class CT_DrawParam extends OFDElement {
      * @return this
      */
     public CT_DrawParam setCap(LineCapType cap) {
+        if (cap == null) {
+            this.removeAttr("Cap");
+            return this;
+        }
         this.addAttribute("Cap", cap.toString());
         return this;
     }
@@ -175,6 +188,10 @@ public class CT_DrawParam extends OFDElement {
      * @return this
      */
     public CT_DrawParam setDashOffset(Double dashOffset) {
+        if (dashOffset == null) {
+            this.removeAttr("DashOffset");
+            return this;
+        }
         this.addAttribute("DashOffset", dashOffset.toString());
         return this;
     }
@@ -212,6 +229,10 @@ public class CT_DrawParam extends OFDElement {
      * @return this
      */
     public CT_DrawParam setDashPattern(ST_Array dashPattern) {
+        if (dashPattern == null) {
+            this.removeAttr("DashPattern");
+            return this;
+        }
         this.addAttribute("DashPattern", dashPattern.toString());
         return this;
     }
@@ -244,6 +265,10 @@ public class CT_DrawParam extends OFDElement {
      * @return this
      */
     public CT_DrawParam setMiterLimit(Double miterLimit) {
+        if (miterLimit == null) {
+            this.removeAttr("MiterLimit");
+            return this;
+        }
         this.addAttribute("MiterLimit", miterLimit.toString());
         return this;
     }

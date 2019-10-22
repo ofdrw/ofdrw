@@ -2,7 +2,9 @@ package org.ofdrw.core.text;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_Array;
+import org.ofdrw.core.pageDescription.clips.ClipAble;
 
 /**
  * 文字定位
@@ -14,7 +16,7 @@ import org.ofdrw.core.basicType.ST_Array;
  * @author 权观宇
  * @since 2019-10-21 09:28:35
  */
-public class TextCode extends OFDElement {
+public class TextCode extends OFDElement implements ClipAble {
     public TextCode(Element proxy) {
         super(proxy);
     }
@@ -57,7 +59,7 @@ public class TextCode extends OFDElement {
             this.removeAttr("X");
             return this;
         }
-        this.addAttribute("X", x.toString());
+        this.addAttribute("X", STBase.fmt(x));
         return this;
     }
 
@@ -93,7 +95,7 @@ public class TextCode extends OFDElement {
             this.removeAttr("Y");
             return this;
         }
-        this.addAttribute("Y", y.toString());
+        this.addAttribute("Y", STBase.fmt(y));
         return this;
     }
 
@@ -163,10 +165,9 @@ public class TextCode extends OFDElement {
      * @param deltaY 文字之间在 Y 方向上的偏移值；null表示不偏移
      * @return this
      */
-    public TextCode setDeltaY(Double deltaY) {
+    public TextCode setDeltaY(ST_Array deltaY) {
         if (deltaY == null) {
             this.removeAttr("DeltaY");
-
             return this;
         }
         this.addAttribute("DeltaY", deltaY.toString());
@@ -184,11 +185,11 @@ public class TextCode extends OFDElement {
      *
      * @return 文字之间在 Y 方向上的偏移值；null表示不偏移
      */
-    public Double getDeltaY() {
+    public ST_Array getDeltaY() {
         String str = this.attributeValue("DeltaY");
         if (str == null || str.trim().length() == 0) {
             return null;
         }
-        return Double.parseDouble(str);
+        return ST_Array.getInstance(str);
     }
 }

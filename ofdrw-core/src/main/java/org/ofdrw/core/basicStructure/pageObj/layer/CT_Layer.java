@@ -22,7 +22,10 @@ public class CT_Layer extends CT_PageBlock {
      * @return this
      */
     public CT_Layer setType(Type type) {
-        type = type == null ? Type.Body : type;
+        if (type == null) {
+            this.removeAttr("Type");
+            return this;
+        }
         this.addAttribute("Type", type.toString());
         return this;
     }
@@ -48,6 +51,10 @@ public class CT_Layer extends CT_PageBlock {
      * @return this
      */
     public CT_Layer setDrawParam(ST_RefID drawParam) {
+        if (drawParam == null) {
+            this.removeAttr("DrawParam");
+            return this;
+        }
         this.addAttribute("DrawParam", drawParam.toString());
         return this;
     }

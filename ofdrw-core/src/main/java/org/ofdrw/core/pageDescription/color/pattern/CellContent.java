@@ -36,6 +36,7 @@ public class CellContent extends CT_PageBlock {
      */
     public CellContent setThumbnail(ST_RefID thumbnail) {
         if (thumbnail == null) {
+            this.removeAttr("Thumbnail");
             return this;
         }
         this.addAttribute("Thumbnail", thumbnail.toString());

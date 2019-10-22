@@ -34,7 +34,8 @@ public class CT_Path extends CT_GraphicUnit<CT_Path>  implements ClipAble {
      */
     public CT_Path setStroke(Boolean stroke) {
         if (stroke == null) {
-            stroke = true;
+            this.removeAttr("Stroke");
+            return this;
         }
         this.addAttribute("Stroke", stroke.toString());
         return this;
@@ -63,7 +64,8 @@ public class CT_Path extends CT_GraphicUnit<CT_Path>  implements ClipAble {
      */
     public CT_Path setFill(Boolean fill) {
         if (fill == null) {
-            fill = false;
+            this.removeAttr("Fill");
+            return this;
         }
         this.addAttribute("Fill", fill.toString());
         return this;
@@ -97,7 +99,8 @@ public class CT_Path extends CT_GraphicUnit<CT_Path>  implements ClipAble {
      */
     public CT_Path setRule(Rule rule) {
         if (rule == null) {
-            rule = Rule.NonZero;
+            this.removeAttr("Rule");
+            return this;
         }
         this.addAttribute("Rule", rule.toString());
         return this;

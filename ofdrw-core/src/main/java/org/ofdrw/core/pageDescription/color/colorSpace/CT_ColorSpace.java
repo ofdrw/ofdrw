@@ -63,6 +63,10 @@ public class CT_ColorSpace extends OFDElement {
      * @return this
      */
     public CT_ColorSpace setBitsPerComponent(BitsPerComponent bitsPerComponent) {
+        if (bitsPerComponent == null) {
+            this.removeAttr("BitsPerComponent");
+            return this;
+        }
         this.addAttribute("BitsPerComponent", bitsPerComponent.toString());
         return this;
     }
@@ -87,6 +91,10 @@ public class CT_ColorSpace extends OFDElement {
      * @return this
      */
     public CT_ColorSpace setProfile(ST_Loc profile) {
+        if (profile == null) {
+            this.removeAttr("Profile");
+            return this;
+        }
         this.addAttribute("Profile", profile.toString());
         return this;
     }

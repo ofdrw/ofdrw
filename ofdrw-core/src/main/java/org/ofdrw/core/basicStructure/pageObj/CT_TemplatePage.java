@@ -2,6 +2,7 @@ package org.ofdrw.core.basicStructure.pageObj;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 
@@ -53,6 +54,11 @@ public class CT_TemplatePage extends OFDElement {
      * @return this
      */
     public CT_TemplatePage setTemplatePageName(String name) {
+        if (name == null || name.trim().length() == 0) {
+            this.removeAttr("Name");
+            return this;
+        }
+
         this.addAttribute("Name", name);
         return this;
     }
@@ -81,8 +87,12 @@ public class CT_TemplatePage extends OFDElement {
      * @param zOrder 模板页的默认视图类型
      * @return this
      */
-    public CT_TemplatePage setZOrder(String zOrder) {
-        this.addAttribute("ZOrder", zOrder);
+    public CT_TemplatePage setZOrder(Type zOrder) {
+        if (zOrder == null) {
+            this.removeAttr("ZOrder");
+            return this;
+        }
+        this.addAttribute("ZOrder", zOrder.toString());
         return this;
     }
 
@@ -98,9 +108,9 @@ public class CT_TemplatePage extends OFDElement {
      *
      * @return 模板页的默认视图类型
      */
-    public String getZOrder() {
+    public Type getZOrder() {
         String value = this.attributeValue("ZOrder");
-        return (value == null || value.trim().length() == 0) ? "Background" : value;
+        return (value == null || value.trim().length() == 0) ? Type.Background : Type.getInstance(value);
     }
 
 
@@ -112,6 +122,10 @@ public class CT_TemplatePage extends OFDElement {
      * @return this
      */
     public CT_TemplatePage setBaseLoc(ST_Loc baseLoc) {
+        if (baseLoc == null) {
+            this.removeAttr("BaseLoc");
+            return this;
+        }
         this.addAttribute("BaseLoc", baseLoc.toString());
         return this;
     }

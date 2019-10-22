@@ -5,6 +5,7 @@ import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.action.Actions;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.core.pageDescription.clips.Clips;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 
@@ -69,6 +70,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      */
     public T setGraphicName(String name) {
         if (name == null || name.trim().length() == 0) {
+            this.removeAttr("Name");
             return (T) this;
         }
         this.addAttribute("Name", name);
@@ -93,6 +95,10 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @return this
      */
     public T setVisible(Boolean visible) {
+        if (visible == null) {
+            this.removeAttr("Visible");
+            return (T) this;
+        }
         this.addAttribute("Visible", visible.toString());
         return (T) this;
     }
@@ -122,6 +128,10 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @return this
      */
     public T setLineWidth(Double lineWidth) {
+        if (lineWidth == null) {
+            this.removeAttr("LineWidth");
+            return (T) this;
+        }
         this.addAttribute("LineWidth", lineWidth.toString());
         return (T) this;
     }
@@ -154,6 +164,10 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @return this
      */
     public T setCap(LineCapType cap) {
+        if (cap == null) {
+            this.removeAttr("Cap");
+            return (T) this;
+        }
         this.addAttribute("Cap", cap.toString());
         return (T) this;
     }
@@ -184,6 +198,10 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @return this
      */
     public T setJoin(LineJoinType join) {
+        if (join == null) {
+            this.removeAttr("Join");
+            return (T) this;
+        }
         this.addAttribute("Join", join.toString());
         return (T) this;
     }
@@ -217,6 +235,10 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @return this
      */
     public T setMiterLimit(Double miterLimit) {
+        if (miterLimit == null) {
+            this.removeAttr("MiterLimit");
+            return (T) this;
+        }
         this.addAttribute("MiterLimit", miterLimit.toString());
         return (T) this;
     }
@@ -259,6 +281,10 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @return this
      */
     public T setDashOffset(Double dashOffset) {
+        if (dashOffset == null) {
+            this.removeAttr("DashOffset");
+            return (T) this;
+        }
         this.addAttribute("DashOffset", dashOffset.toString());
         return (T) this;
     }
@@ -304,6 +330,10 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @return this
      */
     public T setDashPattern(ST_Array dashPattern) {
+        if (dashPattern == null) {
+            this.removeAttr("DashPattern");
+            return (T) this;
+        }
         this.addAttribute("DashPattern", dashPattern.toString());
         return (T) this;
     }
@@ -341,7 +371,11 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @return this
      */
     public T setAlpha(Integer alpha) {
-        if (alpha == null || alpha < 0) {
+        if(alpha == null){
+            this.removeAttr("Alpha");
+            return (T) this;
+        }
+        if (alpha < 0) {
             alpha = 0;
         }
         if (alpha > 255) {
@@ -397,5 +431,38 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
         return e == null ? null : new Actions(e);
     }
 
-    // TODO 2019-10-15 18:14:21 Clips
+
+    /**
+     * 【可选】
+     * 设置 图元对象的裁剪区域序列
+     * <p>
+     * 采用对象空间坐标系
+     * <p>
+     * 当存在多个 Clip 对象时，最终裁剪区域为所有 Clip 区域的交集。
+     *
+     * @param clips 图元对象的裁剪区域序列
+     * @return this
+     */
+    public CT_GraphicUnit setClips(Clips clips) {
+        if (clips == null) {
+            return this;
+        }
+        this.add(clips);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 设置 图元对象的裁剪区域序列
+     * <p>
+     * 采用对象空间坐标系
+     * <p>
+     * 当存在多个 Clip 对象时，最终裁剪区域为所有 Clip 区域的交集。
+     *
+     * @return 图元对象的裁剪区域序列
+     */
+    public Clips getClips() {
+        Element e = this.getOFDElement("Clips");
+        return e == null ? null : new Clips(e);
+    }
 }

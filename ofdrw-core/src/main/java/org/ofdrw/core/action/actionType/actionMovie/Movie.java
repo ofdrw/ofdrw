@@ -64,7 +64,11 @@ public class Movie extends OFDElement implements OFDAction {
      * @return this
      */
     public Movie setOperator(PlayType operator) {
-        operator = operator == null ? PlayType.Play : operator;
+        if (operator == null) {
+            this.removeAttr("Operator");
+            return this;
+        }
+
         this.addAttribute("Operator", operator.toString());
         return this;
     }

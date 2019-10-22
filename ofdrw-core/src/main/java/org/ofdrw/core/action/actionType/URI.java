@@ -61,6 +61,10 @@ public class URI extends OFDElement implements OFDAction {
      * @return this
      */
     public URI setBase(String base) {
+        if (base == null) {
+            this.removeAttr("Base");
+            return this;
+        }
         this.addAttribute("Base", base);
         return this;
     }
