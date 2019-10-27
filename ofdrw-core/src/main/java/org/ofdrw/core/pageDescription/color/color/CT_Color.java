@@ -38,6 +38,10 @@ public class CT_Color extends OFDElement {
         super("Color");
     }
 
+    protected CT_Color(String name) {
+        super(name);
+    }
+
     /**
      * RGB颜色值
      * <p>

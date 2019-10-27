@@ -110,5 +110,30 @@ public class CT_Image extends CT_GraphicUnit<CT_Image> {
         return ST_RefID.getInstance(this.attributeValue("ImageMask"));
     }
 
-    // TODO 2019-10-22 21:20:43 Border
+
+    /**
+     * 【可选】
+     * 设置 图像边框
+     *
+     * @param border 图像边框
+     * @return this
+     */
+    public CT_Image setBorder(Border border) {
+        if (border == null) {
+            return this;
+        }
+        this.add(border);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 设置 图像边框
+     *
+     * @return 图像边框
+     */
+    public Border getBorder() {
+        Element e = this.getOFDElement("Border");
+        return e == null ? null : new Border(e);
+    }
 }

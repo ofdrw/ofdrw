@@ -7,6 +7,7 @@ import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.clips.ClipAble;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.text.CT_CGTransfrom;
+import org.ofdrw.core.text.TextCode;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -113,7 +114,8 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
      */
     public CT_Text setStroke(Boolean stroke) {
         if (stroke == null) {
-            stroke = false;
+            this.removeAttr("Stroke");
+            return this;
         }
         this.addAttribute("Stroke", stroke.toString());
         return this;
@@ -146,7 +148,8 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
      */
     public CT_Text setFill(Boolean fill) {
         if (fill == null) {
-            fill = true;
+            this.removeAttr("Fill");
+            return this;
         }
         this.addAttribute("Fill", fill.toString());
         return this;
@@ -181,7 +184,8 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
      */
     public CT_Text setHScale(Double hScale) {
         if (hScale == null) {
-            hScale = 1.0d;
+            this.removeAttr("HScale");
+            return this;
         }
         this.addAttribute("HScale", hScale.toString());
         return this;
@@ -218,7 +222,8 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
      */
     public CT_Text setReadDirection(Direction readDirection) {
         if (readDirection == null) {
-            readDirection = Direction.Angle_0;
+            this.removeAttr("ReadDirection");
+            return this;
         }
         this.addAttribute("ReadDirection", readDirection.toString());
         return this;
@@ -251,7 +256,8 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
      */
     public CT_Text setCharDirection(Direction charDirection) {
         if (charDirection == null) {
-            charDirection = Direction.Angle_0;
+            this.removeAttr("CharDirection");
+            return this;
         }
         this.addAttribute("CharDirection", charDirection.toString());
         return this;
@@ -282,7 +288,8 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
      */
     public CT_Text setWeight(Weight weight) {
         if (weight == null) {
-            weight = Weight.W_400;
+            this.removeAttr("Weight");
+            return this;
         }
         this.addAttribute("Weight", weight.toString());
         return this;
@@ -311,7 +318,8 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
      */
     public CT_Text setItalic(Boolean italic) {
         if (italic == null) {
-            italic = false;
+            this.removeAttr("Italic");
+            return this;
         }
         this.addAttribute("Italic", italic.toString());
         return this;
@@ -430,6 +438,45 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
         return res;
     }
 
-    // TODO 2019-10-21 21:27:26 TextCode
+    /**
+     * 【必选】
+     * 增加 文字内容
+     *
+     * 也就是一段字符编码串
+     *
+     * 如果字符编码不在XML编码方式的字符范围之内，应采用“\”加四位
+     * 十六进制数的格式转义；文字内容中出现的空格也需要转义
+     * 若 TextCode 作为占位符使用时一律采用  ¤ （\u00A4）占位
+     * @param textCode 文字内容
+     * @return this
+     */
+    public CT_Text addTextCode(TextCode textCode) {
+        if(textCode == null){
+            return this;
+        }
+        this.add(textCode);
+        return this;
+    }
+
+    /**
+     * 【必选】
+     * 获取 文字内容序列
+     *
+     * 也就是一段字符编码串
+     *
+     * 如果字符编码不在XML编码方式的字符范围之内，应采用“\”加四位
+     * 十六进制数的格式转义；文字内容中出现的空格也需要转义
+     * 若 TextCode 作为占位符使用时一律采用  ¤ （\u00A4）占位
+     * @return 文字内容序列
+     */
+    public List<TextCode> getTextCodes() {
+        List<Element> elements = this.getOFDElements("TextCode");
+        if(elements == null || elements.size() == 0){
+            return Collections.emptyList();
+        }
+        List<TextCode> res = new ArrayList<>(elements.size());
+        elements.forEach(item -> res.add(new TextCode(item)));
+        return res;
+    }
 
 }

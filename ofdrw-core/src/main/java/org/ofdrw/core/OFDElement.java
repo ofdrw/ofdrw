@@ -74,6 +74,17 @@ public abstract class OFDElement extends DefaultElementProxy {
     }
 
     /**
+     * 设置 元素名称
+     *
+     * @param name 元素名称
+     * @return this
+     */
+    public OFDElement setOFDName(String name) {
+        this.setQName(new QName(name, Const.OFD_NAMESPACE));
+        return this;
+    }
+
+    /**
      * 获取OFD的元素
      *
      * @param name OFD元素名称

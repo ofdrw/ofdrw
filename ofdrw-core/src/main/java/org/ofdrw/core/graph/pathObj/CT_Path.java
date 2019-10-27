@@ -15,7 +15,7 @@ import org.ofdrw.core.pageDescription.color.color.CT_Color;
  * @author 权观宇
  * @since 2019-10-16 08:21:58
  */
-public class CT_Path extends CT_GraphicUnit<CT_Path>  implements ClipAble {
+public class CT_Path extends CT_GraphicUnit<CT_Path> implements ClipAble {
 
     public CT_Path(Element proxy) {
         super(proxy);
@@ -133,6 +133,9 @@ public class CT_Path extends CT_GraphicUnit<CT_Path>  implements ClipAble {
         if (strokeColor == null) {
             return this;
         }
+        if (!(strokeColor instanceof StrokeColor)) {
+            strokeColor.setOFDName("StrokeColor");
+        }
         this.add(strokeColor);
         return this;
     }
@@ -145,9 +148,9 @@ public class CT_Path extends CT_GraphicUnit<CT_Path>  implements ClipAble {
      *
      * @return 沟边颜色，null表示为黑色，颜色定义请参考 8.3.2 基本颜色
      */
-    public CT_Color getStrokeColor() {
+    public StrokeColor getStrokeColor() {
         Element e = this.getOFDElement("StrokeColor");
-        return e == null ? null : new CT_Color(e);
+        return e == null ? null : new StrokeColor(e);
     }
 
     /**
@@ -163,6 +166,9 @@ public class CT_Path extends CT_GraphicUnit<CT_Path>  implements ClipAble {
         if (fillColor == null) {
             return this;
         }
+        if (!(fillColor instanceof FillColor)) {
+            fillColor.setOFDName("FillColor");
+        }
         this.add(fillColor);
         return this;
     }
@@ -177,7 +183,7 @@ public class CT_Path extends CT_GraphicUnit<CT_Path>  implements ClipAble {
      */
     public CT_Color getFillColor() {
         Element e = this.getOFDElement("FillColor");
-        return e == null ? null : new CT_Color(e);
+        return e == null ? null : new FillColor(e);
     }
 
     /**
