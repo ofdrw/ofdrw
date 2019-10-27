@@ -25,16 +25,16 @@ public abstract class OFDElement extends DefaultElementProxy {
 
     public OFDElement(Element proxy) {
         super(proxy);
-        /*
-         * 判断 被代理的对象和子类的对象是否为同一个类型
-         */
-        String subObjsQName = this.getQualifiedName();
-        String proxyObjQName = this.proxy.getQualifiedName();
-        if (!subObjsQName.equals(proxyObjQName)) {
-            throw new IllegalArgumentException("wrong proxy type: "
-                    + this.proxy.getQualifiedName()
-                    + " require: " + this.getQualifiedName());
-        }
+//        /*
+//         * 判断 被代理的对象和子类的对象是否为同一个类型
+//         */
+//        String subObjsQName = this.getQualifiedName();
+//        String proxyObjQName = this.proxy.getQualifiedName();
+//        if (!subObjsQName.equals(proxyObjQName)) {
+//            throw new IllegalArgumentException("wrong proxy type: "
+//                    + this.proxy.getQualifiedName()
+//                    + " require: " + this.getQualifiedName());
+//        }
     }
 
     public OFDElement(String name) {

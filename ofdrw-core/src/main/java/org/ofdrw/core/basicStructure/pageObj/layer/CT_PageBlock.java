@@ -21,7 +21,7 @@ public class CT_PageBlock extends OFDElement implements PageBlockType {
         super(proxy);
     }
 
-    public CT_PageBlock(String name) {
+    protected CT_PageBlock(String name) {
         super(name);
     }
 
@@ -62,5 +62,6 @@ public class CT_PageBlock extends OFDElement implements PageBlockType {
         });
         return res;
     }
+
 
 }
