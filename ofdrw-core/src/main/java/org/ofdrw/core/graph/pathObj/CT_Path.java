@@ -25,6 +25,10 @@ public class CT_Path extends CT_GraphicUnit<CT_Path> implements ClipAble {
         super("Path");
     }
 
+    protected CT_Path(String name) {
+        super(name);
+    }
+
     /**
      * 【可选 属性】
      * 设置 图形是否被沟边

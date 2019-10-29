@@ -1,7 +1,8 @@
-package org.ofdrw.core.basicStructure.pageObj.layer;
+package org.ofdrw.core.basicStructure.pageObj.layer.block;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 
 import java.util.ArrayList;
 import java.util.List;

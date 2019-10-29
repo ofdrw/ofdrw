@@ -1,7 +1,7 @@
 package org.ofdrw.core.compositeObj;
 
 import org.dom4j.Element;
-import org.ofdrw.core.basicStructure.pageObj.layer.CT_PageBlock;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 
 /**
  * 内容的矢量描述

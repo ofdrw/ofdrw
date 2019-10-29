@@ -1,6 +1,7 @@
 package org.ofdrw.core.basicStructure.pageObj.layer;
 
 import org.dom4j.Element;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 
 /**
  * 用于表示页块类型的接口

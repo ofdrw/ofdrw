@@ -2,7 +2,7 @@ package org.ofdrw.core.compositeObj;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
-import org.ofdrw.core.basicStructure.pageObj.layer.CT_PageBlock;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicType.ST_RefID;
 
 /**
