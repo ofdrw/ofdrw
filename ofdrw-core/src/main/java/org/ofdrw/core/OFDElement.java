@@ -174,6 +174,17 @@ public abstract class OFDElement extends DefaultElementProxy {
         return this;
     }
 
+
+    /**
+     * 移除元素中所有内容
+     *
+     * @return this
+     */
+    public OFDElement removeAll() {
+        this.elements().forEach(this::remove);
+        return this;
+    }
+
     /**
      * 【可选】
      * <p>

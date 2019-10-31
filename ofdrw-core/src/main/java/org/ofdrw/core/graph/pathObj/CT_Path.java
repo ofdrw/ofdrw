@@ -140,6 +140,7 @@ public class CT_Path extends CT_GraphicUnit<CT_Path> implements ClipAble {
         if (!(strokeColor instanceof StrokeColor)) {
             strokeColor.setOFDName("StrokeColor");
         }
+        this.removeOFDElemByNames("StrokeColor");
         this.add(strokeColor);
         return this;
     }
@@ -173,6 +174,7 @@ public class CT_Path extends CT_GraphicUnit<CT_Path> implements ClipAble {
         if (!(fillColor instanceof FillColor)) {
             fillColor.setOFDName("FillColor");
         }
+        this.removeOFDElemByNames("FillColor");
         this.add(fillColor);
         return this;
     }

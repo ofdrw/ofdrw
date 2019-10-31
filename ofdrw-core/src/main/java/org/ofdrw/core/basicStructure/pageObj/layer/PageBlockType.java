@@ -1,7 +1,7 @@
 package org.ofdrw.core.basicStructure.pageObj.layer;
 
 import org.dom4j.Element;
-import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
 
 /**
  * 用于表示页块类型的接口
@@ -22,19 +22,19 @@ public interface PageBlockType extends Element {
      */
     static PageBlockType getInstance(Element element) {
         String qName = element.getQualifiedName();
-        CT_PageBlock res = null;
+        PageBlockType res = null;
         switch (qName) {
             case "ofd:TextObject":
-                // TODO 2019-10-10 20:22:35 TextObject
+                res = new TextObject(element);
                 break;
             case "ofd:PathObject":
-                // TODO 2019-10-10 20:26:36 PathObject
+                res = new PathObject(element);
                 break;
             case "ofd:ImageObject":
-                // TODO 2019-10-10 20:26:51 ImageObject
+                res = new ImageObject(element);
                 break;
             case "ofd:CompositeObject":
-                // TODO 2019-10-10 20:27:11 CompositeObject
+                res = new CompositeObject(element);
                 break;
             case "ofd:PageBlock":
                 res = new CT_PageBlock(element);

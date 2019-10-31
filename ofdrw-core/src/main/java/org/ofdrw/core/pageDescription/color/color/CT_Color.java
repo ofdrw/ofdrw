@@ -38,6 +38,15 @@ public class CT_Color extends OFDElement {
         super("Color");
     }
 
+    /**
+     * @param color 颜色族中的颜色
+     */
+    public CT_Color(ColorClusterType color) {
+        this();
+        this.setColor(color);
+    }
+
+
     protected CT_Color(String name) {
         super(name);
     }
@@ -56,8 +65,7 @@ public class CT_Color extends OFDElement {
      */
     public static CT_Color rgb(int r, int g, int b) {
         return new CT_Color()
-                .setValue(new ST_Array(r, g, b))
-                .setAlpha(255);
+                .setValue(new ST_Array(r, g, b));
     }
 
     /**
@@ -241,6 +249,9 @@ public class CT_Color extends OFDElement {
      * @return this
      */
     public CT_Color setColor(ColorClusterType color) {
+        if (color == null) {
+            return this;
+        }
         this.add(color);
         return this;
     }

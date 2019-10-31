@@ -28,6 +28,11 @@ public class ST_Pos extends STBase {
         this.y = y;
     }
 
+
+    public static ST_Pos getInstance(double x, double y) {
+        return new ST_Pos(x,y);
+    }
+
     /**
      * 获取 ST_Pos 实例如果参数非法则返还null
      *
