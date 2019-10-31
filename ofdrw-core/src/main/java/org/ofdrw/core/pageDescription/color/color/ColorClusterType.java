@@ -1,6 +1,7 @@
 package org.ofdrw.core.pageDescription.color.color;
 
 import org.dom4j.Element;
+import org.ofdrw.core.pageDescription.color.color.axialShd.CT_AxialShd;
 
 
 /**
@@ -31,7 +32,7 @@ public interface ColorClusterType extends Element {
                 // TODO 2019-10-11 21:40:30 Pattern
                 break;
             case "ofd:AxialShd":
-                // TODO 2019-10-11 21:40:46 AxialShd
+                res = new CT_AxialShd(element);
                 break;
             case "ofd:RadialShd":
                 // TODO 2019-10-11 21:40:57 RadialShd
