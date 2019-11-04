@@ -128,7 +128,7 @@ public class CT_OutlineElem extends OFDElement {
      * @return this
      */
     public CT_OutlineElem setActions(Actions actions) {
-        this.add(actions);
+        this.set(actions);
         return this;
     }
 

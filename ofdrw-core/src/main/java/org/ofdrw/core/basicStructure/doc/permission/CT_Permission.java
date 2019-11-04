@@ -213,7 +213,7 @@ public class CT_Permission extends OFDElement {
      * @return this
      */
     public CT_Permission setPrint(Print print) {
-        this.add(print);
+        this.set(print);
         return this;
     }
 
@@ -245,7 +245,7 @@ public class CT_Permission extends OFDElement {
      * @return this
      */
     public CT_Permission setValidPeriod(ValidPeriod validPeriod) {
-        this.add(validPeriod);
+        this.set(validPeriod);
         return this;
     }
 

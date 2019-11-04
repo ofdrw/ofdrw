@@ -64,7 +64,7 @@ public class Bookmark extends OFDElement {
      * @return this
      */
     public Bookmark setDest(CT_Dest dest) {
-        this.add(dest);
+        this.set(dest);
         return this;
     }
 

@@ -66,7 +66,7 @@ public class CT_Action extends OFDElement {
      * @return this
      */
     public CT_Action setRegion(CT_Region region) {
-        this.add(region);
+        this.set(region);
         return this;
     }
 

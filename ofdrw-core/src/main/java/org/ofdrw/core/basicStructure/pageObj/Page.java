@@ -46,7 +46,7 @@ public class Page extends OFDElement {
      * @return this
      */
     public Page setArea(CT_PageArea area) {
-        this.add(area);
+        this.set(area);
         return this;
     }
 
@@ -80,7 +80,7 @@ public class Page extends OFDElement {
      * @return this
      */
     public Page setTemplate(Template template) {
-        this.add(template);
+        this.set(template);
         return this;
     }
 
@@ -143,7 +143,7 @@ public class Page extends OFDElement {
      * @return this
      */
     public Page setContent(Content content) {
-        this.add(content);
+        this.set(content);
         return this;
     }
 
@@ -171,7 +171,7 @@ public class Page extends OFDElement {
      * @return this
      */
     public Page setActions(Actions actions) {
-        this.add(actions);
+        this.set(actions);
         return this;
     }
 

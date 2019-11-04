@@ -61,7 +61,7 @@ public class CT_CommonData extends OFDElement {
      * @return this
      */
     public CT_CommonData setPageArea(CT_PageArea pageArea) {
-        this.add(pageArea);
+        this.set(pageArea);
         return this;
     }
 

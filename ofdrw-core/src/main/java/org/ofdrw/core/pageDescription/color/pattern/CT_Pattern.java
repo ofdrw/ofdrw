@@ -285,7 +285,7 @@ public class CT_Pattern extends OFDElement implements ColorClusterType {
      * @return this
      */
     public CT_Pattern setCellContent(CellContent cellContent) {
-        this.add(cellContent);
+        this.set(cellContent);
         return this;
     }
 

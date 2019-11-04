@@ -120,7 +120,7 @@ public class CT_ColorSpace extends OFDElement {
      * @return this
      */
     public CT_ColorSpace setPalette(Palette palette) {
-        this.add(palette);
+        this.set(palette);
         return this;
     }
 

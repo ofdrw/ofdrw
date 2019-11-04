@@ -238,7 +238,7 @@ public class CT_DocInfo extends OFDElement {
      * @return this
      */
     public CT_DocInfo setCover(ST_Loc cover) {
-        this.add(cover.getElement("Cover"));
+        this.set(cover.getElement("Cover"));
         return this;
     }
 
@@ -265,7 +265,7 @@ public class CT_DocInfo extends OFDElement {
      * @return this
      */
     public CT_DocInfo setKeywords(Keywords keywords) {
-        this.add(keywords);
+        this.set(keywords);
         return this;
     }
 
@@ -348,7 +348,7 @@ public class CT_DocInfo extends OFDElement {
      * @return this
      */
     public CT_DocInfo setCustomDatas(CustomDatas customDatas) {
-        this.add(customDatas);
+        this.set(customDatas);
         return this;
     }
 

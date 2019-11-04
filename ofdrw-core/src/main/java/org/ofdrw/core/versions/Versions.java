@@ -27,7 +27,7 @@ public class Versions extends OFDElement {
 
     public Versions(Version version) {
         this();
-        this.add(version);
+        this.addVersion(version);
     }
 
     /**

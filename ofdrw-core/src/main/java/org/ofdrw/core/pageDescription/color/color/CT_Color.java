@@ -252,6 +252,7 @@ public class CT_Color extends OFDElement {
         if (color == null) {
             return this;
         }
+        this.removeOFDElemByNames("Pattern", "AxialShd", "RadialShd", "GouraudShd", "LaGouraudShd");
         this.add(color);
         return this;
     }

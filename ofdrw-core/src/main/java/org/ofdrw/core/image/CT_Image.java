@@ -122,7 +122,7 @@ public class CT_Image extends CT_GraphicUnit<CT_Image> {
         if (border == null) {
             return this;
         }
-        this.add(border);
+        this.set(border);
         return this;
     }
 

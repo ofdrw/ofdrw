@@ -38,7 +38,7 @@ public class Document extends OFDElement {
      * @return this
      */
     public Document setCommonData(CT_CommonData commonData) {
-        this.add(commonData);
+        this.set(commonData);
         return this;
     }
 
@@ -65,7 +65,7 @@ public class Document extends OFDElement {
      * @return this
      */
     public Document setPages(Pages pages) {
-        this.add(pages);
+        this.set(pages);
         return this;
     }
 
@@ -90,7 +90,7 @@ public class Document extends OFDElement {
      * @return this
      */
     public Document setOutlines(Outlines outlines) {
-        this.add(outlines);
+        this.set(outlines);
         return this;
     }
 
@@ -113,7 +113,7 @@ public class Document extends OFDElement {
      * @return this
      */
     public Document setPermissions(CT_Permission permission) {
-        this.add(permission);
+        this.set(permission);
         return this;
     }
 
@@ -138,7 +138,7 @@ public class Document extends OFDElement {
      * @return this
      */
     public Document setActions(Actions actions) {
-        this.add(actions);
+        this.set(actions);
         return this;
     }
 
@@ -163,7 +163,7 @@ public class Document extends OFDElement {
      * @return this
      */
     public Document setVPreferences(CT_VPreferences vPreferences) {
-        this.add(vPreferences);
+        this.set(vPreferences);
         return this;
     }
 
@@ -189,7 +189,7 @@ public class Document extends OFDElement {
      * @return this
      */
     public Document setBookmarks(Bookmarks bookmarks) {
-        this.add(bookmarks);
+        this.set(bookmarks);
         return this;
     }
 

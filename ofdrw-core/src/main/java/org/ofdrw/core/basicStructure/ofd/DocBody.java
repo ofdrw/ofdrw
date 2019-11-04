@@ -33,7 +33,7 @@ public class DocBody extends OFDElement {
      * @return this
      */
     public DocBody setDocInfo(CT_DocInfo CTDocInfo) {
-        this.add(CTDocInfo);
+        this.set(CTDocInfo);
         return this;
     }
 
@@ -56,7 +56,7 @@ public class DocBody extends OFDElement {
      * @return this
      */
     public DocBody setDocRoot(ST_Loc docRoot) {
-        this.add(docRoot.getElement(DOC_ROOT));
+        this.set(docRoot.getElement(DOC_ROOT));
         return this;
     }
 
@@ -82,7 +82,7 @@ public class DocBody extends OFDElement {
      * @return this
      */
     public DocBody setVersions(Versions versions) {
-        this.add(versions);
+        this.set(versions);
         return this;
     }
 

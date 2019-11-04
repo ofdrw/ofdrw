@@ -129,6 +129,28 @@ public abstract class OFDElement extends DefaultElementProxy {
         return this.elements(new QName(name, Const.OFD_NAMESPACE));
     }
 
+    /**
+     * 设置元素
+     * <p>
+     * 如果同类型元素已经存在，那么删除原有元素
+     *
+     * @param element 需要设置的元素
+     * @return this
+     */
+    public OFDElement set(Element element) {
+        if (element == null) {
+            return this;
+        }
+        // 删除原有内容
+        List<Element> old = this.elements(element.getQName());
+        if (old != null && !old.isEmpty()) {
+            for (Element toBeReplace : old) {
+                this.remove(toBeReplace);
+            }
+        }
+        this.add(element);
+        return this;
+    }
 
     /**
      * 根据 OFD元素的名称删除节点内所有匹配的OFD元素
