@@ -1,4 +1,4 @@
-package org.ofdrw.core.pageDescription.color.color.axialShd;
+package org.ofdrw.core.pageDescription.color.color;
 
 /**
  * 轴线延长线方向是否继续绘制

@@ -1,8 +1,7 @@
-package org.ofdrw.core.pageDescription.color.color.axialShd;
+package org.ofdrw.core.pageDescription.color.color;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
-import org.ofdrw.core.pageDescription.color.color.CT_Color;
 
 /**
  * 颜色段

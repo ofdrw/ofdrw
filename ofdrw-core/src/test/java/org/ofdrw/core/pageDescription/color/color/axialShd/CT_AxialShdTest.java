@@ -5,8 +5,8 @@ import org.ofdrw.TestTool;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.ofdrw.core.pageDescription.color.color.MapType;
+import org.ofdrw.core.pageDescription.color.color.Segment;
 
 public class CT_AxialShdTest {
     public static CT_AxialShd axialShdCase() {

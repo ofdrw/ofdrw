@@ -1,4 +1,4 @@
-package org.ofdrw.core.pageDescription.color.color.axialShd;
+package org.ofdrw.core.pageDescription.color.color;
 
 /**
  * 渐变绘制的方式
