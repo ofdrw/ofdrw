@@ -4,10 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
 import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.pageDescription.color.color.CT_RadialShd;
 import org.ofdrw.core.pageDescription.color.color.Extend;
 import org.ofdrw.core.pageDescription.color.color.Segment;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class CT_RadialShdTest {
 

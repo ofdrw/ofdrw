@@ -1,6 +1,8 @@
 package org.ofdrw.core.text.text;
 
 import org.dom4j.Element;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
@@ -47,6 +49,18 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
         CT_Text res = new CT_Text("TextObject");
         res.setObjID(id);
         return res;
+    }
+
+    /**
+     * 构造文字对象
+     *
+     * @param id 对象ID
+     * @return 对象
+     */
+    public TextObject toObj(ST_ID id) {
+        this.setName("TextObject");
+        this.setObjID(id);
+        return new TextObject(this);
     }
 
     /**

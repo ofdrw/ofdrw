@@ -1,6 +1,7 @@
 package org.ofdrw.core.pageDescription.color.pattern;
 
 import org.dom4j.Element;
+import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicType.ST_RefID;
 
@@ -17,7 +18,6 @@ import org.ofdrw.core.basicType.ST_RefID;
  * @since 2019-10-12 09:07:00
  */
 public class CellContent extends CT_PageBlock {
-    // TODO 2019-10-12 21:36:51 case test
 
     public CellContent(Element proxy) {
         super(proxy);
@@ -40,6 +40,21 @@ public class CellContent extends CT_PageBlock {
             return this;
         }
         this.addAttribute("Thumbnail", thumbnail.toString());
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 增加 页块
+     * <p>
+     * 一个页块中可以嵌套其他页块，可含有0到多个页块
+     *
+     * @param pageBlock 页块实例
+     * @return this
+     */
+    @Override
+    public CellContent addPageBlock(PageBlockType pageBlock) {
+        this.add(pageBlock);
         return this;
     }
 

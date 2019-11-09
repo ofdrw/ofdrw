@@ -1,13 +1,9 @@
-package org.ofdrw.core.pageDescription.color.color.radialShd;
+package org.ofdrw.core.pageDescription.color.color;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_Pos;
-import org.ofdrw.core.pageDescription.color.color.ColorClusterType;
-import org.ofdrw.core.pageDescription.color.color.Extend;
-import org.ofdrw.core.pageDescription.color.color.MapType;
-import org.ofdrw.core.pageDescription.color.color.Segment;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,6 +1,8 @@
 package org.ofdrw.core.image;
 
 import org.dom4j.Element;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
+import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 
@@ -19,6 +21,10 @@ public class CT_Image extends CT_GraphicUnit<CT_Image> {
 
     public CT_Image() {
         super("Image");
+    }
+
+    protected CT_Image(String name) {
+        super(name);
     }
 
     /**
@@ -124,6 +130,18 @@ public class CT_Image extends CT_GraphicUnit<CT_Image> {
         }
         this.set(border);
         return this;
+    }
+
+    /**
+     * 构造图片对象
+     *
+     * @param id 对象ID
+     * @return 对象
+     */
+    public ImageObject toObj(ST_ID id) {
+        this.setName("ImageObject");
+        this.setObjID(id);
+        return new ImageObject(this);
     }
 
     /**

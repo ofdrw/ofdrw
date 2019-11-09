@@ -1,6 +1,8 @@
 package org.ofdrw.core.compositeObj;
 
 import org.dom4j.Element;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.CompositeObject;
+import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 
@@ -34,9 +36,21 @@ public class CT_Composite extends CT_GraphicUnit<CT_Composite> {
     }
 
     /**
+     * 构造复合对象
+     *
+     * @param id 对象ID
+     * @return 对象
+     */
+    public CompositeObject toObj(ST_ID id) {
+        this.setName("CompositeObject");
+        this.setObjID(id);
+        return new CompositeObject(this);
+    }
+
+    /**
      * 【必选 属性】
      * 设置 引用资源文件中定义的矢量图像的标识
-     *
+     * <p>
      * 复合对象引用的资源时 Res 中的矢量图像（CompositeGraphUnit）
      * ，其类型为 CT_VectorG，其结构如 72 所示
      *
@@ -54,8 +68,8 @@ public class CT_Composite extends CT_GraphicUnit<CT_Composite> {
     /**
      * 【必选 属性】
      * 获取 引用资源文件中定义的矢量图像的标识
-     *
-     *
+     * <p>
+     * <p>
      * 复合对象引用的资源时 Res 中的矢量图像（CompositeGraphUnit）
      * ，其类型为 CT_VectorG，其结构如 72 所示
      *

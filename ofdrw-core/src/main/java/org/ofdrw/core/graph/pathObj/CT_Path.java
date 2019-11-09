@@ -1,6 +1,8 @@
 package org.ofdrw.core.graph.pathObj;
 
 import org.dom4j.Element;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
+import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.clips.ClipAble;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
@@ -27,6 +29,18 @@ public class CT_Path extends CT_GraphicUnit<CT_Path> implements ClipAble {
 
     protected CT_Path(String name) {
         super(name);
+    }
+
+    /**
+     * 构造路径对象
+     *
+     * @param id 对象ID
+     * @return 对象
+     */
+    public PathObject toObj(ST_ID id) {
+        this.setName("PathObject");
+        this.setObjID(id);
+        return new PathObject(this);
     }
 
     /**

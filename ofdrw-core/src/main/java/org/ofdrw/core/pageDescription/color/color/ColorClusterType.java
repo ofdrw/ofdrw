@@ -1,7 +1,7 @@
 package org.ofdrw.core.pageDescription.color.color;
 
 import org.dom4j.Element;
-import org.ofdrw.core.pageDescription.color.color.axialShd.CT_AxialShd;
+import org.ofdrw.core.pageDescription.color.pattern.CT_Pattern;
 
 
 /**
@@ -29,19 +29,19 @@ public interface ColorClusterType extends Element {
         ColorClusterType res = null;
         switch (qName) {
             case "ofd:Pattern":
-                // TODO 2019-10-11 21:40:30 Pattern
+                res = new CT_Pattern(element);
                 break;
             case "ofd:AxialShd":
                 res = new CT_AxialShd(element);
                 break;
             case "ofd:RadialShd":
-                // TODO 2019-10-11 21:40:57 RadialShd
+                res = new CT_RadialShd(element);
                 break;
             case "ofd:GouraudShd":
-                // TODO 2019-10-11 21:41:11 GouraudShd
+                res = new CT_GouraudShd(element);
                 break;
             case "ofd:LaGouraudShd":
-                // TODO 2019-10-11 21:41:22 LaGouraudShd
+                res = new CT_LaGouraudShd(element);
                 break;
             default:
                 throw new IllegalArgumentException("未知的元素类型不是 颜色子类：" + qName);
