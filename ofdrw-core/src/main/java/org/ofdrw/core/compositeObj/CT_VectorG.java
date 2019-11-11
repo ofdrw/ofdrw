@@ -2,20 +2,23 @@ package org.ofdrw.core.compositeObj;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicType.ST_RefID;
+
+import java.util.List;
 
 /**
  * 矢量图像
  * <p>
  * 复合对象引用的资源时 Res 中的矢量图像（CompositeGraphUnit）
+ * <p>
+ * 13 图 72 表 50
  *
  * @author 权观宇
  * @since 2019-10-27 04:56:42
  */
 public class CT_VectorG extends OFDElement {
-
-    // TODO 2019-10-27 17:44:41 CT_PageBlock 测试
 
     public CT_VectorG(Element proxy) {
         super(proxy);
@@ -157,14 +160,29 @@ public class CT_VectorG extends OFDElement {
      * @param content 内容的矢量描述
      * @return this
      */
-    public CT_VectorG setContent(CT_PageBlock content) {
+    public CT_VectorG setContent(Content content) {
         if (content == null) {
             throw new IllegalArgumentException("内容的矢量描述（Content）不能为空");
         }
-        if (!(content instanceof Content)) {
-            this.setOFDName("Content");
+        this.set(content);
+        return this;
+    }
+
+    /**
+     * 【必选】
+     * 增加 内容的矢量描述
+     *
+     * @param blockType 内容的矢量描述
+     * @return this
+     */
+    public CT_VectorG addContent(PageBlockType blockType) {
+        if (blockType == null) {
+            return this;
         }
-        this.add(content);
+        Element e = this.getOFDElement("Content");
+        Content content = (e == null) ? new Content() : new Content(e);
+        content.addPageBlock(blockType);
+        this.set(content);
         return this;
     }
 
@@ -174,8 +192,12 @@ public class CT_VectorG extends OFDElement {
      *
      * @return 内容的矢量描述
      */
-    public Content getContent() {
+    public List<PageBlockType> getContent() {
         Element e = this.getOFDElement("Content");
-        return e == null ? null : new Content(e);
+        if (e == null) {
+            throw new IllegalArgumentException("没有找到Content元素");
+        }
+        Content content = new Content(e);
+        return content.getPageBlocks();
     }
 }

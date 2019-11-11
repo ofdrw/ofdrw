@@ -5,6 +5,9 @@ import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_RefID;
+import org.ofdrw.core.graph.pathObj.FillColor;
+import org.ofdrw.core.graph.pathObj.StrokeColor;
+import org.ofdrw.core.pageDescription.color.color.CT_Color;
 
 /**
  * 绘制参数
@@ -290,5 +293,73 @@ public class CT_DrawParam extends OFDElement {
         return Double.parseDouble(str);
     }
 
-    // TODO 2019-10-11 19:58:41 CT_Color
+
+    /**
+     * 【可选】
+     * 设置 填充颜色
+     * <p>
+     * 用以填充路径形成的区域以及文字轮廓内的区域，
+     * 默认值为透明色。关于颜色的描述见 8.3
+     *
+     * @param fillColor 填充颜色
+     * @return this
+     */
+    public CT_DrawParam setFillColor(CT_Color fillColor) {
+        if (fillColor == null) {
+            this.removeOFDElemByNames("FillColor");
+            return this;
+        }
+        fillColor.setName("FillColor");
+        this.set(fillColor);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 获取 填充颜色
+     * <p>
+     * 用以填充路径形成的区域以及文字轮廓内的区域，
+     * 默认值为透明色。关于颜色的描述见 8.3
+     *
+     * @return 填充颜色
+     */
+    public FillColor getFillColor() {
+        Element e = this.getOFDElement("FillColor");
+        return e == null ? null : new FillColor(e);
+    }
+
+
+    /**
+     * 【可选】
+     * 设置 勾边颜色
+     * <p>
+     * 用以填充路径形成的区域以及文字轮廓内的区域，
+     * 默认值为黑色。关于颜色的描述见 8.3
+     *
+     * @param strokeColor 勾边颜色
+     * @return this
+     */
+    public CT_DrawParam setStrokeColor(CT_Color strokeColor) {
+        if (strokeColor == null) {
+            this.removeOFDElemByNames("StrokeColor");
+            return this;
+        }
+        strokeColor.setName("StrokeColor");
+        this.set(strokeColor);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 获取 勾边颜色
+     * <p>
+     * 用以填充路径形成的区域以及文字轮廓内的区域，
+     * 默认值为黑色。关于颜色的描述见 8.3
+     *
+     * @return 勾边颜色
+     */
+    public CT_Color getStrokeColor() {
+        Element e = this.getOFDElement("StrokeColor");
+        return e == null ? null : new StrokeColor(e);
+    }
 }

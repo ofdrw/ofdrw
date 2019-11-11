@@ -18,8 +18,6 @@ import org.ofdrw.core.pageDescription.color.color.ColorClusterType;
  */
 public class CT_Pattern extends OFDElement implements ColorClusterType {
 
-    // TODO 2019-10-12 21:20:35 test case
-
     public CT_Pattern(Element proxy) {
         super(proxy);
     }

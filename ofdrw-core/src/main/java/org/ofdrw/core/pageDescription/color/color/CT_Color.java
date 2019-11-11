@@ -28,8 +28,6 @@ import java.util.List;
  */
 public class CT_Color extends OFDElement {
 
-    // TODO 2019-10-11 21:58:07 CT_Color ColorClusterType
-
     public CT_Color(Element proxy) {
         super(proxy);
     }
