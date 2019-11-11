@@ -188,16 +188,15 @@ public class CT_VectorG extends OFDElement {
 
     /**
      * 【必选】
-     * 设置 内容的矢量描述
+     * 获取 内容的矢量描述
      *
      * @return 内容的矢量描述
      */
-    public List<PageBlockType> getContent() {
+    public Content getContent() {
         Element e = this.getOFDElement("Content");
         if (e == null) {
             throw new IllegalArgumentException("没有找到Content元素");
         }
-        Content content = new Content(e);
-        return content.getPageBlocks();
+        return new Content(e);
     }
 }
