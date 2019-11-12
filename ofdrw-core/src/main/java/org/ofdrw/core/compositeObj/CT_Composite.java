@@ -21,8 +21,6 @@ import org.ofdrw.core.pageDescription.CT_GraphicUnit;
  */
 public class CT_Composite extends CT_GraphicUnit<CT_Composite> {
 
-    // TODO 2019-10-27 16:19:22 CompositeGraphUnit test case
-
     public CT_Composite(Element proxy) {
         super(proxy);
     }
