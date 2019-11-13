@@ -4,10 +4,12 @@ import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_Array;
+import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.graph.pathObj.FillColor;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 
 /**
  * 绘制参数
@@ -44,6 +46,16 @@ public class CT_DrawParam extends OFDElement {
     public CT_DrawParam(String name) {
         super("DrawParam");
     }
+
+    public ST_ID getID(){
+        return this.getObjID();
+    }
+
+    public CT_DrawParam setID(ST_ID id) {
+        this.setObjID(id);
+        return this;
+    }
+
 
     /**
      * 【可选 属性】
@@ -309,7 +321,7 @@ public class CT_DrawParam extends OFDElement {
             this.removeOFDElemByNames("FillColor");
             return this;
         }
-        fillColor.setName("FillColor");
+        fillColor.setOFDName("FillColor");
         this.set(fillColor);
         return this;
     }
@@ -344,7 +356,7 @@ public class CT_DrawParam extends OFDElement {
             this.removeOFDElemByNames("StrokeColor");
             return this;
         }
-        strokeColor.setName("StrokeColor");
+        strokeColor.setOFDName("StrokeColor");
         this.set(strokeColor);
         return this;
     }

@@ -40,7 +40,7 @@ public class CT_Composite extends CT_GraphicUnit<CT_Composite> {
      * @return 对象
      */
     public CompositeObject toObj(ST_ID id) {
-        this.setName("CompositeObject");
+        this.setOFDName("CompositeObject");
         this.setObjID(id);
         return new CompositeObject(this);
     }

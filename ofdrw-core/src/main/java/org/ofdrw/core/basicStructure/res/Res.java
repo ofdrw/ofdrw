@@ -22,8 +22,6 @@ import java.util.List;
  */
 public class Res extends OFDElement {
 
-    // TODO 2019-10-11 18:16:06 test case
-
     public Res(Element proxy) {
         super(proxy);
     }

@@ -139,7 +139,7 @@ public class CT_Image extends CT_GraphicUnit<CT_Image> {
      * @return 对象
      */
     public ImageObject toObj(ST_ID id) {
-        this.setName("ImageObject");
+        this.setOFDName("ImageObject");
         this.setObjID(id);
         return new ImageObject(this);
     }

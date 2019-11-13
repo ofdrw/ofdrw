@@ -1,6 +1,8 @@
 package org.ofdrw.core.pageDescription.color.color;
 
 import org.dom4j.Element;
+import org.dom4j.QName;
+import org.ofdrw.core.Const;
 import org.ofdrw.core.OFDElement;
 
 import java.util.ArrayList;
@@ -117,7 +119,7 @@ public class CT_GouraudShd extends OFDElement implements ColorClusterType {
             this.removeAttr("BackColor");
             return this;
         }
-        backColor.setName("BackColor");
+        backColor.setOFDName("BackColor");
         this.set(backColor);
         return this;
     }
@@ -133,7 +135,7 @@ public class CT_GouraudShd extends OFDElement implements ColorClusterType {
     public CT_Color getBackColor() {
         Element e = this.getOFDElement("BackColor");
         if (e != null) {
-            e.setName("Color");
+            e.setQName(new QName("Color", Const.OFD_NAMESPACE));
         }
         return e == null ? null : new CT_Color(e);
     }

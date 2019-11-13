@@ -58,7 +58,7 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
      * @return 对象
      */
     public TextObject toObj(ST_ID id) {
-        this.setName("TextObject");
+        this.setOFDName("TextObject");
         this.setObjID(id);
         return new TextObject(this);
     }

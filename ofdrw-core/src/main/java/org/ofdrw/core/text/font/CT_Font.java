@@ -2,6 +2,7 @@ package org.ofdrw.core.text.font;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 
 /**
@@ -28,6 +29,16 @@ public class CT_Font extends OFDElement {
         this();
         this.setFontName(fontName);
     }
+
+    public ST_ID getID(){
+        return this.getObjID();
+    }
+
+    public CT_Font setID(ST_ID id) {
+        this.setObjID(id);
+        return this;
+    }
+
 
     /**
      * 【必选 属性】

@@ -4,6 +4,7 @@ import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
+import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_RefID;
 
 import java.util.List;
@@ -30,6 +31,15 @@ public class CT_VectorG extends OFDElement {
 
     protected CT_VectorG(String name) {
         super(name);
+    }
+
+    public ST_ID getID() {
+        return this.getObjID();
+    }
+
+    public CT_VectorG setID(ST_ID id) {
+        this.setObjID(id);
+        return this;
     }
 
     /**

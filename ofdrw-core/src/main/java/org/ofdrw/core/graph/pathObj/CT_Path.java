@@ -38,7 +38,7 @@ public class CT_Path extends CT_GraphicUnit<CT_Path> implements ClipAble {
      * @return 对象
      */
     public PathObject toObj(ST_ID id) {
-        this.setName("PathObject");
+        this.setOFDName("PathObject");
         this.setObjID(id);
         return new PathObject(this);
     }

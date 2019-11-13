@@ -1,6 +1,7 @@
 package org.ofdrw.core.basicStructure.res;
 
 import org.dom4j.Element;
+import org.ofdrw.core.basicStructure.res.resources.*;
 
 /**
  * 资源文件抽象类型
@@ -11,7 +12,6 @@ import org.dom4j.Element;
  * @since 2019-10-11 06:07:07
  */
 public interface OFDResource extends Element {
-
 
     /**
      * 解析元素并获取对应资源类型子类实例
@@ -25,19 +25,19 @@ public interface OFDResource extends Element {
         OFDResource res = null;
         switch (qName) {
             case "ofd:ColorSpaces":
-                // TODO 2019-10-11 18:10:13 ColorSpaces
+                res = new ColorSpaces(element);
                 break;
             case "ofd:DrawParams":
-                // TODO 2019-10-11 18:10:25 DrawParams
+                res = new DrawParams(element);
                 break;
             case "ofd:Fonts":
-                // TODO 2019-10-11 18:10:36 Fonts
+                res = new Fonts(element);
                 break;
             case "ofd:MultiMedias":
-                // TODO 2019-10-11 18:10:55 MultiMedias
+                res = new MultiMedias(element);
                 break;
             case "ofd:CompositeGraphicUnits":
-                // TODO 2019-10-11 18:11:52 CompositeGraphicUnit
+                res = new CompositeGraphicUnits(element);
                 break;
             default:
                 throw new IllegalArgumentException("不是 Res的子类，未知元素类型：" + qName);
