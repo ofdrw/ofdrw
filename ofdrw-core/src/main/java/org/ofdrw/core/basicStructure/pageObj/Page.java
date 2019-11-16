@@ -24,8 +24,6 @@ import java.util.List;
  */
 public class Page extends OFDElement {
 
-    // TODO 2019-10-11 17:53:53 test case
-
     public Page(Element proxy) {
         super(proxy);
     }

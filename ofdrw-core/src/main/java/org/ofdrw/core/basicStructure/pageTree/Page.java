@@ -8,7 +8,8 @@ import org.ofdrw.core.basicType.ST_Loc;
 /**
  * 页节点
  * <p>
- * 表 11 页树属性
+ * 7.6 页树 表 11 页树属性
+ *
  *
  * @author 权观宇
  * @since 2019-10-05 10:49:09
