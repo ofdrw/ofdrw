@@ -7,6 +7,7 @@ import org.ofdrw.core.basicType.ST_Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 调色板
@@ -80,12 +81,7 @@ public class Palette extends OFDElement {
      * @return 调色板中的预定义颜色列表
      */
     public List<CV> getCVs() {
-        List<Element> elements = this.getOFDElements("CV");
-        if(elements == null || elements.size() == 0){
-            return Collections.emptyList();
-        }
-        List<CV> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new CV(item)));
-        return res;
+        return this.getOFDElements("CV",CV::new);
     }
+
 }

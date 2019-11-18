@@ -57,12 +57,6 @@ public class CompositeGraphicUnits extends OFDElement implements OFDResource {
      * @return 矢量图像资源描述
      */
     public List<CT_VectorG> getCompositeGraphicUnits() {
-        List<Element> elements = this.getOFDElements("CompositeGraphicUnit");
-        if (elements == null || elements.size() == 0) {
-            return Collections.emptyList();
-        }
-        List<CT_VectorG> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new CT_VectorG(item)));
-        return res;
+        return this.getOFDElements("CompositeGraphicUnit",CT_VectorG::new);
     }
 }

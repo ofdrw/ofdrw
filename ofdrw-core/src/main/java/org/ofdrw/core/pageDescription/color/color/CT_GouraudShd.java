@@ -95,13 +95,7 @@ public class CT_GouraudShd extends OFDElement implements ColorClusterType {
      * @return 渐变控制点列表
      */
     public List<Point> getPoints() {
-        List<Element> elements = this.getOFDElements("Point");
-        if (elements == null || elements.size() == 0) {
-            return Collections.emptyList();
-        }
-        List<Point> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new Point(item)));
-        return res;
+       return this.getOFDElements("Point",Point::new);
     }
 
 

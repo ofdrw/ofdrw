@@ -7,6 +7,7 @@ import org.ofdrw.core.OFDElement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 大纲节点
@@ -166,12 +167,6 @@ public class CT_OutlineElem extends OFDElement {
      * @return 该大纲下所有子节点
      */
     public List<CT_OutlineElem> getOutlineElems() {
-        List<Element> elements = this.getOFDElements("OutlineElem");
-        if(elements == null || elements.size() == 0){
-            return Collections.emptyList();
-        }
-        List<CT_OutlineElem> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new CT_OutlineElem(item)));
-        return res;
+        return this.getOFDElements("OutlineElem",CT_OutlineElem::new);
     }
 }

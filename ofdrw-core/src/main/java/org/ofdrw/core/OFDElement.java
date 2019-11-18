@@ -3,11 +3,15 @@ package org.ofdrw.core;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.dom4j.QName;
+import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicType.ST_ID;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 /**
@@ -21,7 +25,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2019-09-28 12:05:55
  */
-public abstract class OFDElement extends DefaultElementProxy {
+public class OFDElement extends DefaultElementProxy {
 
     public OFDElement(Element proxy) {
         super(proxy);
@@ -37,9 +41,17 @@ public abstract class OFDElement extends DefaultElementProxy {
 //        }
     }
 
-    public OFDElement(String name) {
+    protected OFDElement(String name) {
         // 设置 xmlns:ofd=http://www.ofdspec.org/2016 , 并增加 ofd
         super(name, Const.OFD_NAMESPACE);
+    }
+
+    /**
+     * @param name 元素名称
+     * @return 获取OFD类型元素实例
+     */
+    public static OFDElement getInstance(String name) {
+        return new OFDElement(name);
     }
 
     /**
@@ -90,8 +102,25 @@ public abstract class OFDElement extends DefaultElementProxy {
      * @param name OFD元素名称
      * @return OFD元素或null
      */
-    public Element getOFDElement(String name) {
-        return this.element(new QName(name, Const.OFD_NAMESPACE));
+    public OFDElement getOFDElement(String name) {
+        Element e = this.element(new QName(name, Const.OFD_NAMESPACE));
+        return e == null ? null : new OFDElement(e);
+    }
+
+    /**
+     * 代理对象创建
+     *
+     * @param name   元素名称
+     * @param mapper 代理对象构造器
+     * @param <R>    元素类型
+     * @return 代理对象
+     */
+    public <R extends OFDElement> R getOFDElement(String name, Function<? super Element, ? extends R> mapper) {
+        OFDElement e = this.getOFDElement(name);
+        if (e == null) {
+            return null;
+        }
+        return mapper.apply(e);
     }
 
     /**
@@ -101,7 +130,7 @@ public abstract class OFDElement extends DefaultElementProxy {
      * @return true 删除成功；false 删除失败，可能是由于属性不存在
      */
     public boolean removeAttr(String name) {
-        Attribute a = this.attribute("X");
+        Attribute a = this.attribute(name);
         if (a != null) {
             return this.remove(a);
         }
@@ -125,8 +154,14 @@ public abstract class OFDElement extends DefaultElementProxy {
      * @param name OFD元素名称
      * @return 指定名称OFD元素集合
      */
-    public List<Element> getOFDElements(String name) {
-        return this.elements(new QName(name, Const.OFD_NAMESPACE));
+    public <R> List<R> getOFDElements(String name, Function<? super Element, ? extends R> mapper) {
+        List<Element> elements = this.elements(new QName(name, Const.OFD_NAMESPACE));
+        if (elements == null || elements.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return elements.stream()
+                .map(mapper)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -169,7 +204,7 @@ public abstract class OFDElement extends DefaultElementProxy {
                 continue;
             }
             // 根据名字获取指定类型的元素
-            for (Element toBeDelete : this.getOFDElements(name)) {
+            for (Element toBeDelete : this.getOFDElements(name, OFDElement::new)) {
                 if (toBeDelete == null) {
                     continue;
                 }

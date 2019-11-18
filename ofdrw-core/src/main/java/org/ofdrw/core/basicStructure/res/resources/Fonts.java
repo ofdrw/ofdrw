@@ -37,7 +37,7 @@ public class Fonts extends OFDElement implements OFDResource {
      * @return this
      */
     public Fonts addFont(CT_Font font) {
-        if(font == null){
+        if (font == null) {
             return this;
         }
         if (font.getID() == null) {
@@ -56,12 +56,6 @@ public class Fonts extends OFDElement implements OFDResource {
      * @return 字形描述
      */
     public List<CT_Font> getFonts() {
-        List<Element> elements = this.getOFDElements("Font");
-        if(elements == null || elements.size() == 0){
-            return Collections.emptyList();
-        }
-        List<CT_Font> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new CT_Font(item)));
-        return res;
+        return this.getOFDElements("Font", CT_Font::new);
     }
 }

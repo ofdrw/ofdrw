@@ -53,12 +53,6 @@ public class DrawParams extends OFDElement implements OFDResource {
      * @return 绘制参数描述
      */
     public List<CT_DrawParam> getDrawParams() {
-        List<Element> elements = this.getOFDElements("DrawParam");
-        if (elements == null || elements.size() == 0) {
-            return Collections.emptyList();
-        }
-        List<CT_DrawParam> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new CT_DrawParam(item)));
-        return res;
+        return this.getOFDElements("DrawParam", CT_DrawParam::new);
     }
 }

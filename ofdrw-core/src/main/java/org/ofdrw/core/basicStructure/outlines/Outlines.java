@@ -5,6 +5,7 @@ import org.ofdrw.core.OFDElement;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * 大纲按照树形结构进行组织
@@ -42,13 +43,7 @@ public class Outlines extends OFDElement implements Iterable<CT_OutlineElem> {
      * @return 大纲节点
      */
     public List<CT_OutlineElem> getOutlineElems() {
-        List<Element> elements = this.getOFDElements("OutlineElem");
-        if(elements == null || elements.size() == 0){
-            return Collections.emptyList();
-        }
-        List<CT_OutlineElem> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new CT_OutlineElem(item)));
-        return res;
+        return this.getOFDElements("OutlineElem",CT_OutlineElem::new);
     }
 
     @Override
@@ -63,6 +58,7 @@ public class Outlines extends OFDElement implements Iterable<CT_OutlineElem> {
 
     /**
      * 未实现 不可使用
+     *
      * @return null
      */
     @Deprecated

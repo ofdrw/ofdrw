@@ -53,12 +53,6 @@ public class ColorSpaces extends OFDElement implements OFDResource {
      * @return 颜色空间描述列表
      */
     public List<CT_ColorSpace> getColorSpaces() {
-        List<Element> elements = this.getOFDElements("ColorSpace");
-        if (elements == null || elements.size() == 0) {
-            return Collections.emptyList();
-        }
-        List<CT_ColorSpace> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new CT_ColorSpace(item)));
-        return res;
+        return this.getOFDElements("ColorSpace", CT_ColorSpace::new);
     }
 }

@@ -123,13 +123,7 @@ public class Page extends OFDElement {
      * @return 页资源路径列表
      */
     public List<ST_Loc> getPageResList() {
-        List<Element> elements = this.getOFDElements("PageRes");
-        if(elements == null || elements.size() == 0){
-            return Collections.emptyList();
-        }
-        List<ST_Loc> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new ST_Loc(item.getText())));
-        return res;
+        return this.getOFDElements("PageRes", e -> new ST_Loc(e.getText()));
     }
 
 

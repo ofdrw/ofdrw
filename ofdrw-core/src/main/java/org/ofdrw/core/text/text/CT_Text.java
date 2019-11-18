@@ -443,13 +443,7 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
      * @return 字符编码到字符索引之间的变换关系序列
      */
     public List<CT_CGTransfrom> getCGTransforms() {
-        List<Element> elements = this.getOFDElements("CGTransform");
-        if(elements == null || elements.size() == 0){
-            return Collections.emptyList();
-        }
-        List<CT_CGTransfrom> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new CT_CGTransfrom(item)));
-        return res;
+        return this.getOFDElements("CGTransform",CT_CGTransfrom::new);
     }
 
     /**
@@ -484,13 +478,7 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
      * @return 文字内容序列
      */
     public List<TextCode> getTextCodes() {
-        List<Element> elements = this.getOFDElements("TextCode");
-        if(elements == null || elements.size() == 0){
-            return Collections.emptyList();
-        }
-        List<TextCode> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new TextCode(item)));
-        return res;
+        return this.getOFDElements("TextCode",TextCode::new);
     }
 
 }

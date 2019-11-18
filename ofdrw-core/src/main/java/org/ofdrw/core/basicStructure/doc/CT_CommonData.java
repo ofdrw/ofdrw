@@ -9,6 +9,7 @@ import org.ofdrw.core.basicType.ST_RefID;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 文档公共数据结构
@@ -157,10 +158,7 @@ public class CT_CommonData extends OFDElement {
      * @return 模板页序列 (可能为空容器)
      */
     public List<CT_TemplatePage> getTemplatePages() {
-        List<Element> elementList = this.getOFDElements("TemplatePage");
-        ArrayList<CT_TemplatePage> res = new ArrayList<>(elementList.size());
-        elementList.forEach(item -> res.add(new CT_TemplatePage(item)));
-        return res;
+        return this.getOFDElements("TemplatePage",CT_TemplatePage::new);
     }
 
     /**

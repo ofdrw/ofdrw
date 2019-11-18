@@ -55,12 +55,6 @@ public class MultiMedias extends OFDElement implements OFDResource {
      * @return 多媒体资源描述
      */
     public List<CT_MultiMedia> getMultiMedias() {
-        List<Element> elements = this.getOFDElements("MultiMedia");
-        if (elements == null || elements.size() == 0) {
-            return Collections.emptyList();
-        }
-        List<CT_MultiMedia> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new CT_MultiMedia(item)));
-        return res;
+        return this.getOFDElements("MultiMedia", CT_MultiMedia::new);
     }
 }

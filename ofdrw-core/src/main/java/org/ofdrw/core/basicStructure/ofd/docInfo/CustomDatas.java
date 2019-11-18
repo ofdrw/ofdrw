@@ -54,13 +54,7 @@ public class CustomDatas extends OFDElement {
      * @return 自定义元数据集合
      */
     public List<CustomData> getCustomDatas() {
-        List<Element> elements = this.getOFDElements("CustomDatas");
-        if(elements == null || elements.size() == 0){
-            return Collections.emptyList();
-        }
-        List<CustomData> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new CustomData(item)));
-        return res;
+        return this.getOFDElements("CustomDatas", CustomData::new);
     }
 
     /**

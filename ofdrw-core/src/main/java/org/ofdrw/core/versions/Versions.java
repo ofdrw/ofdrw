@@ -49,13 +49,7 @@ public class Versions extends OFDElement {
      * @return 版本描述入口列表
      */
     public List<Version> getVersions() {
-        List<Element> elements = this.getOFDElements("Version");
-        if(elements == null || elements.size() == 0){
-            return Collections.emptyList();
-        }
-        List<Version> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new Version(item)));
-        return res;
+        return this.getOFDElements("Version", Version::new);
     }
 
     @Override

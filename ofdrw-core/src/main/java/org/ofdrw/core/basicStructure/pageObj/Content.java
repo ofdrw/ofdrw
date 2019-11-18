@@ -58,12 +58,6 @@ public class Content extends OFDElement {
      * @return 层节点
      */
     public List<CT_Layer> getLayers() {
-        List<Element> elements = this.getOFDElements("Layer");
-        if(elements == null || elements.size() == 0){
-            return Collections.emptyList();
-        }
-        List<CT_Layer> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new CT_Layer(item)));
-        return res;
+        return this.getOFDElements("Layer", CT_Layer::new);
     }
 }

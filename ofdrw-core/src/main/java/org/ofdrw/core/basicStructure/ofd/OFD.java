@@ -5,6 +5,7 @@ import org.ofdrw.core.OFDElement;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 主入口
@@ -102,7 +103,8 @@ public class OFD extends OFDElement {
      * @return 文件对象入口（如果有多个则获取第一个）
      */
     public DocBody getDocBody() {
-        return new DocBody(this.getOFDElements("DocBody").get(0));
+        OFDElement e = this.getOFDElement("DocBody");
+        return e == null ? null : new DocBody(e);
     }
 
 
@@ -112,10 +114,7 @@ public class OFD extends OFDElement {
      * @return 所有文档入口
      */
     public List<DocBody> getDocBodies() {
-        List<Element> src = this.getOFDElements("DocBody");
-        List<DocBody> res = new ArrayList<>(src.size());
-        src.forEach(item -> res.add(new DocBody(item)));
-        return res;
+        return this.getOFDElements("DocBody",DocBody::new);
     }
 
     @Override

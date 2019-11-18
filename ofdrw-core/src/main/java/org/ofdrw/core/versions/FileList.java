@@ -7,6 +7,7 @@ import org.ofdrw.core.basicType.ST_Loc;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 版本包含的文件列表
@@ -59,13 +60,7 @@ public class FileList extends OFDElement {
      * @return 文件列表文件描述列表
      */
     public List<File> getFiles() {
-        List<Element> elements = this.getOFDElements("File");
-        if (elements == null || elements.size() == 0) {
-            return Collections.emptyList();
-        }
-        List<File> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new File(item)));
-        return res;
+        return this.getOFDElements("File",File::new);
     }
 
 }

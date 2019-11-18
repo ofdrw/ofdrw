@@ -29,11 +29,17 @@ public class ST_Array extends STBase {
      * @return 单位CTM举证
      */
     public static ST_Array unitCTM() {
-        return new ST_Array(new String[]{
+        /*
+         * 1 0 0
+         * 0 1 0
+         * 0 0 1
+         */
+        return new ST_Array(
                 "1", "0", // 0
                 "0", "1", // 0
                 "0", "0"  // 1
-        });
+        );
+
     }
 
     /**

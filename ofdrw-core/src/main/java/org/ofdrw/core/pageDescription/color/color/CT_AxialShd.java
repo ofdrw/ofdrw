@@ -208,12 +208,6 @@ public class CT_AxialShd extends OFDElement implements ColorClusterType {
      * @return 段列表
      */
     public List<Segment> getSegments() {
-        List<Element> elements = this.getOFDElements("Segment");
-        if (elements == null || elements.size() == 0) {
-            return Collections.emptyList();
-        }
-        List<Segment> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new Segment(item)));
-        return res;
+        return this.getOFDElements("Segment", Segment::new);
     }
 }

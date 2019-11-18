@@ -5,6 +5,7 @@ import org.ofdrw.core.OFDElement;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 页树
@@ -42,16 +43,13 @@ public class Pages extends OFDElement {
     /**
      * 【必选】
      * 获取 叶节点序列
-     *
+     * <p>
      * 一个页树中可以包含一个或多个叶节点，页顺序是
      * 根据页树进行前序遍历时叶节点的顺序。
      *
      * @return 叶节点序列 （大于等于 1）
      */
-    public List<Page> getPages(){
-        List<Element> es = this.getOFDElements("Page");
-        List<Page> res = new ArrayList<>(es.size());
-        es.forEach(item -> res.add(new Page(item)));
-        return res;
+    public List<Page> getPages() {
+        return this.getOFDElements("Page",Page::new);
     }
 }

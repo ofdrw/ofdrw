@@ -58,12 +58,6 @@ public class CT_Clip extends OFDElement {
      * @return 裁剪区域
      */
     public List<Area> getAreas() {
-        List<Element> elements = this.getOFDElements("Area");
-        if(elements == null || elements.size() == 0){
-            return Collections.emptyList();
-        }
-        List<Area> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> res.add(new Area(item)));
-        return res;
+        return this.getOFDElements("Area", Area::new);
     }
 }
