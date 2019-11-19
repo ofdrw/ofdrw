@@ -21,14 +21,13 @@ import java.util.Map;
  * @since 2019-11-16 02:22:34
  */
 public class Annot extends OFDElement {
-    // TODO 2019-11-18 20:47:17 Test Case
 
     public Annot(Element proxy) {
         super(proxy);
     }
 
-    public Annot(String name) {
-        super(name);
+    public Annot() {
+        super("Annot");
     }
 
     /**
@@ -415,11 +414,10 @@ public class Annot extends OFDElement {
      * @param appearance 注释的静态显示效果
      * @return this
      */
-    public Annot setAppearance(CT_PageBlock appearance) {
+    public Annot setAppearance(Appearance appearance) {
         if (appearance == null) {
             throw new IllegalArgumentException("注释的静态显示效果（Appearance）为空");
         }
-        appearance.setOFDName("Appearance");
         this.set(appearance);
         return this;
     }
@@ -432,7 +430,7 @@ public class Annot extends OFDElement {
      *
      * @return  注释的静态显示效果
      */
-    public CT_PageBlock getAppearance() {
-        return this.getOFDElement("Appearance", CT_PageBlock::new);
+    public Appearance getAppearance() {
+        return this.getOFDElement("Appearance", Appearance::new);
     }
 }

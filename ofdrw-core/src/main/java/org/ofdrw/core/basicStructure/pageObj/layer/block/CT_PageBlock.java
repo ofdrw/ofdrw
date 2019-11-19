@@ -6,6 +6,7 @@ import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 页块结构
@@ -56,12 +57,9 @@ public class CT_PageBlock extends OFDElement implements PageBlockType {
      * @return 当前页块内的所有页块
      */
     public List<PageBlockType> getPageBlocks() {
-        List<Element> elements = this.elements();
-        List<PageBlockType> res = new ArrayList<>(elements.size());
-        elements.forEach(item -> {
-            res.add(PageBlockType.getInstance(item));
-        });
-        return res;
+        return this.elements().stream()
+                .map(PageBlockType::getInstance)
+                .collect(Collectors.toList());
     }
 
 

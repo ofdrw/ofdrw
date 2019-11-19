@@ -32,6 +32,9 @@ public class CT_Region extends OFDElement {
      * @return this
      */
     public CT_Region addArea(CT_Area area) {
+        if (area == null) {
+            return this;
+        }
         this.add(area);
         return this;
     }
@@ -43,9 +46,6 @@ public class CT_Region extends OFDElement {
      * @return 区域中所有分路径
      */
     public List<CT_Area> getAreas(){
-        List<Element> es = this.elements();
-        List<CT_Area> res = new ArrayList<>();
-        es.forEach(item -> res.add(new CT_Area(item)));
-        return res;
+        return this.getOFDElements("Area", CT_Area::new);
     }
 }
