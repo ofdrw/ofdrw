@@ -27,7 +27,7 @@ public class CustomTags extends OFDElement {
         super(proxy);
     }
 
-    protected CustomTags() {
+    public CustomTags() {
         super("CustomTags");
     }
 

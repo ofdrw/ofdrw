@@ -1,5 +1,8 @@
 package org.ofdrw.core.basicType;
 
+
+import org.dom4j.Element;
+
 /**
  * 包结构内文件的路径，“.”表示当前路径，“..”表示符路径
  * <p>
@@ -39,6 +42,18 @@ public class ST_Loc extends STBase {
             return null;
         }
         return new ST_Loc(loc.trim());
+    }
+
+    /**
+     * 从实例中获取 路径
+     * @param e 元素
+     * @return 路径对象
+     */
+    public static ST_Loc getInstance(Element e){
+        if (e == null) {
+            return null;
+        }
+        return getInstance(e.getTextTrim());
     }
 
     public String getLoc() {
