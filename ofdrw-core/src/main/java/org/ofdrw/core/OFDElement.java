@@ -70,12 +70,19 @@ public class OFDElement extends DefaultElementProxy {
      * 设置OFD参数
      * <p>
      * 如果参数已经存在则修改参数
+     * <p>
+     * 如果属性值value为null，表示删除该类元素
      *
      * @param name  元素名称
      * @param value 元素文本
      * @return this
      */
     public OFDElement setOFDEntity(String name, Serializable value) {
+        if (value == null) {
+            this.removeOFDElemByNames(name);
+            return this;
+        }
+
         Element e = this.getOFDElement(name);
         if (e == null) {
             return addOFDEntity(name, value);
