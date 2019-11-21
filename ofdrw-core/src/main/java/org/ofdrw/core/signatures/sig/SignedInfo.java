@@ -2,6 +2,11 @@ package org.ofdrw.core.signatures.sig;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.signatures.appearance.Seal;
+import org.ofdrw.core.signatures.appearance.StampAnnot;
+import org.ofdrw.core.signatures.range.References;
+
+import java.util.List;
 
 /**
  * 签名要保护的原文及本次签名相关的信息
@@ -100,7 +105,94 @@ public class SignedInfo extends OFDElement {
         return this.getOFDElementText("SignatureDateTime");
     }
 
-    // TODO 2019-11-20 19:49:31 References
-    // TODO 2019-11-20 19:49:42 StampAnnot
-    // TODO 2019-11-20 19:49:49 Seal
+
+    /**
+     * 【必选】
+     * 设置 包内文件计算所得的摘要记录列表
+     * <p>
+     * 一个受本次签名保护的包内文件对应一个 Reference节点
+     *
+     * @param references 包内文件计算所得的摘要记录列表
+     * @return this
+     */
+    public SignedInfo setReferences(References references) {
+        if (references == null) {
+            throw new IllegalArgumentException("包内文件计算所得的摘要记录列表（References）为空");
+        }
+        this.set(references);
+        return this;
+    }
+
+    /**
+     * 【必选】
+     * 设置 包内文件计算所得的摘要记录列表
+     * <p>
+     * 一个受本次签名保护的包内文件对应一个 Reference节点
+     *
+     * @return 包内文件计算所得的摘要记录列表
+     */
+    public References getReferences() {
+        Element e = this.getOFDElement("References");
+        if (e == null) {
+            throw new IllegalArgumentException("包内文件计算所得的摘要记录列表（References）为空");
+        }
+        return new References(e);
+    }
+
+    /**
+     * 【可选】
+     * 增加 本签名关联的外观（用OFD中的注解表示）
+     * <p>
+     * 该节点可出现多次
+     *
+     * @param stampAnnot 本签名关联的外观
+     * @return this
+     */
+    public SignedInfo addStampAnnot(StampAnnot stampAnnot) {
+        if (stampAnnot == null) {
+            return this;
+        }
+        this.add(stampAnnot);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 获取 本签名关联的外观（用OFD中的注解表示）序列
+     * <p>
+     * 该节点可出现多次
+     *
+     * @return 本签名关联的外观序列
+     */
+    public List<StampAnnot> getStampAnnots() {
+        return this.getOFDElements("StampAnnot", StampAnnot::new);
+    }
+
+
+    /**
+     * 【可选】
+     * 设置 电子印章信息
+     *
+     * @param seal 电子印章信息
+     * @return this
+     */
+    public SignedInfo setSeal(Seal seal) {
+        if (seal == null) {
+            this.removeOFDElemByNames("Seal");
+            return this;
+        }
+        this.set(seal);
+        return this;
+    }
+
+    /**
+     * 【可选】
+     * 设置 电子印章信息
+     *
+     * @return 电子印章信息
+     */
+    public Seal getSeal() {
+        Element e = this.getOFDElement("Seal");
+        return e == null ? null : new Seal(e);
+    }
 }

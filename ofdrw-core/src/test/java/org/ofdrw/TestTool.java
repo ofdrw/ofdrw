@@ -8,6 +8,7 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -21,8 +22,9 @@ public class TestTool {
 
     /**
      * 读入文件验证
+     *
      * @param name 文件
-     * @param fn 验证方法
+     * @param fn   验证方法
      */
     public static void validate(String name, Consumer<Element> fn) {
         try {
@@ -35,6 +37,24 @@ public class TestTool {
         }
     }
 
+
+    /**
+     * 获取对应元素的XML文本文件的字节内容
+     *
+     * @param element 元素
+     * @return 字节内容
+     */
+    public static byte[] xmlByte(Element element) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            XMLWriter writerToSout = new XMLWriter(out, FORMAT);
+            writerToSout.write(element);
+            writerToSout.flush();
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 
     /**

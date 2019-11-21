@@ -33,7 +33,35 @@ public class Signature extends OFDElement {
         super("Signature");
     }
 
-    // TODO 2019-11-20 19:21:51 SignedInfo
+
+    /**
+     * 【必选】
+     * 设置 签名要保护的原文及本次签名的相关信息
+     *
+     * @param signedInfo 签名要保护的原文及本次签名的相关信息
+     * @return this
+     */
+    public Signature setSignedInfo(SignedInfo signedInfo) {
+        if (signedInfo == null) {
+            throw new IllegalArgumentException("签名要保护的原文及本次签名的相关信息（SignedInfo）为空");
+        }
+        this.set(signedInfo);
+        return this;
+    }
+
+    /**
+     * 【必选】
+     * 获取 签名要保护的原文及本次签名的相关信息
+     *
+     * @return 签名要保护的原文及本次签名的相关信息
+     */
+    public SignedInfo getSignedInfo() {
+        Element e = this.getOFDElement("SignedInfo");
+        if (e == null) {
+            throw new IllegalArgumentException("签名要保护的原文及本次签名的相关信息（SignedInfo）为空");
+        }
+        return new SignedInfo(e);
+    }
 
     /**
      * 【必选】
