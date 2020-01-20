@@ -50,6 +50,24 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
 
     /**
      * 【必选 属性】
+     * 设置 外接矩形
+     * <p>
+     * 采用当前空间坐标系（页面坐标或其他容器坐标），当图
+     * 元绘制超出此矩形区域时进行裁剪。
+     *
+     * @param topLeftX 外接矩形X坐标
+     * @param topLeftY 外接矩形Y坐标
+     * @param width    外接矩形宽度
+     * @param height   外接矩形高度
+     * @return this
+     */
+    public T setBoundary(double topLeftX, double topLeftY, double width, double height) {
+        ST_Box boundary = new ST_Box(topLeftX, topLeftY, width, height);
+        return setBoundary(boundary);
+    }
+
+    /**
+     * 【必选 属性】
      * 获取 外接矩形
      * <p>
      * 采用当前空间坐标系（页面坐标或其他容器坐标），当图
@@ -371,7 +389,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @return this
      */
     public T setAlpha(Integer alpha) {
-        if(alpha == null){
+        if (alpha == null) {
             this.removeAttr("Alpha");
             return (T) this;
         }

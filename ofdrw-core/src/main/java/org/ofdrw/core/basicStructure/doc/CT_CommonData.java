@@ -43,6 +43,9 @@ public class CT_CommonData extends OFDElement {
         this.setOFDEntity("MaxUnitID", maxUnitID);
         return this;
     }
+    public CT_CommonData setMaxUnitID(long maxUnitID) {
+        return setMaxUnitID(new ST_ID(maxUnitID));
+    }
 
     /**
      * 【必选】

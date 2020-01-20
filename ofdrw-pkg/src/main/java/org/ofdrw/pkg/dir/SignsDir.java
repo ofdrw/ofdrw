@@ -1,7 +1,12 @@
 package org.ofdrw.pkg.dir;
 
 import org.ofdrw.core.signatures.Signatures;
+import org.ofdrw.pkg.tool.DocObjDump;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +16,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2020-01-18 03:34:34
  */
-public class SignsDir {
+public class SignsDir implements DirCollect {
 
     /**
      * 容器
@@ -75,5 +80,32 @@ public class SignsDir {
             }
         }
         return null;
+    }
+
+    /**
+     * 创建目录并复制文件
+     *
+     * @param base 基础路径
+     * @return 创建的目录路径
+     * @throws IOException IO异常
+     */
+    @Override
+    public Path collect(String base) throws IOException {
+        if (container == null || container.isEmpty()) {
+            throw new IllegalArgumentException("缺少签名文件（SignDir）");
+        }
+        if (signatures == null) {
+            throw new IllegalArgumentException("缺少签名列表文件（signatures）");
+        }
+
+        Path path = Paths.get(base, "Signs");
+        path = Files.createDirectories(path);
+        String dir = path.toAbsolutePath().toString();
+
+        DocObjDump.dump(this.signatures, Paths.get(dir, "Signatures.xml"));
+        for (SignDir p : container) {
+            p.collect(dir);
+        }
+        return path;
     }
 }

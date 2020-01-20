@@ -40,6 +40,5 @@ public enum OFDColorSpaceType {
             default:
                 throw new IllegalArgumentException("未知的颜色空间类型：" + type);
         }
-
     }
 }

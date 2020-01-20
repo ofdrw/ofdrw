@@ -2,8 +2,12 @@ package org.ofdrw.pkg.dir;
 
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.res.Res;
+import org.ofdrw.pkg.tool.DocObjDump;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * 文档容器
@@ -11,12 +15,12 @@ import java.nio.file.Path;
  * @author 权观宇
  * @since 2020-01-18 03:57:59
  */
-public class DocDir {
+public class DocDir implements DirCollect {
 
     /**
-     * 表示第几份文档，从1开始
+     * 表示第几份文档，从0开始
      */
-    private Integer index;
+    private Integer index = 0;
 
     /**
      * 文档的根节点
@@ -49,11 +53,11 @@ public class DocDir {
     private PagesDir pages;
 
     public DocDir() {
-        this.index = 0;
+
     }
 
     /**
-     * @return 文档编号（用于表示第几个） ，从1 起
+     * @return 文档编号（用于表示第几个） ，从0 起
      */
     public Integer getIndex() {
         return index;
@@ -204,5 +208,41 @@ public class DocDir {
             return null;
         }
         return this.res.get(name);
+    }
+
+    /**
+     * 创建目录并复制文件
+     *
+     * @param base 基础路径
+     * @return 创建的目录路径
+     * @throws IOException IO异常
+     */
+    @Override
+    public Path collect(String base) throws IOException {
+        if (document == null) {
+            throw new IllegalArgumentException("文档根节点（document）为空");
+        }
+
+        Path path = Paths.get(base, "Doc_" + index);
+        path = Files.createDirectories(path);
+        String dir = path.toAbsolutePath().toString();
+
+        DocObjDump.dump(document, Paths.get(dir, "Document.xml"));
+        if (signs != null) {
+            signs.collect(dir);
+        }
+        if (pages != null) {
+            pages.collect(dir);
+        }
+        if (publicRes != null) {
+            DocObjDump.dump(publicRes, Paths.get(dir, "PublicRes.xml"));
+        }
+        if (documentRes != null) {
+            DocObjDump.dump(documentRes, Paths.get(dir, "DocumentRes.xml"));
+        }
+        if (res != null) {
+            res.collect(dir);
+        }
+        return path;
     }
 }

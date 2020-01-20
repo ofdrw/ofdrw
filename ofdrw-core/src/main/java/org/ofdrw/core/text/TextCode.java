@@ -38,10 +38,23 @@ public class TextCode extends OFDElement implements ClipAble {
 
     /**
      * 获取文字内容
+     *
      * @return 文字内容
      */
-    public String getContent(){
+    public String getContent() {
         return this.getText();
+    }
+
+    /**
+     * 设置坐标
+     *
+     * @param x 横坐标
+     * @param y 纵坐标
+     * @return this
+     */
+    public TextCode setCoordinate(Double x, Double y) {
+        return this.setX(x)
+                .setY(y);
     }
 
     /**
@@ -146,6 +159,22 @@ public class TextCode extends OFDElement implements ClipAble {
      * <p>
      * DeltaX 不出现时，表示文字的绘制点在 X 方向不做偏移。
      *
+     * @param arr 文字之间在 X 方向上的偏移值数值
+     * @return this
+     */
+    public TextCode setDeltaX(Double... arr) {
+        return setDeltaX(new ST_Array(arr));
+    }
+
+    /**
+     * 【可选 属性】
+     * 设置 文字之间在 X 方向上的偏移值
+     * <p>
+     * double 型数值队列，列表中的每个值代表一个文字与前一个
+     * 文字之间在 X 方向的偏移值
+     * <p>
+     * DeltaX 不出现时，表示文字的绘制点在 X 方向不做偏移。
+     *
      * @return 文字之间在 X 方向上的偏移值；null表示不偏移
      */
     public ST_Array getDeltaX() {
@@ -172,6 +201,22 @@ public class TextCode extends OFDElement implements ClipAble {
         }
         this.addAttribute("DeltaY", deltaY.toString());
         return this;
+    }
+
+    /**
+     * 【可选 属性】
+     * 设置 文字之间在 Y 方向上的偏移值
+     * <p>
+     * double 型数值队列，列表中的每个值代表一个文字与前一个
+     * 文字之间在 Y 方向的偏移值
+     * <p>
+     * DeltaY 不出现时，表示文字的绘制点在 Y 方向不做偏移。
+     *
+     * @param arr 文字之间在 Y 方向上的偏移数值
+     * @return this
+     */
+    public TextCode setDeltaY(Double arr) {
+        return setDeltaY(new ST_Array(arr));
     }
 
     /**

@@ -80,6 +80,17 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
 
     /**
      * 【必选 属性】
+     * 设置 引用资源文件中定义的字形标识
+     *
+     * @param refId ID
+     * @return this
+     */
+    public CT_Text setFont(long refId) {
+        return setFont(new ST_RefID(refId));
+    }
+
+    /**
+     * 【必选 属性】
      * 获取 引用资源文件路径
      *
      * @return 引用字形资源文件路径
@@ -443,23 +454,24 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
      * @return 字符编码到字符索引之间的变换关系序列
      */
     public List<CT_CGTransfrom> getCGTransforms() {
-        return this.getOFDElements("CGTransform",CT_CGTransfrom::new);
+        return this.getOFDElements("CGTransform", CT_CGTransfrom::new);
     }
 
     /**
      * 【必选】
      * 增加 文字内容
-     *
+     * <p>
      * 也就是一段字符编码串
-     *
+     * <p>
      * 如果字符编码不在XML编码方式的字符范围之内，应采用“\”加四位
      * 十六进制数的格式转义；文字内容中出现的空格也需要转义
      * 若 TextCode 作为占位符使用时一律采用  ¤ （\u00A4）占位
+     *
      * @param textCode 文字内容
      * @return this
      */
     public CT_Text addTextCode(TextCode textCode) {
-        if(textCode == null){
+        if (textCode == null) {
             return this;
         }
         this.add(textCode);
@@ -469,16 +481,17 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
     /**
      * 【必选】
      * 获取 文字内容序列
-     *
+     * <p>
      * 也就是一段字符编码串
-     *
+     * <p>
      * 如果字符编码不在XML编码方式的字符范围之内，应采用“\”加四位
      * 十六进制数的格式转义；文字内容中出现的空格也需要转义
      * 若 TextCode 作为占位符使用时一律采用  ¤ （\u00A4）占位
+     *
      * @return 文字内容序列
      */
     public List<TextCode> getTextCodes() {
-        return this.getOFDElements("TextCode",TextCode::new);
+        return this.getOFDElements("TextCode", TextCode::new);
     }
 
 }

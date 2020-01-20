@@ -32,6 +32,14 @@ public class TextObject extends CT_Text implements PageBlockType {
         this.setObjID(id);
     }
 
+    /**
+     * @param id 对象ID
+     */
+    public TextObject(long id) {
+        this();
+        this.setObjID(new ST_ID(id));
+    }
+
 
     /**
      * 【必选 属性】

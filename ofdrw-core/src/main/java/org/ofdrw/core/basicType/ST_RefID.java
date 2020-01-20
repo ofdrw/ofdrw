@@ -21,6 +21,9 @@ public class ST_RefID extends STBase {
         this.ref = ref;
     }
 
+    public ST_RefID(long ref) {
+        this.ref = new ST_ID(ref);
+    }
     /**
      * 获取 ST_RefID 实例如果参数非法则返还null
      *
@@ -32,6 +35,10 @@ public class ST_RefID extends STBase {
             return null;
         }
         return new ST_RefID(ST_ID.getInstance(idStr.trim()));
+    }
+
+    public static ST_RefID getInstance(Long idStr) {
+        return new ST_RefID(new ST_ID(idStr));
     }
 
 

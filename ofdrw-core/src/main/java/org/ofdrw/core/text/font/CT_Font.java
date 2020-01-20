@@ -39,6 +39,10 @@ public class CT_Font extends OFDElement {
         return this;
     }
 
+    public CT_Font setID(long id) {
+        this.setObjID(new ST_ID(id));
+        return this;
+    }
 
     /**
      * 【必选 属性】

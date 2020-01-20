@@ -27,7 +27,25 @@ public class CT_ColorSpace extends OFDElement {
         super("ColorSpace");
     }
 
-    public ST_ID getID(){
+    /**
+     * @param type 颜色类型
+     */
+    public CT_ColorSpace(OFDColorSpaceType type) {
+        this();
+        this.setType(type);
+    }
+
+    /**
+     * @param type 颜色类型
+     * @param id   对象ID
+     */
+    public CT_ColorSpace(OFDColorSpaceType type, long id) {
+        this();
+        this.setType(type)
+                .setID(new ST_ID(id));
+    }
+
+    public ST_ID getID() {
         return this.getObjID();
     }
 

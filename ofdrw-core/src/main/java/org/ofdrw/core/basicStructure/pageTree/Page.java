@@ -23,6 +23,10 @@ public class Page extends OFDElement {
         super("Page");
     }
 
+    /**
+     * @param id 对象ID
+     * @param baseLoc 页面内容位置
+     */
     public Page(long id, String baseLoc) {
         this();
         this.setID(new ST_ID(id))

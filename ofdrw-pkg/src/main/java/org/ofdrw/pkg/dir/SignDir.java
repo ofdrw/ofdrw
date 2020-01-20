@@ -1,8 +1,12 @@
 package org.ofdrw.pkg.dir;
 
 import org.ofdrw.core.signatures.sig.Signature;
+import org.ofdrw.pkg.tool.DocObjDump;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * 签名资源容器
@@ -10,12 +14,12 @@ import java.nio.file.Path;
  * @author 权观宇
  * @since 2020-01-18 03:43:52
  */
-public class SignDir {
+public class SignDir implements DirCollect {
 
     /**
      * 表示第几个签名
      */
-    private Integer index;
+    private Integer index = 0;
 
     /**
      * 签名/签章 描述文件
@@ -35,7 +39,7 @@ public class SignDir {
     private Path signedValue;
 
     public SignDir() {
-        this.index = 1;
+
     }
 
     /**
@@ -108,5 +112,30 @@ public class SignDir {
     public SignDir setSignedValue(Path signedValue) {
         this.signedValue = signedValue;
         return this;
+    }
+
+    /**
+     * 创建目录并复制文件
+     *
+     * @param base 基础路径
+     * @return 创建的目录路径
+     * @throws IOException IO异常
+     */
+    @Override
+    public Path collect(String base) throws IOException {
+        Path path = Paths.get(base, "Sign_" + index);
+        path = Files.createDirectories(path);
+        String dir = path.toAbsolutePath().toString();
+        if (signature == null) {
+            throw new IllegalArgumentException("缺少签名/签章描述文件（signature）");
+        }
+        DocObjDump.dump(signature, Paths.get(dir, "Signature.xml"));
+        if (seal != null) {
+            Files.copy(seal, Paths.get(dir, "Seal.esl"));
+        }
+        if (signedValue != null) {
+            Files.copy(signedValue, Paths.get(dir, "SignedValue.dat"));
+        }
+        return path;
     }
 }

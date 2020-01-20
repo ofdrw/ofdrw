@@ -238,6 +238,10 @@ public class OFDElement extends DefaultElementProxy {
         return this;
     }
 
+    public OFDElement setObjID(long objId) {
+        return this.setObjID(new ST_ID(objId));
+    }
+
 
     /**
      * 移除元素中所有内容

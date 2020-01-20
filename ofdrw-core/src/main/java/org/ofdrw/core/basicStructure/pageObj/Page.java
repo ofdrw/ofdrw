@@ -1,6 +1,7 @@
 package org.ofdrw.core.basicStructure.pageObj;
 
 import org.dom4j.Element;
+import org.ofdrw.core.Const;
 import org.ofdrw.core.action.Actions;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
@@ -44,6 +45,7 @@ public class Page extends OFDElement {
      * @return this
      */
     public Page setArea(CT_PageArea area) {
+        area.setOFDName("Area");
         this.set(area);
         return this;
     }
