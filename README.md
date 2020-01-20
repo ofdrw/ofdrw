@@ -16,6 +16,7 @@
 - *2020-01-20* ofdrw 首个OFD文件生成成功，并能够通过 [数科OFD阅读器](http://www.suwell.cn/product/index.html) 正确打开。
     
     可通过运行`org.ofdrw.pkg.dir.OFDDirTest#jar` 在项目target目录下生成一个名为hello.ofd的文件。
-
+- *2019-11-21* 完成基础库的开发工作，开始策划`ofdrw-pkg`。
+- *2019-09-27* 项目策划完成并开始实施。
 
 欢迎大家一同参与项目。
