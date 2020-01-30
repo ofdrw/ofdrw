@@ -11,6 +11,7 @@
     <modules>
         <module>ofdrw-core</module>
         <module>ofdrw-pkg</module>
+        <module>ofdrw-layout</module>
     </modules>
 
 </project>
