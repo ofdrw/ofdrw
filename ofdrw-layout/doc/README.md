@@ -112,6 +112,7 @@
 | *float* | 在段中的浮动方向：left、right、center。默认值为left |
 | *left* | 相对于段的左边界距离。 |
 | *right* | 相对于段的右边界距离。 |
+| *integrity* | 当渲染空间不足时可能会拆分元素，true为不拆分，false为拆分。默认值为false |
 
 ### 固定布局
 
@@ -122,12 +123,15 @@
 
 ![固定布局](固定布局.jpg)
 
-其中
+如果Padding、Border、Margin分别在上、右、下、左四个方向的值都一致，那么图元的宽度为：
 ```
 Height = Content height + 2 * (Padding + Border + Margin)
 
 Width = Content Width + 2 * (Padding + Border + Margin)
 ```
+
+如果不一致则需要分别计算。
+
 
 > 盒式模型最终会被翻译成图元并放置在页面中的图层内。
 
