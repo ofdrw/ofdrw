@@ -23,4 +23,8 @@
 
 如果该项目有兴趣不妨给个Star，欢迎大家一同参与项目。
 
+## 项目关注度
+
+> 项目获得 Star曲线
+
 [![Stargazers over time](https://starchart.cc/Trisia/ofdrw.svg)](https://starchart.cc/Trisia/ofdrw)
