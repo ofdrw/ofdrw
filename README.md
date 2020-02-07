@@ -21,4 +21,6 @@
 - *2019-11-21* 完成基础库的开发工作，开始策划`ofdrw-pkg`。
 - *2019-09-27* 项目策划完成并开始实施。
 
-如何各位对该项目有兴趣不妨给个Star，欢迎大家一同参与项目。
+如果该项目有兴趣不妨给个Star，欢迎大家一同参与项目。
+
+[![Stargazers over time](https://starchart.cc/Trisia/ofdrw.svg)](https://starchart.cc/Trisia/ofdrw)
