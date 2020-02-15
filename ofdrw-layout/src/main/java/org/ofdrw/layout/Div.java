@@ -1,5 +1,8 @@
 package org.ofdrw.layout;
 
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  * 盒式模型基础
  *
@@ -81,6 +84,36 @@ public class Div {
      * true为不拆分，false为拆分。默认值为false
      */
     private Boolean integrity;
+
+    private LinkedList<Div> content = new LinkedList<>();
+
+    /**
+     * 增加了Div中的内容
+     *
+     * @param div 内容
+     * @return this
+     */
+    public Div add(Div div) {
+        content.add(div);
+        return this;
+    }
+
+    /**
+     * 返回指定位子的Div
+     *
+     * @param index 指定位置
+     * @return div
+     */
+    public Div get(int index) {
+        return content.get(index);
+    }
+
+    /**
+     * @return Div中所有内容
+     */
+    public List<Div> getAll() {
+        return this.content;
+    }
 
     public Double getWidth() {
         return width;
