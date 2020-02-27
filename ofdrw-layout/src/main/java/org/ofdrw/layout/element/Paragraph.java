@@ -1,6 +1,4 @@
-package org.ofdrw.layout;
-
-import com.sun.jmx.snmp.SnmpNull;
+package org.ofdrw.layout.element;
 
 import java.util.LinkedList;
 import java.util.List;

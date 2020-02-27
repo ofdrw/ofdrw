@@ -1,4 +1,4 @@
-package org.ofdrw.layout;
+package org.ofdrw.layout.element;
 
 /**
  * 数组参数工具

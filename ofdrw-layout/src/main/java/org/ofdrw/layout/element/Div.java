@@ -1,7 +1,4 @@
-package org.ofdrw.layout;
-
-import java.util.LinkedList;
-import java.util.List;
+package org.ofdrw.layout.element;
 
 /**
  * 盒式模型基础
@@ -31,21 +28,21 @@ public class Div {
      * <p>
      * 数组中个元素意义：上、右、下、左
      */
-    private Double[] padding;
+    private Double[] padding = {0d, 0d, 0d, 0d};
 
     /**
      * 边框宽度
      * <p>
      * 数组中个元素意义：上、右、下、左
      */
-    private Double[] border;
+    private Double[] border = {0d, 0d, 0d, 0d};
 
     /**
      * 外边距
      * <p>
      * 数组中个元素意义：上、右、下、左
      */
-    private Double[] margin;
+    private Double[] margin = {0d, 0d, 0d, 0d};
 
     /**
      * 固定布局的盒式模型左上角X坐标
@@ -60,7 +57,7 @@ public class Div {
     /**
      * 对段的占用情况
      */
-    private Clear clear;
+    private Clear clear = Clear.both;
 
     /**
      * 在段中的浮动方向
@@ -84,36 +81,6 @@ public class Div {
      * true为不拆分，false为拆分。默认值为false
      */
     private Boolean integrity;
-
-    private LinkedList<Div> content = new LinkedList<>();
-
-    /**
-     * 增加了Div中的内容
-     *
-     * @param div 内容
-     * @return this
-     */
-    public Div add(Div div) {
-        content.add(div);
-        return this;
-    }
-
-    /**
-     * 返回指定位子的Div
-     *
-     * @param index 指定位置
-     * @return div
-     */
-    public Div get(int index) {
-        return content.get(index);
-    }
-
-    /**
-     * @return Div中所有内容
-     */
-    public List<Div> getAll() {
-        return this.content;
-    }
 
     public Double getWidth() {
         return width;

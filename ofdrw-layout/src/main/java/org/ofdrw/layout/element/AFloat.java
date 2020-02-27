@@ -1,4 +1,4 @@
-package org.ofdrw.layout;
+package org.ofdrw.layout.element;
 
 /**
  * 在段中的浮动方向

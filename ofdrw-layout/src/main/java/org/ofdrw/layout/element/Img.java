@@ -1,4 +1,4 @@
-package org.ofdrw.layout;
+package org.ofdrw.layout.element;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
