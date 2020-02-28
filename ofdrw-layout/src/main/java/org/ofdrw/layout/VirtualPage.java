@@ -1,6 +1,5 @@
 package org.ofdrw.layout;
 
-import org.ofdrw.layout.element.ArrayParamTool;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.Position;
 
@@ -9,7 +8,7 @@ import java.util.List;
 
 /**
  * 虚拟页面
- *
+ * <p>
  * 虚拟页面介于盒式模型和板式模型两种中间
  * 虚拟页面内包含多个Div对象，这些对象都为绝对定位。
  * 由于是绝对定位，因此不存在分页的情况。
@@ -18,36 +17,36 @@ import java.util.List;
  * @since 2020-02-28 02:32:27
  */
 public class VirtualPage {
-    /**
-     * 页面宽度
-     */
-    private Double width;
-    /**
-     * 页面高度
-     */
-    private Double height;
 
     /**
-     * 外边距
-     * <p>
-     * 上 左 下 右
-     * 默认值 36
+     * 虚拟页面的样式
      */
-    private Double[] margin = {36d, 36d, 36d, 36d};
+    private PageCfg style;
 
+    /**
+     * 虚拟页面的内容
+     */
     private List<Div> content;
 
     private VirtualPage() {
     }
 
     public VirtualPage(Double width, Double height) {
-        this.width = width;
-        this.height = height;
+        this.style = new PageCfg(width, height);
         content = new LinkedList<>();
+    }
+
+    public PageCfg getStyle() {
+        return style;
+    }
+
+    public void setStyle(PageCfg style) {
+        this.style = style;
     }
 
     /**
      * 向虚拟页面中加入对象
+     *
      * @param d 对象
      * @return this
      */
@@ -61,32 +60,5 @@ public class VirtualPage {
         this.content.add(d);
         return this;
 
-    }
-
-    public Double getWidth() {
-        return width;
-    }
-
-    public VirtualPage setWidth(Double width) {
-        this.width = width;
-        return this;
-    }
-
-    public Double getHeight() {
-        return height;
-    }
-
-    public VirtualPage setHeight(Double height) {
-        this.height = height;
-        return this;
-    }
-
-    public Double[] getMargin() {
-        return margin;
-    }
-
-    public VirtualPage setMargin(Double[] margin) {
-        this.margin = ArrayParamTool.arr4p(margin);
-        return this;
     }
 }
