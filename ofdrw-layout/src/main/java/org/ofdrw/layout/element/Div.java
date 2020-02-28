@@ -1,13 +1,16 @@
 package org.ofdrw.layout.element;
 
 
+import org.ofdrw.layout.Measure;
+import org.ofdrw.layout.Rectangle;
+
 /**
  * 盒式模型基础
  *
  * @author 权观宇
  * @since 2020-02-03 12:46:15
  */
-public class Div {
+public class Div implements Measure {
 
     /**
      * 背景颜色
@@ -222,5 +225,44 @@ public class Div {
     public Div setIntegrity(Boolean integrity) {
         this.integrity = integrity;
         return this;
+    }
+
+    /**
+     * @return 而外宽度
+     */
+    protected double widthPlus() {
+        return (this.margin[1] + this.margin[3])
+                + (this.padding[1] + this.padding[3])
+                + (this.border[1] + this.border[3]);
+    }
+
+    /**
+     * @return 而外高度
+     */
+    protected double heightPlus() {
+        return (this.margin[0] + this.margin[2])
+                + (this.padding[0] + this.padding[2])
+                + (this.border[0] + this.border[2]);
+    }
+
+    /**
+     * 获取尺寸
+     *
+     * @param widthLimit 宽度限制
+     * @return 元素尺寸
+     */
+    @Override
+    public Rectangle reSize(Double widthLimit) {
+        if (this.height == null || this.width == null) {
+            return Rectangle.Empty;
+        }
+        if (widthLimit != null) {
+            if (this.width > widthLimit) {
+                this.setWidth(widthLimit);
+            }
+        }
+        double w = this.width + widthPlus();
+        double h = this.height + heightPlus();
+        return new Rectangle(w, h);
     }
 }

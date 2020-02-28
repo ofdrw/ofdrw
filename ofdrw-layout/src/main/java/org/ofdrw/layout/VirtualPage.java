@@ -26,14 +26,17 @@ public class VirtualPage {
     /**
      * 虚拟页面的内容
      */
-    private List<Div> content;
+    private List<Div> content = new LinkedList<>();
 
     private VirtualPage() {
     }
 
+    public VirtualPage(PageCfg style) {
+        this.style = style;
+    }
+
     public VirtualPage(Double width, Double height) {
         this.style = new PageCfg(width, height);
-        content = new LinkedList<>();
     }
 
     public PageCfg getStyle() {

@@ -1,5 +1,7 @@
 package org.ofdrw.layout.element;
 
+import org.ofdrw.layout.Rectangle;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,7 +16,7 @@ public class Paragraph extends Div {
     /**
      * 行间距
      */
-    private Double lineHeight;
+    private Double lineSpace = 2d;
 
     /**
      * 默认字体
@@ -83,12 +85,12 @@ public class Paragraph extends Div {
         return this;
     }
 
-    public Double getLineHeight() {
-        return lineHeight;
+    public Double getLineSpace() {
+        return lineSpace;
     }
 
-    public Paragraph setLineHeight(Double lineHeight) {
-        this.lineHeight = lineHeight;
+    public Paragraph setLineSpace(Double lineSpace) {
+        this.lineSpace = lineSpace;
         return this;
     }
 
@@ -118,5 +120,49 @@ public class Paragraph extends Div {
         this.contents.clear();
         this.contents.addAll(contents);
         return this;
+    }
+
+    /**
+     * 获取尺寸
+     *
+     * @param widthLimit 宽度限制
+     * @return 元素尺寸
+     */
+    @Override
+    public Rectangle reSize(Double widthLimit) {
+        Double width = this.getWidth();
+        if (widthLimit == null) {
+            throw new NullPointerException("widthLimit为空");
+        }
+        if (width == null || (width > widthLimit)) {
+            width = widthLimit;
+        }
+        double widthRemain = width;
+        double height = 0;
+        double lineHeight = 0;
+        for (Span s : this.contents) {
+            for (TxtGlyph txt : s.glyphList()) {
+                if (txt.getW() > widthRemain) {
+                    // 剩余空间不足则需要换行
+                    height += lineHeight + this.lineSpace;
+                    // 重置行元素
+                    widthRemain = width;
+                    lineHeight = 0;
+                }
+                widthRemain -= txt.getW();
+                if (txt.getH() > lineHeight) {
+                    // 如果高度比原来行高高那么更新行高
+                    lineHeight = txt.getH();
+                }
+            }
+        }
+        if (widthRemain != width) {
+            // 剩余最后一行加入到高度中
+            height += lineHeight;
+        }
+        width += widthPlus();
+        height += heightPlus();
+        return new Rectangle(width, height);
+
     }
 }

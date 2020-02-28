@@ -1,5 +1,10 @@
 package org.ofdrw.layout.element;
 
+import org.ofdrw.layout.Rectangle;
+
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  * 字体基础单元
  * <p>
@@ -8,7 +13,7 @@ package org.ofdrw.layout.element;
  * @author 权观宇
  * @since 2020-02-03 02:01:53
  */
-public class Span{
+public class Span {
 
     /**
      * 字体
@@ -52,6 +57,13 @@ public class Span{
      * 文本内容
      */
     private String text;
+
+    /**
+     * 当渲染空间不足时可能会拆分元素
+     * <p>
+     * true为不拆分，false为拆分。默认值为false
+     */
+    private Boolean integrity = false;
 
     private Span() {
         this.setFont(Font.getDefault());
@@ -133,4 +145,27 @@ public class Span{
         this.text = text;
         return this;
     }
+
+    public Boolean getIntegrity() {
+        return integrity;
+    }
+
+    public Span setIntegrity(Boolean integrity) {
+        this.integrity = integrity;
+        return this;
+    }
+
+    /**
+     * 获取字体图形列表
+     *
+     * @return 字体图形列表
+     */
+    public List<TxtGlyph> glyphList() {
+        LinkedList<TxtGlyph> res = new LinkedList<>();
+        for (char c : this.text.toCharArray()) {
+            res.add(new TxtGlyph(c, this));
+        }
+        return res;
+    }
+
 }
