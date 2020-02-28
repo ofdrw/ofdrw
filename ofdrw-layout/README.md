@@ -6,7 +6,7 @@
 
 Layout库的工作就是把两种布局的样式翻译成 **虚拟页面**。
 
-![Layout工作](Layout工作.jpg)
+![Layout工作](./doc/Layout工作.jpg)
 
 虚拟页面: 
 
