@@ -1,5 +1,6 @@
 package org.ofdrw.layout.element;
 
+
 /**
  * 盒式模型基础
  *
@@ -7,12 +8,19 @@ package org.ofdrw.layout.element;
  * @since 2020-02-03 12:46:15
  */
 public class Div {
+
+    /**
+     * 背景颜色
+     * <p>
+     * (R,G,B) 三色数组
+     */
+    private int[] backgroundColor = null;
     /**
      * 内容宽度
      * <p>
      * 如果不设置，则为自适应。最大宽度不能大于页面版心宽度。
      */
-    private Double width;
+    private Double width = null;
 
     /**
      * 内容高度
@@ -21,7 +29,7 @@ public class Div {
      * <p>
      * 注意如果需要保证块完整，那么高度不能大于版心高度。
      */
-    private Double height;
+    private Double height = null;
 
     /**
      * 内边距
@@ -47,12 +55,12 @@ public class Div {
     /**
      * 固定布局的盒式模型左上角X坐标
      */
-    private Double x;
+    private Double x = null;
 
     /**
      * 固定布局的盒式模型左上角y坐标
      */
-    private Double y;
+    private Double y = null;
 
     /**
      * 对段的占用情况
@@ -64,23 +72,49 @@ public class Div {
      * <p>
      * 为了避免与float关键字冲突采用AFloat
      */
-    private AFloat aFloat;
+    private AFloat aFloat = AFloat.left;
 
     /**
      * 相对于段的左边界距离
      */
-    private Double left;
+    private Double left = null;
 
     /**
      * 相对于段的右边界距离
      */
-    private Double right;
+    private Double right = null;
+
+    /**
+     * 元素定位方式
+     * <p>
+     * 默认为静态定位
+     */
+    private Position position = Position.Static;
+
     /**
      * 当渲染空间不足时可能会拆分元素
      * <p>
      * true为不拆分，false为拆分。默认值为false
      */
-    private Boolean integrity;
+    private Boolean integrity = false;
+
+    public Position getPosition() {
+        return position;
+    }
+
+    public Div setPosition(Position position) {
+        this.position = position;
+        return this;
+    }
+
+    public int[] getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public Div setBackgroundColor(int r, int g, int b) {
+        this.backgroundColor = new int[]{r, g, b};
+        return this;
+    }
 
     public Double getWidth() {
         return width;

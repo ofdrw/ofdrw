@@ -8,7 +8,7 @@ package org.ofdrw.layout.element;
  * @author 权观宇
  * @since 2020-02-03 02:01:53
  */
-public class Span {
+public class Span{
 
     /**
      * 字体
@@ -25,7 +25,7 @@ public class Span {
      * <p>
      * 默认为 0
      */
-    private Double letterSpacing;
+    private Double letterSpacing = 0d;
 
     /**
      * 是否加粗

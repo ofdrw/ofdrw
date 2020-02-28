@@ -1,5 +1,10 @@
 package org.ofdrw.layout.element;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -11,7 +16,7 @@ import java.nio.file.Path;
  * @author 权观宇
  * @since 2020-02-03 03:34:31
  */
-public class Img extends Div {
+public class Img extends Div{
     /**
      * 图片文件路径
      */
@@ -27,21 +32,31 @@ public class Img extends Div {
 
     private Img() {
         this.fit = true;
+        // 图片对象不可拆分
+        this.setIntegrity(true);
     }
 
-    public Img(double width, double height,Path src) {
+    public Img(double width, double height, Path src) throws IOException {
         this(src);
         this.src = src;
         this.setWidth(width)
                 .setHeight(height);
     }
 
-    public Img(Path src) {
+    public Img(Path src) throws IOException {
         this();
         if (src == null || Files.notExists(src)) {
             throw new IllegalArgumentException("图片文件为空或不存在");
         }
         this.src = src;
+        parseImg();
+    }
+
+    private void parseImg() throws IOException {
+        File picture = src.toFile();
+        BufferedImage sourceImg = ImageIO.read(new FileInputStream(picture));
+        this.setWidth((double) sourceImg.getWidth());
+        this.setHeight((double) sourceImg.getHeight());
     }
 
     public Path getSrc() {
@@ -61,4 +76,6 @@ public class Img extends Div {
         this.src = src;
         return this;
     }
+
+
 }
