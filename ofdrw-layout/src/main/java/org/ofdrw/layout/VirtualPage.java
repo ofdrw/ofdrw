@@ -21,7 +21,7 @@ public class VirtualPage {
     /**
      * 虚拟页面的样式
      */
-    private PageCfg style;
+    private PageLayout style;
 
     /**
      * 虚拟页面的内容
@@ -31,19 +31,19 @@ public class VirtualPage {
     private VirtualPage() {
     }
 
-    public VirtualPage(PageCfg style) {
+    public VirtualPage(PageLayout style) {
         this.style = style;
     }
 
     public VirtualPage(Double width, Double height) {
-        this.style = new PageCfg(width, height);
+        this.style = new PageLayout(width, height);
     }
 
-    public PageCfg getStyle() {
+    public PageLayout getStyle() {
         return style;
     }
 
-    public void setStyle(PageCfg style) {
+    public void setStyle(PageLayout style) {
         this.style = style;
     }
 

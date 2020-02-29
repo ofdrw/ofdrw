@@ -17,6 +17,22 @@ public class Rectangle {
         this.height = height;
     }
 
+    /**
+     * 增加宽度
+     * @param delta 增加量（正为增，负为减）
+     */
+    public void addToWidth(double delta) {
+        this.width += delta;
+    }
+
+    /**
+     * 增加高度
+     * @param delta 增加量（正为增，负为减）
+     */
+    public void addToHeight(double delta) {
+        this.height += delta;
+    }
+
     public boolean isEmpty(){
         return this.width == 0 && this.height == 0;
     }

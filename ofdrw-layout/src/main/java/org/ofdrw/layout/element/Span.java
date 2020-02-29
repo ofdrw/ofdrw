@@ -168,4 +168,18 @@ public class Span {
         return res;
     }
 
+    /**
+     * @return 不拆分情况下都放在一行内占用的大小
+     */
+    public Rectangle blockSize() {
+        List<TxtGlyph> txtGlyphs = glyphList();
+        double width = 0;
+        double height = 0;
+        for (TxtGlyph glyph : txtGlyphs) {
+            width += glyph.getW();
+            height = glyph.getH();
+        }
+        return new Rectangle(width, height);
+    }
+
 }

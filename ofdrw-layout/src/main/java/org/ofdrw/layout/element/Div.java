@@ -258,11 +258,13 @@ public class Div implements Measure {
         }
         if (widthLimit != null) {
             if (this.width > widthLimit) {
+                // TODO 尺寸重置警告日志
                 this.setWidth(widthLimit);
             }
         }
         double w = this.width + widthPlus();
         double h = this.height + heightPlus();
+
         return new Rectangle(w, h);
     }
 }

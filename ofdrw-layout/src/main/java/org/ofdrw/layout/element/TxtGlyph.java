@@ -11,6 +11,9 @@ public class TxtGlyph {
      * 文字
      */
     private char txt;
+    /**
+     * 父类元素
+     */
     private Span parent;
 
     public TxtGlyph(char txt, Span span) {

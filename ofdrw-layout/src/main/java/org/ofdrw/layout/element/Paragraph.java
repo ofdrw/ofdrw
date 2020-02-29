@@ -135,12 +135,36 @@ public class Paragraph extends Div {
             throw new NullPointerException("widthLimit为空");
         }
         if (width == null || (width > widthLimit)) {
+            // TODO 尺寸重设警告日志
             width = widthLimit;
         }
         double widthRemain = width;
         double height = 0;
         double lineHeight = 0;
         for (Span s : this.contents) {
+            // Span 不可分割的情况的分析
+            if (s.getIntegrity()) {
+                // 获取Span整体的块的大小
+                Rectangle blockSize = s.blockSize();
+                double blockWidth = blockSize.getWidth();
+                // 不可分割元素如果大于行宽度则忽略
+                if (blockWidth > width) {
+                    continue;
+                } else if (blockWidth <= widthRemain) {
+                    // 行内剩余宽度足够，则放入行中
+                    widthRemain -= blockWidth;
+                    // 加入行后，判断是否需要提升行高度
+                    if (lineHeight < blockSize.getHeight()) {
+                        lineHeight = blockSize.getHeight();
+                    }
+                } else {
+                    height += lineHeight + this.lineSpace;
+                    widthRemain = width;
+                    lineHeight = 0;
+                }
+                continue;
+            }
+            // Span可以被换行等分割的情况
             for (TxtGlyph txt : s.glyphList()) {
                 if (txt.getW() > widthRemain) {
                     // 剩余空间不足则需要换行
