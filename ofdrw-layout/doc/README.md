@@ -112,6 +112,7 @@
 | *float* | 在段中的浮动方向：left、right、center。默认值为left |
 | *left* | 相对于段的左边界距离。 |
 | *right* | 相对于段的右边界距离。 |
+| *top* | 相对于段的顶边的距离。 |
 | *integrity* | 当渲染空间不足时可能会拆分元素，true为不拆分，false为拆分。默认值为false |
 
 ### 固定布局

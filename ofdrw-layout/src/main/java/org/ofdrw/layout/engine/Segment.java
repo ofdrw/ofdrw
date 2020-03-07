@@ -44,6 +44,10 @@ public class Segment {
     private Segment() {
     }
 
+    public double getHeight() {
+        return height;
+    }
+
     /**
      * 向段中添加元素
      *
@@ -81,15 +85,13 @@ public class Segment {
         1. 独占
         2. 浮动 + Clear 对立
          */
-        if ((clear == Clear.both)
-                || (aFloat == AFloat.right && clear == Clear.left)
-                || (aFloat == AFloat.left && clear == Clear.right)) {
+        if (div.isBlockElement()) {
             this.remainWidth = 0;
             this.height = blockSize.getHeight();
             content.add(div);
             return true;
         }
-        // 新家如的元素为居中元素，但是目前的段内不处于居中样式，那么无法加入
+        // 新加入的元素为居中元素，但是目前的段内不处于居中样式，那么无法加入
         if (aFloat == AFloat.center && !isCenterFloat()) {
             return false;
         }
@@ -128,5 +130,14 @@ public class Segment {
      */
     public boolean isEmpty() {
         return this.content.isEmpty();
+    }
+
+    /**
+     * 获取段中的元素
+     *
+     * @return 段中的元素
+     */
+    public List<Div> getContent() {
+        return content;
     }
 }

@@ -134,6 +134,7 @@ public class Paragraph extends Div {
         if (widthLimit == null) {
             throw new NullPointerException("widthLimit为空");
         }
+        widthLimit -= this.widthPlus();
         if (width == null || (width > widthLimit)) {
             // TODO 尺寸重设警告日志
             width = widthLimit;

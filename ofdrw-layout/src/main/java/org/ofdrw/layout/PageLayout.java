@@ -21,7 +21,8 @@ public class PageLayout {
     /**
      * 外边距
      * <p>
-     * 上 左 下 右
+     *  上 左 下 右
+     * [0  1  2  3]
      * 默认值 36
      */
     private Double[] margin = {36d, 36d, 36d, 36d};
@@ -70,5 +71,18 @@ public class PageLayout {
      */
     public double contentHeight() {
         return height - margin[0] - margin[2];
+    }
+
+    /**
+     * 页面正文的工作区域
+     *
+     * @return 工作区域
+     */
+    public Rectangle getWorkerArea() {
+        return new Rectangle(
+                margin[1],
+                margin[0],
+                width - margin[1] - margin[3],
+                height - margin[0] - margin[2]);
     }
 }

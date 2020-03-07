@@ -88,6 +88,11 @@ public class Div implements Measure {
     private Double right = null;
 
     /**
+     * 相对坐标的top
+     */
+    private Double top = null;
+
+    /**
      * 元素定位方式
      * <p>
      * 默认为静态定位
@@ -100,6 +105,37 @@ public class Div implements Measure {
      * true为不拆分，false为拆分。默认值为false
      */
     private Boolean integrity = false;
+
+    /**
+     * 是否是块级元素
+     * <p>
+     * 块元素将会独占整个段
+     * <p>
+     * 绝对定位默认不为块级元素
+     *
+     * @return true 独占; false 共享
+     */
+    public boolean isBlockElement() {
+        if (position == Position.Absolute) {
+            return false;
+        }
+        /*
+         独占段的元素类型
+         1. 独占
+         2. 浮动 + Clear 对立
+         */
+        return (clear == Clear.both)
+                || (aFloat == AFloat.right && clear == Clear.left)
+                || (aFloat == AFloat.left && clear == Clear.right);
+    }
+
+    public Double getTop() {
+        return top;
+    }
+
+    public void setTop(Double top) {
+        this.top = top;
+    }
 
     public Position getPosition() {
         return position;
@@ -256,11 +292,13 @@ public class Div implements Measure {
         if (this.height == null || this.width == null) {
             return Rectangle.Empty;
         }
-        if (widthLimit != null) {
-            if (this.width > widthLimit) {
-                // TODO 尺寸重置警告日志
-                this.setWidth(widthLimit);
-            }
+        if (widthLimit == null) {
+            throw new NullPointerException("widthLimit为空");
+        }
+        widthLimit -= widthPlus();
+        if (this.width > widthLimit) {
+            // TODO 尺寸重置警告日志
+            this.setWidth(widthLimit);
         }
         double w = this.width + widthPlus();
         double h = this.height + heightPlus();
