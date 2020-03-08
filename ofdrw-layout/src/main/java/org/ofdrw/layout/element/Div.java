@@ -305,4 +305,21 @@ public class Div implements Measure {
 
         return new Rectangle(w, h);
     }
+
+    /**
+     * 空的Div对象
+     * <p>
+     * 共享段空间，且不可分割
+     *
+     * @param width  宽度
+     * @param height 高度
+     * @return div
+     */
+    public static Div empty(double width, double height) {
+        return new Div()
+                .setWidth(width)
+                .setHeight(height)
+                .setClear(Clear.none)
+                .setIntegrity(true);
+    }
 }

@@ -7,10 +7,7 @@ import org.ofdrw.layout.element.AFloat;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.Position;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * 流式布局分析器
@@ -63,7 +60,7 @@ public class StreamingLayoutAnalyzer {
         }
         LinkedList<Segment> seq = new LinkedList<>(segmentSequence);
         // 初始化页面
-        newPage();
+        addNewPage();
         while (!seq.isEmpty()) {
             Segment segment = seq.pop();
             // 高度足够能够放入剩余空间中
@@ -74,8 +71,36 @@ public class StreamingLayoutAnalyzer {
                 elementPositioning(segment, area);
                 continue;
             }
-            // TODO 分段
+            // 判断段是否可以拆分
+            if (segment.isBlockable() == false) {
+                if (segment.getHeight() > pageWorkArea.getWidth()) {
+                    // 如果段不可拆分，并且高度大于整个页面的高度，那么这样的段应该舍弃
+                } else {
+                    // 如果段不可拆分，并且高度小于整个页面的高度，那么新起一个页面，重新加入队列布局
+                    addNewPage();
+                    seq.push(segment);
+                }
+                continue;
+            }
+            // 段可以拆分，那么通过剩余空间对段分块，这个分块只会分为两块
+            List<Segment> blocks = segmentBlocking(segment, remainArea.clone());
+            // 因为是栈的原因，需要把最后一个元素最新压到栈顶。
+            Collections.reverse(blocks);
+            // 重新进入队列中
+            blocks.forEach(seq::push);
         }
+        return null;
+    }
+
+    /**
+     * 由于剩余空间不足，所以需要对段进行分块，剩余的块将流转到下一个页面的段中
+     *
+     * @param segment    段
+     * @param remainArea 剩余空间
+     * @return 分块后的段序列
+     */
+    private List<Segment> segmentBlocking(Segment segment, Rectangle remainArea) {
+        // TODO 分块处理
         return null;
     }
 
@@ -86,31 +111,25 @@ public class StreamingLayoutAnalyzer {
      * @param area    分配给该段的页面空间
      */
     private void elementPositioning(Segment segment, Rectangle area) {
-        List<Div> content = segment.getContent();
-        // 元素尺寸便于分析
-        List<Rectangle> elementSizes = new ArrayList<>(content.size());
-        // 分析元素尺寸并缓存，为下一步规划空间使用做准备
-        content.forEach((item) -> elementSizes.add(item.reSize(area.getWidth())));
         // 将流式的自动定位转为绝对定位位置的Div
-        for (int i = 0, len = content.size(); i < len; i++) {
-            Div itemDiv = content.get(i);
-            Rectangle box = elementSizes.get(i);
+        for(Map.Entry<Div, Rectangle> item: segment){
+            Div itemDiv = item.getKey();
+            Rectangle box = item.getValue();
             // 将流式的自动定位转为绝对定位位置的Div
             itemDiv.setPosition(Position.Absolute)
                     .setWidth(box.getWidth())
                     .setHeight(box.getHeight())
                     .setY(area.getY());
         }
-
         // 居中的布局分析
         if (segment.isCenterFloat()) {
             // 获取段内所有元素的宽度
-            double totalWidth = elementSizes.stream().mapToDouble(Rectangle::getWidth).sum();
+            double totalWidth = segment.getSizeList().stream().mapToDouble(Rectangle::getWidth).sum();
             // 第一个元素偏移的X坐标
             double offsetX = area.getX() + ((area.getWidth() - totalWidth) / 2);
-            for (int i = 0, len = content.size(); i < len; i++) {
-                Div itemDiv = content.get(i);
-                Rectangle box = elementSizes.get(i);
+            for(Map.Entry<Div, Rectangle> item: segment){
+                Div itemDiv =item.getKey();
+                Rectangle box = item.getValue();
                 itemDiv.setX(offsetX);
                 // 增加偏移量计算出下一个box应该出现的位置
                 offsetX += box.getWidth();
@@ -119,9 +138,9 @@ public class StreamingLayoutAnalyzer {
             // 左右浮动的分析
             double startX = area.getX();
             double endX = startX + area.getWidth();
-            for (int i = 0, len = content.size(); i < len; i++) {
-                Div itemDiv = content.get(i);
-                Rectangle box = elementSizes.get(i);
+            for(Map.Entry<Div, Rectangle> item: segment){
+                Div itemDiv =item.getKey();
+                Rectangle box = item.getValue();
                 AFloat aFloat = itemDiv.getFloat();
                 if (aFloat == AFloat.left) {
                     itemDiv.setX(startX);
@@ -133,13 +152,17 @@ public class StreamingLayoutAnalyzer {
             }
         }
         // 加入到虚拟页面中
-        content.forEach(vPage::add);
+        segment.getContent().forEach(vPage::add);
     }
 
-    private void newPage() {
+    /**
+     * 创建新页面
+     */
+    private void addNewPage() {
         // 重置工作区域
         remainArea = this.pageWorkArea.clone();
         vPage = new VirtualPage(layout);
+        vPageList.add(vPage);
     }
 
 }
