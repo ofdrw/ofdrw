@@ -93,14 +93,40 @@ public class StreamingLayoutAnalyzer {
     }
 
     /**
-     * 由于剩余空间不足，所以需要对段进行分块，剩余的块将流转到下一个页面的段中
+     * 由于剩余空间不足且段可以分块
+     * <p>
+     * 对段进行分块，剩余的块将流转到下一个页面的段中
      *
      * @param segment    段
-     * @param remainArea 剩余空间
+     * @param area 剩余空间
      * @return 分块后的段序列
      */
-    private List<Segment> segmentBlocking(Segment segment, Rectangle remainArea) {
-        // TODO 分块处理
+    private List<Segment> segmentBlocking(Segment segment, Rectangle area) {
+        // 分为两块
+
+        Segment sgm1 = new Segment(segment.getWidth());
+        Segment sgmNext = new Segment(segment.getWidth());
+        for (Map.Entry<Div, Rectangle> item : segment) {
+            Div div = item.getKey();
+            Rectangle rec = item.getValue();
+            // 1. 能够放置到剩余空间中
+            if (rec.getHeight() <= area.getHeight()) {
+                // 向第一个段，加入实际的Div
+                sgm1.tryAdd(div);
+                // 向第下一个段加入占位符
+                sgmNext.tryAdd(Div.placeholder(rec));
+                continue;
+            }
+            // 2. 在剩余空间中无法放置，且元素本身不可分割
+            if(div.getIntegrity()){
+                // 向第一个段中加入占位符
+                sgm1.tryAdd(Div.placeholder(rec.getWidth(), area.getHeight()));
+                // 把实际元素加入下一个段中
+                sgmNext.tryAdd(div);
+                continue;
+            }
+            // TODO 3. 无法在剩余空间中放置，且可以分割的情况，需要对元素进行分割
+        }
         return null;
     }
 
@@ -112,7 +138,7 @@ public class StreamingLayoutAnalyzer {
      */
     private void elementPositioning(Segment segment, Rectangle area) {
         // 将流式的自动定位转为绝对定位位置的Div
-        for(Map.Entry<Div, Rectangle> item: segment){
+        for (Map.Entry<Div, Rectangle> item : segment) {
             Div itemDiv = item.getKey();
             Rectangle box = item.getValue();
             // 将流式的自动定位转为绝对定位位置的Div
@@ -127,8 +153,8 @@ public class StreamingLayoutAnalyzer {
             double totalWidth = segment.getSizeList().stream().mapToDouble(Rectangle::getWidth).sum();
             // 第一个元素偏移的X坐标
             double offsetX = area.getX() + ((area.getWidth() - totalWidth) / 2);
-            for(Map.Entry<Div, Rectangle> item: segment){
-                Div itemDiv =item.getKey();
+            for (Map.Entry<Div, Rectangle> item : segment) {
+                Div itemDiv = item.getKey();
                 Rectangle box = item.getValue();
                 itemDiv.setX(offsetX);
                 // 增加偏移量计算出下一个box应该出现的位置
@@ -138,8 +164,8 @@ public class StreamingLayoutAnalyzer {
             // 左右浮动的分析
             double startX = area.getX();
             double endX = startX + area.getWidth();
-            for(Map.Entry<Div, Rectangle> item: segment){
-                Div itemDiv =item.getKey();
+            for (Map.Entry<Div, Rectangle> item : segment) {
+                Div itemDiv = item.getKey();
                 Rectangle box = item.getValue();
                 AFloat aFloat = itemDiv.getFloat();
                 if (aFloat == AFloat.left) {
@@ -152,7 +178,11 @@ public class StreamingLayoutAnalyzer {
             }
         }
         // 加入到虚拟页面中
-        segment.getContent().forEach(vPage::add);
+        segment.getContent()
+                .stream()
+                // 排除 空间占位符
+                .filter(item -> !item.isPlaceholder())
+                .forEach(vPage::add);
     }
 
     /**

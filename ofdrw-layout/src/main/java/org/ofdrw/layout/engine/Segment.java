@@ -24,7 +24,7 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
     /**
      * 段高度
      */
-    private double height;
+    private double height = 0d;
     /**
      * 段最大宽度
      */
@@ -43,6 +43,7 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
      * 默认值： false 不可拆分
      */
     private boolean blockable = false;
+
 
     public Segment(double width) {
         this.width = width;
@@ -69,21 +70,14 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
             return true;
         }
         // 剩余空间已经不足
+        // 可是是应为: 段内已经有元素，并且新加入的元素为独占，那么不能加入段中
+        //            也可能是刚好空间耗尽
         if (this.remainWidth == 0) {
             return false;
         }
-
-        Clear clear = div.getClear();
         AFloat aFloat = div.getFloat();
-
-        // 段内已经有元素，并且新加入的元素为独占，那么不能加入段中
-        if (content.size() != 0 && clear == Clear.both) {
-            return false;
-        }
-
         // 根据段宽度重置加入元素尺寸
         Rectangle blockSize = div.reSize(this.width);
-
         if (blockSize.getWidth() > this.remainWidth) {
             // 段剩余宽度不足无法放入元素，舍弃
             return false;
@@ -97,8 +91,6 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
          */
         if (div.isBlockElement()) {
             this.remainWidth = 0;
-            this.height = blockSize.getHeight();
-            content.add(div);
             add(div, blockSize);
             return true;
         }
@@ -107,9 +99,6 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
             return false;
         }
         this.remainWidth -= blockSize.getWidth();
-        if (height < blockSize.getHeight()) {
-            this.height = blockSize.getHeight();
-        }
         add(div, blockSize);
         return true;
     }
@@ -121,6 +110,9 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
      * @param blockSize 元素尺寸
      */
     private void add(Div div, Rectangle blockSize) {
+        if (height < blockSize.getHeight()) {
+            this.height = blockSize.getHeight();
+        }
         if (div.getIntegrity() == false) {
             // 判断是否可以拆分段，只要出现了一个可拆分的，那么该段就是可以拆分
             this.blockable = true;
@@ -207,6 +199,10 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
     @Override
     public void remove() {
         throw new UnsupportedOperationException();
+    }
+
+    public double getWidth() {
+        return width;
     }
 
     @Override

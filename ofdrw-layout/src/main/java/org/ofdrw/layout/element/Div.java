@@ -307,19 +307,44 @@ public class Div implements Measure {
     }
 
     /**
-     * 空的Div对象
+     * 占位符
+     * <p>
+     * 不参与渲染
+     */
+    private boolean isPlaceholder = false;
+
+    /**
+     * 判断是否为占位符
+     *
+     * @return true 占位符，不参与渲染， false - 非占位符
+     */
+    public boolean isPlaceholder() {
+        return isPlaceholder;
+    }
+
+    /**
+     * 空间占位符
      * <p>
      * 共享段空间，且不可分割
      *
      * @param width  宽度
      * @param height 高度
-     * @return div
+     * @return 空间占位符
      */
-    public static Div empty(double width, double height) {
+    public static Div placeholder(double width, double height) {
         return new Div()
                 .setWidth(width)
                 .setHeight(height)
                 .setClear(Clear.none)
                 .setIntegrity(true);
+    }
+
+    /**
+     * 空间占位符
+     * @param rec 矩形区域
+     * @return 空间占位符
+     */
+    public static Div placeholder(Rectangle rec) {
+        return placeholder(rec.getWidth(), rec.getHeight());
     }
 }
