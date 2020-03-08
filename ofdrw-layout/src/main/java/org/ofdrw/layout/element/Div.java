@@ -107,6 +107,13 @@ public class Div implements Measure {
     private Boolean integrity = false;
 
     /**
+     * 占位符
+     * <p>
+     * 不参与渲染
+     */
+    private boolean placeholder = false;
+
+    /**
      * 是否是块级元素
      * <p>
      * 块元素将会独占整个段
@@ -306,12 +313,6 @@ public class Div implements Measure {
         return new Rectangle(w, h);
     }
 
-    /**
-     * 占位符
-     * <p>
-     * 不参与渲染
-     */
-    private boolean isPlaceholder = false;
 
     /**
      * 判断是否为占位符
@@ -319,7 +320,12 @@ public class Div implements Measure {
      * @return true 占位符，不参与渲染， false - 非占位符
      */
     public boolean isPlaceholder() {
-        return isPlaceholder;
+        return placeholder;
+    }
+
+    public Div setPlaceholder(boolean placeholder) {
+        this.placeholder = placeholder;
+        return this;
     }
 
     /**
@@ -329,22 +335,27 @@ public class Div implements Measure {
      *
      * @param width  宽度
      * @param height 高度
+     * @param aFloat 浮动方向
      * @return 空间占位符
      */
-    public static Div placeholder(double width, double height) {
+    public static Div placeholder(double width, double height, AFloat aFloat) {
         return new Div()
+                .setPlaceholder(true)
                 .setWidth(width)
                 .setHeight(height)
+                .setFloat(aFloat)
                 .setClear(Clear.none)
                 .setIntegrity(true);
     }
 
     /**
      * 空间占位符
-     * @param rec 矩形区域
+     *
+     * @param rec    矩形区域
+     * @param aFloat 浮动方向
      * @return 空间占位符
      */
-    public static Div placeholder(Rectangle rec) {
-        return placeholder(rec.getWidth(), rec.getHeight());
+    public static Div placeholder(Rectangle rec, AFloat aFloat) {
+        return placeholder(rec.getWidth(), rec.getHeight(), aFloat);
     }
 }

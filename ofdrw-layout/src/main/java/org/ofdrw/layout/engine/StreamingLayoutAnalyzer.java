@@ -97,13 +97,12 @@ public class StreamingLayoutAnalyzer {
      * <p>
      * 对段进行分块，剩余的块将流转到下一个页面的段中
      *
-     * @param segment    段
-     * @param area 剩余空间
+     * @param segment 段
+     * @param area    剩余空间
      * @return 分块后的段序列
      */
     private List<Segment> segmentBlocking(Segment segment, Rectangle area) {
         // 分为两块
-
         Segment sgm1 = new Segment(segment.getWidth());
         Segment sgmNext = new Segment(segment.getWidth());
         for (Map.Entry<Div, Rectangle> item : segment) {
@@ -114,13 +113,13 @@ public class StreamingLayoutAnalyzer {
                 // 向第一个段，加入实际的Div
                 sgm1.tryAdd(div);
                 // 向第下一个段加入占位符
-                sgmNext.tryAdd(Div.placeholder(rec));
+                sgmNext.tryAdd(Div.placeholder(rec, div.getFloat()));
                 continue;
             }
             // 2. 在剩余空间中无法放置，且元素本身不可分割
-            if(div.getIntegrity()){
+            if (div.getIntegrity()) {
                 // 向第一个段中加入占位符
-                sgm1.tryAdd(Div.placeholder(rec.getWidth(), area.getHeight()));
+                sgm1.tryAdd(Div.placeholder(rec.getWidth(), area.getHeight(), div.getFloat()));
                 // 把实际元素加入下一个段中
                 sgmNext.tryAdd(div);
                 continue;
@@ -137,16 +136,9 @@ public class StreamingLayoutAnalyzer {
      * @param area    分配给该段的页面空间
      */
     private void elementPositioning(Segment segment, Rectangle area) {
-        // 将流式的自动定位转为绝对定位位置的Div
-        for (Map.Entry<Div, Rectangle> item : segment) {
-            Div itemDiv = item.getKey();
-            Rectangle box = item.getValue();
-            // 将流式的自动定位转为绝对定位位置的Div
-            itemDiv.setPosition(Position.Absolute)
-                    .setWidth(box.getWidth())
-                    .setHeight(box.getHeight())
-                    .setY(area.getY());
-        }
+        /*
+         根据浮动方式，判断元素在段中X坐标定位
+         */
         // 居中的布局分析
         if (segment.isCenterFloat()) {
             // 获取段内所有元素的宽度
@@ -177,12 +169,31 @@ public class StreamingLayoutAnalyzer {
                 }// ignore center and null
             }
         }
-        // 加入到虚拟页面中
-        segment.getContent()
-                .stream()
-                // 排除 空间占位符
-                .filter(item -> !item.isPlaceholder())
-                .forEach(vPage::add);
+
+        for (Map.Entry<Div, Rectangle> item : segment) {
+            Div itemDiv = item.getKey();
+            Rectangle box = item.getValue();
+            if (itemDiv.isPlaceholder()) {
+                // 占位符不参与绘制，跳过
+                continue;
+            }
+            /*
+             将流式的自动定位转为绝对定位位置的Div
+             */
+            itemDiv.setWidth(box.getWidth())
+                    .setHeight(box.getHeight())
+                    .setY(area.getY());
+            // 解决相对定位的位置
+            if (itemDiv.getPosition() == Position.Relative) {
+                Double x = itemDiv.getX();
+                Double y = itemDiv.getY();
+                itemDiv.setX(x + itemDiv.getLeft() - itemDiv.getRight())
+                        .setY(y + itemDiv.getTop());
+            }
+            itemDiv.setPosition(Position.Absolute);
+            // 加入到虚拟页面中
+            vPage.add(itemDiv);
+        }
     }
 
     /**
