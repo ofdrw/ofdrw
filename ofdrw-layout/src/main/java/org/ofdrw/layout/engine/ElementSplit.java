@@ -1,6 +1,5 @@
 package org.ofdrw.layout.engine;
 
-import org.ofdrw.layout.Rectangle;
 import org.ofdrw.layout.element.Div;
 
 /**
@@ -11,10 +10,18 @@ import org.ofdrw.layout.element.Div;
  */
 public interface ElementSplit {
     /**
-     * 根据给定的空间分割元素
+     * 根据给定的高度切分元素
+     * <p>
+     * 截断元素前必须确定元素的宽度和高度，否则将会抛出异常
+     * <p>
+     * 元素的分割只作用于竖直方向上，水平方向不做分割每次只会截断1次。
      *
-     * @param area 空间大小
-     * @return 根据给定空间分割之后的元素
+     * 截断的元素在截断出均无margin、border、padding
+     * <p>
+     * 截断后的内容比截断高度高的多
+     *
+     * @param sHeight   切分高度
+     * @return 根据给定空间分割之后的新元素
      */
-    Div[] split(Rectangle area);
+    Div[] split(double sHeight);
 }

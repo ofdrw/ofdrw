@@ -3,6 +3,9 @@ package org.ofdrw.layout.element;
 
 import org.ofdrw.layout.Measure;
 import org.ofdrw.layout.Rectangle;
+import org.ofdrw.layout.engine.ElementSplit;
+
+import java.util.Arrays;
 
 /**
  * 盒式模型基础
@@ -10,7 +13,7 @@ import org.ofdrw.layout.Rectangle;
  * @author 权观宇
  * @since 2020-02-03 12:46:15
  */
-public class Div implements Measure {
+public class Div implements Measure, ElementSplit {
 
     /**
      * 背景颜色
@@ -198,14 +201,149 @@ public class Div implements Measure {
         return this;
     }
 
+    public Div setBorder(double border) {
+        if (border < 0) {
+            border = 0;
+        }
+        this.border = new Double[]{
+                border, border, border, border
+        };
+        return this;
+    }
+
     public Double[] getMargin() {
         return margin;
+    }
+
+    public Div setMargin(double margin) {
+        if (margin < 0) {
+            margin = 0;
+        }
+        this.margin = new Double[]{margin, margin, margin, margin};
+        return this;
     }
 
     public Div setMargin(Double[] margin) {
         this.margin = ArrayParamTool.arr4p(margin);
         return this;
     }
+
+    public Double getMarginTop() {
+        return margin[0];
+    }
+
+    public Div setMarginTop(Double top) {
+        margin[0] = top;
+        return this;
+    }
+
+    public Double getMarginRight() {
+        return margin[1];
+    }
+
+    public Div setMarginRight(Double right) {
+        margin[1] = right;
+        return this;
+    }
+
+    public Double getMarginBottom() {
+        return margin[2];
+    }
+
+    public Div setMarginBottom(Double bottom) {
+        margin[2] = bottom;
+        return this;
+    }
+
+    public Double getMarginLeft() {
+        return margin[3];
+    }
+
+    public Div setMarginLeft(Double left) {
+        margin[3] = left;
+        return this;
+    }
+
+    public Double getBorderTop() {
+        return border[0];
+    }
+
+    public Div setBorderTop(Double top) {
+        border[0] = top;
+        return this;
+    }
+
+    public Double getBorderRight() {
+        return border[1];
+    }
+
+    public Div setBorderRight(Double right) {
+        border[1] = right;
+        return this;
+    }
+
+    public Double getBorderBottom() {
+        return border[2];
+    }
+
+    public Div setBorderBottom(Double bottom) {
+        border[2] = bottom;
+        return this;
+    }
+
+    public Double getBorderLeft() {
+        return border[3];
+    }
+
+    public Div setBorderLeft(Double left) {
+        border[3] = left;
+        return this;
+    }
+
+    public Div setPadding(double padding) {
+        if (padding < 0) {
+            padding = 0;
+        }
+        this.padding = new Double[]{padding, padding, padding, padding};
+        return this;
+    }
+
+    public Double getPaddingTop() {
+        return padding[0];
+    }
+
+    public Div setPaddingTop(Double top) {
+        padding[0] = top;
+        return this;
+    }
+
+    public Double getPaddingRight() {
+        return padding[1];
+    }
+
+    public Div setPaddingRight(Double right) {
+        padding[1] = right;
+        return this;
+    }
+
+    public Double getPaddingBottom() {
+        return padding[2];
+    }
+
+    public Div setPaddingBottom(Double bottom) {
+        padding[2] = bottom;
+        return this;
+    }
+
+    public Double getPaddingLeft() {
+        return padding[3];
+    }
+
+    public Div setPaddingLeft(Double left) {
+        padding[3] = left;
+        return this;
+    }
+
 
     public Double getX() {
         return x;
@@ -271,7 +409,7 @@ public class Div implements Measure {
     }
 
     /**
-     * @return 而外宽度
+     * @return 额外宽度
      */
     protected double widthPlus() {
         return (this.margin[1] + this.margin[3])
@@ -280,7 +418,7 @@ public class Div implements Measure {
     }
 
     /**
-     * @return 而外高度
+     * @return 额外高度
      */
     protected double heightPlus() {
         return (this.margin[0] + this.margin[2])
@@ -357,5 +495,108 @@ public class Div implements Measure {
      */
     public static Div placeholder(Rectangle rec, AFloat aFloat) {
         return placeholder(rec.getWidth(), rec.getHeight(), aFloat);
+    }
+
+
+    /**
+     * 克隆Div
+     *
+     * @return 一模一样的全新Div对象
+     */
+    @Override
+    public Div clone() {
+        Div div = new Div();
+        div.backgroundColor = backgroundColor;
+        div.width = width;
+        div.height = height;
+        div.padding = padding.clone();
+        div.border = border.clone();
+        div.margin = margin.clone();
+        div.x = x;
+        div.y = y;
+        div.clear = clear;
+        div.aFloat = aFloat;
+        div.left = left;
+        div.right = right;
+        div.top = top;
+        div.position = position;
+        div.integrity = integrity;
+        div.placeholder = placeholder;
+        return div;
+    }
+
+    /**
+     * 根据给定的高度切分元素
+     * <p>
+     * 截断元素前必须确定元素的宽度和高度，否则将会抛出异常
+     * <p>
+     * 元素的分割只作用于竖直方向上，水平方向不做分割每次只会截断1次。
+     * <p>
+     * 截断的元素在截断出均无margin、border、padding
+     * <p>
+     * 截断后的内容比截断高度高的多
+     *
+     * @param sHeight 切分高度
+     * @return 根据给定空间分割之后的新元素
+     */
+    @Override
+    public Div[] split(double sHeight) {
+        if (width == null || height == null) {
+            throw new IllegalStateException("分割元素必须具有固定的宽度以及高度，width或height为空");
+        }
+        double totalH = height + heightPlus();
+        if (totalH <= sHeight) {
+            // 小于切分高度时返还自身，表示不切分
+            return new Div[]{this};
+        }
+        // 否则切分元素，首先克隆元素
+        Div div1 = this.clone();
+        Div div2 = this.clone();
+         /*
+         调整边框等配置
+         div1 无下边，总高度为切分高度
+         div2 无上边，高度为剩余高度
+          */
+        // 减去顶边的布局区域
+        double h1 = sHeight - (div1.getMarginTop() + div1.getBorderTop() + div1.getPaddingTop());
+        div1.setHeight(h1)
+                // 取消低边的所有布局
+                .setMarginBottom(0d)
+                .setBorderBottom(0d)
+                .setPaddingBottom(0d);
+
+        // 减去截断内容
+        double h2 = div2.height - h1;
+        div2.setHeight(h2)
+                // 取消顶边的所有布局
+                .setMarginTop(0d)
+                .setBorderTop(0d)
+                .setPaddingTop(0d);
+
+        return new Div[]{
+                div1, div2
+        };
+    }
+
+    @Override
+    public String toString() {
+        return "Div{" +
+                "backgroundColor=" + Arrays.toString(backgroundColor) +
+                ", width=" + width +
+                ", height=" + height +
+                ", padding=" + Arrays.toString(padding) +
+                ", border=" + Arrays.toString(border) +
+                ", margin=" + Arrays.toString(margin) +
+                ", x=" + x +
+                ", y=" + y +
+                ", clear=" + clear +
+                ", aFloat=" + aFloat +
+                ", left=" + left +
+                ", right=" + right +
+                ", top=" + top +
+                ", position=" + position +
+                ", integrity=" + integrity +
+                ", placeholder=" + placeholder +
+                '}';
     }
 }
