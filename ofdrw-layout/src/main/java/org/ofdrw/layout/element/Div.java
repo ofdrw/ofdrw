@@ -1,7 +1,7 @@
 package org.ofdrw.layout.element;
 
 
-import org.ofdrw.layout.Measure;
+import org.ofdrw.layout.RenderPrepare;
 import org.ofdrw.layout.Rectangle;
 import org.ofdrw.layout.engine.ElementSplit;
 
@@ -13,7 +13,7 @@ import java.util.Arrays;
  * @author 权观宇
  * @since 2020-02-03 12:46:15
  */
-public class Div implements Measure, ElementSplit {
+public class Div implements RenderPrepare, ElementSplit {
 
     /**
      * 背景颜色
@@ -399,7 +399,12 @@ public class Div implements Measure, ElementSplit {
         return this;
     }
 
-    public Boolean getIntegrity() {
+    /**
+     * 元素是否可以拆分
+     *
+     * @return true - 可以拆分；false - 无法拆分
+     */
+    public Boolean isIntegrity() {
         return integrity;
     }
 
@@ -433,7 +438,7 @@ public class Div implements Measure, ElementSplit {
      * @return 元素尺寸
      */
     @Override
-    public Rectangle reSize(Double widthLimit) {
+    public Rectangle doPrepare(Double widthLimit) {
         if (this.height == null || this.width == null) {
             return Rectangle.Empty;
         }
@@ -542,7 +547,7 @@ public class Div implements Measure, ElementSplit {
     @Override
     public Div[] split(double sHeight) {
         if (width == null || height == null) {
-            throw new IllegalStateException("分割元素必须具有固定的宽度以及高度，width或height为空");
+            throw new RuntimeException("切分元素必须要有固定的宽度（width）和高度（height）");
         }
         double totalH = height + heightPlus();
         if (totalH <= sHeight) {

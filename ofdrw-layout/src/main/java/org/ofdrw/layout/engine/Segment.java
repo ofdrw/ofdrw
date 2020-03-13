@@ -2,9 +2,7 @@ package org.ofdrw.layout.engine;
 
 import org.ofdrw.layout.Rectangle;
 import org.ofdrw.layout.element.AFloat;
-import org.ofdrw.layout.element.Clear;
 import org.ofdrw.layout.element.Div;
-import org.ofdrw.layout.element.Position;
 
 import java.util.*;
 
@@ -77,7 +75,7 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
         }
         AFloat aFloat = div.getFloat();
         // 根据段宽度重置加入元素尺寸
-        Rectangle blockSize = div.reSize(this.width);
+        Rectangle blockSize = div.doPrepare(this.width);
         if (blockSize.getWidth() > this.remainWidth) {
             // 段剩余宽度不足无法放入元素，舍弃
             return false;
@@ -113,7 +111,7 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
         if (height < blockSize.getHeight()) {
             this.height = blockSize.getHeight();
         }
-        if (div.getIntegrity() == false) {
+        if (div.isIntegrity() == false) {
             // 判断是否可以拆分段，只要出现了一个可拆分的，那么该段就是可以拆分
             this.blockable = true;
         }

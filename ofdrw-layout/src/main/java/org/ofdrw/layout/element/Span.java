@@ -65,6 +65,8 @@ public class Span {
      */
     private Boolean integrity = false;
 
+    private LinkedList<TxtGlyph> txtGlyphsCache;
+
     private Span() {
         this.setFont(Font.getDefault());
     }
@@ -72,7 +74,7 @@ public class Span {
     public Span(Font font, Double fontSize, String text) {
         this.font = font;
         this.fontSize = fontSize;
-        this.text = text;
+        setText(text);
     }
 
     public Span(String text) {
@@ -80,7 +82,14 @@ public class Span {
         if (text == null) {
             throw new IllegalArgumentException("text内容为空");
         }
-        this.text = text;
+        setText(text);
+    }
+
+    /**
+     * @return 字符数量
+     */
+    public int length() {
+        return text.length();
     }
 
     public Font getFont() {
@@ -143,10 +152,19 @@ public class Span {
 
     public Span setText(String text) {
         this.text = text;
+        if (txtGlyphsCache != null) {
+            // 如果已经存在缓存，那么重新建立缓存
+            glyphList();
+        }
         return this;
     }
 
-    public Boolean getIntegrity() {
+    /**
+     * 元素是否可以拆分
+     *
+     * @return true 可以拆分；false 不能拆分
+     */
+    public Boolean isIntegrity() {
         return integrity;
     }
 
@@ -161,11 +179,13 @@ public class Span {
      * @return 字体图形列表
      */
     public List<TxtGlyph> glyphList() {
-        LinkedList<TxtGlyph> res = new LinkedList<>();
-        for (char c : this.text.toCharArray()) {
-            res.add(new TxtGlyph(c, this));
+        if (txtGlyphsCache == null) {
+            txtGlyphsCache = new LinkedList<>();
+            for (char c : this.text.toCharArray()) {
+                txtGlyphsCache.add(new TxtGlyph(c, this));
+            }
         }
-        return res;
+        return txtGlyphsCache;
     }
 
     /**
@@ -182,4 +202,34 @@ public class Span {
         return new Rectangle(width, height);
     }
 
+    /**
+     * 切分元素
+     *
+     * @param index 字符坐标
+     * @return 切分后的两个全新元素
+     */
+    public Span[] split(int index) {
+        if (index < 0 || index >= text.length()) {
+            throw new IllegalArgumentException("非法的切分数组坐标(index): " + index);
+        }
+        Span s1 = this.clone();
+        s1.text = this.text.substring(0, index);
+        Span s2 = this.clone();
+        s2.text = this.text.substring(index);
+        return new Span[]{s1, s2};
+    }
+
+    @Override
+    public Span clone() {
+        Span span = new Span();
+        span.font = font;
+        span.fontSize = fontSize;
+        span.letterSpacing = letterSpacing;
+        span.bold = bold;
+        span.italic = italic;
+        span.underline = underline;
+        span.text = new String(text);
+        span.integrity = integrity;
+        return span;
+    }
 }

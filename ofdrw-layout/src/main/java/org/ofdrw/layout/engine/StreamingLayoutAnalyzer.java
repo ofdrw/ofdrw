@@ -117,7 +117,7 @@ public class StreamingLayoutAnalyzer {
                 continue;
             }
             // 2. 在剩余空间中无法放置，且元素本身不可分割
-            if (div.getIntegrity()) {
+            if (div.isIntegrity()) {
                 // 向第一个段中加入占位符
                 sgm1.tryAdd(Div.placeholder(rec.getWidth(), area.getHeight(), div.getFloat()));
                 // 把实际元素加入下一个段中

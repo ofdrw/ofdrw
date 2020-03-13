@@ -1,6 +1,7 @@
 package org.ofdrw.layout.element;
 
 import org.ofdrw.layout.Rectangle;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -33,16 +34,20 @@ public class Paragraph extends Div {
      */
     private LinkedList<Span> contents;
 
+    private LinkedList<TxtLineBlock> lineCache;
+
 
     public Paragraph() {
         this.setClear(Clear.both);
         this.contents = new LinkedList<>();
+        this.lineCache = new LinkedList<>();
     }
 
     /**
      * @param text 文字内容
      */
     public Paragraph(String text) {
+        this();
         if (text == null) {
             throw new IllegalArgumentException("文字内容为null");
         }
@@ -123,71 +128,114 @@ public class Paragraph extends Div {
     }
 
     /**
+     * 创建新的行
+     *
+     * @return 行块
+     */
+    private TxtLineBlock newLine() {
+        return new TxtLineBlock(getWidth(), lineSpace);
+    }
+
+    /**
      * 获取尺寸
      *
      * @param widthLimit 宽度限制
      * @return 元素尺寸
      */
     @Override
-    public Rectangle reSize(Double widthLimit) {
+    public Rectangle doPrepare(Double widthLimit) {
+        this.lineCache.clear();
         Double width = this.getWidth();
         if (widthLimit == null) {
             throw new NullPointerException("widthLimit为空");
         }
-        widthLimit -= this.widthPlus();
+        widthLimit -= widthPlus();
         if (width == null || (width > widthLimit)) {
             // TODO 尺寸重设警告日志
             width = widthLimit;
         }
-        double widthRemain = width;
-        double height = 0;
-        double lineHeight = 0;
-        for (Span s : this.contents) {
-            // Span 不可分割的情况的分析
-            if (s.getIntegrity()) {
-                // 获取Span整体的块的大小
-                Rectangle blockSize = s.blockSize();
-                double blockWidth = blockSize.getWidth();
-                // 不可分割元素如果大于行宽度则忽略
-                if (blockWidth > width) {
-                    continue;
-                } else if (blockWidth <= widthRemain) {
-                    // 行内剩余宽度足够，则放入行中
-                    widthRemain -= blockWidth;
-                    // 加入行后，判断是否需要提升行高度
-                    if (lineHeight < blockSize.getHeight()) {
-                        lineHeight = blockSize.getHeight();
-                    }
-                } else {
-                    height += lineHeight + this.lineSpace;
-                    widthRemain = width;
-                    lineHeight = 0;
-                }
+        setWidth(width);
+        TxtLineBlock line = newLine();
+        LinkedList<Span> seq = new LinkedList<>(contents);
+        while (!seq.isEmpty()) {
+            Span s = seq.pop();
+
+            // 获取Span整体的块的大小
+            double blockWidth = s.blockSize().getWidth();
+            if (blockWidth > width && s.isIntegrity()) {
+                // TODO 警告 不可分割元素如果大于行宽度则忽略
                 continue;
             }
-            // Span可以被换行等分割的情况
-            for (TxtGlyph txt : s.glyphList()) {
-                if (txt.getW() > widthRemain) {
-                    // 剩余空间不足则需要换行
-                    height += lineHeight + this.lineSpace;
-                    // 重置行元素
-                    widthRemain = width;
-                    lineHeight = 0;
-                }
-                widthRemain -= txt.getW();
-                if (txt.getH() > lineHeight) {
-                    // 如果高度比原来行高高那么更新行高
-                    lineHeight = txt.getH();
-                }
+
+            // 尝试向行中加入元素
+            boolean added = line.tryAdd(s);
+            if (added) {
+                // 成功加入
+                continue;
             }
+
+            // 无法加入行内，且Span 不可分割，那么需要换行
+            if (s.isIntegrity()) {
+                lineCache.add(line);
+                line = newLine();
+                // 重新进入队列
+                seq.push(s);
+                continue;
+            }
+            // 由于文字单元可以分割，那么尝试通过分割的方式填充该行
+            Span toNextLineSpan = line.trySplitAdd(s);
+            if (toNextLineSpan == null) {
+                // 行空间耗尽，重新加入队列
+                seq.push(s);
+            } else {
+                // 将切分后的文字单元加入队列
+                seq.push(toNextLineSpan);
+            }
+            lineCache.add(line);
+            line = newLine();
         }
-        if (widthRemain != width) {
-            // 剩余最后一行加入到高度中
-            height += lineHeight;
+        // 最后一行处理
+        if (!line.isEmpty()) {
+            lineCache.add(line);
         }
+        // 合并所有行的高度
+        double height = lineCache.stream()
+                .mapToDouble(TxtLineBlock::getHeight)
+                .sum();
+        // 设置元素高度
+        setHeight(height);
         width += widthPlus();
         height += heightPlus();
         return new Rectangle(width, height);
+    }
 
+
+    /**
+     * 根据给定的切分段落
+     * <p>
+     * 段落会根据指定的宽度和高度，判断空间是否能够容纳该行，
+     * 如果无法容纳，那么将会切分文字内容到两个独立的段落中。
+     *
+     * <p>
+     * 截断元素前必须确定元素的宽度和高度，否则将会抛出异常
+     * <p>
+     * 截断的元素在截断出均无margin、border、padding
+     *
+     * @param sHeight 切分高度
+     * @return 根据给定空间分割之后的新元素
+     */
+    @Override
+    public Div[] split(double sHeight) {
+        Double width = this.getWidth();
+        Double height = getHeight();
+        if (width == null || height == null) {
+            throw new RuntimeException("切分元素必须要有固定的宽度（width）和高度（height），请先运行reSize方法");
+        }
+        if (height + heightPlus() <= sHeight) {
+            // 不足够切分
+            return new Div[]{this};
+        }
+        // TODO 通过行缓存决定如何切分
+        throw new NotImplementedException();
     }
 }
