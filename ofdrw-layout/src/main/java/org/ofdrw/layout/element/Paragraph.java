@@ -5,6 +5,8 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * 段落
@@ -34,13 +36,16 @@ public class Paragraph extends Div {
      */
     private LinkedList<Span> contents;
 
-    private LinkedList<TxtLineBlock> lineCache;
+    /**
+     * 元素内行缓存
+     */
+    private LinkedList<TxtLineBlock> lines;
 
 
     public Paragraph() {
         this.setClear(Clear.both);
         this.contents = new LinkedList<>();
-        this.lineCache = new LinkedList<>();
+        this.lines = new LinkedList<>();
     }
 
     /**
@@ -137,14 +142,14 @@ public class Paragraph extends Div {
     }
 
     /**
-     * 获取尺寸
+     * 预布局
      *
      * @param widthLimit 宽度限制
      * @return 元素尺寸
      */
     @Override
     public Rectangle doPrepare(Double widthLimit) {
-        this.lineCache.clear();
+        this.lines.clear();
         Double width = this.getWidth();
         if (widthLimit == null) {
             throw new NullPointerException("widthLimit为空");
@@ -176,7 +181,7 @@ public class Paragraph extends Div {
 
             // 无法加入行内，且Span 不可分割，那么需要换行
             if (s.isIntegrity()) {
-                lineCache.add(line);
+                lines.add(line);
                 line = newLine();
                 // 重新进入队列
                 seq.push(s);
@@ -191,15 +196,15 @@ public class Paragraph extends Div {
                 // 将切分后的文字单元加入队列
                 seq.push(toNextLineSpan);
             }
-            lineCache.add(line);
+            lines.add(line);
             line = newLine();
         }
         // 最后一行处理
         if (!line.isEmpty()) {
-            lineCache.add(line);
+            lines.add(line);
         }
         // 合并所有行的高度
-        double height = lineCache.stream()
+        double height = lines.stream()
                 .mapToDouble(TxtLineBlock::getHeight)
                 .sum();
         // 设置元素高度
@@ -209,6 +214,19 @@ public class Paragraph extends Div {
         return new Rectangle(width, height);
     }
 
+    /**
+     * 设置行元素，并行中文字单元加入到内容中
+     *
+     * @param lines 行序列
+     * @return this
+     */
+    private Paragraph setLines(LinkedList<TxtLineBlock> lines) {
+        this.lines = lines;
+        for (TxtLineBlock item : lines) {
+            this.contents.addAll(item.getInlineSpans());
+        }
+        return this;
+    }
 
     /**
      * 根据给定的切分段落
@@ -229,13 +247,53 @@ public class Paragraph extends Div {
         Double width = this.getWidth();
         Double height = getHeight();
         if (width == null || height == null) {
-            throw new RuntimeException("切分元素必须要有固定的宽度（width）和高度（height），请先运行reSize方法");
+            throw new RuntimeException("切分元素必须要有固定的宽度（width）和高度（height）");
         }
         if (height + heightPlus() <= sHeight) {
             // 不足够切分
             return new Div[]{this};
         }
-        // TODO 通过行缓存决定如何切分
+        if (lines.isEmpty()) {
+            throw new IllegalStateException("没有找到可用行，是否已经运行");
+        }
+
+        LinkedList<TxtLineBlock> seq2 = new LinkedList<>(this.lines);
+        LinkedList<TxtLineBlock> seq1 = new LinkedList<>();
+        double remainHeight = sHeight - getMarginTop() - getBorderTop() - getPaddingTop();
+        while (!seq2.isEmpty()) {
+            TxtLineBlock line = seq2.pop();
+            if (remainHeight < line.getHeight()) {
+                // 空间不足
+                seq2.push(line);
+                break;
+            } else {
+                seq1.add(line);
+                remainHeight -= line.getHeight();
+            }
+        }
+        Paragraph p1, p2;
+        // TODO seq2 为空可能由于Margin等参数导致的空间不足
+        // TODO seq1 表示剩余空间一个元素也无法放下的情况
+
         throw new NotImplementedException();
+    }
+
+
+    /**
+     * 请勿调用该方法克隆段落，除非你知道你在干什么
+     *
+     * @return 属性一模一样，但是没有任何内容的段落
+     */
+    @Override
+    public Paragraph clone() {
+        Paragraph p = new Paragraph();
+        p = this.copyTo(p);
+        p.lineSpace = lineSpace;
+        p.defaultFont = defaultFont;
+        p.defaultFontSize = defaultFontSize;
+
+        p.lines = new LinkedList<>();
+        p.contents = new LinkedList<>();
+        return p;
     }
 }

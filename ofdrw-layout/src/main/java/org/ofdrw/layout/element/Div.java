@@ -511,23 +511,35 @@ public class Div implements RenderPrepare, ElementSplit {
     @Override
     public Div clone() {
         Div div = new Div();
-        div.backgroundColor = backgroundColor;
-        div.width = width;
-        div.height = height;
-        div.padding = padding.clone();
-        div.border = border.clone();
-        div.margin = margin.clone();
-        div.x = x;
-        div.y = y;
-        div.clear = clear;
-        div.aFloat = aFloat;
-        div.left = left;
-        div.right = right;
-        div.top = top;
-        div.position = position;
-        div.integrity = integrity;
-        div.placeholder = placeholder;
+        return copyTo(div);
+    }
+
+    /**
+     * Clone到制定对象
+     *
+     * @param div 目标对象
+     * @param <T> 泛型参数
+     * @return 克隆复制后的对象
+     */
+    public <T extends Div> T copyTo(T div) {
+        div.setBackgroundColor(backgroundColor[0], backgroundColor[1], backgroundColor[2]);
+        div.setWidth(width);
+        div.setHeight(height);
+        div.setPadding(padding.clone());
+        div.setBorder(border.clone());
+        div.setMargin(margin.clone());
+        div.setX(x);
+        div.setY(y);
+        div.setClear(clear);
+        div.setFloat(aFloat);
+        div.setLeft(left);
+        div.setRight(right);
+        div.setTop(top);
+        div.setPosition(position);
+        div.setIntegrity(integrity);
+        div.setPlaceholder(placeholder);
         return div;
+
     }
 
     /**
