@@ -33,6 +33,41 @@ public class ParagraphTest {
         rectangle = p1.doPrepare(56d);
         System.out.println(rectangle);
         Assertions.assertEquals(rectangle.getHeight(), 12 + (15 + 2) * 2);
+        int cnt = 0;
+        for (TxtLineBlock line : p1.getLines()) {
+            cnt++;
+            System.out.print(cnt + ": ");
+            line.getInlineSpans().forEach(s-> System.out.print(s.getText()));
+            System.out.println();
+        }
+    }
+
+    @Test
+    public void split() {
+        Paragraph p = new Paragraph().setFontSize(10d).add("岂不美哉");
+        Span span = new Span("妙妙oh").setFontSize(15d).setLetterSpacing(3d);
+        p.add(span);
+        p.doPrepare(55d);
+        /*
+        line1: 岂不美哉 40 = 10 * 4 | H 10
+        lineSpace: 2
+        line2: 妙妙o    46 = (15 + 3) * 2 + (7 + 1 + 3) | H 15
+        lineSpace: 2
+        line3: h        10 = 7 + 1 + 3 | H 15
+        lineSpace: 2
+
+        height = 10 + 15 * 2 + 2 * 3 = 46
+        */
+        Div[] sp1 =p.split(11);
+        Assertions.assertEquals(sp1.length, 2);
+        Assertions.assertTrue(sp1[0].isPlaceholder());
+        Assertions.assertEquals(sp1[0].doPrepare(55d).getHeight(), 11);
+
+        Div[] sp2 = p.split(12);
+        Assertions.assertEquals(((Paragraph)sp2[1]).getLines().size(), 2);
+
+        p.setMarginTop(12d);
 
     }
+
 }

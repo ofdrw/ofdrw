@@ -132,6 +132,10 @@ public class Paragraph extends Div {
         return this;
     }
 
+    public LinkedList<TxtLineBlock> getLines() {
+        return lines;
+    }
+
     /**
      * 创建新的行
      *
@@ -256,6 +260,7 @@ public class Paragraph extends Div {
         if (lines.isEmpty()) {
             throw new IllegalStateException("没有找到可用行，是否已经运行");
         }
+        // TODO Margin、border、padding 切分情况处理同Div
 
         LinkedList<TxtLineBlock> seq2 = new LinkedList<>(this.lines);
         LinkedList<TxtLineBlock> seq1 = new LinkedList<>();
@@ -272,10 +277,34 @@ public class Paragraph extends Div {
             }
         }
         Paragraph p1, p2;
-        // TODO seq2 为空可能由于Margin等参数导致的空间不足
-        // TODO seq1 表示剩余空间一个元素也无法放下的情况
-
-        throw new NotImplementedException();
+        // seq2 为空可能由于Margin等参数导致的空间不足
+        if (seq2.isEmpty()) {
+            p1 = clone().setLines(seq1);
+            p1.setMarginBottom(0d)
+                    .setBorderBottom(0d)
+                    .setPaddingBottom(0d);
+            Div div2 = this.copyTo(new Div());
+            div2.setHeight(0d)
+                    .setMarginTop(0d)
+                    .setBorderTop(0d)
+                    .setPaddingTop(0d);
+            return new Div[]{p1, div2};
+        }
+        // 剩余空间一行都无法放下的情况，整个对象放到下一个段中，并使用占位符占有上一个段的空间
+        if (seq1.isEmpty()) {
+            Div placeholder = Div.placeholder(this.getWidth() + widthPlus(), sHeight, this.getFloat());
+            return new Div[]{placeholder, this};
+        }
+        // 正常情况下的分割
+        p1 = clone().setLines(seq1);
+        p1.setMarginBottom(0d)
+                .setBorderBottom(0d)
+                .setPaddingBottom(0d);
+        p2 = clone().setLines(seq2);
+        p2.setMarginTop(0d)
+                .setBorderTop(0d)
+                .setPaddingTop(0d);
+        return new Div[]{p1, p2};
     }
 
 

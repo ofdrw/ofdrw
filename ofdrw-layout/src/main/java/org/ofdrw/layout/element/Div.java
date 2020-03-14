@@ -165,6 +165,11 @@ public class Div implements RenderPrepare, ElementSplit {
         return this;
     }
 
+    Div setBackgroundColor(int[] backgroundColor) {
+        this.backgroundColor = backgroundColor;
+        return this;
+    }
+
     public Double getWidth() {
         return width;
     }
@@ -458,6 +463,23 @@ public class Div implements RenderPrepare, ElementSplit {
 
 
     /**
+     * 获取模型区域大小
+     * <p>
+     * 注意：该方法必须在元素内容大小确定的情况才能放回正确的尺寸
+     * <p>
+     * 也就是说必须在 {@link #doPrepare(Double)} 或是手动设置宽度和高度之后调用才能返还正确值
+     *
+     * @return 模型大小
+     */
+    public Rectangle box() {
+        double w = this.width + widthPlus();
+        double h = this.height + heightPlus();
+
+        return new Rectangle(w, h);
+    }
+
+
+    /**
      * 判断是否为占位符
      *
      * @return true 占位符，不参与渲染， false - 非占位符
@@ -522,7 +544,7 @@ public class Div implements RenderPrepare, ElementSplit {
      * @return 克隆复制后的对象
      */
     public <T extends Div> T copyTo(T div) {
-        div.setBackgroundColor(backgroundColor[0], backgroundColor[1], backgroundColor[2]);
+        div.setBackgroundColor(backgroundColor == null ? null : backgroundColor.clone());
         div.setWidth(width);
         div.setHeight(height);
         div.setPadding(padding.clone());
@@ -569,6 +591,49 @@ public class Div implements RenderPrepare, ElementSplit {
         // 否则切分元素，首先克隆元素
         Div div1 = this.clone();
         Div div2 = this.clone();
+
+        /*
+         Margin border Padding 的考虑
+         */
+        if (getMarginTop() >= sHeight) {
+            // Margin 分段情况
+            double deltaM = getMarginTop() - sHeight;
+            // 只留下一个Margin的div
+            div1.setMarginTop(sHeight)
+                    .setBorderTop(0d)
+                    .setPaddingTop(0d)
+                    .setHeight(0d)
+                    .setPaddingBottom(0d)
+                    .setBorderBottom(0d)
+                    .setMarginBottom(0d);
+            // 减去部分残留在上一个段的margin
+            div2.setMarginTop(deltaM);
+            return new Div[]{div1, div2};
+        } else if (getMarginTop() + getBorderTop() >= sHeight) {
+            // Border + Margin 耗尽了空间 分段的情况
+            double deltaB = getBorderTop() - (sHeight - getMarginTop());
+            // 剩余空间除去Margin剩下都是border
+            div1.setBorderTop(sHeight - getMarginTop())
+                    .setPaddingTop(0d)
+                    .setHeight(0d)
+                    .setPaddingBottom(0d)
+                    .setMarginBottom(0d);
+            // 减去margin和border
+            div2.setMarginTop(0d)
+                    .setBorderTop(deltaB);
+            return new Div[]{div1, div2};
+        } else if (getMarginTop() + getBorderTop() + getPaddingTop() >= sHeight) {
+            double deltaP = getPaddingTop() - (sHeight - getMarginTop() - getBorderTop());
+            div1.setPaddingTop(sHeight - getMarginTop() - getBorderTop())
+                    .setHeight(0d)
+                    .setPaddingBottom(0d)
+                    .setMarginBottom(0d);
+            div2.setMarginTop(0d)
+                    .setBorderTop(0d)
+                    .setPaddingTop(deltaP);
+            return new Div[]{div1, div2};
+        }
+        // 切割内容的情况
          /*
          调整边框等配置
          div1 无下边，总高度为切分高度
