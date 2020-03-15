@@ -54,7 +54,7 @@ public class StreamingLayoutAnalyzer {
      * @param segmentSequence 段序列
      * @return 虚拟页面序列
      */
-    List<VirtualPage> analyze(List<Segment> segmentSequence) {
+    public List<VirtualPage> analyze(List<Segment> segmentSequence) {
         if (segmentSequence == null || segmentSequence.isEmpty()) {
             return Collections.emptyList();
         }
@@ -74,7 +74,7 @@ public class StreamingLayoutAnalyzer {
             // 判断段是否可以拆分
             if (segment.isBlockable() == false) {
                 if (segment.getHeight() > pageWorkArea.getWidth()) {
-                    // 如果段不可拆分，并且高度大于整个页面的高度，那么这样的段应该舍弃
+                    // TODO 警告: 如果段不可拆分，并且高度大于整个页面的高度，那么这样的段应该舍弃
                 } else {
                     // 如果段不可拆分，并且高度小于整个页面的高度，那么新起一个页面，重新加入队列布局
                     addNewPage();
@@ -89,7 +89,7 @@ public class StreamingLayoutAnalyzer {
             // 重新进入队列中
             blocks.forEach(seq::push);
         }
-        return null;
+        return vPageList;
     }
 
     /**
@@ -103,13 +103,15 @@ public class StreamingLayoutAnalyzer {
      */
     private List<Segment> segmentBlocking(Segment segment, Rectangle area) {
         // 分为两块
+        LinkedList<Segment> res = new LinkedList<>();
         Segment sgm1 = new Segment(segment.getWidth());
         Segment sgmNext = new Segment(segment.getWidth());
         for (Map.Entry<Div, Rectangle> item : segment) {
             Div div = item.getKey();
             Rectangle rec = item.getValue();
             // 1. 能够放置到剩余空间中
-            if (rec.getHeight() <= area.getHeight()) {
+            double availableHeight = area.getHeight();
+            if (rec.getHeight() <= availableHeight) {
                 // 向第一个段，加入实际的Div
                 sgm1.tryAdd(div);
                 // 向第下一个段加入占位符
@@ -119,14 +121,19 @@ public class StreamingLayoutAnalyzer {
             // 2. 在剩余空间中无法放置，且元素本身不可分割
             if (div.isIntegrity()) {
                 // 向第一个段中加入占位符
-                sgm1.tryAdd(Div.placeholder(rec.getWidth(), area.getHeight(), div.getFloat()));
+                sgm1.tryAdd(Div.placeholder(rec.getWidth(), availableHeight, div.getFloat()));
                 // 把实际元素加入下一个段中
                 sgmNext.tryAdd(div);
                 continue;
             }
-            // TODO 3. 无法在剩余空间中放置，且可以分割的情况，需要对元素进行分割
+            // 3. 无法在剩余空间中放置，且可以分割的情况，需要对元素进行分割
+            Div[] split = div.split(availableHeight);
+            sgm1.tryAdd(split[0]);
+            sgmNext.tryAdd(split[1]);
         }
-        return null;
+        res.add(sgm1);
+        res.add(sgmNext);
+        return res;
     }
 
     /**
