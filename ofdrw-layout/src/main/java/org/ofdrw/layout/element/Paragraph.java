@@ -261,6 +261,51 @@ public class Paragraph extends Div {
             throw new IllegalStateException("没有找到可用行，是否已经运行");
         }
         // TODO Margin、border、padding 切分情况处理同Div
+         /*
+         Margin border Padding 的考虑
+         */
+        if (getMarginTop() >= sHeight) {
+            // Margin 分段情况
+            double deltaM = getMarginTop() - sHeight;
+            // 只留下一个Margin的div
+            Div div1 = this.copyTo(new Div());
+            div1.setMarginTop(sHeight)
+                    .setBorderTop(0d)
+                    .setPaddingTop(0d)
+                    .setHeight(0d)
+                    .setPaddingBottom(0d)
+                    .setBorderBottom(0d)
+                    .setMarginBottom(0d);
+            // 减去部分残留在上一个段的margin
+            this.setMarginTop(deltaM);
+            return new Div[]{div1, this};
+        } else if (getMarginTop() + getBorderTop() >= sHeight) {
+            // Border + Margin 耗尽了空间 分段的情况
+            double deltaB = getBorderTop() - (sHeight - getMarginTop());
+            Div div1 = this.copyTo(new Div());
+            // 剩余空间除去Margin剩下都是border
+            div1.setBorderTop(sHeight - getMarginTop())
+                    .setPaddingTop(0d)
+                    .setHeight(0d)
+                    .setPaddingBottom(0d)
+                    .setMarginBottom(0d);
+            // 减去margin和border
+            this.setMarginTop(0d)
+                    .setBorderTop(deltaB);
+            return new Div[]{div1, this};
+        } else if (getMarginTop() + getBorderTop() + getPaddingTop() >= sHeight) {
+            double deltaP = getPaddingTop() - (sHeight - getMarginTop() - getBorderTop());
+            Div div1 = this.copyTo(new Div());
+            div1.setPaddingTop(sHeight - getMarginTop() - getBorderTop())
+                    .setHeight(0d)
+                    .setPaddingBottom(0d)
+                    .setMarginBottom(0d);
+            this.setMarginTop(0d)
+                    .setBorderTop(0d)
+                    .setPaddingTop(deltaP);
+            return new Div[]{div1, this};
+        }
+
 
         LinkedList<TxtLineBlock> seq2 = new LinkedList<>(this.lines);
         LinkedList<TxtLineBlock> seq1 = new LinkedList<>();

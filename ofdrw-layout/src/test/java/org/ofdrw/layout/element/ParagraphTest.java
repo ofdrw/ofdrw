@@ -67,6 +67,10 @@ public class ParagraphTest {
         Assertions.assertEquals(((Paragraph)sp2[1]).getLines().size(), 2);
 
         p.setMarginTop(12d);
+        Div[] sp3 = p.split(11d);
+        Assertions.assertEquals(sp3[0].getMarginTop(), 11);
+        Assertions.assertEquals(sp3[0].box().getHeight(), 11);
+        Assertions.assertEquals(sp3[1].getMarginTop(), 1);
 
     }
 
