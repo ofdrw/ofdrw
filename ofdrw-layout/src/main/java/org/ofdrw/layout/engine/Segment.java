@@ -2,6 +2,7 @@ package org.ofdrw.layout.engine;
 
 import org.ofdrw.layout.Rectangle;
 import org.ofdrw.layout.element.AFloat;
+import org.ofdrw.layout.element.Clear;
 import org.ofdrw.layout.element.Div;
 
 import java.util.*;
@@ -96,6 +97,24 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
         if (aFloat == AFloat.center && !isCenterFloat()) {
             return false;
         }
+        // 排除特殊占有情况
+        Clear clear = div.getClear();
+        if (clear == Clear.left || clear == Clear.right) {
+            for (Div inner : content) {
+                if (clear == Clear.left) {
+                    // clear left 但是left 有元素
+                    if (inner.getFloat() == AFloat.left) {
+                        return false;
+                    }
+                } else {
+                    // clear right 但是right 有元素
+                    if (inner.getFloat() == AFloat.right) {
+                        return false;
+                    }
+                }
+            }
+        }
+
         this.remainWidth -= blockSize.getWidth();
         add(div, blockSize);
         return true;

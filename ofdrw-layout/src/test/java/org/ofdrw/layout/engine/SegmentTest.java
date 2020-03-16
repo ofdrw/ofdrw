@@ -16,7 +16,7 @@ class SegmentTest {
         Assertions.assertFalse(sgm.tryAdd(new Div(70d, 70d)));
 
         sgm = new Segment(138d);
-        // h:138 - 50 = 88
+        // h: 138 - 50 = 88
         Assertions.assertTrue(sgm.tryAdd(
                 new Div(50d, 10d)
                         .setClear(Clear.none)
@@ -28,14 +28,28 @@ class SegmentTest {
         ));
         Assertions.assertEquals(sgm.getHeight(), 70);
 
+        // 无法加入
         Assertions.assertFalse(sgm.tryAdd(
                 new Div(55d, 70d)
                         .setClear(Clear.none)
         ));
-        Assertions.assertFalse(sgm.tryAdd(
+        // 可以加入
+        Assertions.assertTrue(sgm.tryAdd(
                 new Div(1d, 70d)
                         .setClear(Clear.none)
         ));
+
+        sgm = new Segment(138d);
+        // h:138 - 50 = 88
+        Assertions.assertTrue(sgm.tryAdd(
+                new Div(50d, 10d)
+                        .setClear(Clear.none)
+        ));
+        Assertions.assertFalse(sgm.tryAdd(
+                new Div(50d, 10d)
+                        .setClear(Clear.left)
+        ));
+
 
     }
 
