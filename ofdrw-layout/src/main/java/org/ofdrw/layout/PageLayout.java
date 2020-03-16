@@ -9,6 +9,9 @@ import org.ofdrw.layout.element.ArrayParamTool;
  * @since 2020-02-28 03:25:54
  */
 public class PageLayout {
+    // w: 138  h: 225
+    public static final PageLayout A4 = new PageLayout(210d, 297d);
+
     /**
      * 页面宽度
      */

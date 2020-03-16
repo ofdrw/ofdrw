@@ -116,6 +116,14 @@ public class Div implements RenderPrepare, ElementSplit {
      */
     private boolean placeholder = false;
 
+    public Div() {
+    }
+
+    public Div(Double width, Double height) {
+        this.width = width;
+        this.height = height;
+    }
+
     /**
      * 是否是块级元素
      * <p>
