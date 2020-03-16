@@ -62,6 +62,14 @@ public class VirtualPage {
         }
         this.content.add(d);
         return this;
+    }
 
+    public List<Div> getContent() {
+        return content;
+    }
+
+    VirtualPage setContent(List<Div> content) {
+        this.content = content;
+        return this;
     }
 }

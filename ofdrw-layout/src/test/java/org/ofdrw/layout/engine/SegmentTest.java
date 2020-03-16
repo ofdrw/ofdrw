@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.ofdrw.layout.element.AFloat;
 import org.ofdrw.layout.element.Clear;
 import org.ofdrw.layout.element.Div;
+import org.ofdrw.layout.element.PageAreaFiller;
 
 class SegmentTest {
 
@@ -49,8 +50,6 @@ class SegmentTest {
                 new Div(50d, 10d)
                         .setClear(Clear.left)
         ));
-
-
     }
 
 

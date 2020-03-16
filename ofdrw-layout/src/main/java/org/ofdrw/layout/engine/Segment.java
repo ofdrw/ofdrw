@@ -4,6 +4,7 @@ import org.ofdrw.layout.Rectangle;
 import org.ofdrw.layout.element.AFloat;
 import org.ofdrw.layout.element.Clear;
 import org.ofdrw.layout.element.Div;
+import org.ofdrw.layout.element.PageAreaFiller;
 
 import java.util.*;
 
@@ -42,6 +43,13 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
      * 默认值： false 不可拆分
      */
     private boolean blockable = false;
+
+    /**
+     * 剩余页面空间填充段
+     * <p>
+     * true - 填充剩余页面空间； false - 非填充段
+     */
+    private boolean isRemainAreaFiller = false;
 
 
     public Segment(double width) {
@@ -89,6 +97,10 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
         2. 浮动 + Clear 对立
          */
         if (div.isBlockElement()) {
+            if (!isEmpty()) {
+                // 独占类型如果已经存在元素那么则无法加入
+                return false;
+            }
             this.remainWidth = 0;
             add(div, blockSize);
             return true;
@@ -134,6 +146,9 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
             // 判断是否可以拆分段，只要出现了一个可拆分的，那么该段就是可以拆分
             this.blockable = true;
         }
+        if (div instanceof PageAreaFiller) {
+            this.isRemainAreaFiller = true;
+        }
         this.content.add(div);
         this.sizeList.add(blockSize);
     }
@@ -173,6 +188,15 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
      */
     public boolean isEmpty() {
         return this.content.isEmpty();
+    }
+
+    /**
+     * 是否是剩余填充空间
+     *
+     * @return true - 填充； false - 非填充
+     */
+    public boolean isRemainAreaFiller() {
+        return isRemainAreaFiller;
     }
 
     /**
