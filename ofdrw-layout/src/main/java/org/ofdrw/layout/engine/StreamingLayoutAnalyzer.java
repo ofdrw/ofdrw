@@ -59,10 +59,22 @@ public class StreamingLayoutAnalyzer {
             return Collections.emptyList();
         }
         LinkedList<Segment> seq = new LinkedList<>(segmentSequence);
-        // 初始化页面
-        addNewPage();
+        if(vPageList.isEmpty()){
+            // 初始化页面
+            addNewPage();
+        }
         while (!seq.isEmpty()) {
             Segment segment = seq.pop();
+            // 页面没有剩余空间，新建页面
+            if (remainArea.getHeight() == 0) {
+                // 空间不足则换页
+                addNewPage();
+            }
+            // 特殊的如果是一个填充段那么设置页面
+            if (segment.isRemainAreaFiller()) {
+                remainArea.setHeight(0d);
+                continue;
+            }
             // 高度足够能够放入剩余空间中
             if (segment.getHeight() <= remainArea.getHeight()) {
                 // 分配段空间
@@ -73,7 +85,7 @@ public class StreamingLayoutAnalyzer {
             }
             // 判断段是否可以拆分
             if (segment.isBlockable() == false) {
-                if (segment.getHeight() > pageWorkArea.getWidth()) {
+                if (segment.getHeight() > pageWorkArea.getHeight()) {
                     // TODO 警告: 如果段不可拆分，并且高度大于整个页面的高度，那么这样的段应该舍弃
                 } else {
                     // 如果段不可拆分，并且高度小于整个页面的高度，那么新起一个页面，重新加入队列布局

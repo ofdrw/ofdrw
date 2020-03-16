@@ -40,8 +40,10 @@ public class SegmentationEngine {
             return Collections.emptyList();
         }
         LinkedList<Segment> res = new LinkedList<>();
+        LinkedList<Div> seq = new LinkedList<>(streamLayoutQueue);
         Segment segment = new Segment(width);
-        for (Div div : streamLayoutQueue) {
+        while (!seq.isEmpty()) {
+            Div div = seq.pop();
             if (div.getPosition() == Position.Absolute) {
                 continue;
             }
@@ -52,6 +54,7 @@ public class SegmentationEngine {
                 // 段已经无法再容纳元素： 无法加入元素且不为空
                 res.add(segment);
                 segment =  new Segment(width);
+                seq.push(div);
             }
         }
         // 处理最后一个段的情况
