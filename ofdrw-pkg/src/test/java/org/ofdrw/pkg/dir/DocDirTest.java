@@ -12,9 +12,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DocDirTest {
 
-    public static final DocDir docDir(){
+    public static final DocDir docDir() {
         Path font = Paths.get("src/test/resources", "Font4.ttf");
-      return new DocDir()
+        return new DocDir()
                 .addResource(font)
                 .setPublicRes(PublicResContent.res())
                 .setDocument(DocumentContent.doc())

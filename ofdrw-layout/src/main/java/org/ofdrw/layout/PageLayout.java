@@ -9,8 +9,18 @@ import org.ofdrw.layout.element.ArrayParamTool;
  * @since 2020-02-28 03:25:54
  */
 public class PageLayout {
-    // w: 138  h: 225
+
+    public static final PageLayout A0 = new PageLayout(841d, 1189d);
+    public static final PageLayout A1 = new PageLayout(594d, 841d);
+    public static final PageLayout A2 = new PageLayout(420d, 594d);
+    public static final PageLayout A3 = new PageLayout(297d, 420d);
     public static final PageLayout A4 = new PageLayout(210d, 297d);
+    public static final PageLayout A5 = new PageLayout(148d, 210d);
+    public static final PageLayout A6 = new PageLayout(105d, 148d);
+    public static final PageLayout A7 = new PageLayout(74d, 105d);
+    public static final PageLayout A8 = new PageLayout(52d, 74d);
+    public static final PageLayout A9 = new PageLayout(37d, 52d);
+    public static final PageLayout A10 = new PageLayout(26d, 37d);
 
     /**
      * 页面宽度
@@ -24,7 +34,7 @@ public class PageLayout {
     /**
      * 外边距
      * <p>
-     *  上 左 下 右
+     * 上 左 下 右
      * [0  1  2  3]
      * 默认值 36
      */
