@@ -7,7 +7,7 @@
 
 - [**ofdrw-core**](./ofdrw-core/) 核心API，参考[《GB/T 33190-2016 电子文件存储与交换格式版式文档》](./GBT_33190-2016_电子文件存储与交换格式版式文档.pdf)实现的基础
     - 实施状态： **阶段性完成**。
-- [**ofdrw-pkg**](./ofdrw-package) OFD文件的容器以及用于文档的打包。
+- [**ofdrw-pkg**](./ofdrw-pkg) OFD文件的容器以及用于文档的打包。
     - 实施状态：*达成基本功能*
 - [**ofdrw-layout**](./ofdrw-layout) OFD布局。
     - 实时状态： *编码开发*
