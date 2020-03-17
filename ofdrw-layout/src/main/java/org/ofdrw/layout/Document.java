@@ -5,17 +5,30 @@ import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.layout.element.Div;
+import org.ofdrw.layout.engine.Segment;
+import org.ofdrw.layout.engine.SegmentationEngine;
+import org.ofdrw.layout.engine.StreamingLayoutAnalyzer;
 import org.ofdrw.pkg.dir.DocDir;
 import org.ofdrw.pkg.dir.OFDDir;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * OFD 文档对象
+ * <p>
+ * 使用API的方式构造OFD文档，并打包为OFD文件。
+ *
+ * @author Cliven
+ * @since 2020-3-17 20:13:51
+ */
 public class Document implements Closeable {
 
     /**
@@ -26,8 +39,6 @@ public class Document implements Closeable {
      * 打包后OFD文档存放路径
      */
     private Path outPath;
-
-
     /**
      * 当前文档中所有对象使用标识的最大值。
      * 初始值为 0。MaxUnitID主要用于文档编辑，
@@ -36,22 +47,32 @@ public class Document implements Closeable {
      * 同时需要修改此 MaxUnitID值。
      */
     private AtomicInteger MaxUnitID = new AtomicInteger(0);
-
     /**
      * 流式布局元素队列
      */
     private LinkedList<Div> streamQueue;
-
     /**
      * 固定布局虚拟页面队列
      */
     private LinkedList<VirtualPage> vPageList;
-
     /**
      * 页面样式
+     * <p>
+     * 默认为 A4
+     * <p>
+     * 页边距：上下都是2.54厘米，左右都是3.17厘米。
      */
     private PageLayout pageLayout = PageLayout.A4;
 
+    public Document(Path outPath) {
+        if (outPath == null) {
+            throw new IllegalArgumentException("OFD文件存储路径(outPath)为空");
+        }
+        if (Files.isDirectory(outPath)) {
+            throw new IllegalArgumentException("OFD文件存储路径(outPath)不能是目录");
+        }
+        this.outPath = outPath;
+    }
 
     private Document() {
         this.streamQueue = new LinkedList<>();
@@ -121,6 +142,26 @@ public class Document implements Closeable {
 
     @Override
     public void close() throws IOException {
+        if (!streamQueue.isEmpty()) {
+            /*
+            将流式布局转换为板式布局
+            */
+            SegmentationEngine sgmEngine = new SegmentationEngine(pageLayout);
+            StreamingLayoutAnalyzer analyzer = new StreamingLayoutAnalyzer(pageLayout);
+            // 1. 流式布局队列经过分段引擎，获取分段队列
+            List<Segment> sgmQueue = sgmEngine.process(streamQueue);
+            // 2. 段队列进入布局分析器，构造基于固定布局的虚拟页面。
+            List<VirtualPage> virtualPageList = analyzer.analyze(sgmQueue);
+            vPageList.addAll(virtualPageList);
+        }
+        // TODO 将虚拟页面解析为OFD语言，写入的OFD对象中 2020-3-17 20:13:34
 
+        if (vPageList.isEmpty()) {
+            throw new IllegalStateException("OFD文档中没有页面，无法生成OFD文档");
+        }
+        // final. 执行打包程序
+        String base = outPath.toAbsolutePath().getParent().toString();
+        String fileName = outPath.getFileName().toString();
+        ofdDir.jar(base, fileName);
     }
 }

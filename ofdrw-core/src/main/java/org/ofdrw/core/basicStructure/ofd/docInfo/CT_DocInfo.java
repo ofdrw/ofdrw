@@ -32,7 +32,7 @@ public class CT_DocInfo extends OFDElement {
      * @return this
      */
     public CT_DocInfo setDocID(UUID docID) {
-        this.setOFDEntity("DocID", docID.toString());
+        this.setOFDEntity("DocID", docID.toString().replace("-", ""));
         return this;
     }
 
