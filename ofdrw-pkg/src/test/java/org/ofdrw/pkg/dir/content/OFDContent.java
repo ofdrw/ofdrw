@@ -16,7 +16,7 @@ public class OFDContent {
                 .setDocID(UUID.randomUUID())
                 .setAuthor("权观宇")
                 .setCreationDate(LocalDate.now())
-                .setCreator("ofdrw")
+                .setCreator("ofd r&w")
                 .setCreatorVersion("1.0.0-SNAPSHOT");
         DocBody docBody = new DocBody()
                 .setDocInfo(docInfo)
