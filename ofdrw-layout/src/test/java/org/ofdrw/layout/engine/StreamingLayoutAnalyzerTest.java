@@ -17,7 +17,8 @@ class StreamingLayoutAnalyzerTest {
     @Test
     public void analyze() {
         // h: 225 w: 138
-        PageLayout layout = new PageLayout(210d, 297d);
+        PageLayout layout = new PageLayout(210d, 297d)
+                .setMargin(36d);
         StreamingLayoutAnalyzer analyzer = new StreamingLayoutAnalyzer(layout);
         List<Segment> seq = new LinkedList<>();
 

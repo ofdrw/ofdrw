@@ -34,11 +34,14 @@ public class PageLayout {
     /**
      * 外边距
      * <p>
+     * 页边距：上下都是2.54厘米，左右都是3.17厘米。
+     *
+     * <p>
      * 上 左 下 右
      * [0  1  2  3]
      * 默认值 36
      */
-    private Double[] margin = {36d, 36d, 36d, 36d};
+    private Double[] margin = {25.4, 31.7, 25.4, 31.7};
 
     public PageLayout(Double width, Double height) {
         this.width = width;
@@ -67,11 +70,30 @@ public class PageLayout {
         return margin;
     }
 
-    public PageLayout setMargin(Double[] margin) {
+    public PageLayout setMargin(Double... margin) {
         this.margin = ArrayParamTool.arr4p(margin);
         return this;
     }
 
+    public PageLayout setMarginTop(double top) {
+        margin[0] = top;
+        return this;
+    }
+
+    public  PageLayout setMarginRight(double right){
+        margin[1] = right;
+        return this;
+    }
+
+    public PageLayout setMarginBottom(double bottom) {
+        margin[2] = bottom;
+        return this;
+    }
+
+    public  PageLayout setMarginLeft(double left){
+        margin[3] = left;
+        return this;
+    }
     /**
      * @return 实际能放置内容的宽度
      */
