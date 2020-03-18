@@ -80,9 +80,17 @@ public class PageLayout {
         return this;
     }
 
-    public  PageLayout setMarginRight(double right){
+    public double getMarginTop() {
+        return margin[0];
+    }
+
+    public PageLayout setMarginRight(double right) {
         margin[1] = right;
         return this;
+    }
+
+    public double getMarginRight() {
+        return margin[1];
     }
 
     public PageLayout setMarginBottom(double bottom) {
@@ -90,10 +98,20 @@ public class PageLayout {
         return this;
     }
 
-    public  PageLayout setMarginLeft(double left){
+    public double getMarginBottom() {
+        return margin[2];
+    }
+
+
+    public PageLayout setMarginLeft(double left) {
         margin[3] = left;
         return this;
     }
+
+    public double getMarginLeft() {
+        return margin[3];
+    }
+
     /**
      * @return 实际能放置内容的宽度
      */

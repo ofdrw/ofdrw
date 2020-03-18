@@ -1,8 +1,11 @@
 package org.ofdrw.layout;
 
+import org.ofdrw.core.basicStructure.doc.CT_CommonData;
+import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
+import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.engine.Segment;
@@ -64,7 +67,20 @@ public class Document implements Closeable {
      */
     private PageLayout pageLayout = PageLayout.A4;
 
+    /**
+     * 文档属性信息，该对象会在初始化是被创建并且添加到文档中
+     * 此处只是保留引用，为了方便操作。
+     */
+    private CT_CommonData cdata;
+
+
+    /**
+     * 在指定路径位置上创建一个OFD文件
+     *
+     * @param outPath OFD输出路径
+     */
     public Document(Path outPath) {
+        this();
         if (outPath == null) {
             throw new IllegalArgumentException("OFD文件存储路径(outPath)为空");
         }
@@ -74,9 +90,13 @@ public class Document implements Closeable {
         this.outPath = outPath;
     }
 
+    /**
+     * 文档初始化构造器
+     */
     private Document() {
         this.streamQueue = new LinkedList<>();
         this.vPageList = new LinkedList<>();
+        // 初始化文档对象
         containerInit();
     }
 
@@ -92,6 +112,17 @@ public class Document implements Closeable {
             return this;
         }
         this.pageLayout = pageLayout;
+        // 设置页面区域
+        CT_PageArea pageArea = new CT_PageArea()
+                // 物理区域为实际页面大小
+                .setPhysicalBox(0, 0, pageLayout.getWidth(), pageLayout.getHeight())
+                // 显示区域为减去margin的区域
+                .setApplicationBox(pageLayout.getMarginLeft(),
+                        pageLayout.getMarginTop(),
+                        pageLayout.contentWidth(),
+                        pageLayout.contentHeight());
+        // 设置页面大小
+        cdata.setPageArea(pageArea);
         return this;
     }
 
@@ -109,9 +140,24 @@ public class Document implements Closeable {
                 .setDocRoot(new ST_Loc("Doc_0/Document.xml"));
         OFD ofd = new OFD().addDocBody(docBody);
 
+        // 创建一个低层次的文档对象
+        org.ofdrw.core.basicStructure.doc.Document lowDoc = new org.ofdrw.core.basicStructure.doc.Document();
+        cdata = new CT_CommonData()
+                .setMaxUnitID(0)
+                // 由于有字形资源所以一定存在公共资源，这里县创建
+                .setPublicRes(new ST_Loc("PublicRes.xml"));
+        // 默认使用RGB颜色空间所以此处设置颜色空间
+        // 设置页面属性
+        this.setDefaultPageLayout(this.pageLayout);
+        lowDoc.setCommonData(cdata)
+                // 空的页面引用集合，该集合将会在解析虚拟页面时得到填充
+                .setPages(new Pages());
+
+        DocDir docDir = new DocDir()
+                .setDocument(lowDoc);
         ofdDir = new OFDDir()
                 .setOfd(ofd)
-                .add(new DocDir());
+                .add(docDir);
     }
 
     /**
@@ -159,6 +205,9 @@ public class Document implements Closeable {
         if (vPageList.isEmpty()) {
             throw new IllegalStateException("OFD文档中没有页面，无法生成OFD文档");
         }
+        // 设置最大对象ID
+        cdata.setMaxUnitID(MaxUnitID.get());
+
         // final. 执行打包程序
         String base = outPath.toAbsolutePath().getParent().toString();
         String fileName = outPath.getFileName().toString();
