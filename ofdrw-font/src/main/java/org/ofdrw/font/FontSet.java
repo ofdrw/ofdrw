@@ -24,11 +24,11 @@ final public class FontSet {
      * @param fontName 字体名称
      * @return 字体对象
      */
-    private static Font get(FontName fontName) {
+    public static Font get(FontName fontName) {
         try {
             String fileName = fontName.getFilename();
             Path path = loadAndCacheFont(fileName);
-            switch (fileName) {
+            switch (fontName.toString()) {
                 case "SimSun":
                     return new Font("宋体", "宋体", path);
                 case "KaiTi":
@@ -60,9 +60,8 @@ final public class FontSet {
         if (Files.notExists(path)) {
             // 文件不存在那么创建文件
             Files.createFile(path);
-            System.out.println("Create file: " + path + fileName);
             // 缓存到临时文件中
-            try (InputStream in = FontSet.class.getResourceAsStream(fileName);
+            try (InputStream in = FontSet.class.getResourceAsStream("/" + fileName);
                  OutputStream out = Files.newOutputStream(path)) {
                 IOUtils.copy(in, out);
             }
