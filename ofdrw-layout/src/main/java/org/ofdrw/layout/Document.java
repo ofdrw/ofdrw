@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>
  * 使用API的方式构造OFD文档，并打包为OFD文件。
  *
- * @author Cliven
+ * @author 权观宇
  * @since 2020-3-17 20:13:51
  */
 public class Document implements Closeable {

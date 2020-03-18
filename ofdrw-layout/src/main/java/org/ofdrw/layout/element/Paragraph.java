@@ -1,12 +1,10 @@
 package org.ofdrw.layout.element;
 
+import org.ofdrw.font.Font;
 import org.ofdrw.layout.Rectangle;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * 段落
