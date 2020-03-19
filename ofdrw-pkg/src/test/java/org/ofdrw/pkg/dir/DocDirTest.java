@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DocDirTest {
 
     public static final DocDir docDir() {
-        Path font = Paths.get("src/test/resources", "Font4.ttf");
+        Path font = Paths.get("src/test/resources", "NotoSerifCJKsc-Medium.otf");
         return new DocDir()
                 .addResource(font)
                 .setPublicRes(PublicResContent.res())

@@ -70,6 +70,8 @@ public class ST_Array extends STBase {
                 } else {
                     item = str;
                 }
+            } else if (item instanceof Double) {
+                item = STBase.fmt((Double) item);
             }
             array.add(item.toString());
         }

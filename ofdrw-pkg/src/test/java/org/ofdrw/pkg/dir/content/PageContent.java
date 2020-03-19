@@ -16,15 +16,20 @@ import java.nio.file.Path;
 public class PageContent {
 
     private static Content content() {
-        TextCode hello = new TextCode()
-                .setCoordinate(0.6747, 3.5101)
-                .setDeltaX(1.95, 1.95, 0.8, 0.8, 1.95, 1.95, 1.95, 1.95, 1.95, 1.95, 1.95,0.8)
-                .setContent("hello ofdrw!");
+        TextCode tcENTxt = new TextCode()
+                .setCoordinate(0d, 25d)
+                .setDeltaX(14d, 14d, 14d)
+                .setContent("Font");
+        TextCode tcSTTxt = new TextCode()
+                .setCoordinate(60d, 25d)
+                .setDeltaX(25d)
+                .setContent("字形");
         TextObject textObj = new TextObject(3);
-        textObj.setBoundary(31.0753, 25.9115, 25, 5)
+        textObj.setBoundary(50, 20, 112, 26)
                 .setFont(4)
-                .setSize(3.6865)
-                .addTextCode(hello);
+                .setSize(25.4)
+                .addTextCode(tcENTxt)
+                .addTextCode(tcSTTxt);
         CT_Layer layer = new CT_Layer();
         layer.addPageBlock(textObj)
                 .setObjID(2);
