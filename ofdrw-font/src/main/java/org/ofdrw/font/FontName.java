@@ -26,6 +26,9 @@ public enum FontName {
      */
     NotoSerifBold("NotoSerifCJKsc-Bold");
 
+    /**
+     * 字体名称
+     */
     private String fileName;
 
     FontName(String fileName) {
@@ -38,7 +41,6 @@ public enum FontName {
      * @return 字体文件名
      */
     public String getFilename() {
-        // TODO 修改为思源名称
         return fileName;
     }
 }
