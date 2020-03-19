@@ -1,5 +1,6 @@
 package org.ofdrw.layout.element;
 
+import org.ofdrw.font.Font;
 import org.ofdrw.layout.Rectangle;
 
 import java.util.LinkedList;
