@@ -9,14 +9,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 2020-03-18 20:44:44
  */
 class FontNameTest {
-
-    @Test
-    public void toStr() {
-        assertEquals(FontName.SimSun.toString(), "SimSun");
-    }
     @Test
     public void getFilename(){
-        assertEquals(FontName.SimSun.getFilename(), "SimSun.ttf");
+        assertEquals(FontName.NotoSerif.getFilename(), "NotoSerifCJKsc-Medium.otf");
     }
 
 }

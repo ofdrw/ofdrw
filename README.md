@@ -11,11 +11,14 @@
     - 实施状态：*达成基本功能*
 - [**ofdrw-layout**](./ofdrw-layout) OFD布局。
     - 实时状态： *顶层构建设计*
+- [**ofdrw-font**](./ofdrw-font) OFD生成需要的常规字体（OpenType）
+    - 实时状态： *待测试*
 
 ## 进展
 
+- *2020-03-18* 策划并启动 font的开发。
 - *2020-02-28* 开始Layout的开发。
-- *2020-01-22* 启动OFD Layout 设计。
+- *2020-01-22* 启动 Layout 设计。
 - *2020-01-20* ofd r&w 首个OFD文件生成成功，并能够通过 [数科OFD阅读器](http://www.suwell.cn/product/index.html) 正确打开。
     
     可通过运行`org.ofdrw.pkg.dir.OFDDirTest#jar` 在项目target目录下生成一个名为hello.ofd的文件。

@@ -28,17 +28,15 @@ final public class FontSet {
         try {
             String fileName = fontName.getFilename();
             Path path = loadAndCacheFont(fileName);
-            switch (fontName.toString()) {
-                case "SimSun":
-                    return new Font("宋体", "宋体", path);
-                case "KaiTi":
-                    return new Font("楷体", "楷体", path);
-                case "YaHei":
-                    return new Font("微软雅黑", "微软雅黑", path);
-                case "FangSong":
-                    return new Font("仿宋", "仿宋", path);
-                case "SimHei":
-                    return new Font("黑体", "黑体", path);
+            switch (fontName) {
+                case NotoSerif:
+                    return new Font("Noto Serif CJK SC", "Medium", path);
+                case NotoSerifBold:
+                    return new Font("Noto Serif CJK SC", "Bold", path);
+                case NotoSans:
+                    return new Font("Noto Sans CJK SC", "Medium", path);
+                case NotoSansBold:
+                    return new Font("Noto Sans CJK SC", "Bold", path);
             }
             return null;
         } catch (IOException e) {
