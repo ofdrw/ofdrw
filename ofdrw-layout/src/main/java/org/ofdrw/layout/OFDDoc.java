@@ -2,6 +2,7 @@ package org.ofdrw.layout;
 
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
+import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
@@ -25,14 +26,16 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * OFD 文档对象
+ * Virtual Document 虚拟文档对象
+ * <p>
+ * 与 {@link org.ofdrw.core.basicStructure.doc.Document} 区别
  * <p>
  * 使用API的方式构造OFD文档，并打包为OFD文件。
  *
  * @author 权观宇
  * @since 2020-3-17 20:13:51
  */
-public class Document implements Closeable {
+public class OFDDoc implements Closeable {
 
     /**
      * OFD 打包
@@ -79,7 +82,7 @@ public class Document implements Closeable {
      *
      * @param outPath OFD输出路径
      */
-    public Document(Path outPath) {
+    public OFDDoc(Path outPath) {
         this();
         if (outPath == null) {
             throw new IllegalArgumentException("OFD文件存储路径(outPath)为空");
@@ -93,7 +96,7 @@ public class Document implements Closeable {
     /**
      * 文档初始化构造器
      */
-    private Document() {
+    private OFDDoc() {
         this.streamQueue = new LinkedList<>();
         this.vPageList = new LinkedList<>();
         // 初始化文档对象
@@ -107,7 +110,7 @@ public class Document implements Closeable {
      * @param pageLayout 页面默认样式
      * @return this
      */
-    public Document setDefaultPageLayout(PageLayout pageLayout) {
+    public OFDDoc setDefaultPageLayout(PageLayout pageLayout) {
         if (pageLayout == null) {
             return this;
         }
@@ -141,7 +144,7 @@ public class Document implements Closeable {
         OFD ofd = new OFD().addDocBody(docBody);
 
         // 创建一个低层次的文档对象
-        org.ofdrw.core.basicStructure.doc.Document lowDoc = new org.ofdrw.core.basicStructure.doc.Document();
+        Document lowDoc = new Document();
         cdata = new CT_CommonData()
                 .setMaxUnitID(0)
                 // 由于有字形资源所以一定存在公共资源，这里县创建
@@ -168,7 +171,7 @@ public class Document implements Closeable {
      * @param item 元素
      * @return this
      */
-    public Document add(Div item) {
+    public OFDDoc add(Div item) {
         streamQueue.add(item);
         return this;
     }
@@ -181,7 +184,7 @@ public class Document implements Closeable {
      * @param virtualPage 虚拟页面
      * @return this
      */
-    public Document addVPage(VirtualPage virtualPage) {
+    public OFDDoc addVPage(VirtualPage virtualPage) {
         vPageList.add(virtualPage);
         return this;
     }
