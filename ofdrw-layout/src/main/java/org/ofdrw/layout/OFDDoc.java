@@ -12,6 +12,7 @@ import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.engine.Segment;
 import org.ofdrw.layout.engine.SegmentationEngine;
 import org.ofdrw.layout.engine.StreamingLayoutAnalyzer;
+import org.ofdrw.layout.engine.VPageParseEngine;
 import org.ofdrw.pkg.dir.DocDir;
 import org.ofdrw.pkg.dir.OFDDir;
 
@@ -203,11 +204,13 @@ public class OFDDoc implements Closeable {
             List<VirtualPage> virtualPageList = analyzer.analyze(sgmQueue);
             vPageList.addAll(virtualPageList);
         }
-        // TODO 将虚拟页面解析为OFD语言，写入的OFD对象中 2020-3-17 20:13:34
-
         if (vPageList.isEmpty()) {
             throw new IllegalStateException("OFD文档中没有页面，无法生成OFD文档");
         }
+        // 创建虚拟页面解析引擎，并持有文档上下文。
+        VPageParseEngine parseEngine = new VPageParseEngine(ofdDir.getDocDefault(), MaxUnitID);
+        // 解析虚拟页面
+        parseEngine.process(vPageList);
         // 设置最大对象ID
         cdata.setMaxUnitID(MaxUnitID.get());
 

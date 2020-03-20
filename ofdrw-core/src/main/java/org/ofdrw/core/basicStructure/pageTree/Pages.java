@@ -41,6 +41,16 @@ public class Pages extends OFDElement {
     }
 
     /**
+     * 获取页面数量
+     *
+     * @return 页面数量
+     */
+    public int getSize() {
+        return this.elements().size();
+    }
+
+
+    /**
      * 【必选】
      * 获取 叶节点序列
      * <p>

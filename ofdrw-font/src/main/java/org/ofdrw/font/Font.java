@@ -24,18 +24,14 @@ public class Font {
      */
     private Path fontFile;
 
-
-
     private Font() {
     }
 
     /**
-     * @return 默认字体（宋体）
+     * @return 默认字体（Noto思源宋体）
      */
     public static Font getDefault() {
-        return new Font()
-                // 默认为宋体
-                .setName("SimSun");
+        return FontSet.get(FontName.NotoSerif);
     }
 
     public Font(String name, String familyName, Path fontFile) {
