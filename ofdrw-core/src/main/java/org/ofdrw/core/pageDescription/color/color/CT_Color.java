@@ -66,6 +66,10 @@ public class CT_Color extends OFDElement {
                 .setValue(new ST_Array(r, g, b));
     }
 
+    public static CT_Color rgb(int[] rgb) {
+        return rgb(rgb[0], rgb[1], rgb[2]);
+    }
+
     /**
      * 【可选 属性】
      * 设置 颜色值

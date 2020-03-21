@@ -1,6 +1,9 @@
 package org.ofdrw.layout;
 
+import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.layout.element.ArrayParamTool;
+
+import java.util.Arrays;
 
 /**
  * 虚拟页面样式
@@ -137,5 +140,35 @@ public class PageLayout {
                 margin[0],
                 width - margin[1] - margin[3],
                 height - margin[0] - margin[2]);
+    }
+
+    /**
+     * 获取OFD页面区域
+     *
+     * @return OFD页面区域
+     */
+    public CT_PageArea getPageArea() {
+        return new CT_PageArea()
+                // 物理区域为实际页面大小
+                .setPhysicalBox(0, 0, this.getWidth(), this.getHeight())
+                // 显示区域为减去margin的区域
+                .setApplicationBox(this.getMarginLeft(),
+                        this.getMarginTop(),
+                        this.contentWidth(),
+                        this.contentHeight());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj instanceof PageLayout) {
+            PageLayout that = (PageLayout) obj;
+            return (Arrays.equals(this.margin, that.margin)
+                    && this.width.equals(that.width)
+                    && this.height.equals(that.height));
+        }
+        return false;
     }
 }

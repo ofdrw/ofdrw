@@ -116,17 +116,8 @@ public class OFDDoc implements Closeable {
             return this;
         }
         this.pageLayout = pageLayout;
-        // 设置页面区域
-        CT_PageArea pageArea = new CT_PageArea()
-                // 物理区域为实际页面大小
-                .setPhysicalBox(0, 0, pageLayout.getWidth(), pageLayout.getHeight())
-                // 显示区域为减去margin的区域
-                .setApplicationBox(pageLayout.getMarginLeft(),
-                        pageLayout.getMarginTop(),
-                        pageLayout.contentWidth(),
-                        pageLayout.contentHeight());
         // 设置页面大小
-        cdata.setPageArea(pageArea);
+        cdata.setPageArea(pageLayout.getPageArea());
         return this;
     }
 
@@ -208,7 +199,7 @@ public class OFDDoc implements Closeable {
             throw new IllegalStateException("OFD文档中没有页面，无法生成OFD文档");
         }
         // 创建虚拟页面解析引擎，并持有文档上下文。
-        VPageParseEngine parseEngine = new VPageParseEngine(ofdDir.getDocDefault(), MaxUnitID);
+        VPageParseEngine parseEngine = new VPageParseEngine(pageLayout, ofdDir.getDocDefault(), MaxUnitID);
         // 解析虚拟页面
         parseEngine.process(vPageList);
         // 设置最大对象ID

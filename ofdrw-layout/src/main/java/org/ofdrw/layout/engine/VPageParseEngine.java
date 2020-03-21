@@ -1,12 +1,26 @@
 package org.ofdrw.layout.engine;
 
+import org.ofdrw.core.basicStructure.pageObj.Content;
+import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
 import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicStructure.res.Res;
+import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.layout.PageLayout;
+import org.ofdrw.layout.Rectangle;
 import org.ofdrw.layout.VirtualPage;
+import org.ofdrw.layout.element.Div;
+import org.ofdrw.layout.element.Img;
+import org.ofdrw.layout.element.PageAreaFiller;
+import org.ofdrw.layout.element.Paragraph;
+import org.ofdrw.layout.engine.render.DivRender;
 import org.ofdrw.pkg.dir.DocDir;
 import org.ofdrw.pkg.dir.PageDir;
 import org.ofdrw.pkg.dir.PagesDir;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -55,14 +69,21 @@ public class VPageParseEngine {
     private int maxPageIndex = 0;
 
     /**
+     * 页面元素布局
+     */
+    private PageLayout pageLayout;
+
+    /**
      * 创建虚拟页面解析器
      *
-     * @param docDir    文档容器
-     * @param maxUnitID 自增的ID获取器
+     * @param pageLayout 页面布局样式
+     * @param docDir     文档容器
+     * @param maxUnitID  自增的ID获取器
      */
-    public VPageParseEngine(DocDir docDir, AtomicInteger maxUnitID) {
+    public VPageParseEngine(PageLayout pageLayout, DocDir docDir, AtomicInteger maxUnitID) {
         this.docDir = docDir;
         this.maxUnitID = maxUnitID;
+        this.pageLayout = pageLayout;
 
         // 初始化公共资源
         publicRes = docDir.getPublicRes();
@@ -100,16 +121,60 @@ public class VPageParseEngine {
             if (virtualPage == null) {
                 continue;
             }
-            // 创建一个全新的页面对象
+            // 创建一个全新的页面容器对象
             PageDir pageDir = newPage();
-            // TODO 解析虚拟页面
+            // 解析虚拟页面，并加入到容器中
+            convertPageContent(virtualPage, pageDir);
+        }
+    }
 
+    /**
+     * 转化虚拟页面的内容为实际OFD元素
+     *
+     * @param vPage   虚拟页面
+     * @param pageDir 虚拟页面目录
+     */
+    private void convertPageContent(VirtualPage vPage, PageDir pageDir) {
+        // 底层的OFD页面对象
+        org.ofdrw.core.basicStructure.pageObj.Page page = new org.ofdrw.core.basicStructure.pageObj.Page();
+        PageLayout vPageStyle = vPage.getStyle();
+        if (!pageLayout.equals(vPageStyle)) {
+            // 如果与默认页面样式不一致，那么需要单独设置页面样式
+            page.setArea(vPageStyle.getPageArea());
+        }
+        pageDir.setContent(page);
+        if (vPage.getContent().isEmpty()) {
+            return;
+        }
+        // 新建一个正文层的图层用于容纳元素
+        CT_Layer layer = new CT_Layer();
+        layer.setObjID(maxUnitID.incrementAndGet());
+        // 添加一个页面的内容
+        page.setContent(new Content().addLayer(layer));
+
+        // 处理页面中的元素为OFD的图元
+        for (Div elem : vPage.getContent()) {
+            // 忽略占位符和对象
+            if (elem instanceof PageAreaFiller
+                    || elem.isPlaceholder()) {
+                continue;
+            }
+            // 处理每一个元素的基础盒式模型属性，背景边框等，并加入到图层中
+            DivRender.render(layer, elem, maxUnitID);
+
+
+            if (elem instanceof Img) {
+                // TODO 图片解析
+            } else if (elem instanceof Paragraph) {
+                // TODO 段落布局
+            }
         }
     }
 
 
+
     /**
-     * 创建页面目录，并且新的页面加入文档中
+     * 创建页面容器，并且新的页面加入文档中
      *
      * @return 页面容器
      */

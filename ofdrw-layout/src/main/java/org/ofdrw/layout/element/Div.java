@@ -21,6 +21,14 @@ public class Div implements RenderPrepare, ElementSplit {
      * (R,G,B) 三色数组
      */
     private int[] backgroundColor = null;
+
+    /**
+     * 边框颜色
+     * <p>
+     * (R,G,B) 三色数组
+     */
+    private int[] borderColor = null;
+
     /**
      * 内容宽度
      * <p>
@@ -125,6 +133,18 @@ public class Div implements RenderPrepare, ElementSplit {
     }
 
     /**
+     * 是否存在边框
+     *
+     * @return true 不存在；false 存在
+     */
+    public boolean isNoBorder() {
+        return getMarginTop() == 0d
+                && getMarginRight() == 0d
+                && getMarginBottom() == 0d
+                && getMarginRight() == 0d;
+    }
+
+    /**
      * 是否是块级元素
      * <p>
      * 块元素将会独占整个段
@@ -145,6 +165,15 @@ public class Div implements RenderPrepare, ElementSplit {
         return (clear == Clear.both)
                 || (aFloat == AFloat.right && clear == Clear.left)
                 || (aFloat == AFloat.left && clear == Clear.right);
+    }
+
+    public int[] getBorderColor() {
+        return borderColor;
+    }
+
+    public Div setBorderColor(int r, int g, int b) {
+        this.borderColor = new int[]{r, g, b};
+        return this;
     }
 
     public Double getTop() {

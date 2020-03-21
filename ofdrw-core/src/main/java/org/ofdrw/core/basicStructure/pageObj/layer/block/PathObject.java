@@ -46,6 +46,10 @@ public class PathObject extends CT_Path implements PageBlockType {
         return this;
     }
 
+    public PathObject setID(long id) {
+        return setID(new ST_ID(id));
+    }
+
     /**
      * 【必选 属性】
      * 获取 对象ID
