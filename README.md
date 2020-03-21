@@ -10,7 +10,7 @@
 - [**ofdrw-pkg**](./ofdrw-pkg) OFD文件的容器以及用于文档的打包。
     - 实施状态：*达成基本功能*
 - [**ofdrw-layout**](./ofdrw-layout) OFD布局。
-    - 实时状态： *顶层构建设计*
+    - 实时状态： *渲染器开发*
 - [**ofdrw-font**](./ofdrw-font) OFD生成需要的常规字体（OpenType）
     - 实时状态： *待测试*
 
