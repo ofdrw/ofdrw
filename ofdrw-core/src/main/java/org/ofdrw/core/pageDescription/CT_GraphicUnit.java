@@ -5,6 +5,8 @@ import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.action.Actions;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.core.basicType.ST_RefID;
+import org.ofdrw.core.pageDescription.clips.Area;
 import org.ofdrw.core.pageDescription.clips.Clips;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
@@ -133,6 +135,51 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
             return true;
         }
         return Boolean.parseBoolean(str);
+    }
+
+
+    /**
+     * 【可选 属性】
+     * 设置 对空间内的图元变换矩阵
+     *
+     * @param ctm 变换矩阵
+     * @return this
+     */
+    public T setCTM(ST_Array ctm) {
+        this.addAttribute("CTM", ctm.toString());
+        return (T) this;
+    }
+
+    /**
+     * 【可选 属性】
+     * 获取 对空间内的图元变换矩阵
+     *
+     * @return 变换矩阵
+     */
+    public ST_Array getCTM() {
+        return ST_Array.getInstance(this.attributeValue("CTM"));
+    }
+
+    /**
+     * 【可选 属性】
+     * 设置 引用资源文件中的绘制参数标识
+     *
+     * @param id 绘制参数标识
+     * @return this
+     */
+    public T setDrawParam(ST_RefID id) {
+        this.addAttribute("DrawParam", id.toString());
+        return (T) this;
+    }
+
+    /**
+     * 【可选 属性】
+     * 获取 引用资源文件中的绘制参数标识
+     *
+     * @return 绘制参数标识
+     */
+    public ST_RefID getDrawParam() {
+        return ST_RefID.getInstance(this.attributeValue("DrawParam"));
     }
 
 

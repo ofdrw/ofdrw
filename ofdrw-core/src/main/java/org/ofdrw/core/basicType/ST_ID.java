@@ -52,6 +52,15 @@ public class ST_ID extends STBase {
         return this;
     }
 
+    /**
+     * 获取引用ID
+     * @return 引用ID
+     */
+    public ST_RefID ref(){
+        return new ST_RefID(this);
+    }
+
+
     @Override
     public String toString() {
         return id.toString();

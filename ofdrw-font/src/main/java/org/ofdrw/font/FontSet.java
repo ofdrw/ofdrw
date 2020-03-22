@@ -30,13 +30,13 @@ final public class FontSet {
             Path path = loadAndCacheFont(fileName);
             switch (fontName) {
                 case NotoSerif:
-                    return new Font("Noto Serif CJK SC", "Medium", path);
+                    return new Font("NotoSerifCJKsc-Medium", "Medium", path);
                 case NotoSerifBold:
-                    return new Font("Noto Serif CJK SC", "Bold", path);
+                    return new Font("NotoSerifCJKsc-Bold", "Bold", path);
                 case NotoSans:
-                    return new Font("Noto Sans CJK SC", "Medium", path);
+                    return new Font("NotoSansCJKsc-Medium", "Medium", path);
                 case NotoSansBold:
-                    return new Font("Noto Sans CJK SC", "Bold", path);
+                    return new Font("NotoSansCJKsc-Bold", "Bold", path);
             }
             return null;
         } catch (IOException e) {

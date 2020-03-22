@@ -22,23 +22,22 @@ public class Img extends Div{
      */
     private Path src;
 
-    /**
-     * 是否保持比例缩放
-     * <p>
-     * true - 保持比例缩放
-     * false - 拉伸适应width和height
-     */
-    private boolean fit;
+//    /**
+//     * 是否保持比例缩放
+//     * <p>
+//     * true - 保持比例缩放
+//     * false - 拉伸适应width和height
+//     */
+//    private boolean fit;
 
     private Img() {
-        this.fit = true;
+//        this.fit = true;
         // 图片对象不可拆分
         this.setIntegrity(true);
     }
 
     public Img(double width, double height, Path src) throws IOException {
         this(src);
-        this.src = src;
         this.setWidth(width)
                 .setHeight(height);
     }
@@ -63,14 +62,14 @@ public class Img extends Div{
         return src;
     }
 
-    public boolean isFit() {
-        return fit;
-    }
-
-    public Img setFit(boolean fit) {
-        this.fit = fit;
-        return this;
-    }
+//    public boolean isFit() {
+//        return fit;
+//    }
+//
+//    public Img setFit(boolean fit) {
+//        this.fit = fit;
+//        return this;
+//    }
 
     public Img setSrc(Path src) {
         this.src = src;
@@ -78,18 +77,7 @@ public class Img extends Div{
     }
 
     /**
-     * 根据给定的高度切分元素
-     * <p>
-     * 截断元素前必须确定元素的宽度和高度，否则将会抛出异常
-     * <p>
-     * 元素的分割只作用于竖直方向上，水平方向不做分割每次只会截断1次。
-     * <p>
-     * 截断的元素在截断出均无margin、border、padding
-     * <p>
-     * 截断后的内容比截断高度高的多
-     *
-     * @param sHeight 切分高度
-     * @return 根据给定空间分割之后的新元素
+     * 不允许切分
      */
     @Override
     public Div[] split(double sHeight) {

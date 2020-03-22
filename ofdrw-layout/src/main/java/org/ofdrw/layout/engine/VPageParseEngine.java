@@ -2,25 +2,19 @@ package org.ofdrw.layout.engine;
 
 import org.ofdrw.core.basicStructure.pageObj.Content;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
-import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
 import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
-import org.ofdrw.core.basicStructure.res.Res;
-import org.ofdrw.core.basicType.ST_Box;
-import org.ofdrw.core.basicType.ST_ID;
-import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.layout.PageLayout;
-import org.ofdrw.layout.Rectangle;
 import org.ofdrw.layout.VirtualPage;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.Img;
 import org.ofdrw.layout.element.PageAreaFiller;
 import org.ofdrw.layout.element.Paragraph;
 import org.ofdrw.layout.engine.render.DivRender;
+import org.ofdrw.layout.engine.render.ImgRender;
 import org.ofdrw.pkg.dir.DocDir;
 import org.ofdrw.pkg.dir.PageDir;
 import org.ofdrw.pkg.dir.PagesDir;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -67,16 +61,26 @@ public class VPageParseEngine {
     private PageLayout pageLayout;
 
     /**
+     * 公共资源管理器
+     */
+    private ResManager resManager;
+
+    /**
      * 创建虚拟页面解析器
      *
      * @param pageLayout 页面布局样式
      * @param docDir     文档容器
+     * @param prm        公共资源管理器
      * @param maxUnitID  自增的ID获取器
      */
-    public VPageParseEngine(PageLayout pageLayout, DocDir docDir, AtomicInteger maxUnitID) {
+    public VPageParseEngine(PageLayout pageLayout,
+                            DocDir docDir,
+                            ResManager prm,
+                            AtomicInteger maxUnitID) {
         this.docDir = docDir;
         this.maxUnitID = maxUnitID;
         this.pageLayout = pageLayout;
+        resManager = prm;
 
         pages = docDir.getDocument().getPages();
         if (pages == null) {
@@ -149,13 +153,13 @@ public class VPageParseEngine {
             DivRender.render(layer, elem, maxUnitID);
 
             if (elem instanceof Img) {
-                // TODO 图片解析
+                // 渲染图片对象
+                ImgRender.render(layer, resManager, (Img) elem, maxUnitID);
             } else if (elem instanceof Paragraph) {
                 // TODO 段落布局
             }
         }
     }
-
 
 
     /**

@@ -1,7 +1,6 @@
 package org.ofdrw.layout;
 
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
-import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
@@ -9,10 +8,7 @@ import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.layout.element.Div;
-import org.ofdrw.layout.engine.Segment;
-import org.ofdrw.layout.engine.SegmentationEngine;
-import org.ofdrw.layout.engine.StreamingLayoutAnalyzer;
-import org.ofdrw.layout.engine.VPageParseEngine;
+import org.ofdrw.layout.engine.*;
 import org.ofdrw.pkg.dir.DocDir;
 import org.ofdrw.pkg.dir.OFDDir;
 
@@ -182,6 +178,7 @@ public class OFDDoc implements Closeable {
 
     /**
      * 获取页面样式
+     *
      * @return 页面样式
      */
     public PageLayout getPageLayout() {
@@ -205,8 +202,10 @@ public class OFDDoc implements Closeable {
         if (vPageList.isEmpty()) {
             throw new IllegalStateException("OFD文档中没有页面，无法生成OFD文档");
         }
+        DocDir docDefault = ofdDir.getDocDefault();
+        ResManager prm = new ResManager(docDefault, MaxUnitID);
         // 创建虚拟页面解析引擎，并持有文档上下文。
-        VPageParseEngine parseEngine = new VPageParseEngine(pageLayout, ofdDir.getDocDefault(), MaxUnitID);
+        VPageParseEngine parseEngine = new VPageParseEngine(pageLayout, docDefault, prm, MaxUnitID);
         // 解析虚拟页面
         parseEngine.process(vPageList);
         // 设置最大对象ID
@@ -214,6 +213,6 @@ public class OFDDoc implements Closeable {
 
         // final. 执行打包程序
         String fileName = outPath.toAbsolutePath().toString();
-        ofdDir.jar( fileName);
+        ofdDir.jar(fileName);
     }
 }

@@ -39,10 +39,10 @@ public class DivRender {
         if (bgColor != null) {
             ST_ID objId = new ST_ID(maxUnitID.incrementAndGet());
             PathObject bg = new PathObject(objId);
-            double x = e.getX() + e.getMarginLeft() + e.getBorderLeft() + e.getPaddingLeft();
-            double y = e.getY() + e.getMarginTop() + e.getBorderTop() + e.getPaddingTop();
-            double w = e.getWidth();
-            double h = e.getHeight();
+            double x = e.getX() + e.getMarginLeft() + e.getBorderLeft();
+            double y = e.getY() + e.getMarginTop() + e.getBorderTop();
+            double w = e.getPaddingLeft() + e.getWidth() + e.getPaddingRight();
+            double h = e.getPaddingTop() + e.getHeight() + e.getPaddingBottom();
             bg.setBoundary(x, y, w, h)
                     // 设置填充颜色的矩形区域
                     .setAbbreviatedData(GraphHelper.rect(0, 0, w, h))
