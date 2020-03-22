@@ -51,8 +51,9 @@ public class AbbreviatedData extends OFDElement {
      *
      * 默认情况下，每次调用C都将会刷新元素内容
      */
-    public void flush(){
+    public AbbreviatedData flush(){
         this.setText(this.toString());
+        return this;
     }
 
     /**

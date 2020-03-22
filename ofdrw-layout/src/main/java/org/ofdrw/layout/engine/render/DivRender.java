@@ -94,7 +94,7 @@ public class DivRender {
                     PathObject topBorder = new PathObject(objId);
                     double x = e.getX() + e.getMarginLeft();
                     double y = e.getY() + e.getMarginTop();
-                    double w = e.getBorderLeft() + e.getWidth() + e.getBorderRight();
+                    double w = e.getBorderLeft() + e.getPaddingLeft() + e.getWidth() + e.getPaddingRight() + e.getBorderRight();
                     topBorder.setBoundary(x, y, w, topWidth)
                             .setLineWidth(topWidth)
                             .setAbbreviatedData(new AbbreviatedData().M(0, topWidth / 2).L(w, topWidth / 2));
@@ -118,7 +118,7 @@ public class DivRender {
                             + e.getPaddingTop()
                             + e.getHeight()
                             + e.getPaddingBottom();
-                    double w = e.getBorderLeft() + e.getWidth() + e.getBorderRight();
+                    double w = e.getBorderLeft() + e.getPaddingLeft() + e.getWidth() + e.getPaddingRight() + e.getBorderRight();
                     bottomBorder.setBoundary(x, y, w, bottomWidth)
                             .setLineWidth(bottomWidth)
                             .setAbbreviatedData(new AbbreviatedData().M(0, bottomWidth / 2).L(w, bottomWidth / 2));
@@ -137,7 +137,7 @@ public class DivRender {
                     PathObject leftBorder = new PathObject(objId);
                     double x = e.getX() + e.getMarginLeft();
                     double y = e.getY() + e.getMarginTop();
-                    double h = e.getBorderTop() + e.getHeight() + e.getBorderBottom();
+                    double h = e.getBorderTop() + e.getPaddingTop() + e.getHeight() + e.getPaddingBottom() + e.getBorderBottom();
                     leftBorder.setBoundary(x, y, leftWidth, h)
                             .setLineWidth(leftWidth)
                             .setAbbreviatedData(new AbbreviatedData().M(leftWidth / 2, 0).L(leftWidth / 2, h));
@@ -162,7 +162,7 @@ public class DivRender {
                             + e.getWidth()
                             + e.getPaddingRight();
                     double y = e.getY() + e.getMarginTop();
-                    double h = e.getBorderTop() + e.getHeight() + e.getBorderBottom();
+                    double h = e.getBorderTop() + e.getPaddingTop() + e.getHeight() + e.getPaddingBottom() + e.getBorderBottom();
                     rightBorder.setBoundary(x, y, rightWidth, h)
                             .setLineWidth(rightWidth)
                             .setAbbreviatedData(new AbbreviatedData().M(rightWidth / 2, 0).L(rightWidth / 2, h));

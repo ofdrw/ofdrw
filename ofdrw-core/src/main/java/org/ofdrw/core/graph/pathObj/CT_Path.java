@@ -220,7 +220,7 @@ public class CT_Path extends CT_GraphicUnit<CT_Path> implements ClipAble {
             return this;
         }
         this.removeOFDElemByNames("AbbreviatedData");
-        this.add(abbreviatedData);
+        this.add(abbreviatedData.flush());
         return this;
     }
 
