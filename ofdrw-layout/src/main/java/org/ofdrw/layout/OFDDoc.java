@@ -138,7 +138,6 @@ public class OFDDoc implements Closeable {
         // 创建一个低层次的文档对象
         Document lowDoc = new Document();
         cdata = new CT_CommonData()
-                .setMaxUnitID(0)
                 // 由于有字形资源所以一定存在公共资源，这里县创建
                 .setPublicRes(new ST_Loc("PublicRes.xml"));
         // 默认使用RGB颜色空间所以此处设置颜色空间
@@ -181,6 +180,14 @@ public class OFDDoc implements Closeable {
         return this;
     }
 
+    /**
+     * 获取页面样式
+     * @return 页面样式
+     */
+    public PageLayout getPageLayout() {
+        return pageLayout;
+    }
+
     @Override
     public void close() throws IOException {
         if (!streamQueue.isEmpty()) {
@@ -206,8 +213,7 @@ public class OFDDoc implements Closeable {
         cdata.setMaxUnitID(MaxUnitID.get());
 
         // final. 执行打包程序
-        String base = outPath.toAbsolutePath().getParent().toString();
-        String fileName = outPath.getFileName().toString();
-        ofdDir.jar(base, fileName);
+        String fileName = outPath.toAbsolutePath().toString();
+        ofdDir.jar( fileName);
     }
 }

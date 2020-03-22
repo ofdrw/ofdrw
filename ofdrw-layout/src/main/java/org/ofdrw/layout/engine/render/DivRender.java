@@ -68,14 +68,14 @@ public class DivRender {
                 PathObject border = new PathObject(objId);
                 double x = e.getX() + e.getMarginLeft();
                 double y = e.getY() + e.getMarginTop();
-                double w = e.getWidth() + lineWidth * 2;
-                double h = e.getHeight() + lineWidth * 2;
+                double w = lineWidth + e.getPaddingLeft() + e.getWidth() + e.getPaddingRight() + lineWidth;
+                double h = lineWidth + e.getPaddingTop() + e.getHeight() + e.getPaddingBottom() + lineWidth;
                 border.setBoundary(x, y, w, h)
                         .setLineWidth(lineWidth)
                         .setAbbreviatedData(GraphHelper.rect(
                                 lineWidth / 2, lineWidth / 2,
-                                e.getWidth() + lineWidth,
-                                e.getHeight() + lineWidth));
+                                w - lineWidth,
+                                h - lineWidth));
                 // 如果存在边框颜色，那么设置颜色；默认颜色为 黑色
                 int[] borderColor = e.getBorderColor();
                 if (borderColor != null) {
