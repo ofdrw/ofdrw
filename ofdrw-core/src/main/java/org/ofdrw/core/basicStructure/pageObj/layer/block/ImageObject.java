@@ -34,6 +34,10 @@ public class ImageObject extends CT_Image implements PageBlockType {
         this.setObjID(id);
     }
 
+    public ImageObject(long id){
+        this(new ST_ID(id));
+    }
+
     /**
      * 【必选 属性】
      * 设置 对象ID

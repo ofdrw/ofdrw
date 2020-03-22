@@ -46,13 +46,6 @@ public class VPageParseEngine {
     private AtomicInteger maxUnitID;
 
     /**
-     * 文档公共资源索引
-     * <p>
-     * 如：字体、图形图像等
-     */
-    private Res publicRes;
-
-    /**
      * 页面序列索引
      */
     private Pages pages;
@@ -84,13 +77,6 @@ public class VPageParseEngine {
         this.docDir = docDir;
         this.maxUnitID = maxUnitID;
         this.pageLayout = pageLayout;
-
-        // 初始化公共资源
-        publicRes = docDir.getPublicRes();
-        if (publicRes == null) {
-            publicRes = new Res();
-            docDir.setPublicRes(publicRes);
-        }
 
         pages = docDir.getDocument().getPages();
         if (pages == null) {
@@ -161,7 +147,6 @@ public class VPageParseEngine {
             }
             // 处理每一个元素的基础盒式模型属性，背景边框等，并加入到图层中
             DivRender.render(layer, elem, maxUnitID);
-
 
             if (elem instanceof Img) {
                 // TODO 图片解析
