@@ -46,7 +46,6 @@ public class ImgRender {
         double x = e.getX() + e.getMarginLeft() + e.getBorderLeft() + e.getPaddingLeft();
         double y = e.getY() + e.getMarginTop() + e.getBorderTop() + e.getPaddingTop();
         imgObj.setBoundary(x, y, e.getWidth(), e.getHeight());
-        // TODO 2020-3-22 19:26:02 变换矩阵待核实
         imgObj.setCTM(new ST_Array(e.getWidth(), 0, 0, e.getHeight(), 0, 0));
         layer.addPageBlock(imgObj);
     }
