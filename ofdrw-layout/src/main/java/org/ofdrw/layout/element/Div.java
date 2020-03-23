@@ -238,18 +238,8 @@ public class Div implements RenderPrepare, ElementSplit {
         return border;
     }
 
-    public Div setBorder(Double[] border) {
+    public Div setBorder(Double... border) {
         this.border = ArrayParamTool.arr4p(border);
-        return this;
-    }
-
-    public Div setBorder(double border) {
-        if (border < 0) {
-            border = 0;
-        }
-        this.border = new Double[]{
-                border, border, border, border
-        };
         return this;
     }
 
@@ -257,15 +247,7 @@ public class Div implements RenderPrepare, ElementSplit {
         return margin;
     }
 
-    public Div setMargin(double margin) {
-        if (margin < 0) {
-            margin = 0;
-        }
-        this.margin = new Double[]{margin, margin, margin, margin};
-        return this;
-    }
-
-    public Div setMargin(Double[] margin) {
+    public Div setMargin(Double... margin) {
         this.margin = ArrayParamTool.arr4p(margin);
         return this;
     }
@@ -342,13 +324,6 @@ public class Div implements RenderPrepare, ElementSplit {
         return this;
     }
 
-    public Div setPadding(double padding) {
-        if (padding < 0) {
-            padding = 0;
-        }
-        this.padding = new Double[]{padding, padding, padding, padding};
-        return this;
-    }
 
     public Double getPaddingTop() {
         return padding[0];

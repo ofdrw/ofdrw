@@ -27,9 +27,9 @@ class OFDDocTest {
                     .setPosition(Position.Absolute)
                     .setX(70d).setY(113.5)
                     .setBackgroundColor(30, 144, 255)
-                    .setMargin(10)
-                    .setBorder(10)
-                    .setPadding(10);
+                    .setMargin(10d)
+                    .setBorder(10d)
+                    .setPadding(10d);
             vPage.add(e);
             ofdDoc.addVPage(vPage);
         }
@@ -47,9 +47,9 @@ class OFDDocTest {
                     .setX(70d).setY(113.5)
                     .setBackgroundColor(30, 144, 255)
                     .setBorderColor(255, 0, 0)
-                    .setMargin(10)
+                    .setMargin(10d)
                     .setBorderTop(10d).setBorderRight(7d).setBorderBottom(3d).setBorderLeft(0.5d)
-                    .setPadding(10);
+                    .setPadding(10d);
             vPage.add(e);
             ofdDoc.addVPage(vPage);
         }
@@ -63,13 +63,14 @@ class OFDDocTest {
             PageLayout pageLayout = ofdDoc.getPageLayout();
             VirtualPage vPage = new VirtualPage(pageLayout);
             Path imgPath = Paths.get("src/test/resources", "testimg.png");
-            Img img = new Img(35, 13, imgPath);
+            Img img = new Img(imgPath);
 
-            double x = pageLayout.getHeight() / 2 - (35.0 / 2);
-            double y = pageLayout.getWidth() / 2 - (13.0 / 2);
+            double x = (pageLayout.getWidth() - img.getWidth()) / 2;
+            double y = (pageLayout.getHeight() - img.getHeight()) / 2;
             img.setPosition(Position.Absolute)
                     .setX(x).setY(y);
-            img.setBorder(3);
+            img.setBorder(3d);
+            img.setPadding(3d);
             vPage.add(img);
             ofdDoc.addVPage(vPage);
         }

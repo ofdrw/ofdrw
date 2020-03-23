@@ -16,7 +16,7 @@ import java.nio.file.Path;
  * @author 权观宇
  * @since 2020-02-03 03:34:31
  */
-public class Img extends Div{
+public class Img extends Div {
     /**
      * 图片文件路径
      */
@@ -54,8 +54,8 @@ public class Img extends Div{
     private void parseImg() throws IOException {
         File picture = src.toFile();
         BufferedImage sourceImg = ImageIO.read(new FileInputStream(picture));
-        this.setWidth((double) sourceImg.getWidth());
-        this.setHeight((double) sourceImg.getHeight());
+        this.setWidth((double) sourceImg.getWidth() / 5);
+        this.setHeight((double) sourceImg.getHeight() / 5);
     }
 
     public Path getSrc() {

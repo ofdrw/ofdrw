@@ -119,14 +119,29 @@ public class PageLayout {
      * @return 实际能放置内容的宽度
      */
     public double contentWidth() {
-        return width - margin[1] - margin[3];
+        return width - getMarginLeft()- getMarginRight();
     }
 
     /**
      * @return 实际能放置内容的高度
      */
     public double contentHeight() {
-        return height - margin[0] - margin[2];
+        return height - getMarginTop() - getMarginBottom();
+    }
+
+    /**
+     * 绘制区域原点X
+     * @return 起始X坐标
+     */
+    public double getStartX(){
+        return getMarginLeft();
+    }
+    /**
+     * 绘制区域原点Y
+     * @return 起始Y坐标
+     */
+    public double getStartY(){
+        return getMarginTop();
     }
 
     /**
@@ -136,10 +151,10 @@ public class PageLayout {
      */
     public Rectangle getWorkerArea() {
         return new Rectangle(
-                margin[1],
-                margin[0],
-                width - margin[1] - margin[3],
-                height - margin[0] - margin[2]);
+               getStartX(),
+               getStartY(),
+                contentWidth(),
+                contentHeight());
     }
 
     /**
@@ -152,8 +167,8 @@ public class PageLayout {
                 // 物理区域为实际页面大小
                 .setPhysicalBox(0, 0, this.getWidth(), this.getHeight())
                 // 显示区域为减去margin的区域
-                .setApplicationBox(this.getMarginLeft(),
-                        this.getMarginTop(),
+                .setApplicationBox(getStartX(),
+                        getStartY(),
                         this.contentWidth(),
                         this.contentHeight());
     }

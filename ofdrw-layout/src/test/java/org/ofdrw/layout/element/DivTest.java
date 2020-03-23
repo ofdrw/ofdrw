@@ -39,7 +39,7 @@ class DivTest {
                 .setHeight(100d)
                 .setPadding(6d)
                 .setBorder(8d)
-                .setMargin(10);
+                .setMargin(10d);
 
 
         Div[] sp = div.split(5);
