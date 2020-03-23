@@ -138,10 +138,10 @@ public class Div implements RenderPrepare, ElementSplit {
      * @return true 不存在；false 存在
      */
     public boolean isNoBorder() {
-        return getMarginTop() == 0d
-                && getMarginRight() == 0d
-                && getMarginBottom() == 0d
-                && getMarginRight() == 0d;
+        return getBorderTop() == 0d
+                && getBorderRight() == 0d
+                && getBorderBottom() == 0d
+                && getBorderLeft() == 0d;
     }
 
     /**

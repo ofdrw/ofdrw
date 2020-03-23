@@ -69,6 +69,7 @@ class OFDDocTest {
             double y = pageLayout.getWidth() / 2 - (13.0 / 2);
             img.setPosition(Position.Absolute)
                     .setX(x).setY(y);
+            img.setBorder(3);
             vPage.add(img);
             ofdDoc.addVPage(vPage);
         }
