@@ -139,4 +139,23 @@ public class TxtLineBlock {
     public double getHeight() {
         return maxSpanHeight + lineSpace;
     }
+
+
+    /**
+     * 获取行间距
+     *
+     * @return 行间距
+     */
+    public Double getLineSpace() {
+        return lineSpace;
+    }
+
+    /**
+     * 行内最高元素高度
+     *
+     * @return 行内最高元素高度
+     */
+    public Double getMaxSpanHeight() {
+        return maxSpanHeight;
+    }
 }

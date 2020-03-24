@@ -47,6 +47,7 @@ public class Paragraph extends Div {
     }
 
     /**
+     * 新建一个段落对象
      * @param text 文字内容
      */
     public Paragraph(String text) {

@@ -90,6 +90,8 @@ public class ResManager {
                     .setID(id);
             // 加入媒体类型清单
             medias.addMultiMedia(multiMedia);
+            // 加入缓存
+            cache.put(absPath, multiMedia);
             return id;
         } else {
             // 该资源已经加入过返回资源的ID
