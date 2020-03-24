@@ -19,8 +19,8 @@ public class PublicResContent {
         ColorSpaces cs = new ColorSpaces()
                 .addColorSpace(new CT_ColorSpace(OFDColorSpaceType.RGB, 5));
         CT_Font calibri = new CT_Font()
+                .setFontName("NotoSerifCJKsc")
                 .setFamilyName("Medium")
-                .setFontName("NotoSerifCJKsc-Medium")
                 .setID(4)
                 .setFontFile(new ST_Loc("Res/NotoSerifCJKsc-Medium.otf"));
 

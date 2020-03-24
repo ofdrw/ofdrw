@@ -26,19 +26,23 @@ final public class FontSet {
      */
     public static Font get(FontName fontName) {
         try {
+            if (fontName == null) {
+                // 默认使用思源宋体字体
+                fontName = FontName.NotoSerif;
+            }
             String fileName = fontName.getFilename();
             Path path = loadAndCacheFont(fileName);
             switch (fontName) {
                 case NotoSerif:
-                    return new Font("NotoSerifCJKsc-Medium", "Medium", path);
+                    return new Font("NotoSerifCJKsc", "Medium", path);
                 case NotoSerifBold:
-                    return new Font("NotoSerifCJKsc-Bold", "Bold", path);
+                    return new Font("NotoSerifCJKsc", "Bold", path);
                 case NotoSans:
-                    return new Font("NotoSansCJKsc-Medium", "Medium", path);
+                    return new Font("NotoSansCJKsc", "Medium", path);
                 case NotoSansBold:
-                    return new Font("NotoSansCJKsc-Bold", "Bold", path);
+                    return new Font("NotoSansCJKsc", "Bold", path);
             }
-            return null;
+            throw new IllegalArgumentException("不支持字体：" + fontName);
         } catch (IOException e) {
             e.printStackTrace();
             return null;

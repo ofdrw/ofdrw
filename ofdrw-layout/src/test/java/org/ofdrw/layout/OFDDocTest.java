@@ -3,6 +3,7 @@ package org.ofdrw.layout;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.Img;
+import org.ofdrw.layout.element.Paragraph;
 import org.ofdrw.layout.element.Position;
 
 import java.io.IOException;
@@ -74,7 +75,54 @@ class OFDDocTest {
             vPage.add(img);
             ofdDoc.addVPage(vPage);
         }
-
     }
 
+    @Test
+    void paragraphTest() throws IOException {
+        Path path = Paths.get("target/VPage4.ofd").toAbsolutePath();
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            PageLayout pageLayout = ofdDoc.getPageLayout();
+            VirtualPage vPage = new VirtualPage(pageLayout);
+
+            Paragraph p = new Paragraph(120d, 10d);
+            p.add("我们无论遇到什么困难也不要怕，微笑着面对它，消除恐惧的最好办法就是直面恐惧，坚持就是胜利，加油！奥力给！ （OFD Reader & Write）");
+            p.setPosition(Position.Absolute)
+                    .setPadding(3d)
+                    .setBorder(0.353);
+            double x = pageLayout.getWidth() / 2 - p.getMarginLeft() - p.getWidth() / 2;
+            p.setX(x).setY(pageLayout.getMarginTop());
+
+            vPage.add(p);
+            ofdDoc.addVPage(vPage);
+        }
+    }
+    @Test
+    void paragraphTest2() throws IOException {
+        Path path = Paths.get("target/VPage5.ofd").toAbsolutePath();
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            PageLayout pageLayout = ofdDoc.getPageLayout();
+            VirtualPage vPage = new VirtualPage(pageLayout);
+
+            Paragraph p = new Paragraph(120d, 10d);
+            p.add("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+            p.setPosition(Position.Absolute)
+                    .setPadding(3d)
+                    .setBorder(0.353);
+            double x = pageLayout.getWidth() / 2 - p.getMarginLeft() - p.getWidth() / 2;
+            p.setX(x).setY(pageLayout.getMarginTop());
+            vPage.add(p);
+
+            p = new Paragraph(120d, 10d);
+            p.add("ABCDEFGHIJKLMNOPQRSTUVWXYZ".toLowerCase());
+            p.setPosition(Position.Absolute)
+                    .setPadding(3d)
+                    .setBorder(0.353);
+            x = pageLayout.getWidth() / 2 - p.getMarginLeft() - p.getWidth() / 2;
+            p.setX(x).setY(pageLayout.getMarginTop() + 20);
+
+
+            vPage.add(p);
+            ofdDoc.addVPage(vPage);
+        }
+    }
 }

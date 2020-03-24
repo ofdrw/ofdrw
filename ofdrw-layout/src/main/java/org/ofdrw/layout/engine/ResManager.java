@@ -4,13 +4,18 @@ import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicStructure.res.MediaType;
 import org.ofdrw.core.basicStructure.res.Res;
+import org.ofdrw.core.basicStructure.res.resources.Fonts;
 import org.ofdrw.core.basicStructure.res.resources.MultiMedias;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.core.text.font.CT_Font;
+import org.ofdrw.font.Font;
 import org.ofdrw.pkg.dir.DocDir;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -39,6 +44,11 @@ public class ResManager {
     private MultiMedias medias;
 
     /**
+     * 字体资源列表
+     */
+    private Fonts fonts;
+
+    /**
      * 资源缓存
      * <p>
      * 防止资源重复添加
@@ -53,8 +63,82 @@ public class ResManager {
         this.docDir = docDir;
         this.maxUnitID = maxUnitID;
         this.cache = new HashMap<>();
+
+        // 初始化字体缓存
+        Res docRes = docDir.getDocumentRes();
+        if (docRes != null) {
+            List<Fonts> fontsList = docRes.getFonts();
+            for (Fonts f : fontsList) {
+                f.getFonts().forEach(item -> {
+                    String completeFontName = item.getFontName();
+                    String familyName = item.getFamilyName();
+                    if (familyName != null && familyName.length() > 0) {
+                        completeFontName += "-" + familyName;
+                    }
+                    // 加入缓存防止重复加入
+                    cache.put(completeFontName, item);
+                });
+            }
+        }
     }
 
+    /**
+     * 增加字体资源
+     * <p>
+     * 如果字体已经被加入，那么不会重复加入
+     *
+     * @param font 字体描述对象
+     * @return 字体的对象ID
+     */
+    public ST_ID addFont(Font font) {
+        Res resMenu = pubRes();
+        if (this.fonts == null) {
+            this.fonts = new Fonts();
+            resMenu.addResource(this.fonts);
+        }
+
+        // 获取字体全名
+        String completeFontName = font.getCompleteFontName();
+        // 检查缓存
+        if (cache.get(completeFontName) == null) {
+            // 生成加入资源的ID
+            ST_ID id = new ST_ID(maxUnitID.incrementAndGet());
+            String familyName = font.getFamilyName();
+            // 新建一个OFD字体对象
+            CT_Font ctFont = new CT_Font()
+                    .setFontName(font.getName())
+                    .setFamilyName(familyName)
+                    .setID(id)
+                    .setFontFile("Res/" + font.getFontFileName());
+            // 设置特殊字族属性
+            if (familyName != null) {
+                switch (familyName.toLowerCase()) {
+                    case "serif":
+                        ctFont.setSerif(true);
+                        break;
+                    case "bold":
+                        ctFont.setBold(true);
+                        break;
+                    case "italic":
+                        ctFont.setItalic(true);
+                        break;
+                    case "fixedwidth":
+                        ctFont.setFixedWidth(true);
+                        break;
+                }
+            }
+            // 将字体文件加入到文档容器中
+            docDir.addResource(font.getFontFile());
+            // 把字体加入到字体清单中
+            fonts.addFont(ctFont);
+            // 缓存字体
+            cache.put(completeFontName, ctFont);
+            return id;
+        } else {
+            // 该资源已经加入过返回资源的ID
+            return cache.get(completeFontName).getObjID();
+        }
+    }
 
     /**
      * 加入一个图片资源
@@ -99,7 +183,6 @@ public class ResManager {
         }
     }
 
-
     /**
      * 获取公共资源清单
      * <p>
@@ -137,4 +220,6 @@ public class ResManager {
         }
         return docRes;
     }
+
+
 }

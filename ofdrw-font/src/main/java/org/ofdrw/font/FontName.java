@@ -11,20 +11,20 @@ public enum FontName {
     /**
      * 思源黑体
      */
-    NotoSans("NotoSansCJKsc-Medium"),
+    NotoSans("NotoSansCJKsc-Medium.otf"),
     /**
      * 思源黑体-粗体
      */
-    NotoSansBold("NotoSansCJKsc-Bold"),
+    NotoSansBold("NotoSansCJKsc-Bold.otf"),
 
     /**
      * 思源宋体
      */
-    NotoSerif("NotoSerifCJKsc-Medium"),
+    NotoSerif("NotoSerifCJKsc-Medium.otf"),
     /**
      * 思源宋体-粗体
      */
-    NotoSerifBold("NotoSerifCJKsc-Bold");
+    NotoSerifBold("NotoSerifCJKsc-Bold.otf");
 
     /**
      * 字体名称
@@ -32,7 +32,7 @@ public enum FontName {
     private String fileName;
 
     FontName(String fileName) {
-        this.fileName = fileName + ".otf";
+        this.fileName = fileName;
     }
 
     /**

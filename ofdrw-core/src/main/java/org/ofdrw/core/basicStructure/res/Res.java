@@ -2,6 +2,7 @@ package org.ofdrw.core.basicStructure.res;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicStructure.res.resources.Fonts;
 import org.ofdrw.core.basicType.ST_Loc;
 
 import java.util.ArrayList;
@@ -74,6 +75,21 @@ public class Res extends OFDElement {
     public Res addResource(OFDResource resource) {
         this.set(resource);
         return this;
+    }
+
+    /**
+     * 获取字体资源文件
+     *
+     * @return 字体资源列表
+     */
+    public List<Fonts> getFonts() {
+        List<Fonts> fontsList = new ArrayList<>();
+        for (OFDResource item : getResources()) {
+            if (item instanceof Fonts) {
+                fontsList.add((Fonts) item);
+            }
+        }
+        return fontsList;
     }
 
     /**

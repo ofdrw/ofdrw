@@ -39,6 +39,17 @@ public class Paragraph extends Div {
      */
     private LinkedList<TxtLineBlock> lines;
 
+    /**
+     * 创建一个固定大小段落对象
+     *
+     * @param width  内容宽度
+     * @param height 内容高度
+     */
+    public Paragraph(Double width, Double height) {
+        this();
+        setWidth(width)
+                .setHeight(height);
+    }
 
     public Paragraph() {
         this.setClear(Clear.both);
@@ -48,6 +59,7 @@ public class Paragraph extends Div {
 
     /**
      * 新建一个段落对象
+     *
      * @param text 文字内容
      */
     public Paragraph(String text) {

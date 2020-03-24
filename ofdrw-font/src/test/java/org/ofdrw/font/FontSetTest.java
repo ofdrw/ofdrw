@@ -16,11 +16,10 @@ class FontSetTest {
 
     @Test
     public void get() throws IOException {
-        final Font font = FontSet.get(FontName.NotoSans);
+         Font font = FontSet.get(FontName.NotoSans);
         final Path fontFile = font.getFontFile();
         assertNotNull(fontFile);
         long size = Files.size(fontFile);
         assertEquals(size, 16489616);
-
     }
 }

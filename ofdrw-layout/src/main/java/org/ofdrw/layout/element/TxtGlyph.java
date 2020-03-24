@@ -28,6 +28,7 @@ public class TxtGlyph {
         double w = parent.getLetterSpacing();
         // 所有 ASCII码均采用半角
         if (txt > 26 && txt < 127) {
+            // TODO 2020-3-24 20:58:02 因为字符大宽度不能规则需要定制化
             w += Math.floor(parent.getFontSize() / 2) + 1;
         } else {
             // 非英文字符

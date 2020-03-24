@@ -12,6 +12,7 @@ import org.ofdrw.layout.element.PageAreaFiller;
 import org.ofdrw.layout.element.Paragraph;
 import org.ofdrw.layout.engine.render.DivRender;
 import org.ofdrw.layout.engine.render.ImgRender;
+import org.ofdrw.layout.engine.render.ParagraphRender;
 import org.ofdrw.pkg.dir.DocDir;
 import org.ofdrw.pkg.dir.PageDir;
 import org.ofdrw.pkg.dir.PagesDir;
@@ -156,7 +157,8 @@ public class VPageParseEngine {
                 // 渲染图片对象
                 ImgRender.render(layer, resManager, (Img) elem, maxUnitID);
             } else if (elem instanceof Paragraph) {
-                // TODO 段落布局
+                // 渲染段落对象
+                ParagraphRender.render(layer, resManager, (Paragraph) elem, maxUnitID);
             }
         }
     }

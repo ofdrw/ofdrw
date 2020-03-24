@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.layout.Rectangle;
 
+import java.util.Arrays;
+
 public class SpanTest {
 
     @Test
@@ -28,5 +30,18 @@ public class SpanTest {
         span.setLetterSpacing(3d);
         Assertions.assertEquals(span.blockSize().getWidth(), 20 + 7 * 6 + 9 * 3);
 
+    }
+
+    @Test
+    public void getDeltaX(){
+        Span span = new Span("你好OFD R&W")
+                .setFontSize(10d);
+        Double[] deltaX = span.getDeltaX();
+        System.out.println(Arrays.toString(deltaX));
+        Double[] expect = new Double[]{
+                10d, 10d, 6d, 6d, 6d, 6d, 6d, 6d
+        };
+
+        Assertions.assertArrayEquals(expect, deltaX);
     }
 }

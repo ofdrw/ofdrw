@@ -433,7 +433,7 @@ public class Div implements RenderPrepare, ElementSplit {
     /**
      * @return 额外宽度
      */
-    protected double widthPlus() {
+    public double widthPlus() {
         return (this.margin[1] + this.margin[3])
                 + (this.padding[1] + this.padding[3])
                 + (this.border[1] + this.border[3]);
@@ -442,7 +442,7 @@ public class Div implements RenderPrepare, ElementSplit {
     /**
      * @return 额外高度
      */
-    protected double heightPlus() {
+    public double heightPlus() {
         return (this.margin[0] + this.margin[2])
                 + (this.padding[0] + this.padding[2])
                 + (this.border[0] + this.border[2]);

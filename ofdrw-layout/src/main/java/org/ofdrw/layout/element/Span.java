@@ -23,8 +23,9 @@ public class Span {
 
     /**
      * 字体大小
+     * 默认值3毫米
      */
-    private Double fontSize;
+    private Double fontSize = 3d;
 
     /**
      * 字间距
@@ -187,6 +188,29 @@ public class Span {
             }
         }
         return txtGlyphsCache;
+    }
+
+    /**
+     * 获取字符X坐标偏移值队列
+     * <p>
+     * 队列中的每个值代表后一个文字与前一个文字之间在X方向上的偏移值
+     *
+     * @return 字符在X坐标偏移值队列
+     */
+    public Double[] getDeltaX() {
+        List<TxtGlyph> list = glyphList();
+        int len = list.size();
+        if (len == 1) {
+            // 只有一个字符时，不存在字符偏移所以返还空数组
+            return new Double[]{};
+        }
+        // 队列中的每个值代表后一个文字与前一个文字之间在X方向上的偏移值
+        // 因此不要计算最后一个元素的偏移值，偏移量忽略最后一个字符的大小 len - 1
+        Double[] res = new Double[len - 1];
+        for (int i = 0; i < len - 1; i++) {
+            res[i] = list.get(i).getW();
+        }
+        return res;
     }
 
     /**

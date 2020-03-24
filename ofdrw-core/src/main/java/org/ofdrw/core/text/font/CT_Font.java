@@ -30,7 +30,7 @@ public class CT_Font extends OFDElement {
         this.setFontName(fontName);
     }
 
-    public ST_ID getID(){
+    public ST_ID getID() {
         return this.getObjID();
     }
 
@@ -84,7 +84,8 @@ public class CT_Font extends OFDElement {
      */
     public CT_Font setFamilyName(String familyName) {
         if (familyName == null || familyName.trim().length() == 0) {
-            familyName = "";
+            // 不设置（可选参数）
+            return this;
         }
         this.addAttribute("FamilyName", familyName);
         return this;
@@ -290,6 +291,10 @@ public class CT_Font extends OFDElement {
     public CT_Font setFontFile(ST_Loc fontFile) {
         this.setOFDEntity("FontFile", fontFile.toString());
         return this;
+    }
+
+    public CT_Font setFontFile(String path) {
+        return setFontFile(new ST_Loc(path));
     }
 
     /**
