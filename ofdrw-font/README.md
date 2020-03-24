@@ -9,5 +9,5 @@
 
 这两种字体均为开源免费。
 
-**非常感谢 [Google Noto](https://github.com/googlefonts/noto-fonts/tree/bc9353da6f625b7a47035de952c2e8fd9e3ae889/unhinted) 
+**非常感谢 [Google Noto](https://github.com/googlefonts/noto-fonts) 
 开源字体库。**
