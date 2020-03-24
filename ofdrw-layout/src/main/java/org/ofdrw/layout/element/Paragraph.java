@@ -258,7 +258,6 @@ public class Paragraph extends Div {
         if (lines.isEmpty()) {
             throw new IllegalStateException("没有找到可用行，是否已经运行");
         }
-        // TODO Margin、border、padding 切分情况处理同Div
          /*
          Margin border Padding 的考虑
          */
@@ -292,6 +291,7 @@ public class Paragraph extends Div {
                     .setBorderTop(deltaB);
             return new Div[]{div1, this};
         } else if (getMarginTop() + getBorderTop() + getPaddingTop() >= sHeight) {
+            // Border + Margin + Padding 耗尽了空间 分段的情况
             double deltaP = getPaddingTop() - (sHeight - getMarginTop() - getBorderTop());
             Div div1 = this.copyTo(new Div());
             div1.setPaddingTop(sHeight - getMarginTop() - getBorderTop())
@@ -303,8 +303,7 @@ public class Paragraph extends Div {
                     .setPaddingTop(deltaP);
             return new Div[]{div1, this};
         }
-
-
+        // 文字内容或是Bottom 耗尽了空间 分段的情况
         LinkedList<TxtLineBlock> seq2 = new LinkedList<>(this.lines);
         LinkedList<TxtLineBlock> seq1 = new LinkedList<>();
         double remainHeight = sHeight - getMarginTop() - getBorderTop() - getPaddingTop();
