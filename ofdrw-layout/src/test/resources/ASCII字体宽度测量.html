@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+
+    <style>
+        @font-face {
+            font-family: "SS";
+            src: url("./NotoSerifCJKsc-Regular.otf");
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="infoBox"></div>
+    <canvas id="canvas"></canvas>
+    <script>
+        var infoBox = document.getElementById("infoBox");
+        const cvs = document.getElementById('canvas');
+        const ctx = cvs.getContext('2d');
+
+        ctx.font = '1px SS';
+        
+        var lenMap = "";
+        //for (var i = 128; i <= 255; i++) {
+        for (var i = 32; i <= 126; i++) {
+            var ch = String.fromCharCode(i);
+            var w100 = "";
+            for (var j = 0; j < 100; j++) {
+                w100 += ch;
+            }
+            var w = ctx.measureText(w100).width;
+            console.log(ch, "100个宽度为:", w);
+
+            var dom = document.createElement('p');
+            dom.innerHTML = "[ " +ch +" ] 宽度为: " + (w/100.0);
+            infoBox.appendChild(dom);
+
+            lenMap +=  + (w/100.0) + ","
+        }
+        var dom = document.createElement('p');
+        dom.innerHTML = "宽度百分比映射为: " + lenMap;
+        infoBox.appendChild(dom);
+    </script>
+</body>
+
+</html>
