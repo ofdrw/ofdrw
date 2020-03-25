@@ -11,11 +11,11 @@ public enum FontName {
     /**
      * 思源黑体
      */
-    NotoSans("NotoSansCJKsc-Medium.otf"),
+    NotoSans("NotoSansMonoCJKsc-Regular.otf"),
     /**
      * 思源黑体-粗体
      */
-    NotoSansBold("NotoSansCJKsc-Bold.otf"),
+    NotoSansBold("NotoSansMonoCJKsc-Bold.otf"),
 
     /**
      * 思源宋体

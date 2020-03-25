@@ -34,13 +34,13 @@ final public class FontSet {
             Path path = loadAndCacheFont(fileName);
             switch (fontName) {
                 case NotoSerif:
-                    return new Font("NotoSerifCJKsc", "Medium", path);
+                    return new Font("Noto Serif CJK SC", null, path);
                 case NotoSerifBold:
-                    return new Font("NotoSerifCJKsc", "Bold", path);
+                    return new Font("Noto Serif CJK SC Bold", "Bold", path);
                 case NotoSans:
-                    return new Font("NotoSansCJKsc", "Medium", path);
+                    return new Font("Noto Sans Mono CJK SC Regular", null, path);
                 case NotoSansBold:
-                    return new Font("NotoSansCJKsc", "Bold", path);
+                    return new Font("Noto Sans Mono CJK SC Bold", "Bold", path);
             }
             throw new IllegalArgumentException("不支持字体：" + fontName);
         } catch (IOException e) {
