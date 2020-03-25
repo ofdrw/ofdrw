@@ -35,17 +35,17 @@ public class DivRender {
          1. 首先绘制背景颜色
          2. 绘制边框
          */
-        // 背景颜色
-        if (bgColor != null) {
+        // 背景颜色 (又背景颜色并且，内容存在高度)
+        double eleContentHeight = e.getPaddingTop() + e.getHeight() + e.getPaddingBottom();
+        if (bgColor != null && eleContentHeight > 0) {
             ST_ID objId = new ST_ID(maxUnitID.incrementAndGet());
             PathObject bg = new PathObject(objId);
             double x = e.getX() + e.getMarginLeft() + e.getBorderLeft();
             double y = e.getY() + e.getMarginTop() + e.getBorderTop();
             double w = e.getPaddingLeft() + e.getWidth() + e.getPaddingRight();
-            double h = e.getPaddingTop() + e.getHeight() + e.getPaddingBottom();
-            bg.setBoundary(x, y, w, h)
+            bg.setBoundary(x, y, w, eleContentHeight)
                     // 设置填充颜色的矩形区域
-                    .setAbbreviatedData(GraphHelper.rect(0, 0, w, h))
+                    .setAbbreviatedData(GraphHelper.rect(0, 0, w, eleContentHeight))
                     // 设置不描边、填充，并且设置填充颜色
                     .setStroke(false)
                     .setFill(true)
@@ -127,6 +127,10 @@ public class DivRender {
                         bottomBorder.setStrokeColor(CT_Color.rgb(borderColor));
                     }
                     layer.addPageBlock(bottomBorder);
+                }
+                // 元素中没有任何内容和边框，那么认为是占位符，跳过绘制
+                if ((topWidth + bottomWidth + eleContentHeight) == 0) {
+                    return;
                 }
                 /*
                 左边

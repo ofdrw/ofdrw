@@ -5,6 +5,7 @@ import org.ofdrw.layout.RenderPrepare;
 import org.ofdrw.layout.Rectangle;
 import org.ofdrw.layout.engine.ElementSplit;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
 /**
@@ -173,6 +174,11 @@ public class Div implements RenderPrepare, ElementSplit {
 
     public Div setBorderColor(int r, int g, int b) {
         this.borderColor = new int[]{r, g, b};
+        return this;
+    }
+
+    Div setBorderColor(int[] rgb) {
+        this.borderColor = rgb;
         return this;
     }
 
@@ -557,6 +563,7 @@ public class Div implements RenderPrepare, ElementSplit {
      */
     public <T extends Div> T copyTo(T div) {
         div.setBackgroundColor(backgroundColor == null ? null : backgroundColor.clone());
+        div.setBorderColor(borderColor == null ? null : borderColor.clone());
         div.setWidth(width);
         div.setHeight(height);
         div.setPadding(padding.clone());
@@ -617,10 +624,11 @@ public class Div implements RenderPrepare, ElementSplit {
                     .setHeight(0d)
                     .setPaddingBottom(0d)
                     .setBorderBottom(0d)
-                    .setMarginBottom(0d);
+                    .setMarginBottom(0d)
+                    // 只有Margin那么只是一个占位符
+                    .setPlaceholder(true);
             // 减去部分残留在上一个段的margin
             div2.setMarginTop(deltaM);
-            return new Div[]{div1, div2};
         } else if (getMarginTop() + getBorderTop() >= sHeight) {
             // Border + Margin 耗尽了空间 分段的情况
             double deltaB = getBorderTop() - (sHeight - getMarginTop());
@@ -629,11 +637,11 @@ public class Div implements RenderPrepare, ElementSplit {
                     .setPaddingTop(0d)
                     .setHeight(0d)
                     .setPaddingBottom(0d)
+                    .setBorderBottom(0d)
                     .setMarginBottom(0d);
             // 减去margin和border
             div2.setMarginTop(0d)
                     .setBorderTop(deltaB);
-            return new Div[]{div1, div2};
         } else if (getMarginTop() + getBorderTop() + getPaddingTop() >= sHeight) {
             double deltaP = getPaddingTop() - (sHeight - getMarginTop() - getBorderTop());
             div1.setPaddingTop(sHeight - getMarginTop() - getBorderTop())
@@ -643,14 +651,67 @@ public class Div implements RenderPrepare, ElementSplit {
             div2.setMarginTop(0d)
                     .setBorderTop(0d)
                     .setPaddingTop(deltaP);
-            return new Div[]{div1, div2};
+        } else if (getMarginTop() + getBorderTop() + getPaddingTop() + getHeight() >= sHeight) {
+            // 内容分割调整
+            Div[] divs = contentSplitAdjust(sHeight, div1, div2);
+            div1 = divs[0];
+            div2 = divs[1];
+        } else if (getMarginTop() + getBorderTop() + getPaddingTop() + getHeight() + getPaddingBottom() >= sHeight) {
+            double deltaP = sHeight - (getMarginTop() + getBorderTop() + getPaddingTop() + getHeight());
+            div1.setPaddingBottom(deltaP)
+                    .setBorderBottom(0d)
+                    .setMarginBottom(0d);
+            div2.setMarginTop(0d)
+                    .setBorderTop(0d)
+                    .setPaddingTop(0d)
+                    .setHeight(0d)
+                    .setPaddingBottom(div2.getPaddingBottom() - deltaP);
+        } else if (
+                getMarginTop() + getBorderTop() + getPaddingTop() +
+                        getHeight() + getPaddingBottom() + getBorderBottom() >= sHeight) {
+            double deltaB = sHeight - (getMarginTop() + getBorderTop() + getPaddingTop() +
+                    getHeight() + getPaddingBottom());
+
+            div1.setBorderBottom(deltaB)
+                    .setMarginBottom(0d);
+            div2.setMarginTop(0d)
+                    .setBorderTop(0d)
+                    .setPaddingTop(0d)
+                    .setHeight(0d)
+                    .setPaddingBottom(0d)
+                    .setBorderBottom(div2.getBorderBottom() - deltaB);
+
+        } else {
+            double deltaM = sHeight - (getMarginTop() + getBorderTop() + getPaddingTop() +
+                    getHeight() + getPaddingBottom() + getBorderBottom());
+            div1.setMarginBottom(deltaM);
+            div2.setMarginTop(0d)
+                    .setBorderTop(0d)
+                    .setPaddingTop(0d)
+                    .setHeight(0d)
+                    .setPaddingBottom(0d)
+                    .setBorderBottom(0d)
+                    .setMarginBottom(div2.getMarginBottom() - deltaM)
+                    .setPlaceholder(true);
         }
-        // 切割内容的情况
-         /*
-         调整边框等配置
-         div1 无下边，总高度为切分高度
-         div2 无上边，高度为剩余高度
-          */
+        return new Div[]{div1, div2};
+    }
+
+    /**
+     * 内容分割调整
+     * <p>
+     * 根据分割高度调整两个克隆元素，达成分割元素的效果
+     *
+     * @param sHeight 分割内容的高度
+     * @param div1    克隆元素1
+     * @param div2    克隆元素2
+     */
+    public <T extends Div> Div[] contentSplitAdjust(double sHeight, T div1, T div2) {
+        /*
+         * 调整边框等配置
+         * div1 无下边，总高度为切分高度
+         * div2 无上边，高度为剩余高度
+         */
         // 减去顶边的布局区域
         double h1 = sHeight - (div1.getMarginTop() + div1.getBorderTop() + div1.getPaddingTop());
         div1.setHeight(h1)
@@ -660,22 +721,21 @@ public class Div implements RenderPrepare, ElementSplit {
                 .setPaddingBottom(0d);
 
         // 减去截断内容
-        double h2 = div2.height - h1;
+        double h2 = div2.getHeight() - h1;
         div2.setHeight(h2)
                 // 取消顶边的所有布局
                 .setMarginTop(0d)
                 .setBorderTop(0d)
                 .setPaddingTop(0d);
-
-        return new Div[]{
-                div1, div2
-        };
+        return new Div[]{div1, div2};
     }
+
 
     @Override
     public String toString() {
         return "Div{" +
                 "backgroundColor=" + Arrays.toString(backgroundColor) +
+                ", borderColor=" + Arrays.toString(borderColor) +
                 ", width=" + width +
                 ", height=" + height +
                 ", padding=" + Arrays.toString(padding) +

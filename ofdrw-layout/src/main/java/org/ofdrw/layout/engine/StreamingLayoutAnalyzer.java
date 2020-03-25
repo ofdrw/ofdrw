@@ -83,7 +83,7 @@ public class StreamingLayoutAnalyzer {
                 elementPositioning(segment, area);
                 continue;
             }
-            // 判断段是否可以拆分
+            // 段不可以拆分情况下
             if (segment.isBlockable() == false) {
                 if (segment.getHeight() > pageWorkArea.getHeight()) {
                     // TODO 警告: 如果段不可拆分，并且高度大于整个页面的高度，那么这样的段应该舍弃
@@ -191,7 +191,6 @@ public class StreamingLayoutAnalyzer {
 
         for (Map.Entry<Div, Rectangle> item : segment) {
             Div itemDiv = item.getKey();
-            Rectangle box = item.getValue();
             if (itemDiv.isPlaceholder()) {
                 // 占位符不参与绘制，跳过
                 continue;
@@ -199,9 +198,7 @@ public class StreamingLayoutAnalyzer {
             /*
              将流式的自动定位转为绝对定位位置的Div
              */
-            itemDiv.setWidth(box.getWidth())
-                    .setHeight(box.getHeight())
-                    .setY(area.getY());
+            itemDiv.setY(area.getY());
             // 解决相对定位的位置
             if (itemDiv.getPosition() == Position.Relative) {
                 Double x = itemDiv.getX();

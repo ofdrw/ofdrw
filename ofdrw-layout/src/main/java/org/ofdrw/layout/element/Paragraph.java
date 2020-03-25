@@ -243,79 +243,8 @@ public class Paragraph extends Div {
         return this;
     }
 
-    /**
-     * 根据给定的切分段落
-     * <p>
-     * 段落会根据指定的宽度和高度，判断空间是否能够容纳该行，
-     * 如果无法容纳，那么将会切分文字内容到两个独立的段落中。
-     *
-     * <p>
-     * 截断元素前必须确定元素的宽度和高度，否则将会抛出异常
-     * <p>
-     * 截断的元素在截断出均无margin、border、padding
-     *
-     * @param sHeight 切分高度
-     * @return 根据给定空间分割之后的新元素
-     */
     @Override
-    public Div[] split(double sHeight) {
-        Double width = this.getWidth();
-        Double height = getHeight();
-        if (width == null || height == null) {
-            throw new RuntimeException("切分元素必须要有固定的宽度（width）和高度（height）");
-        }
-        if (height + heightPlus() <= sHeight) {
-            // 不足够切分
-            return new Div[]{this};
-        }
-        if (lines.isEmpty()) {
-            throw new IllegalStateException("没有找到可用行，是否已经运行");
-        }
-         /*
-         Margin border Padding 的考虑
-         */
-        if (getMarginTop() >= sHeight) {
-            // Margin 分段情况
-            double deltaM = getMarginTop() - sHeight;
-            // 只留下一个Margin的div
-            Div div1 = this.copyTo(new Div());
-            div1.setMarginTop(sHeight)
-                    .setBorderTop(0d)
-                    .setPaddingTop(0d)
-                    .setHeight(0d)
-                    .setPaddingBottom(0d)
-                    .setBorderBottom(0d)
-                    .setMarginBottom(0d);
-            // 减去部分残留在上一个段的margin
-            this.setMarginTop(deltaM);
-            return new Div[]{div1, this};
-        } else if (getMarginTop() + getBorderTop() >= sHeight) {
-            // Border + Margin 耗尽了空间 分段的情况
-            double deltaB = getBorderTop() - (sHeight - getMarginTop());
-            Div div1 = this.copyTo(new Div());
-            // 剩余空间除去Margin剩下都是border
-            div1.setBorderTop(sHeight - getMarginTop())
-                    .setPaddingTop(0d)
-                    .setHeight(0d)
-                    .setPaddingBottom(0d)
-                    .setMarginBottom(0d);
-            // 减去margin和border
-            this.setMarginTop(0d)
-                    .setBorderTop(deltaB);
-            return new Div[]{div1, this};
-        } else if (getMarginTop() + getBorderTop() + getPaddingTop() >= sHeight) {
-            // Border + Margin + Padding 耗尽了空间 分段的情况
-            double deltaP = getPaddingTop() - (sHeight - getMarginTop() - getBorderTop());
-            Div div1 = this.copyTo(new Div());
-            div1.setPaddingTop(sHeight - getMarginTop() - getBorderTop())
-                    .setHeight(0d)
-                    .setPaddingBottom(0d)
-                    .setMarginBottom(0d);
-            this.setMarginTop(0d)
-                    .setBorderTop(0d)
-                    .setPaddingTop(deltaP);
-            return new Div[]{div1, this};
-        }
+    public <T extends Div> Div[] contentSplitAdjust(double sHeight, T div1, T div2) {
         // 文字内容或是Bottom 耗尽了空间 分段的情况
         LinkedList<TxtLineBlock> seq2 = new LinkedList<>(this.lines);
         LinkedList<TxtLineBlock> seq1 = new LinkedList<>();
@@ -331,19 +260,19 @@ public class Paragraph extends Div {
                 remainHeight -= line.getHeight();
             }
         }
-        Paragraph p1, p2;
+        Paragraph p1 = (Paragraph) div1;
+        Paragraph p2 = (Paragraph) div2;
         // seq2 为空可能由于Margin等参数导致的空间不足
         if (seq2.isEmpty()) {
-            p1 = clone().setLines(seq1);
-            p1.setMarginBottom(0d)
+            p1.setLines(seq1)
+                    .setMarginBottom(0d)
                     .setBorderBottom(0d)
                     .setPaddingBottom(0d);
-            Div div2 = this.copyTo(new Div());
-            div2.setHeight(0d)
+            p2.setHeight(0d)
                     .setMarginTop(0d)
                     .setBorderTop(0d)
                     .setPaddingTop(0d);
-            return new Div[]{p1, div2};
+            return new Div[]{p1, p2};
         }
         // 剩余空间一行都无法放下的情况，整个对象放到下一个段中，并使用占位符占有上一个段的空间
         if (seq1.isEmpty()) {
@@ -351,17 +280,16 @@ public class Paragraph extends Div {
             return new Div[]{placeholder, this};
         }
         // 正常情况下的分割
-        p1 = clone().setLines(seq1);
-        p1.setMarginBottom(0d)
+        p1.setLines(seq1)
+                .setMarginBottom(0d)
                 .setBorderBottom(0d)
                 .setPaddingBottom(0d);
-        p2 = clone().setLines(seq2);
-        p2.setMarginTop(0d)
+        p2.setLines(seq2)
+                .setMarginTop(0d)
                 .setBorderTop(0d)
                 .setPaddingTop(0d);
         return new Div[]{p1, p2};
     }
-
 
     /**
      * 请勿调用该方法克隆段落，除非你知道你在干什么
