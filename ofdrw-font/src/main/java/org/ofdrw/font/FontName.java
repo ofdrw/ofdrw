@@ -20,7 +20,7 @@ public enum FontName {
     /**
      * 思源宋体
      */
-    NotoSerif("NotoSerifCJKsc-Medium.otf"),
+    NotoSerif("NotoSerifCJKsc-Regular.otf"),
     /**
      * 思源宋体-粗体
      */
