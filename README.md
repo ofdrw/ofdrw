@@ -12,12 +12,38 @@
 - [**ofdrw-pkg**](./ofdrw-pkg) OFD文件的容器，用于文档的打包。
     - 实施状态：*达成基本功能*
 - [**ofdrw-layout**](./ofdrw-layout) OFD布局引擎库，用于文档构建和渲染。
-    - 实时状态： *DEBUG微调*
+    - 实时状态： **阶段性完成，部分功能未测试**
 - [**ofdrw-font**](./ofdrw-font) 生成OFD需要的常规字体（OpenType）
-    - 实时状态： *待测试*
+    - 实时状态： **阶段性完成**
+
+## QuickStart
+
+如何生成一份OFD文档？
+
+> 如何把大象放入冰箱。
+
+```java
+public class HelloWorld {
+    public static void main(String[] args) throws IOException {
+        Path path = Paths.get("HelloWorld.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            Paragraph p = new Paragraph("你好呀，OFD Reader&Writer！");
+            ofdDoc.add(p);
+        }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+    }
+}
+```
+
+效果如下：
+
+![示例](./ofdrw-layout/doc/示例.png)
+
+
 
 ## 进展
 
+- *2020-03-26* 完善了少内容段落的布局，能够使用center居中，增加HelloWorld Demo。
 - *2020-03-24* 【里程碑】 基本完成段落渲染器开发，第一次成功生成一份含有文字的OFD文档。
     
     可以运行`org.ofdrw.layout.OFDDocTest#paragraphTest`测试用用例，查看效果。

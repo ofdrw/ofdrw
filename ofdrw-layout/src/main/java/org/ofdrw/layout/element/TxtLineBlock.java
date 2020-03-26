@@ -158,4 +158,13 @@ public class TxtLineBlock {
     public Double getMaxSpanHeight() {
         return maxSpanHeight;
     }
+
+    /**
+     * 行内容元素宽度
+     *
+     * @return 行宽度
+     */
+    public Double getWidth() {
+        return width;
+    }
 }

@@ -224,6 +224,14 @@ public class Paragraph extends Div {
                 .sum();
         // 设置元素高度
         setHeight(height);
+        /*
+         * 段落中只有一行的情况，以行内元素确定元素宽度
+         */
+        if (lines.size() == 1) {
+            width = lines.get(0).getWidth();
+            setWidth(width);
+        }
+
         width += widthPlus();
         height += heightPlus();
         return new Rectangle(width, height);
