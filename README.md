@@ -39,7 +39,7 @@ public class HelloWorld {
 
 ![示例](./ofdrw-layout/doc/示例.png)
 
-
+> **更多关于OFD布局设计，请参考 [《OFD R&W 布局设计》](./ofdrw-layout/doc/README.md)**
 
 ## 进展
 
