@@ -61,6 +61,11 @@ public class Span {
     private String text;
 
     /**
+     * 字体颜色
+     */
+    private int[] fillColor;
+
+    /**
      * 当渲染空间不足时可能会拆分元素
      * <p>
      * true为不拆分，false为拆分。默认值为false
@@ -85,6 +90,34 @@ public class Span {
             throw new IllegalArgumentException("text内容为空");
         }
         setText(text);
+    }
+
+    public int[] getColor() {
+        return fillColor;
+    }
+
+    /**
+     * 设置字体颜色
+     *
+     * @param rgb 颜色值
+     * @return this
+     */
+    public Span setColor(int[] rgb) {
+        this.fillColor = rgb;
+        return this;
+    }
+
+    /**
+     * 设置字体颜色
+     *
+     * @param r 红
+     * @param g 绿
+     * @param b 懒
+     * @return this
+     */
+    public Span setColor(int r, int g, int b) {
+        this.fillColor = new int[]{r, g, b};
+        return this;
     }
 
     /**
@@ -255,6 +288,7 @@ public class Span {
         span.underline = underline;
         span.text = new String(text);
         span.integrity = integrity;
+        span.fillColor = fillColor == null ? null : fillColor.clone();
         return span;
     }
 }

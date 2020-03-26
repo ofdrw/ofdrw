@@ -11,8 +11,6 @@ import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.text.CT_CGTransfrom;
 import org.ofdrw.core.text.TextCode;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -380,6 +378,7 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
         if (fillColor == null) {
             return this;
         }
+        fillColor.setOFDName("FillColor");
         this.add(fillColor);
         return this;
     }
@@ -411,6 +410,7 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
         if (strokeColor == null) {
             return this;
         }
+        strokeColor.setOFDName("StrokeColor");
         this.add(strokeColor);
         return this;
     }

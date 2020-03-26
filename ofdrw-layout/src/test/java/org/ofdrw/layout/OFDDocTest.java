@@ -196,11 +196,18 @@ class OFDDocTest {
         Path path = Paths.get("target/VPage9.ofd").toAbsolutePath();
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             Paragraph p = new Paragraph();
+            Span sp0 = new Span("我们无论遇到什么困难也不要怕，微笑着面对它，消除恐惧的最好办法就是直面恐惧，")
+                    .setFontSize(5d).setItalic(true);
+            p.add(sp0);
+            ofdDoc.add(p);
+
+            p = new Paragraph();
             Span sp1 = new Span("坚持就是胜利，")
                     .setFontSize(5d);
             Span sp2 = new Span("加油！")
                     .setFontSize(10d);
             Span sp3 = new Span("奥力给！")
+                    .setColor(255, 0, 0)
                     .setBold(true)
                     .setFontSize(15d);
 

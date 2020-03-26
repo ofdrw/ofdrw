@@ -3,6 +3,7 @@ package org.ofdrw.layout.engine.render;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.core.text.text.Weight;
 import org.ofdrw.layout.element.Paragraph;
@@ -79,6 +80,11 @@ public class ParagraphRender {
                 // 是否包含下划线
                 if (s.isUnderline()) {
                     // TODO 2020-3-24 19:30:34 下划线暂时不实现
+                }
+                // 设置字体颜色，默认颜色为黑色
+                int[] color = s.getColor();
+                if (color != null && color.length >= 3) {
+                    txtObj.setFillColor(CT_Color.rgb(color));
                 }
                 // 创建OFD文字定位对象
                 TextCode tcSTTxt = new TextCode()

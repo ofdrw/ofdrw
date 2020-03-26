@@ -9,7 +9,6 @@ import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.graph.pathObj.FillColor;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
-import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 
 /**
  * 绘制参数
