@@ -190,4 +190,24 @@ class OFDDocTest {
         }
         System.out.println("生成文档位置: " + path.toAbsolutePath());
     }
+
+    @Test
+    void streamTestLineDiffPageSplit() throws IOException {
+        Path path = Paths.get("target/VPage9.ofd").toAbsolutePath();
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            Paragraph p = new Paragraph();
+            Span sp1 = new Span("坚持就是胜利，")
+                    .setFontSize(5d);
+            Span sp2 = new Span("加油！")
+                    .setFontSize(10d);
+            Span sp3 = new Span("奥力给！")
+                    .setBold(true)
+                    .setFontSize(15d);
+
+            p.add(sp1).add(sp2).add(sp3);
+            ofdDoc.add(p);
+
+        }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+    }
 }

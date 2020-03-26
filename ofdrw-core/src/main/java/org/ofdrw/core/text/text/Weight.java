@@ -60,4 +60,9 @@ public enum Weight {
                 throw new NumberFormatException("错误的文字对象的粗细值：" + weight);
         }
     }
+
+    @Override
+    public String toString() {
+        return Integer.toString(weight);
+    }
 }
