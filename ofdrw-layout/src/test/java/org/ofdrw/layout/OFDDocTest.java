@@ -169,7 +169,7 @@ class OFDDocTest {
     void streamTestParagraphPageSplit() throws IOException {
         Path path = Paths.get("target/VPage8.ofd").toAbsolutePath();
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
-            Span title = new Span("看云识天气").setBold(true).setFontSize(13d);
+            Span title = new Span("看云识天气").setBold(true).setFontSize(13d).setLetterSpacing(10d);
             Paragraph p = new Paragraph().add(title);
             p.setFloat(AFloat.center).setMargin(5d);
             ofdDoc.add(p);
@@ -203,9 +203,11 @@ class OFDDocTest {
 
             p = new Paragraph();
             Span sp1 = new Span("坚持就是胜利，")
-                    .setFontSize(5d);
+                    .setFontSize(5d)
+                    .setUnderline(true);
             Span sp2 = new Span("加油！")
-                    .setFontSize(10d);
+                    .setFontSize(10d)
+                    .setUnderline(true);
             Span sp3 = new Span("奥力给！")
                     .setColor(255, 0, 0)
                     .setBold(true)

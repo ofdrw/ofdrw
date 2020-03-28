@@ -1,8 +1,11 @@
 package org.ofdrw.layout.engine.render;
 
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
+import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.core.text.text.Weight;
@@ -64,7 +67,8 @@ public class ParagraphRender {
                 TextObject txtObj = new TextObject(maxUnitID.incrementAndGet());
                 // 文字图元宽度
                 double w = s.blockSize().getWidth();
-                txtObj.setBoundary(offsetX, offsetY, w, h)
+                ST_Box boundary = new ST_Box(offsetX, offsetY, w, h);
+                txtObj.setBoundary(boundary)
                         // 设置字体ID
                         .setFont(id.ref())
                         // 设置字体大小
@@ -77,19 +81,16 @@ public class ParagraphRender {
                 if (s.isItalic()) {
                     txtObj.setItalic(true);
                 }
-                // 是否包含下划线
-                if (s.isUnderline()) {
-                    // TODO 2020-3-24 19:30:34 下划线暂时不实现
-                }
                 // 设置字体颜色，默认颜色为黑色
                 int[] color = s.getColor();
                 if (color != null && color.length >= 3) {
                     txtObj.setFillColor(CT_Color.rgb(color));
                 }
                 // 创建OFD文字定位对象
+                Double offset = txtLine.getMaxSpanHeight();
                 TextCode tcSTTxt = new TextCode()
                         // 定位点位于文字的左下角，文字文字Y偏移量为该行最高文字的高度
-                        .setCoordinate(0d, txtLine.getMaxSpanHeight())
+                        .setCoordinate(0d, offset)
                         .setContent(s.getText());
                 Double[] deltaX = s.getDeltaX();
                 if (deltaX.length > 0) {
@@ -100,10 +101,36 @@ public class ParagraphRender {
                 txtObj.addTextCode(tcSTTxt);
                 // 将文字对象加入到图层
                 layer.addPageBlock(txtObj);
+                // 是否包含下划线
+                if (s.isUnderline()) {
+                    ST_ID underlineId = new ST_ID(maxUnitID.incrementAndGet());
+                    // 构造下划线
+                    PathObject underline = drawUnderline(underlineId, boundary, offset);
+                    // 加入到文字对象的上方
+                    layer.addPageBlock(underline);
+                }
                 // 计算行内下一个图元的X坐标
                 offsetX += w;
             }
             offsetY += h;
         }
+    }
+
+
+    /**
+     * 绘制文字的下划线
+     *
+     * @param id       下划线ID
+     * @param boundary 绘制下划线的区域
+     * @param offset   在绘制区域内Y的偏移量
+     * @return 路径对象
+     */
+    private static PathObject drawUnderline(ST_ID id, ST_Box boundary, double offset) {
+        PathObject res = new PathObject(id);
+        offset += 1.2d;
+        res.setBoundary(boundary)
+                .setAbbreviatedData(new AbbreviatedData().M(0, offset).lineTo(boundary.getWidth(), offset))
+                .setLineWidth(0.353);
+        return res;
     }
 }
