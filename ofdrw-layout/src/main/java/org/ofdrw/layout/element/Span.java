@@ -74,7 +74,7 @@ public class Span {
 
     private LinkedList<TxtGlyph> txtGlyphsCache;
 
-    private Span() {
+    protected Span() {
         this.setFont(Font.getDefault());
     }
 

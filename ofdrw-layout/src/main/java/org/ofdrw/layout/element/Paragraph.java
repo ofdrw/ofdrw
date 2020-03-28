@@ -15,6 +15,13 @@ import java.util.List;
 public class Paragraph extends Div {
 
     /**
+     * 首行缩进字符数
+     * <p>
+     * null 标识没有缩进
+     */
+    private Integer firstLineIndent = null;
+
+    /**
      * 行间距
      */
     private Double lineSpace = 2d;
@@ -156,6 +163,69 @@ public class Paragraph extends Div {
         return new TxtLineBlock(getWidth(), lineSpace);
     }
 
+
+    /**
+     * 获取首行缩进字符数
+     *
+     * @return 首行缩进字符数 null表示没有缩进
+     */
+    public Integer getFirstLineIndent() {
+        return firstLineIndent;
+    }
+
+    /**
+     * 设置段落首行缩进
+     * <p>
+     * 默认不缩进
+     *
+     * @param firstLineIndent 缩进字符数null或0表示不缩进
+     * @return this
+     */
+    public Paragraph setFirstLineIndent(Integer firstLineIndent) {
+        this.firstLineIndent = firstLineIndent;
+        return this;
+    }
+
+    /**
+     * 清除缩进格式
+     *
+     * @return this
+     */
+    public Paragraph clearFirstLineIndent() {
+        this.firstLineIndent = null;
+        return this;
+    }
+
+    /**
+     * 处理占位符
+     *
+     * @param seq 段落中的span队列
+     */
+    private void processPlaceholder(LinkedList<Span> seq) {
+        if (seq == null || seq.isEmpty()) {
+            return;
+        }
+        Span firstSpan = seq.peek();
+
+        if (firstSpan instanceof PlaceholderSpan) {
+            // 已经存在段落缩进并且设置的段落缩进为0，那么删除该占位符
+            if (firstLineIndent == null || firstLineIndent == 0) {
+                seq.pop();
+            } else {
+                // 重设占位符的宽度
+                ((PlaceholderSpan) firstSpan).setHoldChars(firstLineIndent);
+            }
+            return;
+        }
+        // 不需要加入占位符
+        if (firstLineIndent == null || firstLineIndent == 0) {
+            return;
+        }
+        // 如果第一个不是占位符，并且占位符数目大于0 那么创建新的占位符,并且加入渲染队列
+        seq.push(new PlaceholderSpan(firstLineIndent, firstSpan.getFontSize()));
+
+    }
+
     /**
      * 预布局
      *
@@ -174,9 +244,12 @@ public class Paragraph extends Div {
             // TODO 尺寸重设警告日志
             width = widthLimit;
         }
+
         setWidth(width);
         TxtLineBlock line = newLine();
         LinkedList<Span> seq = new LinkedList<>(contents);
+        // 处理相对列中插入或调整首行缩进占位符
+        processPlaceholder(seq);
         while (!seq.isEmpty()) {
             Span s = seq.pop();
 

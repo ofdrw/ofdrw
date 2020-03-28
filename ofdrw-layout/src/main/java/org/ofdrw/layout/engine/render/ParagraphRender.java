@@ -10,6 +10,7 @@ import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.core.text.text.Weight;
 import org.ofdrw.layout.element.Paragraph;
+import org.ofdrw.layout.element.PlaceholderSpan;
 import org.ofdrw.layout.element.Span;
 import org.ofdrw.layout.element.TxtLineBlock;
 import org.ofdrw.layout.engine.ResManager;
@@ -61,12 +62,18 @@ public class ParagraphRender {
             double h = txtLine.getHeight();
             // 遍历行内的每个Span
             for (Span s : txtLine.getInlineSpans()) {
+                // 文字图元宽度
+                double w = s.blockSize().getWidth();
+                if (s instanceof PlaceholderSpan) {
+                    // 忽略占位符的渲染只进行坐标偏移
+                    offsetX += w;
+                    continue;
+                }
+
                 // 将字体加入到资源中
                 ST_ID id = resManager.addFont(s.getFont());
                 // 新建字体对象
                 TextObject txtObj = new TextObject(maxUnitID.incrementAndGet());
-                // 文字图元宽度
-                double w = s.blockSize().getWidth();
                 ST_Box boundary = new ST_Box(offsetX, offsetY, w, h);
                 txtObj.setBoundary(boundary)
                         // 设置字体ID
