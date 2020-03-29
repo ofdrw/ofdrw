@@ -225,7 +225,18 @@ public class Paragraph extends Div {
         seq.push(new PlaceholderSpan(firstLineIndent, firstSpan.getFontSize()));
 
     }
-
+    /**
+     * 如果元素高度不存在那么设置高度
+     * <p>
+     * 如果已经设置了高度，该方法不会对该高度造成影响
+     *
+     * @param height 高度
+     */
+    private void setHeightIfNotExist(double height) {
+        if (getHeight() == null || getHeight() == 0) {
+            setHeight(height);
+        }
+    }
     /**
      * 预布局
      *
@@ -295,8 +306,8 @@ public class Paragraph extends Div {
         double height = lines.stream()
                 .mapToDouble(TxtLineBlock::getHeight)
                 .sum();
-        // 设置元素高度
-        setHeight(height);
+        // 设置元素高度，如果元素已经预设高度那么则不设置
+        setHeightIfNotExist(height);
         /*
          * 段落中只有一行的情况，以行内元素确定元素宽度
          */
