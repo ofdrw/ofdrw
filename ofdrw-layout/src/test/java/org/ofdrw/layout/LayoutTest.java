@@ -163,9 +163,76 @@ public class LayoutTest {
     void test4() throws IOException {
         Path path = Paths.get("target/Layout4.ofd");
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
-
+            Div div1 = new Div(30d, 30d)
+                    .setBackgroundColor(105, 105, 105)
+                    .setBorder(0.353)
+                    .setClear(Clear.none);
+            Div div2 = new Div(60d, 60d)
+                    .setClear(Clear.none)
+                    .setBackgroundColor(0, 0, 255)
+                    .setBorder(0.353);
+            Div div3 = new Div(120d, 30d)
+                    .setClear(Clear.none)
+                    .setBackgroundColor(255, 255, 0)
+                    .setBorder(0.353);
+            ofdDoc.add(div1).add(div2).add(div3);
         }
         System.out.println("生成文档位置: " + path.toAbsolutePath());
     }
 
+    @Test
+    void test5() throws IOException {
+        Path path = Paths.get("target/Layout5.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            final PageLayout pageLayout = ofdDoc.getPageLayout();
+            double remain = 50d;
+            double h = pageLayout.contentHeight() - remain;
+            Div div1 = new Div(pageLayout.contentWidth(), h)
+                    .setBackgroundColor(255, 255, 0)
+                    .setClear(Clear.none);
+
+            Div div2 = new Div(40d, 40d)
+                    .setClear(Clear.none)
+                    .setIntegrity(true)
+                    .setBackgroundColor(255, 0, 0);
+            Div div3 = new Div(40d, 80d)
+                    .setClear(Clear.none)
+                    .setIntegrity(true)
+                    .setBackgroundColor(105, 105, 105);
+            Div div4 = new Div(40d, 60d)
+                    .setClear(Clear.none)
+                    .setIntegrity(true)
+                    .setBackgroundColor(0, 0, 0);
+            ofdDoc.add(div1).add(div2).add(div3).add(div4);
+        }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+    }
+
+    @Test
+    void test6() throws IOException {
+        Path path = Paths.get("target/Layout6.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            final PageLayout pageLayout = ofdDoc.getPageLayout();
+            double remain = 50d;
+            double h = pageLayout.contentHeight() - remain;
+            Div div1 = new Div(pageLayout.contentWidth(), h)
+                    .setBackgroundColor(255, 255, 0)
+                    .setMarginBottom(10d)
+                    .setClear(Clear.none);
+
+            Div div2 = new Div(40d, 40d)
+                    .setClear(Clear.none)
+
+                    .setBackgroundColor(255, 0, 0);
+            Div div3 = new Div(40d, 400d)
+                    .setClear(Clear.none)
+
+                    .setBackgroundColor(105, 105, 105);
+            Div div4 = new Div(40d, 800d)
+                    .setClear(Clear.none)
+                    .setBackgroundColor(0, 0, 0);
+            ofdDoc.add(div1).add(div2).add(div3).add(div4);
+        }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+    }
 }
