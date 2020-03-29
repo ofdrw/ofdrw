@@ -92,17 +92,17 @@ public class Div implements RenderPrepare, ElementSplit {
     /**
      * 相对于段的左边界距离
      */
-    private Double left = null;
+    private double left = 0d;
 
     /**
      * 相对于段的右边界距离
      */
-    private Double right = null;
+    private double right = 0d;
 
     /**
      * 相对坐标的top
      */
-    private Double top = null;
+    private double top = 0d;
 
     /**
      * 元素定位方式
@@ -186,8 +186,9 @@ public class Div implements RenderPrepare, ElementSplit {
         return top;
     }
 
-    public void setTop(Double top) {
+    public Div setTop(Double top) {
         this.top = top;
+        return this;
     }
 
     public Position getPosition() {
