@@ -13,6 +13,6 @@
         <module>ofdrw-pkg</module>
         <module>ofdrw-layout</module>
         <module>ofdrw-font</module>
+        <module>ofdrw-full</module>
     </modules>
-
 </project>
