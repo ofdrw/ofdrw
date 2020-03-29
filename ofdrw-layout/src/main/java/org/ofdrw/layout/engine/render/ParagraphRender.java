@@ -49,17 +49,27 @@ public class ParagraphRender {
                 return;
             }
         }
+
+        // 可容纳元素的总高度
+        Double containerHeight = e.getHeight();
         /*
         每一行左上角坐标
          */
         double lineTopX = e.getX() + e.getMarginLeft() + e.getBorderLeft() + e.getPaddingLeft();
         double offsetY = e.getY() + e.getMarginTop() + e.getBorderTop() + e.getPaddingTop();
+        // 已经写入的元素高度统计
+        double hCount = 0;
         // 渲染每一行文字
         for (TxtLineBlock txtLine : lines) {
             // 行内的X偏移量为行开头
             double offsetX = lineTopX;
             // 一行内的所有Span的图元高度都为行高度（最高文字高度 + 行间距）
             double h = txtLine.getHeight();
+            if (hCount + h > containerHeight) {
+                // 如果文字内容高度大于容纳文字的容器高度，那么将该部分内容舍弃，不渲染。
+                break;
+            }
+
             // 遍历行内的每个Span
             for (Span s : txtLine.getInlineSpans()) {
                 // 文字图元宽度
@@ -120,6 +130,7 @@ public class ParagraphRender {
                 offsetX += w;
             }
             offsetY += h;
+            hCount += h;
         }
     }
 
