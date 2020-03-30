@@ -74,6 +74,25 @@ class OFDDocTest {
             ofdDoc.addVPage(vPage);
         }
     }
+    @Test
+    void imgTest_tif() throws IOException {
+        Path path = Paths.get("target/VPage3.ofd").toAbsolutePath();
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            PageLayout pageLayout = ofdDoc.getPageLayout();
+            VirtualPage vPage = new VirtualPage(pageLayout);
+            Path imgPath = Paths.get("src/test/resources", "asf-logo.tif");
+            Img img = new Img(imgPath);
+
+            double x = (pageLayout.getWidth() - img.getWidth()) / 2;
+            double y = (pageLayout.getHeight() - img.getHeight()) / 2;
+            img.setPosition(Position.Absolute)
+                    .setX(x).setY(y);
+            img.setBorder(3d);
+            img.setPadding(3d);
+            vPage.add(img);
+            ofdDoc.addVPage(vPage);
+        }
+    }
 
     @Test
     void paragraphTest() throws IOException {
