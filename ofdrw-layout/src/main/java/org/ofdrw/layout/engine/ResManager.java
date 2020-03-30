@@ -160,10 +160,7 @@ public class ResManager {
             // 生成加入资源的ID
             ST_ID id = new ST_ID(maxUnitID.incrementAndGet());
             // 获取图片文件后缀名称
-            String fileSuffix = fileName.substring(fileName.lastIndexOf(".") + 1).toUpperCase();
-            if ("JPG".equals(fileSuffix)) {
-                fileSuffix = "JPEG";
-            }
+            String fileSuffix = pictureFormat(fileName);
             // 将文件加入资源容器中
             docDir.addResource(imgPath);
             // 创建图片对象
@@ -180,6 +177,25 @@ public class ResManager {
         } else {
             // 该资源已经加入过返回资源的ID
             return cache.get(absPath).getObjID();
+        }
+    }
+
+
+    /**
+     * 根据图片名称推断图片格式
+     *
+     * @param fileName 图片文件名称
+     * @return 图片格式字符串
+     */
+    private String pictureFormat(String fileName) {
+        String fileSuffix = fileName.substring(fileName.lastIndexOf(".") + 1).toUpperCase();
+        switch (fileSuffix) {
+            case "JPG":
+                return "JPEG";
+            case "TIF":
+                return "TIFF";
+            default:
+                return fileSuffix;
         }
     }
 

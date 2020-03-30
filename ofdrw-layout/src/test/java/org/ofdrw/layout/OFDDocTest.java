@@ -57,7 +57,7 @@ class OFDDocTest {
 
     @Test
     void imgTest() throws IOException {
-        Path path = Paths.get("target/VPage3.ofd").toAbsolutePath();
+        Path path = Paths.get("target/VPageOfPNG.ofd").toAbsolutePath();
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             PageLayout pageLayout = ofdDoc.getPageLayout();
             VirtualPage vPage = new VirtualPage(pageLayout);
@@ -74,9 +74,10 @@ class OFDDocTest {
             ofdDoc.addVPage(vPage);
         }
     }
+
     @Test
-    void imgTest_tif() throws IOException {
-        Path path = Paths.get("target/VPage3.ofd").toAbsolutePath();
+    void imgTestTif() throws IOException {
+        Path path = Paths.get("target/VPageOfTIFF.ofd").toAbsolutePath();
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             PageLayout pageLayout = ofdDoc.getPageLayout();
             VirtualPage vPage = new VirtualPage(pageLayout);
