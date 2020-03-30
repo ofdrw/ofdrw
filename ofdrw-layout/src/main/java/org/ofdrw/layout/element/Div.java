@@ -105,6 +105,15 @@ public class Div implements RenderPrepare, ElementSplit {
     private double top = 0d;
 
     /**
+     * 元素整体透明度
+     * <p>
+     * null 表示不透明
+     * <p>
+     * 取值区间 [0,1]
+     */
+    private Double opacity = null;
+
+    /**
      * 元素定位方式
      * <p>
      * 默认为静态定位
@@ -166,6 +175,34 @@ public class Div implements RenderPrepare, ElementSplit {
         return (clear == Clear.both)
                 || (aFloat == AFloat.right && clear == Clear.left)
                 || (aFloat == AFloat.left && clear == Clear.right);
+    }
+
+    /**
+     * 获取透明度
+     *
+     * @return 透明度取值区间 [0,1]
+     */
+    public Double getOpacity() {
+        return opacity;
+    }
+
+    /**
+     * 设置透明度
+     * <p>
+     * 0 - 表示全透明， 1 - 表示不透明
+     *
+     * @param opacity 透明度取值区间 [0,1]
+     * @return this
+     */
+    public Div setOpacity(Double opacity) {
+        if (opacity == null) {
+        } else if (opacity > 1) {
+            opacity = 1d;
+        } else if (opacity < 0) {
+            opacity = 0d;
+        }
+        this.opacity = opacity;
+        return this;
     }
 
     public int[] getBorderColor() {

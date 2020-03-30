@@ -47,6 +47,10 @@ public class ImgRender {
         double y = e.getY() + e.getMarginTop() + e.getBorderTop() + e.getPaddingTop();
         imgObj.setBoundary(x, y, e.getWidth(), e.getHeight());
         imgObj.setCTM(new ST_Array(e.getWidth(), 0, 0, e.getHeight(), 0, 0));
+        if (e.getOpacity() != null) {
+            // 图元透明度
+            imgObj.setAlpha((int) (e.getOpacity() * 255));
+        }
         layer.addPageBlock(imgObj);
     }
 }

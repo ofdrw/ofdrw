@@ -116,6 +116,10 @@ public class ParagraphRender {
                 }
                 // 加入到字符对象中
                 txtObj.addTextCode(tcSTTxt);
+                if (e.getOpacity() != null) {
+                    // 图元透明度
+                    txtObj.setAlpha((int) (e.getOpacity() * 255));
+                }
                 // 将文字对象加入到图层
                 layer.addPageBlock(txtObj);
                 // 是否包含下划线
@@ -123,6 +127,10 @@ public class ParagraphRender {
                     ST_ID underlineId = new ST_ID(maxUnitID.incrementAndGet());
                     // 构造下划线
                     PathObject underline = drawUnderline(underlineId, boundary, offset);
+                    if (e.getOpacity() != null) {
+                        // 图元透明度
+                        underline.setAlpha((int) (e.getOpacity() * 255));
+                    }
                     // 加入到文字对象的上方
                     layer.addPageBlock(underline);
                 }

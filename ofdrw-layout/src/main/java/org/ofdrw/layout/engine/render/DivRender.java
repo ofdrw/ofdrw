@@ -30,6 +30,13 @@ public class DivRender {
             // 没有背景颜色没有边框，那么这个Div就不需要绘制
             return;
         }
+
+        // 图元透明度
+        Integer alpha = null;
+        if (e.getOpacity() != null) {
+            alpha = (int) (e.getOpacity() * 255);
+        }
+
         /*
          基础的盒式模型绘制：
          1. 首先绘制背景颜色
@@ -50,6 +57,9 @@ public class DivRender {
                     .setStroke(false)
                     .setFill(true)
                     .setFillColor(CT_Color.rgb(bgColor));
+            if (alpha != null) {
+                bg.setAlpha(alpha);
+            }
             // 加入图层
             layer.addPageBlock(bg);
         }
@@ -81,6 +91,9 @@ public class DivRender {
                 if (borderColor != null) {
                     border.setStrokeColor(CT_Color.rgb(borderColor));
                 }
+                if (alpha != null) {
+                    border.setAlpha(alpha);
+                }
                 layer.addPageBlock(border);
             }
             // 4条边宽度不一致，需要分别绘制各条边
@@ -101,6 +114,9 @@ public class DivRender {
                     int[] borderColor = e.getBorderColor();
                     if (borderColor != null) {
                         topBorder.setStrokeColor(CT_Color.rgb(borderColor));
+                    }
+                    if (alpha != null) {
+                        topBorder.setAlpha(alpha);
                     }
                     layer.addPageBlock(topBorder);
                 }
@@ -126,6 +142,9 @@ public class DivRender {
                     if (borderColor != null) {
                         bottomBorder.setStrokeColor(CT_Color.rgb(borderColor));
                     }
+                    if (alpha != null) {
+                        bottomBorder.setAlpha(alpha);
+                    }
                     layer.addPageBlock(bottomBorder);
                 }
                 // 元素中没有任何内容和边框，那么认为是占位符，跳过绘制
@@ -140,14 +159,19 @@ public class DivRender {
                     ST_ID objId = new ST_ID(maxUnitID.incrementAndGet());
                     PathObject leftBorder = new PathObject(objId);
                     double x = e.getX() + e.getMarginLeft();
-                    double y = e.getY() + e.getMarginTop();
-                    double h = e.getBorderTop() + e.getPaddingTop() + e.getHeight() + e.getPaddingBottom() + e.getBorderBottom();
+                    double y = e.getY() + e.getMarginTop() + topWidth;
+                    double h = e.getBorderTop() + e.getPaddingTop()
+                            + e.getHeight() + e.getPaddingBottom() + e.getBorderBottom()
+                            - topWidth - bottomWidth;
                     leftBorder.setBoundary(x, y, leftWidth, h)
                             .setLineWidth(leftWidth)
                             .setAbbreviatedData(new AbbreviatedData().M(leftWidth / 2, 0).L(leftWidth / 2, h));
                     int[] borderColor = e.getBorderColor();
                     if (borderColor != null) {
                         leftBorder.setStrokeColor(CT_Color.rgb(borderColor));
+                    }
+                    if (alpha != null) {
+                        leftBorder.setAlpha(alpha);
                     }
                     layer.addPageBlock(leftBorder);
                 }
@@ -165,14 +189,19 @@ public class DivRender {
                             + e.getPaddingLeft()
                             + e.getWidth()
                             + e.getPaddingRight();
-                    double y = e.getY() + e.getMarginTop();
-                    double h = e.getBorderTop() + e.getPaddingTop() + e.getHeight() + e.getPaddingBottom() + e.getBorderBottom();
+                    double y = e.getY() + e.getMarginTop() + topWidth;
+                    double h = e.getBorderTop() + e.getPaddingTop()
+                            + e.getHeight() + e.getPaddingBottom() + e.getBorderBottom()
+                            - topWidth - bottomWidth;
                     rightBorder.setBoundary(x, y, rightWidth, h)
                             .setLineWidth(rightWidth)
                             .setAbbreviatedData(new AbbreviatedData().M(rightWidth / 2, 0).L(rightWidth / 2, h));
                     int[] borderColor = e.getBorderColor();
                     if (borderColor != null) {
                         rightBorder.setStrokeColor(CT_Color.rgb(borderColor));
+                    }
+                    if (alpha != null) {
+                        rightBorder.setAlpha(alpha);
                     }
                     layer.addPageBlock(rightBorder);
                 }

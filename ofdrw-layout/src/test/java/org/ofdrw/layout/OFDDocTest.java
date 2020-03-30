@@ -253,4 +253,37 @@ class OFDDocTest {
         }
         System.out.println("生成文档位置: " + path.toAbsolutePath());
     }
+
+
+    @Test
+    void elementOpacityTest() throws IOException {
+        Path path = Paths.get("target/ElementOpacityDoc.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+
+            Div div = new Div(30d, 30d)
+                    .setBackgroundColor(255, 0, 0)
+                    .setMargin(3d)
+                    .setBorder(1d)
+                    .setOpacity(0.5)
+                    .setFloat(AFloat.center);
+
+            Path imgPath = Paths.get("src/test/resources", "asf-logo.tif");
+            Img img = new Img(imgPath);
+            img.setOpacity(0.3)
+                    .setMargin(3d)
+                    .setBorder(1d);
+
+            Paragraph p = new Paragraph().setFontSize(10d)
+                    .add("我们无论遇到什么困难也不要怕，微笑着面对它，" +
+                            "消除恐惧的最好办法就是直面恐惧，坚持就是胜利，加油！奥力给！");
+            p.setPadding(3d)
+                    .setOpacity(0.2d)
+                    .setMargin(3d)
+                    .setBorder(1d,2d,3d,4d);
+
+            ofdDoc.add(div).add(img).add(p);
+        }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+    }
+
 }
