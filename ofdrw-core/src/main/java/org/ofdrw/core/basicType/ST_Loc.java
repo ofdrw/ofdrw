@@ -34,7 +34,7 @@ public class ST_Loc extends STBase {
 
     /**
      * 获取路径实例
-     * @param loc
+     * @param loc 路径字符串
      * @return 实例或null
      */
     public static ST_Loc getInstance(String loc) {

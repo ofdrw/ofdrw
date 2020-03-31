@@ -67,7 +67,6 @@ public class CT_Composite extends CT_GraphicUnit<CT_Composite> {
      * 【必选 属性】
      * 获取 引用资源文件中定义的矢量图像的标识
      * <p>
-     * <p>
      * 复合对象引用的资源时 Res 中的矢量图像（CompositeGraphUnit）
      * ，其类型为 CT_VectorG，其结构如 72 所示
      *

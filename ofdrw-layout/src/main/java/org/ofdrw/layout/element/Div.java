@@ -740,9 +740,11 @@ public class Div implements RenderPrepare, ElementSplit {
      * <p>
      * 根据分割高度调整两个克隆元素，达成分割元素的效果
      *
+     * @param <T>     Div子类泛型参数
      * @param sHeight 分割内容的高度
      * @param div1    克隆元素1
      * @param div2    克隆元素2
+     * @return 分割调整后的两个Div
      */
     public <T extends Div> Div[] contentSplitAdjust(double sHeight, T div1, T div2) {
         /*

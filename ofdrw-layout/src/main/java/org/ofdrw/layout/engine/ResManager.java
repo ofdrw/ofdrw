@@ -11,7 +11,6 @@ import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.font.Font;
 import org.ofdrw.pkg.dir.DocDir;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.file.Path;
 import java.util.HashMap;

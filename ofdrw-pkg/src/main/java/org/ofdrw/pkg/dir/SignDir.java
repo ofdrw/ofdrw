@@ -54,6 +54,7 @@ public class SignDir implements DirCollect {
      * 设置页码
      *
      * @param index 第几个签名
+     * @return this
      */
     public SignDir setIndex(Integer index) {
         this.index = index;

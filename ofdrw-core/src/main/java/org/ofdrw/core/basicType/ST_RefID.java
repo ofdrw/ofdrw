@@ -4,7 +4,6 @@ package org.ofdrw.core.basicType;
 /**
  * 标识符引用，无符号整数，此标识符应为文档内已定义的标识符
  * <p>
- * <p>
  * 示例：
  * <code>1000</code>
  * <p>

@@ -158,7 +158,9 @@ public class OFDElement extends DefaultElementProxy {
     /**
      * 获取 指定名称OFD元素集合
      *
-     * @param name OFD元素名称
+     * @param name   OFD元素名称
+     * @param mapper 转换对象构造器引用
+     * @param <R> 指定元素对象
      * @return 指定名称OFD元素集合
      */
     public <R> List<R> getOFDElements(String name, Function<? super Element, ? extends R> mapper) {

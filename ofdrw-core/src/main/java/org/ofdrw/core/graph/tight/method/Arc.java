@@ -209,8 +209,8 @@ public class Arc extends Command {
      * <p>
      * 不能与当前的绘制点为同一位置
      *
-     * @param x
-     * @param y
+     * @param x X坐标
+     * @param y Y坐标
      * @return this
      */
     public Arc setEndPoint(double x, double y) {

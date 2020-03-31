@@ -1,6 +1,5 @@
 package org.ofdrw.pkg.dir;
 
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;

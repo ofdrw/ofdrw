@@ -34,6 +34,7 @@ public class PlaceholderSpan extends Span {
      * 设置占位的字符
      *
      * @param holdNum 占位符数量
+     * @return this
      */
     public PlaceholderSpan setHoldChars(int holdNum) {
         StringBuilder txt = new StringBuilder();

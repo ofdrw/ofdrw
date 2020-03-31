@@ -41,7 +41,7 @@ public class CustomData extends OFDElement {
     /**
      * 【必选 属性】
      * 设置元数据名称
-     *
+     * @param name 元数据名称(Name)
      * @return this
      */
     public CustomData setDataName(String name) {
