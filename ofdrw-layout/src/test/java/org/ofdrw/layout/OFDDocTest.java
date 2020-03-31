@@ -6,6 +6,7 @@ import org.ofdrw.layout.element.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -279,11 +280,26 @@ class OFDDocTest {
             p.setPadding(3d)
                     .setOpacity(0.2d)
                     .setMargin(3d)
-                    .setBorder(1d,2d,3d,4d);
+                    .setBorder(1d, 2d, 3d, 4d);
 
             ofdDoc.add(div).add(img).add(p);
         }
         System.out.println("生成文档位置: " + path.toAbsolutePath());
     }
 
+    @Test
+    void splitStrToParagraph() throws IOException {
+        String plaintext = "只……只要我把那家伙给拖进来……\n交给你的话……\n你……你真的会……饶我一命吗？" +
+                "嘻嘻~当然\n我可是说话算话的啦~\n这算是以他的养分为筹码的交易Give&Take啦……快……快点叫吧！\n" +
+                "但是我拒绝！\n——JOJO 岸边露伴";
+
+        Path path = Paths.get("target/SplitStrToParagraphDoc.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            for (String pTxt : plaintext.split("\\\n")) {
+                Paragraph p = new Paragraph(pTxt);
+                ofdDoc.add(p);
+            }
+        }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+    }
 }
