@@ -1,6 +1,8 @@
 # OFD Reader & Writer
 
-***Talk is cheap,Show me the code. ——Linus Torvalds***
+> **Talk is cheap,Show me the code. ——Linus Torvalds**
+
+***像写HTML和Word那样简单的编写OFD。***
 
 根据[《GB/T 33190-2016 电子文件存储与交换格式版式文档》](./GBT_33190-2016_电子文件存储与交换格式版式文档.pdf)标准实现版式文档OFD库（含有书签）。
 
@@ -17,6 +19,22 @@
     - 实时状态： **阶段性完成**
 
 ## QuickStart
+
+引入依赖
+```xml
+<dependency>
+    <groupId>commons-io</groupId>
+    <artifactId>commons-io</artifactId>
+    <version>2.6</version>
+</dependency>
+
+<dependency>
+  <groupId>org.ofdrw</groupId>
+  <artifactId>ofdrw-full</artifactId>
+  <version>1.0.0</version>
+</dependency>
+```
+
 
 如何生成一份OFD文档？
 
@@ -39,7 +57,10 @@ public class HelloWorld {
 
 ![示例](./ofdrw-layout/doc/示例.png)
 
-> **更多关于OFD布局设计，请参考 [《OFD R&W 布局设计》](./ofdrw-layout/doc/README.md)**
+- [生成示例](https://github.com/Trisia/ofdrw/blob/master/ofdrw-layout/src/test/java/org/ofdrw/layout/OFDDocTest.java)
+- [布局示例](https://github.com/Trisia/ofdrw/blob/master/ofdrw-layout/src/test/java/org/ofdrw/layout/LayoutTest.java)
+
+> **关于OFD布局设计，请参考 [《OFD R&W 布局设计》](./ofdrw-layout/doc/README.md)**
 
 ## 源码安装
 
@@ -53,6 +74,7 @@ mvn install
 
 ## 进展
 
+- *2020-03-21* 【里程碑】 OFD R&W 正式发布第一个版本，版本号 1.0.0。
 - *2020-03-29* 完成了《OFD R&W 布局设计》的各种情况测试，准备发布版本。
 - *2020-03-28* 增加了文字下划线、段落的首行缩进的支持。
 - *2020-03-26* 完善了少内容段落的布局，能够使用center居中，增加HelloWorld Demo。
