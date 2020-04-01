@@ -2,21 +2,21 @@
 
 > **Talk is cheap,Show me the code. ——Linus Torvalds**
 
-***像写HTML和Word那样简单的编写OFD。***
+**像写HTML和Word那样简单的编写OFD。**
 
 根据[《GB/T 33190-2016 电子文件存储与交换格式版式文档》](./GBT_33190-2016_电子文件存储与交换格式版式文档.pdf)标准实现版式文档OFD库（含有书签）。
 
-
-项目结构
+项目结构：
 
 - [**ofdrw-core**](./ofdrw-core) OFD核心API，参考[《GB/T 33190-2016 电子文件存储与交换格式版式文档》](./GBT_33190-2016_电子文件存储与交换格式版式文档.pdf)实现的基础
     - 实施状态： **阶段性完成**。
 - [**ofdrw-pkg**](./ofdrw-pkg) OFD文件的容器，用于文档的打包。
-    - 实施状态：*达成基本功能*
+    - 实施状态：*达成基本功能*。
 - [**ofdrw-layout**](./ofdrw-layout) OFD布局引擎库，用于文档构建和渲染。
-    - 实时状态： **阶段性完成，部分功能未测试**
-- [**ofdrw-font**](./ofdrw-font) 生成OFD需要的常规字体（OpenType）
-    - 实时状态： **阶段性完成**
+    - 实时状态： **阶段性完成**。
+- [**ofdrw-font**](./ofdrw-font) 生成OFD需要的常规字体（OpenType）。
+    - 实时状态： **阶段性完成**。
+- [**ofdrw-full**](./ofdrw-full) 上述所有模块整合包，用于简化依赖引入。
 
 ## QuickStart
 
