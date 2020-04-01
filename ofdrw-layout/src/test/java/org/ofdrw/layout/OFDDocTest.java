@@ -100,6 +100,7 @@ class OFDDocTest {
     void paragraphTest() throws IOException {
         Path path = Paths.get("target/VPage4.ofd").toAbsolutePath();
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
+
             PageLayout pageLayout = ofdDoc.getPageLayout();
             VirtualPage vPage = new VirtualPage(pageLayout);
 
@@ -302,4 +303,26 @@ class OFDDocTest {
         }
         System.out.println("生成文档位置: " + path.toAbsolutePath());
     }
+
+    @Test
+    public void fillPageParagraph() throws IOException {
+        Path path = Paths.get("target/FillPageParagraphDoc.ofd").toAbsolutePath();
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            VirtualPage virtualPage = new VirtualPage(210.0, 140.0);
+            virtualPage.getStyle().setMargin(0d);
+            Paragraph p = new Paragraph("helloword");
+            p.setPosition(Position.Absolute);
+            p.setX(0.0);
+            p.setY(0.0);
+            p.setWidth(210.0 - 0.5);
+            p.setHeight(140.0 - 0.5);
+            p.setBorder(0.25);
+            p.setPadding(0.0);
+            p.setMargin(0.0);
+            virtualPage.add(p);
+            ofdDoc.addVPage(virtualPage);
+        }
+        System.out.println("生成文档位置：" + path.toAbsolutePath());
+    }
+
 }
