@@ -58,14 +58,18 @@ public class VirtualContainer {
      * 创建一个虚拟容器
      *
      * @param base 基础路径对象
-     * @throws IOException 目录创建异常
+     * @throws IllegalArgumentException 参数异常
      */
-    public VirtualContainer(Path base) throws IOException {
+    public VirtualContainer(Path base) throws IllegalArgumentException {
         if (base == null) {
             throw new IllegalArgumentException("文件路径为空");
         }
         if (Files.notExists(base)) {
-            base = Files.createDirectories(base);
+            try {
+                base = Files.createDirectories(base);
+            } catch (IOException e) {
+                throw new RuntimeException("无法创建指定目录", e);
+            }
         }
         if (!Files.isDirectory(base)) {
             throw new IllegalStateException("请传入基础目录路径，而不是文件");

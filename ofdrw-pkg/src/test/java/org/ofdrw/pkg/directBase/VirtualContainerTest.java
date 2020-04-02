@@ -82,4 +82,16 @@ class VirtualContainerTest {
         Assertions.assertEquals("VirtualContainer", vc.getContainerName());
     }
 
+    @Test
+    void obtainContainer() throws IOException {
+        // 创建一个容器
+        VirtualContainer pages = vc.obtainContainer("Pages", VirtualContainer::new);
+        Assertions.assertTrue(Files.exists(Paths.get(target, "Pages")));
+
+        Path path = Paths.get(target);
+        VirtualContainer vc2 = new VirtualContainer(path);
+        VirtualContainer pages1 = vc2.getContainer("Pages", VirtualContainer::new);
+        Assertions.assertNotNull(pages1);
+    }
+
 }
