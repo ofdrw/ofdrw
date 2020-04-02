@@ -1,4 +1,4 @@
-package org.ofdrw.pkg.directBase;
+package org.ofdrw.pkg.dir;
 
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
@@ -6,6 +6,7 @@ import org.dom4j.Element;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.ofdrw.pkg.dir.VirtualContainer;
 import org.ofdrw.pkg.tool.EleCup;
 
 import java.io.IOException;

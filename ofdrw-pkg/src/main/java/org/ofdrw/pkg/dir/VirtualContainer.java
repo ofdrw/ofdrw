@@ -1,4 +1,4 @@
-package org.ofdrw.pkg.directBase;
+package org.ofdrw.pkg.dir;
 
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
