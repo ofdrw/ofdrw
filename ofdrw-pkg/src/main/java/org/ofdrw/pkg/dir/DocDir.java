@@ -2,7 +2,7 @@ package org.ofdrw.pkg.dir;
 
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.res.Res;
-import org.ofdrw.pkg.tool.DocObjDump;
+import org.ofdrw.pkg.tool.EleCup;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -227,7 +227,7 @@ public class DocDir implements DirCollect {
         path = Files.createDirectories(path);
         String dir = path.toAbsolutePath().toString();
 
-        DocObjDump.dump(document, Paths.get(dir, "Document.xml"));
+        EleCup.dump(document, Paths.get(dir, "Document.xml"));
         if (signs != null) {
             signs.collect(dir);
         }
@@ -235,10 +235,10 @@ public class DocDir implements DirCollect {
             pages.collect(dir);
         }
         if (publicRes != null) {
-            DocObjDump.dump(publicRes, Paths.get(dir, "PublicRes.xml"));
+            EleCup.dump(publicRes, Paths.get(dir, "PublicRes.xml"));
         }
         if (documentRes != null) {
-            DocObjDump.dump(documentRes, Paths.get(dir, "DocumentRes.xml"));
+            EleCup.dump(documentRes, Paths.get(dir, "DocumentRes.xml"));
         }
         if (res != null) {
             res.collect(dir);

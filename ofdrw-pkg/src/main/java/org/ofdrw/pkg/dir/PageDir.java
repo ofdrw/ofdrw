@@ -2,7 +2,7 @@ package org.ofdrw.pkg.dir;
 
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.res.Res;
-import org.ofdrw.pkg.tool.DocObjDump;
+import org.ofdrw.pkg.tool.EleCup;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -146,13 +146,13 @@ public class PageDir implements DirCollect {
         String dir = path.toAbsolutePath().toString();
 
         if (content != null) {
-            DocObjDump.dump(this.content, Paths.get(dir, "Content.xml"));
+            EleCup.dump(this.content, Paths.get(dir, "Content.xml"));
         }
         if (res != null) {
             res.collect(dir);
         }
         if (pageRes != null) {
-            DocObjDump.dump(this.pageRes, Paths.get(dir, "PageRes.xml"));
+            EleCup.dump(this.pageRes, Paths.get(dir, "PageRes.xml"));
         }
         return path;
     }

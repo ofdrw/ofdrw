@@ -1,7 +1,7 @@
 package org.ofdrw.pkg.dir;
 
 import org.dom4j.Element;
-import org.ofdrw.pkg.tool.DocObjDump;
+import org.ofdrw.pkg.tool.EleCup;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,7 +34,7 @@ public class TT {
      */
     public static void dumpToTmpReview(Element e) throws IOException {
         Path tmp = Files.createTempFile(Paths.get("target"), "ofdrwtest-", ".xml");
-        DocObjDump.dump(e, tmp);
+        EleCup.dump(e, tmp);
         System.out.println("生成位置: " + tmp.toAbsolutePath().toString());
     }
 }

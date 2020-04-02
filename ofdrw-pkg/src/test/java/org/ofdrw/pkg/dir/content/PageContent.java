@@ -8,10 +8,6 @@ import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.pkg.dir.TT;
-import org.ofdrw.pkg.tool.DocObjDump;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class PageContent {
 

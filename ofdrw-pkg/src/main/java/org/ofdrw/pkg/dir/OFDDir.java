@@ -2,7 +2,7 @@ package org.ofdrw.pkg.dir;
 
 import net.lingala.zip4j.ZipFile;
 import org.ofdrw.core.basicStructure.ofd.OFD;
-import org.ofdrw.pkg.tool.DocObjDump;
+import org.ofdrw.pkg.tool.EleCup;
 
 import java.io.File;
 import java.io.IOException;
@@ -122,7 +122,7 @@ public class OFDDir implements DirCollect {
         for (DocDir doc : container) {
             doc.collect(dir);
         }
-        DocObjDump.dump(ofd, Paths.get(dir, "OFD.xml"));
+        EleCup.dump(ofd, Paths.get(dir, "OFD.xml"));
         return path;
     }
 

@@ -1,7 +1,7 @@
 package org.ofdrw.pkg.dir;
 
 import org.ofdrw.core.signatures.Signatures;
-import org.ofdrw.pkg.tool.DocObjDump;
+import org.ofdrw.pkg.tool.EleCup;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -102,7 +102,7 @@ public class SignsDir implements DirCollect {
         path = Files.createDirectories(path);
         String dir = path.toAbsolutePath().toString();
 
-        DocObjDump.dump(this.signatures, Paths.get(dir, "Signatures.xml"));
+        EleCup.dump(this.signatures, Paths.get(dir, "Signatures.xml"));
         for (SignDir p : container) {
             p.collect(dir);
         }

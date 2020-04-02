@@ -1,8 +1,10 @@
 package org.ofdrw.pkg.tool;
 
 import org.dom4j.Document;
+import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
 import java.io.FileOutputStream;
@@ -12,12 +14,31 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * 对象序列化
+ * 元素杯子
+ * <p>
+ * 对象序列化和反序列化工具
+ * <p>
+ * 反序列化 向杯子中注入水
+ * <p>
+ * 序列化把杯子中的水倒出
  *
  * @author 权观宇
- * @since 2020-01-20 14:45:02
+ * @since 2020-4-2 20:20:57
  */
-public class DocObjDump {
+public class EleCup {
+
+    /**
+     * 从文件加载反序列化元素对象
+     *
+     * @param file 文件路径对象
+     * @return 反序列化的元素对象
+     * @throws DocumentException 文件解析异常
+     */
+    public static Element inject(Path file) throws DocumentException {
+        SAXReader reader = new SAXReader();
+        Document document = reader.read(file.toFile());
+        return document.getRootElement();
+    }
 
     /**
      * 序列化文档对象

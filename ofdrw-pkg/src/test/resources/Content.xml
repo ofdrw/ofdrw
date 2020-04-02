@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ofd:Page xmlns:ofd="http://www.ofdspec.org/2016">
+    <ofd:Content>
+        <ofd:Layer ID="2">
+            <ofd:TextObject ID="4" Boundary="31.7 25.4 48 5" Font="3" Size="3.0">
+                <ofd:TextCode X="0" Y="3" DeltaX="3 3 3 3 3 3 3 3 3 3 3 3 3 3 3">只……只要我把那家伙给拖进来……</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="5" Boundary="31.7 30.4 21 5" Font="3" Size="3.0">
+                <ofd:TextCode X="0" Y="3" DeltaX="3 3 3 3 3 3">交给你的话……</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="6" Boundary="31.7 35.4 59.22509765625 5" Font="3" Size="3.0">
+                <ofd:TextCode X="0" Y="3" DeltaX="3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 2.22509765625 3">
+                    你……你真的会……饶我一命吗？嘻嘻~当然
+                </ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="7" Boundary="31.7 40.4 29.22509765625 5" Font="3" Size="3.0">
+                <ofd:TextCode X="0" Y="3" DeltaX="3 3 3 3 3 3 3 3 3">我可是说话算话的啦~</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="8" Boundary="31.7 45.4 90.6298828125 5" Font="3" Size="3.0">
+                <ofd:TextCode X="0" Y="3"
+                              DeltaX="3 3 3 3 3 3 3 3 3 3 3 3 3 3 2.23095703125 0.79833984375 1.57470703125 1.7021484375 2.6103515625 1.7197265625 1.658203125 1.63330078125 1.7021484375 3 3 3 3 3 3 3 3 3 3">
+                    这算是以他的养分为筹码的交易Give&amp;Take啦……快……快点叫吧！
+                </ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="9" Boundary="31.7 50.4 18 5" Font="3" Size="3.0">
+                <ofd:TextCode X="0" Y="3" DeltaX="3 3 3 3 3">但是我拒绝！</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="10" Boundary="31.7 55.4 26.765625 5" Font="3" Size="3.0">
+                <ofd:TextCode X="0" Y="3"
+                              DeltaX="3 3 1.18798828125 2.44482421875 1.18798828125 2.44482421875 1.5 3 3 3">——JOJO 岸边露伴
+                </ofd:TextCode>
+            </ofd:TextObject>
+        </ofd:Layer>
+    </ofd:Content>
+</ofd:Page>

@@ -1,7 +1,7 @@
 package org.ofdrw.pkg.dir;
 
 import org.ofdrw.core.signatures.sig.Signature;
-import org.ofdrw.pkg.tool.DocObjDump;
+import org.ofdrw.pkg.tool.EleCup;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -130,7 +130,7 @@ public class SignDir implements DirCollect {
         if (signature == null) {
             throw new IllegalArgumentException("缺少签名/签章描述文件（signature）");
         }
-        DocObjDump.dump(signature, Paths.get(dir, "Signature.xml"));
+        EleCup.dump(signature, Paths.get(dir, "Signature.xml"));
         if (seal != null) {
             Files.copy(seal, Paths.get(dir, "Seal.esl"));
         }

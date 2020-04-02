@@ -9,10 +9,6 @@ import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.pageDescription.color.colorSpace.OFDColorSpaceType;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.pkg.dir.TT;
-import org.ofdrw.pkg.tool.DocObjDump;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class PublicResContent {
     public static Res res() {
