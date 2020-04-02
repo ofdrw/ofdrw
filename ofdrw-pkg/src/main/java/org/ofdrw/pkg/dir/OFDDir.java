@@ -1,6 +1,7 @@
 package org.ofdrw.pkg.dir;
 
 import net.lingala.zip4j.ZipFile;
+import org.apache.commons.io.FileUtils;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.pkg.tool.EleCup;
 
@@ -179,11 +180,7 @@ public class OFDDir implements DirCollect {
             this.zip(workDirPath.toFile(), fileName);
         } finally {
             if (tmpPath != null) {
-                try (Stream<Path> walk = Files.walk(tmpPath)) {
-                    walk.sorted(Comparator.reverseOrder())
-                            .map(Path::toFile)
-                            .forEach(File::delete);
-                }
+                FileUtils.deleteDirectory(tmpPath.toFile());
             }
         }
     }
