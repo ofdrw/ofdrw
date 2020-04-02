@@ -77,5 +77,9 @@ class VirtualContainerTest {
         Assertions.assertEquals("ofd:Page", obj.getQualifiedName());
     }
 
+    @Test
+    void getContainerName() {
+        Assertions.assertEquals("VirtualContainer", vc.getContainerName());
+    }
 
 }

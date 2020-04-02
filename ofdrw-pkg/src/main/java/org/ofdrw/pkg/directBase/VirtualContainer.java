@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * 虚拟容器对象
@@ -27,10 +28,31 @@ public class VirtualContainer {
     private String base;
 
     /**
+     * 目录名称
+     */
+    private String name;
+
+    /**
      * 文件缓存
      */
     private Map<String, Element> fileCache;
 
+    /**
+     * 目录中的虚拟容器缓存
+     */
+    private Map<String, VirtualContainer> dirCache;
+
+    /**
+     * 获取虚拟容器的名称
+     *
+     * @return 名称
+     */
+    public String getContainerName() {
+        return name;
+    }
+
+    private VirtualContainer() {
+    }
 
     /**
      * 创建一个虚拟容器
@@ -42,9 +64,16 @@ public class VirtualContainer {
         if (base == null) {
             throw new IllegalArgumentException("文件路径为空");
         }
-        base = Files.createDirectories(base);
+        if (Files.notExists(base)) {
+            base = Files.createDirectories(base);
+        }
+        if (!Files.isDirectory(base)) {
+            throw new IllegalStateException("请传入基础目录路径，而不是文件");
+        }
         this.base = base.toAbsolutePath().toString();
+        this.name = base.getFileName().toString();
         fileCache = new HashMap<>(7);
+        dirCache = new HashMap<>(5);
     }
 
     /**
@@ -131,6 +160,69 @@ public class VirtualContainer {
             throw new FileNotFoundException("无法在目录: " + base + "中找到，文件 [ " + fileName + " ]");
         }
         return res;
+    }
+
+
+    /**
+     * 获取一个虚拟容器对象
+     * <p>
+     * 如果容器存在，那么取出元素
+     * <p>
+     * 如果容器不存在，那么创建一个新的对象
+     *
+     * @param name   容器名称
+     * @param mapper 容器构造器引用
+     * @param <R>    容器子类
+     * @return 新建或已经存在的容器
+     */
+    public <R extends VirtualContainer> R obtainContainer(String name, Function<Path, R> mapper) {
+        if (name == null || name.length() == 0) {
+            throw new IllegalArgumentException("容器名称（name）为空");
+        }
+        if (mapper == null) {
+            throw new IllegalArgumentException("容器构建对象（mapper）为空");
+        }
+        Path p = Paths.get(base, name);
+        // 检查缓存
+        VirtualContainer target = dirCache.get(name);
+        if (target == null) {
+            // 如果目录不存在那么创建，如果已经存在那么就是加载
+            R ct = mapper.apply(p);
+            // 加入缓存中
+            dirCache.put(name, ct);
+            return ct;
+        } else {
+            return (R) target;
+        }
+    }
+
+    /**
+     * 获取虚拟容器
+     * <p>
+     * 如果容器不存在那么返还null
+     *
+     * @param name   容器名称
+     * @param mapper 容器构造器引用
+     * @param <R>    容器子类
+     * @return null或容器对象
+     */
+    public <R extends VirtualContainer> R getContainer(String name, Function<Path, R> mapper) {
+        Path p = Paths.get(base, name);
+        if (Files.notExists(p) || !Files.isDirectory(p)) {
+            return null;
+        }
+
+        // 检查缓存
+        VirtualContainer target = dirCache.get(name);
+        if (target == null) {
+            // 调用指定构造器创建容器对象
+            R ct = mapper.apply(p);
+            // 加入缓存中
+            dirCache.put(name, ct);
+            return ct;
+        } else {
+            return (R) target;
+        }
     }
 
 
