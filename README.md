@@ -1,6 +1,12 @@
 # OFD Reader & Writer
 
+**深切悼念，新冠肺炎疫情牺牲烈士和逝世同胞！**
+
+---
+
 > **Talk is cheap,Show me the code. ——Linus Torvalds**
+
+
 
 **像写HTML和Word那样简单的编写OFD。**
 
