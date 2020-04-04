@@ -1,9 +1,6 @@
 package org.ofdrw.pkg.tool;
 
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.DocumentHelper;
-import org.dom4j.Element;
+import org.dom4j.*;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
@@ -25,7 +22,7 @@ import java.nio.file.Path;
  * @author 权观宇
  * @since 2020-4-2 20:20:57
  */
-public class EleCup {
+public class ElemCup {
 
     /**
      * 从文件加载反序列化元素对象
@@ -62,6 +59,10 @@ public class EleCup {
         }
 
         Document doc = DocumentHelper.createDocument();
+        if (e.getDocument() != null) {
+            // 如果元素所属文档不为空，说明是从文件中加载得到，此时需要Clone这个对象以放入新的Document中
+            e = (Element) e.clone();
+        }
         doc.add(e);
         try (OutputStream out = Files.newOutputStream(to)) {
             XMLWriter writeToFile = new XMLWriter(out);

@@ -1,4 +1,4 @@
-package org.ofdrw.pkg.dir;
+package org.ofdrw.pkg.container;
 
 import org.junit.jupiter.api.Test;
 
@@ -10,7 +10,7 @@ public class PathTest {
 
 
     @Test
-    public void pathCat() throws Exception {
+    public void pathCat() {
         Path c = Paths.get("foo/", "bar/", "/Content.xml");
         System.out.println(c.toAbsolutePath().toString());
 //        Assert.assertTrue();

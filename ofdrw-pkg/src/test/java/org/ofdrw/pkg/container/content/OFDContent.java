@@ -1,17 +1,17 @@
-package org.ofdrw.pkg.dir.content;
+package org.ofdrw.pkg.container.content;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
 import org.ofdrw.core.basicType.ST_Loc;
-import org.ofdrw.pkg.dir.TT;
+import org.ofdrw.pkg.container.TT;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
 public class OFDContent {
-    public static final OFD ofd(){
+    public static OFD ofd(){
         CT_DocInfo docInfo = new CT_DocInfo()
                 .setDocID(UUID.randomUUID())
                 .setAuthor("权观宇")

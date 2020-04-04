@@ -1,4 +1,4 @@
-package org.ofdrw.pkg.dir.content;
+package org.ofdrw.pkg.container.content;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.core.basicStructure.res.Res;
@@ -8,22 +8,19 @@ import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.pageDescription.color.colorSpace.OFDColorSpaceType;
 import org.ofdrw.core.text.font.CT_Font;
-import org.ofdrw.pkg.dir.TT;
+import org.ofdrw.pkg.container.TT;
 
 public class PublicResContent {
     public static Res res() {
-        ColorSpaces cs = new ColorSpaces()
-                .addColorSpace(new CT_ColorSpace(OFDColorSpaceType.RGB, 5));
-        CT_Font calibri = new CT_Font()
+        CT_Font serifCJKsc = new CT_Font()
                 .setFontName("NotoSerifCJKsc")
                 .setFamilyName("Medium")
                 .setID(4)
                 .setFontFile(new ST_Loc("Res/NotoSerifCJKsc-Medium.otf"));
 
         Fonts fonts = new Fonts()
-                .addFont(calibri);
+                .addFont(serifCJKsc);
         return new Res()
-                .addResource(cs)
                 .addResource(fonts);
     }
 

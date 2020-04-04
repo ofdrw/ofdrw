@@ -1,13 +1,15 @@
-package org.ofdrw.pkg.dir;
+package org.ofdrw.pkg.container;
 
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.dom4j.tree.DefaultEntity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.ofdrw.pkg.dir.VirtualContainer;
-import org.ofdrw.pkg.tool.EleCup;
+import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicStructure.pageObj.Page;
+import org.ofdrw.pkg.tool.ElemCup;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -59,13 +61,15 @@ class VirtualContainerTest {
     }
 
     @Test
-    void putObj() throws DocumentException {
+    void putObj() throws DocumentException, IOException {
         String fileName = "Content.xml";
         Path path = Paths.get("src/test/resources", fileName);
-        Element inject = EleCup.inject(path);
+        Element inject = ElemCup.inject(path);
+        inject.add(OFDElement.getInstance("TestEmptyElem"));
         vc.putObj("C.xml", inject);
-        // TODO 刷新到文件
-//        Assertions.assertTrue(Files.exists(Paths.get(target, "C.xml")));
+        vc.flush();
+        System.out.println(vc.getFullPath());
+        Assertions.assertTrue(Files.exists(Paths.get(target, "C.xml")));
 
     }
 

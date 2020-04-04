@@ -1,7 +1,7 @@
-package org.ofdrw.pkg.dir;
+package org.ofdrw.pkg.container;
 
 import org.dom4j.Element;
-import org.ofdrw.pkg.tool.EleCup;
+import org.ofdrw.pkg.tool.ElemCup;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,17 +15,6 @@ import java.nio.file.Paths;
  * @since 2020-01-20 15:11:44
  */
 public class TT {
-    /**
-     * 在临时目录中生成
-     *
-     * @param dir 目录对象
-     * @throws IOException IO异常
-     */
-    public static void dumpToTmpReview(DirCollect dir) throws IOException {
-        Path tmp = Files.createTempDirectory(Paths.get("target"), "ofdrwtest-");
-        Path result = dir.collect(tmp.toAbsolutePath().toString());
-        System.out.println("生成位置: " + result.toAbsolutePath().toString());
-    }
 
     /**
      * 在临时目录中生成XML
@@ -34,7 +23,7 @@ public class TT {
      */
     public static void dumpToTmpReview(Element e) throws IOException {
         Path tmp = Files.createTempFile(Paths.get("target"), "ofdrwtest-", ".xml");
-        EleCup.dump(e, tmp);
+        ElemCup.dump(e, tmp);
         System.out.println("生成位置: " + tmp.toAbsolutePath().toString());
     }
 }
