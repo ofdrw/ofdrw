@@ -65,7 +65,7 @@ public class LayoutTest {
             div2 = new Div(20d, 30d)
                     .setBackgroundColor(255, 0, 0)
                     .setBorder(0.353)
-                    .setBorderLeft(0d)
+                    .setBorderRight(0d)
                     .setClear(Clear.none)
                     .setFloat(AFloat.right);
             ofdDoc.add(div1)

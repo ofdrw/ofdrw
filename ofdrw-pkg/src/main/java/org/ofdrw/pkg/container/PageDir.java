@@ -55,7 +55,7 @@ public class PageDir extends VirtualContainer {
     /**
      * 获取页面索引
      *
-     * @return 页面索引(页码影视 index + 1)
+     * @return 页面索引
      */
     public Integer getIndex() {
         return index;

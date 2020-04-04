@@ -173,7 +173,7 @@ class OFDDocTest {
     void streamTestDivPageSplit() throws IOException {
         Path path = Paths.get("target/VPage7.ofd").toAbsolutePath();
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
-            ofdDoc.setDefaultPageLayout(PageLayout.A4.setMargin(0d));
+            ofdDoc.setDefaultPageLayout(PageLayout.A4().setMargin(0d));
             for (int i = 0; i < 500; i++) {
                 Div e = new Div(70d, 30d)
                         .setBackgroundColor(255, 0, 0)

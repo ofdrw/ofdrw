@@ -4,6 +4,7 @@ import net.lingala.zip4j.ZipFile;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.ofdrw.core.basicStructure.ofd.OFD;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -36,9 +37,14 @@ public class OFDDir extends VirtualContainer {
      *
      * @return OFD文档
      */
-    public static OFDDir newOFD() throws IOException {
-        Path tempDirectory = Files.createTempDirectory("ofd-tmp-");
-        return new OFDDir(tempDirectory);
+    public static OFDDir newOFD() {
+        try {
+            Path tempDirectory = Files.createTempDirectory("ofd-tmp-");
+//            System.out.println(">> 工作目录: " + tempDirectory.toAbsolutePath());
+            return new OFDDir(tempDirectory);
+        } catch (IOException e) {
+            throw new RuntimeException("无法创建OFD虚拟容器工作空间，原因：" + e.getMessage(), e);
+        }
     }
 
     /**

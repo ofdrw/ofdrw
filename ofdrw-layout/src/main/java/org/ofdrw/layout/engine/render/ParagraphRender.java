@@ -15,6 +15,7 @@ import org.ofdrw.layout.element.Span;
 import org.ofdrw.layout.element.TxtLineBlock;
 import org.ofdrw.layout.engine.ResManager;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -81,7 +82,12 @@ public class ParagraphRender {
                 }
 
                 // 将字体加入到资源中
-                ST_ID id = resManager.addFont(s.getFont());
+                ST_ID id = null;
+                try {
+                    id = resManager.addFont(s.getFont());
+                } catch (IOException ex) {
+                    throw new RenderException("渲染异常，字体复制失败：" + ex.getMessage(), ex);
+                }
                 // 新建字体对象
                 TextObject txtObj = new TextObject(maxUnitID.incrementAndGet());
                 ST_Box boundary = new ST_Box(offsetX, offsetY, w, h);

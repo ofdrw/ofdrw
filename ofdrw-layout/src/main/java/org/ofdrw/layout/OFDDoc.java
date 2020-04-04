@@ -9,8 +9,8 @@ import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.engine.*;
-import org.ofdrw.pkg.dir.DocDir;
-import org.ofdrw.pkg.dir.OFDDir;
+import org.ofdrw.pkg.container.DocDir;
+import org.ofdrw.pkg.container.OFDDir;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -65,7 +65,7 @@ public class OFDDoc implements Closeable {
      * <p>
      * 页边距：上下都是2.54厘米，左右都是3.17厘米。
      */
-    private PageLayout pageLayout = PageLayout.A4;
+    private PageLayout pageLayout = PageLayout.A4();
 
     /**
      * 文档属性信息，该对象会在初始化是被创建并且添加到文档中
@@ -143,11 +143,10 @@ public class OFDDoc implements Closeable {
                 // 空的页面引用集合，该集合将会在解析虚拟页面时得到填充
                 .setPages(new Pages());
 
-        DocDir docDir = new DocDir()
-                .setDocument(lowDoc);
-        ofdDir = new OFDDir()
-                .setOfd(ofd)
-                .add(docDir);
+        ofdDir = OFDDir.newOFD()
+                .setOfd(ofd);
+        // 创建一个新的文档
+        ofdDir.newDoc().setDocument(lowDoc);
     }
 
     /**
@@ -187,32 +186,37 @@ public class OFDDoc implements Closeable {
 
     @Override
     public void close() throws IOException {
-        if (!streamQueue.isEmpty()) {
+        try {
+            if (!streamQueue.isEmpty()) {
             /*
             将流式布局转换为板式布局
             */
-            SegmentationEngine sgmEngine = new SegmentationEngine(pageLayout);
-            StreamingLayoutAnalyzer analyzer = new StreamingLayoutAnalyzer(pageLayout);
-            // 1. 流式布局队列经过分段引擎，获取分段队列
-            List<Segment> sgmQueue = sgmEngine.process(streamQueue);
-            // 2. 段队列进入布局分析器，构造基于固定布局的虚拟页面。
-            List<VirtualPage> virtualPageList = analyzer.analyze(sgmQueue);
-            vPageList.addAll(virtualPageList);
+                SegmentationEngine sgmEngine = new SegmentationEngine(pageLayout);
+                StreamingLayoutAnalyzer analyzer = new StreamingLayoutAnalyzer(pageLayout);
+                // 1. 流式布局队列经过分段引擎，获取分段队列
+                List<Segment> sgmQueue = sgmEngine.process(streamQueue);
+                // 2. 段队列进入布局分析器，构造基于固定布局的虚拟页面。
+                List<VirtualPage> virtualPageList = analyzer.analyze(sgmQueue);
+                vPageList.addAll(virtualPageList);
+            }
+            if (vPageList.isEmpty()) {
+                throw new IllegalStateException("OFD文档中没有页面，无法生成OFD文档");
+            }
+            DocDir docDefault = ofdDir.obtainDocDefault();
+            ResManager prm = new ResManager(docDefault, MaxUnitID);
+            // 创建虚拟页面解析引擎，并持有文档上下文。
+            VPageParseEngine parseEngine = new VPageParseEngine(pageLayout, docDefault, prm, MaxUnitID);
+            // 解析虚拟页面
+            parseEngine.process(vPageList);
+            // 设置最大对象ID
+            cdata.setMaxUnitID(MaxUnitID.get());
+            // final. 执行打包程序
+            ofdDir.jar(outPath.toAbsolutePath());
+        }finally {
+            if (ofdDir != null) {
+                // 清除在生成OFD过程中的工作区产生的文件
+                ofdDir.clean();
+            }
         }
-        if (vPageList.isEmpty()) {
-            throw new IllegalStateException("OFD文档中没有页面，无法生成OFD文档");
-        }
-        DocDir docDefault = ofdDir.getDocDefault();
-        ResManager prm = new ResManager(docDefault, MaxUnitID);
-        // 创建虚拟页面解析引擎，并持有文档上下文。
-        VPageParseEngine parseEngine = new VPageParseEngine(pageLayout, docDefault, prm, MaxUnitID);
-        // 解析虚拟页面
-        parseEngine.process(vPageList);
-        // 设置最大对象ID
-        cdata.setMaxUnitID(MaxUnitID.get());
-
-        // final. 执行打包程序
-        String fileName = outPath.toAbsolutePath().toString();
-        ofdDir.jar(fileName);
     }
 }

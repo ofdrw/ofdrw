@@ -1,6 +1,8 @@
 package org.ofdrw.layout.engine;
 
+import org.dom4j.DocumentException;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicStructure.res.MediaType;
 import org.ofdrw.core.basicStructure.res.Res;
@@ -10,11 +12,12 @@ import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.font.Font;
-import org.ofdrw.pkg.dir.DocDir;
+import org.ofdrw.pkg.container.DocDir;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -58,16 +61,30 @@ public class ResManager {
     }
 
 
+    /**
+     * 创建资源管理
+     *
+     * @param docDir    文档虚拟容器
+     * @param maxUnitID 自增最大ID提供者
+     */
     public ResManager(DocDir docDir, AtomicInteger maxUnitID) {
         this.docDir = docDir;
         this.maxUnitID = maxUnitID;
         this.cache = new HashMap<>();
+        // 初始化资源缓存
+        initCache();
+    }
 
-        // 初始化字体缓存
-        Res docRes = docDir.getDocumentRes();
-        if (docRes != null) {
-            List<Fonts> fontsList = docRes.getFonts();
-            for (Fonts f : fontsList) {
+    /**
+     * 初始化公共资源缓存
+     * <p>
+     * 初始化内容只要是文档资源
+     */
+    private void initCache() {
+        try {
+            // 初始化字体缓存
+            Res docRes = docDir.getDocumentRes();
+            for (Fonts f : docRes.getFonts()) {
                 f.getFonts().forEach(item -> {
                     String completeFontName = item.getFontName();
                     String familyName = item.getFamilyName();
@@ -78,6 +95,10 @@ public class ResManager {
                     cache.put(completeFontName, item);
                 });
             }
+        } catch (FileNotFoundException e) {
+            // 如果抛出异常说明资源不存在
+        } catch (DocumentException e) {
+            throw new RuntimeException("已有DocumentRes.xml 资源文件解析失败", e);
         }
     }
 
@@ -88,8 +109,9 @@ public class ResManager {
      *
      * @param font 字体描述对象
      * @return 字体的对象ID
+     * @throws IOException 文件复制异常
      */
-    public ST_ID addFont(Font font) {
+    public ST_ID addFont(Font font) throws IOException {
         Res resMenu = pubRes();
         if (this.fonts == null) {
             this.fonts = new Fonts();
@@ -146,8 +168,9 @@ public class ResManager {
      *
      * @param imgPath 图片路径
      * @return 资源ID
+     * @throws IOException 文件复制异常
      */
-    public ST_ID addImage(Path imgPath) {
+    public ST_ID addImage(Path imgPath) throws IOException {
         Res resMenu = docRes();
         if (medias == null) {
             this.medias = new MultiMedias();
@@ -206,15 +229,28 @@ public class ResManager {
      * @return 公共资源清单
      */
     public Res pubRes() {
-        Res publicRes = docDir.getPublicRes();
-        if (publicRes == null) {
+        try {
+            return docDir.getPublicRes();
+        } catch (FileNotFoundException | DocumentException e) {
             // 如果不存在那么创建一个公共资源清单，容器目录为文档根目录下的Res目录
-            publicRes = new Res()
-                    .setBaseLoc(ST_Loc.getInstance("Res"));
+            Res publicRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
             docDir.setPublicRes(publicRes);
-            docDir.getDocument().getCommonData().setPublicRes(ST_Loc.getInstance("PublicRes.xml"));
+            document().getCommonData().setPublicRes(ST_Loc.getInstance("PublicRes.xml"));
+            return publicRes;
         }
-        return publicRes;
+    }
+
+    /**
+     * 忽略无法获取到得到错误信息
+     *
+     * @return document对象
+     */
+    private Document document() {
+        try {
+            return docDir.getDocument();
+        } catch (FileNotFoundException | DocumentException ex) {
+            throw new RuntimeException("文档中缺少Document.xml 文件");
+        }
     }
 
     /**
@@ -225,15 +261,16 @@ public class ResManager {
      * @return 文档资源清单
      */
     public Res docRes() {
-        Res docRes = docDir.getDocumentRes();
-        if (docRes == null) {
+        try {
+            return docDir.getDocumentRes();
+        } catch (FileNotFoundException | DocumentException e) {
             // 如果不存在那么创建一个公共资源清单，容器目录为文档根目录下的Res目录
-            docRes = new Res()
+            Res docRes = new Res()
                     .setBaseLoc(ST_Loc.getInstance("Res"));
             docDir.setDocumentRes(docRes);
-            docDir.getDocument().getCommonData().setDocumentRes(ST_Loc.getInstance("DocumentRes.xml"));
+            document().getCommonData().setDocumentRes(ST_Loc.getInstance("DocumentRes.xml"));
+            return docRes;
         }
-        return docRes;
     }
 
 

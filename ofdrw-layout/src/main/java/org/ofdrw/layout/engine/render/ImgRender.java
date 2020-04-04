@@ -7,6 +7,7 @@ import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.layout.element.Img;
 import org.ofdrw.layout.engine.ResManager;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,7 +40,12 @@ public class ImgRender {
             throw new IllegalArgumentException("图片对象(Img)路径非法");
         }
         // 加入图片资源
-        ST_ID id = resManager.addImage(p);
+        ST_ID id = null;
+        try {
+            id = resManager.addImage(p);
+        } catch (IOException ex) {
+            throw new RenderException("渲染图片复制失败：" + ex.getMessage(), ex);
+        }
         // 在公共资源中加入图片
         ImageObject imgObj = new ImageObject(maxUnitID.incrementAndGet());
         imgObj.setResourceID(id.ref());

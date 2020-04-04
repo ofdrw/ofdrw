@@ -1,5 +1,6 @@
 package org.ofdrw.layout.engine;
 
+import org.dom4j.DocumentException;
 import org.ofdrw.core.basicStructure.pageObj.Content;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageTree.Page;
@@ -13,10 +14,11 @@ import org.ofdrw.layout.element.Paragraph;
 import org.ofdrw.layout.engine.render.DivRender;
 import org.ofdrw.layout.engine.render.ImgRender;
 import org.ofdrw.layout.engine.render.ParagraphRender;
-import org.ofdrw.pkg.dir.DocDir;
-import org.ofdrw.pkg.dir.PageDir;
-import org.ofdrw.pkg.dir.PagesDir;
+import org.ofdrw.pkg.container.DocDir;
+import org.ofdrw.pkg.container.PageDir;
+import org.ofdrw.pkg.container.PagesDir;
 
+import java.io.FileNotFoundException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,14 +50,6 @@ public class VPageParseEngine {
      * 页面虚拟容器
      */
     private PagesDir pagesDir;
-
-    /**
-     * 页面最大索引
-     * <p>
-     * 从0开始
-     */
-    private int maxPageIndex = 0;
-
     /**
      * 页面元素布局
      */
@@ -83,17 +77,16 @@ public class VPageParseEngine {
         this.pageLayout = pageLayout;
         resManager = prm;
 
-        pages = docDir.getDocument().getPages();
-        if (pages == null) {
-            pages = new Pages();
-            docDir.getDocument().setPages(pages);
-        }
-        // 当前页面数量作为最大页面Index，处理文档中已经含有页面的情况
-        maxPageIndex = pages.getSize();
-        pagesDir = docDir.getPages();
-        if (pagesDir == null) {
-            pagesDir = new PagesDir();
-            docDir.setPages(pagesDir);
+        try {
+            pages = docDir.getDocument().getPages();
+            if (pages == null) {
+                pages = new Pages();
+                docDir.getDocument().setPages(pages);
+            }
+            // 如果存在Pages那么获取，不存在那么创建
+            pagesDir = docDir.obtainPages();
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new RuntimeException("无法获取到Document.xml 对象", e);
         }
     }
 
@@ -170,14 +163,10 @@ public class VPageParseEngine {
      * @return 页面容器
      */
     private PageDir newPage() {
-        long id = maxUnitID.incrementAndGet();
-        String pageLoc = String.format("Pages/Page_%d/Content.xml", maxPageIndex);
         // 设置页面index与页面定位路径一致
-        PageDir pageDir = new PageDir();
-        pageDir.setIndex(maxPageIndex);
-        maxPageIndex++;
-        pages.addPage(new Page(id, pageLoc));
-        pagesDir.add(pageDir);
+        PageDir pageDir = pagesDir.newPageDir();
+        String pageLoc = String.format("Pages/Page_%d/Content.xml", pageDir.getIndex());
+        pages.addPage(new Page(maxUnitID.incrementAndGet(), pageLoc));
         return pageDir;
     }
 

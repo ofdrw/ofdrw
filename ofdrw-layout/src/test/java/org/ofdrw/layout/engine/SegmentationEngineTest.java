@@ -16,7 +16,7 @@ public class SegmentationEngineTest {
     @Test
     public void process() {
         // w: 138  h: 225
-        SegmentationEngine sgnEngine = new SegmentationEngine(PageLayout.A4);
+        SegmentationEngine sgnEngine = new SegmentationEngine(PageLayout.A4());
         List<Div> list = new LinkedList<>();
 
         list.add(new Div(50d, 25d).setFloat(AFloat.center));

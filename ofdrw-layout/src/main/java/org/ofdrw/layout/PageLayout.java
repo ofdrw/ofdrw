@@ -13,17 +13,49 @@ import java.util.Arrays;
  */
 public class PageLayout {
 
-    public static final PageLayout A0 = new PageLayout(841d, 1189d);
-    public static final PageLayout A1 = new PageLayout(594d, 841d);
-    public static final PageLayout A2 = new PageLayout(420d, 594d);
-    public static final PageLayout A3 = new PageLayout(297d, 420d);
-    public static final PageLayout A4 = new PageLayout(210d, 297d);
-    public static final PageLayout A5 = new PageLayout(148d, 210d);
-    public static final PageLayout A6 = new PageLayout(105d, 148d);
-    public static final PageLayout A7 = new PageLayout(74d, 105d);
-    public static final PageLayout A8 = new PageLayout(52d, 74d);
-    public static final PageLayout A9 = new PageLayout(37d, 52d);
-    public static final PageLayout A10 = new PageLayout(26d, 37d);
+    public static final PageLayout A0() {
+        return new PageLayout(841d, 1189d);
+    }
+
+    public static final PageLayout A1() {
+        return new PageLayout(594d, 841d);
+    }
+
+    public static final PageLayout A2() {
+        return new PageLayout(420d, 594d);
+    }
+
+    public static final PageLayout A3() {
+        return new PageLayout(297d, 420d);
+    }
+
+    public static final PageLayout A4() {
+        return new PageLayout(210d, 297d);
+    }
+
+    public static final PageLayout A5() {
+        return new PageLayout(148d, 210d);
+    }
+
+    public static final PageLayout A6() {
+        return new PageLayout(105d, 148d);
+    }
+
+    public static final PageLayout A7() {
+        return new PageLayout(74d, 105d);
+    }
+
+    public static final PageLayout A8() {
+        return new PageLayout(52d, 74d);
+    }
+
+    public static final PageLayout A9() {
+        return new PageLayout(37d, 52d);
+    }
+
+    public static final PageLayout A10() {
+        return new PageLayout(26d, 37d);
+    }
 
     /**
      * 页面宽度
@@ -119,7 +151,7 @@ public class PageLayout {
      * @return 实际能放置内容的宽度
      */
     public double contentWidth() {
-        return width - getMarginLeft()- getMarginRight();
+        return width - getMarginLeft() - getMarginRight();
     }
 
     /**
@@ -131,16 +163,19 @@ public class PageLayout {
 
     /**
      * 绘制区域原点X
+     *
      * @return 起始X坐标
      */
-    public double getStartX(){
+    public double getStartX() {
         return getMarginLeft();
     }
+
     /**
      * 绘制区域原点Y
+     *
      * @return 起始Y坐标
      */
-    public double getStartY(){
+    public double getStartY() {
         return getMarginTop();
     }
 
@@ -151,8 +186,8 @@ public class PageLayout {
      */
     public Rectangle getWorkerArea() {
         return new Rectangle(
-               getStartX(),
-               getStartY(),
+                getStartX(),
+                getStartY(),
                 contentWidth(),
                 contentHeight());
     }
