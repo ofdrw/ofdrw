@@ -28,7 +28,7 @@ public class VirtualPage {
      */
     private List<Div> content = new LinkedList<>();
 
-    private VirtualPage() {
+    protected VirtualPage() {
     }
 
     public VirtualPage(PageLayout style) {

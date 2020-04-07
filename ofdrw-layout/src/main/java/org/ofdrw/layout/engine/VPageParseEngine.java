@@ -7,6 +7,7 @@ import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.layout.PageLayout;
 import org.ofdrw.layout.VirtualPage;
+import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.Img;
 import org.ofdrw.layout.element.PageAreaFiller;
@@ -65,7 +66,7 @@ public class VPageParseEngine {
      *
      * @param pageLayout 页面布局样式
      * @param docDir     文档容器
-     * @param prm        公共资源管理器
+     * @param prm        公共资源管理器(Public Resource Manage)
      * @param maxUnitID  自增的ID获取器
      */
     public VPageParseEngine(PageLayout pageLayout,
@@ -105,10 +106,15 @@ public class VPageParseEngine {
             if (virtualPage == null) {
                 continue;
             }
-            // 创建一个全新的页面容器对象
-            PageDir pageDir = newPage();
-            // 解析虚拟页面，并加入到容器中
-            convertPageContent(virtualPage, pageDir);
+            if (virtualPage instanceof AdditionVPage) {
+                // 执行页面编辑
+                pageEdit((AdditionVPage) virtualPage);
+            } else {
+                // 创建一个全新的页面容器对象
+                PageDir pageDir = newPage();
+                // 解析虚拟页面，并加入到容器中
+                convertPageContent(virtualPage, pageDir);
+            }
         }
     }
 
@@ -135,23 +141,47 @@ public class VPageParseEngine {
         layer.setObjID(maxUnitID.incrementAndGet());
         // 添加一个页面的内容
         page.setContent(new Content().addLayer(layer));
+        // 执行转换
+        convert2Layer(layer, vPage.getContent());
+    }
 
+
+    /**
+     * 编辑指定的页面
+     *
+     * @param virtualPage 专用于编辑的虚拟页面
+     */
+    private void pageEdit(AdditionVPage virtualPage) {
+        CT_Layer layer = virtualPage.obtainTopLayer(maxUnitID);
+        List<Div> content = virtualPage.getContent();
+        // 像图层中些转化的元素对象
+        convert2Layer(layer, content);
+    }
+
+
+    /**
+     * 将虚拟页面中的元素转为OFD元素加入图层中
+     *
+     * @param to      图形元素将要写入到的页面图层
+     * @param content 需要加入图层得到元素
+     */
+    private void convert2Layer(CT_Layer to, List<Div> content) {
         // 处理页面中的元素为OFD的图元
-        for (Div elem : vPage.getContent()) {
+        for (Div elem : content) {
             // 忽略占位符和对象
             if (elem instanceof PageAreaFiller
                     || elem.isPlaceholder()) {
                 continue;
             }
             // 处理每一个元素的基础盒式模型属性，背景边框等，并加入到图层中
-            DivRender.render(layer, elem, maxUnitID);
+            DivRender.render(to, elem, maxUnitID);
 
             if (elem instanceof Img) {
                 // 渲染图片对象
-                ImgRender.render(layer, resManager, (Img) elem, maxUnitID);
+                ImgRender.render(to, resManager, (Img) elem, maxUnitID);
             } else if (elem instanceof Paragraph) {
                 // 渲染段落对象
-                ParagraphRender.render(layer, resManager, (Paragraph) elem, maxUnitID);
+                ParagraphRender.render(to, resManager, (Paragraph) elem, maxUnitID);
             }
         }
     }
