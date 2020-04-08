@@ -5,6 +5,7 @@ import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.pageObj.Page;
+import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.pkg.container.OFDDir;
 
 import java.io.Closeable;
@@ -78,7 +79,8 @@ public class OFDReader implements Closeable {
 
         try {
             DocBody docBody = ofdDir.getOfd().getDocBody();
-            docBody.getDocRoot();
+            ST_Loc docRoot = docBody.getDocRoot();
+
             // TODO 2020-4-7 21:51:01 路径解析对象获取并缓存虚拟容器
         } catch (FileNotFoundException | DocumentException e) {
             throw new RuntimeException("无法解析OFD.xml，原因:" + e.getMessage(), e);
