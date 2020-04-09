@@ -3,9 +3,11 @@ package org.ofdrw.reader;
 import org.dom4j.DocumentException;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.core.basicStructure.ofd.OFD;
+import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.pkg.container.OFDDir;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,7 +71,7 @@ class ResourceLocatorTest {
 
     @Test
     void get() throws IOException, DocumentException {
-        assertThrows(ErrorPathException.class, () -> {
+        assertThrows(FileNotFoundException.class, () -> {
             try (OFDReader reader = new OFDReader(src)) {
                 OFDDir ofdDir = reader.getOFDDir();
                 ResourceLocator rl = new ResourceLocator(ofdDir);
@@ -83,6 +85,13 @@ class ResourceLocatorTest {
             assertEquals("969cc3cdd34e407cba54214bf08d7718", ofd.getDocBody().getDocInfo().getDocID());
             // 检查缓存是否生效
             assertEquals(ofd.getProxy(), ofdDir.getOfd().getProxy());
+            Page page = rl.get("/Doc_0/Pages/Page_0/Content.xml", Page::new);
+            assertEquals(page.getProxy(),
+                    ofdDir.getDocDir("Doc_0")
+                            .getPages()
+                            .getByIndex(0)
+                            .getContent()
+                            .getProxy());
         }
     }
 

@@ -62,4 +62,13 @@ public class Pages extends OFDElement {
     public List<Page> getPages() {
         return this.getOFDElements("Page",Page::new);
     }
+
+    /**
+     * 获取指定页面
+     * @param index 页面索引（页码 - 1）
+     * @return 页节点
+     */
+    public Page getPageByIndex(int index) {
+        return getPages().get(index);
+    }
 }

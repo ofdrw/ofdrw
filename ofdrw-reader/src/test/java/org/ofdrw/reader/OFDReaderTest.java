@@ -3,6 +3,7 @@ package org.ofdrw.reader;
 import org.dom4j.DocumentException;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.core.basicStructure.ofd.OFD;
+import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.pkg.container.OFDDir;
 
 import java.io.IOException;
@@ -52,4 +53,12 @@ class OFDReaderTest {
     }
 
 
+    @Test
+    void getPage() throws IOException {
+        try (OFDReader reader = new OFDReader(src)) {
+            OFDDir ofdDir = reader.getOFDDir();
+            Page page = reader.getPage(1);
+
+        }
+    }
 }

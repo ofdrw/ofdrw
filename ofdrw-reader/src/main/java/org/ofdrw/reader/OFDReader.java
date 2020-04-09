@@ -3,8 +3,10 @@ package org.ofdrw.reader;
 import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
+import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.pageObj.Page;
+import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.pkg.container.OFDDir;
 
@@ -34,6 +36,13 @@ public class OFDReader implements Closeable {
      */
     private OFDDir ofdDir;
 
+    /**
+     * 资源定位器
+     * <p>
+     * 解析路径获取资源
+     */
+    private ResourceLocator rl;
+
     private OFDReader() {
     }
 
@@ -55,6 +64,8 @@ public class OFDReader implements Closeable {
         // 解压文档，到临时的工作目录
         new ZipFile(ofdFile.toFile()).extractAll(workDir.toAbsolutePath().toString());
         ofdDir = new OFDDir(workDir);
+        // 创建资源定位器
+        rl = new ResourceLocator(ofdDir);
     }
 
     /**
@@ -76,19 +87,28 @@ public class OFDReader implements Closeable {
         if (numberOfPage <= 0) {
             throw new NumberFormatException("页码(numberOfPage)不能小于0");
         }
-
         try {
+            int index = numberOfPage - 1;
             DocBody docBody = ofdDir.getOfd().getDocBody();
             ST_Loc docRoot = docBody.getDocRoot();
-
-            // TODO 2020-4-7 21:51:01 路径解析对象获取并缓存虚拟容器
+            // 路径解析对象获取并缓存虚拟容器
+            Document document = rl.get(docRoot, Document::new);
+            Pages pages = document.getPages();
+            ST_Loc pageLoc = pages.getPageByIndex(index).getBaseLoc();
+            return rl.get(pageLoc, Page::new);
         } catch (FileNotFoundException | DocumentException e) {
-            throw new RuntimeException("无法解析OFD.xml，原因:" + e.getMessage(), e);
+            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
         }
 
-        return null;
     }
 
+    /**
+     * 获取资源定位器
+     * @return 资源定位器
+     */
+    public ResourceLocator getResourceLocator() {
+        return rl;
+    }
 
     /**
      * 关闭文档

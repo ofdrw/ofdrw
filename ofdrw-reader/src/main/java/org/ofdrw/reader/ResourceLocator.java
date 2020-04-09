@@ -3,8 +3,7 @@ package org.ofdrw.reader;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.ofdrw.core.basicType.ST_Loc;
-import org.ofdrw.pkg.container.OFDDir;
-import org.ofdrw.pkg.container.VirtualContainer;
+import org.ofdrw.pkg.container.*;
 
 import java.io.FileNotFoundException;
 import java.nio.file.Files;
@@ -211,21 +210,19 @@ public class ResourceLocator {
             throw new FileNotFoundException("路径为空（loc）");
         }
         // 查询工作目录
-        LinkedList<String> searchWd = new LinkedList<>(this.workDir);
+        LinkedList<String> wd = new LinkedList<>(this.workDir);
         // 文件名称
-        String fileName = null;
-        if (loc.indexOf('/') != -1) {
+        String fileName;
+        int indexOf = loc.lastIndexOf('/');
+        if (indexOf != -1) {
             // 切换工作目录
-            this.cd(searchWd, loc);
-            fileName = searchWd.removeLast();
-        }else{
+            this.cd(wd, loc.substring(0, indexOf));
+            fileName = loc.substring(indexOf + 1);
+        } else {
             fileName = loc;
         }
-
-        // 获取工作路径
-        String pwd = pwd(searchWd);
-        VirtualContainer vc = doMatchPath(pwd);
-
+        // 查找并获取文件所处路径
+        VirtualContainer vc = getContainer(wd);
         Element element = vc.getObj(fileName);
         return mapper.apply(element);
     }
@@ -233,83 +230,62 @@ public class ResourceLocator {
     /**
      * 获取路径下的文件
      *
-     * @param loc 路径
+     * @param stLoc 路径
      * @return 系统文件路径
      * @throws FileNotFoundException 文件或路径不存在
      */
-    public Path getFile(ST_Loc loc) throws FileNotFoundException {
-        String locPath = loc.getLoc();
-        if (locPath == null || locPath.trim().equals("")) {
+    public Path getFile(ST_Loc stLoc) throws FileNotFoundException {
+        String loc = stLoc.getLoc();
+        if (loc == null || loc.trim().equals("")) {
             throw new FileNotFoundException("路径为空（loc）");
         }
         // 查询工作目录
-        LinkedList<String> searchWd = new LinkedList<>(this.workDir);
+        LinkedList<String> wd = new LinkedList<>(this.workDir);
         // 文件名称
-        String fileName = null;
-        if (locPath.indexOf('/') != -1) {
+        String fileName;
+        int indexOf = loc.lastIndexOf('/');
+        if (indexOf != -1) {
             // 切换工作目录
-            this.cd(searchWd, locPath);
-            fileName = searchWd.removeLast();
-        }else{
-            fileName = locPath;
+            this.cd(wd, loc.substring(0, indexOf));
+            fileName = loc.substring(indexOf + 1);
+        } else {
+            fileName = loc;
         }
-        // 获取工作路径
-        String pwd = pwd(searchWd);
-        VirtualContainer vc = doMatchPath(pwd);
+        // 查找并获取文件所处路径
+        VirtualContainer vc = getContainer(wd);
         return vc.getFile(fileName);
     }
 
 
     /**
-     * 对路径进行匹配找到文件所属的虚拟容器
+     * 通过路径获取容器
      *
-     * @param pwd 工作路径
-     * @return 匹配结果
+     * @param workDir 路径序列
+     * @return 虚拟容器
+     * @throws FileNotFoundException 路径不存在
      */
-    private VirtualContainer doMatchPath(String pwd) throws FileNotFoundException {
-        if (pwd.equals("/")) {
-            return ofdDir;
+    public VirtualContainer getContainer(LinkedList<String> workDir) throws FileNotFoundException {
+        VirtualContainer vc = ofdDir;
+        for (String item : workDir) {
+            if (item.equals("/")) {
+                continue;
+            } else if (item.startsWith("Doc_")) {
+                vc = vc.getContainer(item, DocDir::new);
+            } else if (item.equals("Signs")) {
+                vc = vc.getContainer(item, SignsDir::new);
+            } else if (item.startsWith("Sign_")) {
+                vc = vc.getContainer(item, SignDir::new);
+            } else if (item.equals("Pages")) {
+                vc = vc.getContainer(item, PagesDir::new);
+            } else if (item.startsWith("Page_")) {
+                vc = vc.getContainer(item, PageDir::new);
+            } else if (item.equals("Res")) {
+                vc = vc.getContainer(item, ResDir::new);
+            } else {
+                vc = vc.getContainer(item, VirtualContainer::new);
+            }
         }
-        Matcher m = PtDoc.matcher(pwd);
-        if (m.find() && m.matches()) {
-            return ofdDir.getDocDir(m.group(1));
-        }
-        m = PtSigns.matcher(pwd);
-        if (m.find() && m.matches()) {
-            return ofdDir.getDocDir(m.group(1))
-                    .getSigns();
-        }
-        m = PtSign.matcher(pwd);
-        if (m.find() && m.matches()) {
-            return ofdDir.getDocDir(m.group(1))
-                    .getSigns()
-                    .getSignDir(m.group(2));
-        }
-        m = PtPages.matcher(pwd);
-        if (m.find() && m.matches()) {
-            return ofdDir.getDocDir(m.group(1))
-                    .getPages();
-        }
-        m = PtPage.matcher(pwd);
-        if (m.find() && m.matches()) {
-            return ofdDir.getDocDir(m.group(1))
-                    .getPages()
-                    .getPageDir(m.group(2));
-        }
-        m = PtPageRes.matcher(pwd);
-        if (m.find() && m.matches()) {
-            return ofdDir.getDocDir(m.group(1))
-                    .getPages()
-                    .getPageDir(m.group(2))
-                    .getResDir();
-        }
-        m = PtDocRes.matcher(pwd);
-        if (m.find() && m.matches()) {
-            return ofdDir.getDocDir(m.group(1))
-                    .getRes();
-        }
-        throw new IllegalArgumentException("非规范的OFD路径：" + pwd);
+        return vc;
     }
-
 
 }

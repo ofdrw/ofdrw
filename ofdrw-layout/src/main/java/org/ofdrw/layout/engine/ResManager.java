@@ -265,8 +265,7 @@ public class ResManager {
             return docDir.getDocumentRes();
         } catch (FileNotFoundException | DocumentException e) {
             // 如果不存在那么创建一个公共资源清单，容器目录为文档根目录下的Res目录
-            Res docRes = new Res()
-                    .setBaseLoc(ST_Loc.getInstance("Res"));
+            Res docRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
             docDir.setDocumentRes(docRes);
             document().getCommonData().setDocumentRes(ST_Loc.getInstance("DocumentRes.xml"));
             return docRes;
