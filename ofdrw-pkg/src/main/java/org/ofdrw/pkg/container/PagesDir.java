@@ -70,4 +70,7 @@ public class PagesDir extends VirtualContainer {
         String containerName = PageDir.PageContainerPrefix + index;
         return this.getContainer(containerName, PageDir::new);
     }
+    public PageDir getPageDir(String containerName) throws FileNotFoundException {
+        return this.getContainer(containerName, PageDir::new);
+    }
 }

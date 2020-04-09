@@ -98,38 +98,14 @@ public class SignsDir extends VirtualContainer {
      * @return 签名容器
      * @throws FileNotFoundException 指定的签名容器不存在
      */
-    public SignDir get(Integer index) throws FileNotFoundException {
+    public SignDir getByIndex(Integer index) throws FileNotFoundException {
         if (index == null || index <= 0) {
             throw new NumberFormatException("签名容器index必须大于0");
         }
         String containerName = SignDir.SignContainerPrefix + index;
         return this.getContainer(containerName, SignDir::new);
     }
-
-//    /**
-//     * 创建目录并复制文件
-//     *
-//     * @param base 基础路径
-//     * @return 创建的目录路径
-//     * @throws IOException IO异常
-//     */
-//    @Override
-//    public Path collect(String base) throws IOException {
-//        if (container == null || container.isEmpty()) {
-//            throw new IllegalArgumentException("缺少签名文件（SignDir）");
-//        }
-//        if (signatures == null) {
-//            throw new IllegalArgumentException("缺少签名列表文件（signatures）");
-//        }
-//
-//        Path path = Paths.get(base, "Signs");
-//        path = Files.createDirectories(path);
-//        String dir = path.toAbsolutePath().toString();
-//
-//        ElemCup.dump(this.signatures, Paths.get(dir, "Signatures.xml"));
-//        for (SignDir p : container) {
-//            p.collect(dir);
-//        }
-//        return path;
-//    }
+    public SignDir getSignDir(String containerName) throws FileNotFoundException {
+        return this.getContainer(containerName, SignDir::new);
+    }
 }

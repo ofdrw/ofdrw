@@ -144,6 +144,9 @@ public class OFDDir extends VirtualContainer {
         String name = DocDir.DocContainerPrefix + index;
         return this.getContainer(name, DocDir::new);
     }
+    public DocDir getDocDir(String name) throws FileNotFoundException {
+        return this.getContainer(name, DocDir::new);
+    }
 
     /**
      * 获取第一个文档容器作为默认
