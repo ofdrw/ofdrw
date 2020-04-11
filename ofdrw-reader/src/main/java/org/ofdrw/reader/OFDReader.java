@@ -15,6 +15,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * OFD解析器
@@ -42,6 +43,11 @@ public class OFDReader implements Closeable {
      * 解析路径获取资源
      */
     private ResourceLocator rl;
+
+    /**
+     * 是否已经关闭文档
+     */
+    private boolean closed = false;
 
     private OFDReader() {
     }
@@ -80,15 +86,15 @@ public class OFDReader implements Closeable {
     /**
      * 通过页面页码获取页面对象
      *
-     * @param numberOfPage 页码，从1起
+     * @param pageNum 页码，从1起
      * @return 页面对象
      */
-    public Page getPage(int numberOfPage) {
-        if (numberOfPage <= 0) {
-            throw new NumberFormatException("页码(numberOfPage)不能小于0");
+    public Page getPage(int pageNum) {
+        if (pageNum <= 0) {
+            throw new NumberFormatException("页码(pageNum)不能小于0");
         }
         try {
-            int index = numberOfPage - 1;
+            int index = pageNum - 1;
             // 保存切换目录前的工作区
             rl.save();
             DocBody docBody = ofdDir.getOfd().getDocBody();
@@ -97,7 +103,12 @@ public class OFDReader implements Closeable {
             Document document = rl.get(docRoot, Document::new);
             rl.cd(docRoot.parent());
             Pages pages = document.getPages();
-            ST_Loc pageLoc = pages.getPageByIndex(index).getBaseLoc();
+            List<org.ofdrw.core.basicStructure.pageTree.Page> pageList = pages.getPages();
+            if (index >= pageList.size()) {
+                throw new NumberFormatException(pageNum + "超过最大页码:" + pageList.size());
+            }
+            // 获取页面的路径
+            ST_Loc pageLoc = pageList.get(index).getBaseLoc();
             return rl.get(pageLoc, Page::new);
         } catch (FileNotFoundException | DocumentException e) {
             throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
@@ -105,7 +116,6 @@ public class OFDReader implements Closeable {
             // 还原原有工作区
             rl.restore();
         }
-
     }
 
     /**
@@ -126,6 +136,10 @@ public class OFDReader implements Closeable {
      */
     @Override
     public void close() throws IOException {
+        if (closed) {
+            return;
+        }
+        closed = true;
         if (workDir != null && Files.exists(workDir)) {
             try {
                 FileUtils.deleteDirectory(workDir.toFile());

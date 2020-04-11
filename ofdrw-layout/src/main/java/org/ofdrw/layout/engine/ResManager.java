@@ -72,18 +72,18 @@ public class ResManager {
         this.maxUnitID = maxUnitID;
         this.cache = new HashMap<>();
         // 初始化资源缓存
-        initCache();
+        reloadCache();
     }
 
     /**
-     * 初始化公共资源缓存
+     * 重载公共资源缓存
      * <p>
      * 初始化内容只要是文档资源
      */
-    private void initCache() {
+    private void reloadCache() {
         try {
             // 初始化字体缓存
-            Res docRes = docDir.getDocumentRes();
+            Res docRes = docDir.getPublicRes();
             for (Fonts f : docRes.getFonts()) {
                 f.getFonts().forEach(item -> {
                     String completeFontName = item.getFontName();
@@ -113,15 +113,15 @@ public class ResManager {
      */
     public ST_ID addFont(Font font) throws IOException {
         Res resMenu = pubRes();
-        if (this.fonts == null) {
-            this.fonts = new Fonts();
-            resMenu.addResource(this.fonts);
-        }
 
         // 获取字体全名
         String completeFontName = font.getCompleteFontName();
         // 检查缓存
         if (cache.get(completeFontName) == null) {
+            if (this.fonts == null) {
+                this.fonts = new Fonts();
+                resMenu.addResource(this.fonts);
+            }
             // 生成加入资源的ID
             ST_ID id = new ST_ID(maxUnitID.incrementAndGet());
             String familyName = font.getFamilyName();
@@ -172,13 +172,13 @@ public class ResManager {
      */
     public ST_ID addImage(Path imgPath) throws IOException {
         Res resMenu = docRes();
-        if (medias == null) {
-            this.medias = new MultiMedias();
-            resMenu.addResource(medias);
-        }
         String absPath = imgPath.toAbsolutePath().toString();
         String fileName = imgPath.getFileName().toString();
         if (cache.get(absPath) == null) {
+            if (medias == null) {
+                this.medias = new MultiMedias();
+                resMenu.addResource(medias);
+            }
             // 生成加入资源的ID
             ST_ID id = new ST_ID(maxUnitID.incrementAndGet());
             // 获取图片文件后缀名称

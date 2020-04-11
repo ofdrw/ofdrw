@@ -75,6 +75,10 @@ public class ParagraphRender {
             for (Span s : txtLine.getInlineSpans()) {
                 // 文字图元宽度
                 double w = s.blockSize().getWidth();
+                if (w == 0) {
+                    // 空行
+                    continue;
+                }
                 if (s instanceof PlaceholderSpan) {
                     // 忽略占位符的渲染只进行坐标偏移
                     offsetX += w;

@@ -58,6 +58,7 @@ public enum Type {
     public static Type getInstance(String type) {
         type = (type == null) ? "" : type.trim();
         switch (type) {
+            case "":
             case "Body":
                 return Body;
             case "Foreground":

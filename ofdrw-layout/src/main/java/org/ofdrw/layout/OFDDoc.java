@@ -1,22 +1,31 @@
 package org.ofdrw.layout;
 
+import org.dom4j.DocumentException;
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
+import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
+import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.engine.*;
+import org.ofdrw.layout.exception.DocReadException;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
+import org.ofdrw.reader.OFDReader;
+import org.ofdrw.reader.ResourceLocator;
 
 import java.io.Closeable;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +43,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class OFDDoc implements Closeable {
 
+    /**
+     * 已有的OFD文档解析器
+     * <p>
+     * 仅在修改的模式有效
+     */
+    private OFDReader reader;
     /**
      * OFD 打包
      */
@@ -53,11 +68,13 @@ public class OFDDoc implements Closeable {
     /**
      * 流式布局元素队列
      */
-    private LinkedList<Div> streamQueue;
+    private LinkedList<Div> streamQueue = new LinkedList<>();
+
     /**
      * 固定布局虚拟页面队列
      */
-    private LinkedList<VirtualPage> vPageList;
+    private LinkedList<VirtualPage> vPageList = new LinkedList<>();
+
     /**
      * 页面样式
      * <p>
@@ -91,11 +108,35 @@ public class OFDDoc implements Closeable {
     }
 
     /**
+     * 修改一个OFD文档
+     *
+     * @param reader  OFD解析器
+     * @param outPath 修改后文档生成位置
+     */
+    public OFDDoc(OFDReader reader, Path outPath) throws DocReadException {
+        if (reader == null) {
+            throw new IllegalArgumentException("OFD解析器(reader)不能为空");
+        }
+        if (outPath == null) {
+            throw new IllegalArgumentException("OFD文件存储路径(outPath)为空");
+        }
+        if (Files.isDirectory(outPath)) {
+            throw new IllegalArgumentException("OFD文件存储路径(outPath)不能是目录");
+        }
+        this.outPath = outPath;
+        this.reader = reader;
+        // 通过OFD解析器初始化文档对象
+        try {
+            containerInit(reader);
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new DocReadException("OFD文件解析异常", e);
+        }
+    }
+
+    /**
      * 文档初始化构造器
      */
     private OFDDoc() {
-        this.streamQueue = new LinkedList<>();
-        this.vPageList = new LinkedList<>();
         // 初始化文档对象
         containerInit();
     }
@@ -125,7 +166,7 @@ public class OFDDoc implements Closeable {
                 .setDocID(UUID.randomUUID())
                 .setCreationDate(LocalDate.now())
                 .setCreator("OFD R&W")
-                .setCreatorVersion("1.0.0-SNAPSHOT");
+                .setCreatorVersion("1.1.0-SNAPSHOT");
         DocBody docBody = new DocBody()
                 .setDocInfo(docInfo)
                 .setDocRoot(new ST_Loc("Doc_0/Document.xml"));
@@ -136,7 +177,7 @@ public class OFDDoc implements Closeable {
         cdata = new CT_CommonData()
                 // 由于有字形资源所以一定存在公共资源，这里县创建
                 .setPublicRes(new ST_Loc("PublicRes.xml"));
-        // 默认使用RGB颜色空间所以此处设置颜色空间
+        // 默认使用RGB颜色空间所以此处不设置颜色空间
         // 设置页面属性
         this.setDefaultPageLayout(this.pageLayout);
         lowDoc.setCommonData(cdata)
@@ -147,6 +188,30 @@ public class OFDDoc implements Closeable {
                 .setOfd(ofd);
         // 创建一个新的文档
         ofdDir.newDoc().setDocument(lowDoc);
+    }
+
+    /**
+     * 通过已有文档初始化文档容器
+     *
+     * @param reader OFD解析器
+     */
+    private void containerInit(OFDReader reader) throws FileNotFoundException, DocumentException {
+        ofdDir = reader.getOFDDir();
+        OFD ofd = ofdDir.getOfd();
+        DocBody docBody = ofd.getDocBody();
+        CT_DocInfo docInfo = docBody.getDocInfo();
+        // 设置文档修改时间
+        docInfo.setModDate(LocalDate.now());
+        // 资源定位器
+        ResourceLocator rl = reader.getResourceLocator();
+        // 找到 Document.xml文件并且序列化
+        ST_Loc docRoot = docBody.getDocRoot();
+        Document doc = rl.get(docRoot, Document::new);
+        // 取出文档修改前的文档最大ID
+        cdata = doc.getCommonData();
+        ST_ID maxUnitID = cdata.getMaxUnitID();
+        // 设置当前文档最大ID
+        MaxUnitID = new AtomicInteger(maxUnitID.getId().intValue());
     }
 
     /**
@@ -176,6 +241,27 @@ public class OFDDoc implements Closeable {
     }
 
     /**
+     * 获取指定页面追加页面对象
+     * <p>
+     * 并且追加到虚拟页面列表中
+     *
+     * @param pageNum 页码
+     * @return 追加页面对象
+     */
+    public AdditionVPage getAVPage(int pageNum) {
+        if (reader == null) {
+            throw new RuntimeException("仅在修改模式下允许获取追加页面对象（AdditionVPage）");
+        }
+        // 获取页面的OFD对象
+        Page page = reader.getPage(pageNum);
+        // 构造追加页面对象
+        AdditionVPage avp = new AdditionVPage(page);
+        // 自动加入到虚拟页面列表中
+        this.addVPage(avp);
+        return avp;
+    }
+
+    /**
      * 获取页面样式
      *
      * @return 页面样式
@@ -188,9 +274,9 @@ public class OFDDoc implements Closeable {
     public void close() throws IOException {
         try {
             if (!streamQueue.isEmpty()) {
-            /*
-            将流式布局转换为板式布局
-            */
+                /*
+                 * 将流式布局转换为板式布局
+                 */
                 SegmentationEngine sgmEngine = new SegmentationEngine(pageLayout);
                 StreamingLayoutAnalyzer analyzer = new StreamingLayoutAnalyzer(pageLayout);
                 // 1. 流式布局队列经过分段引擎，获取分段队列
@@ -212,8 +298,10 @@ public class OFDDoc implements Closeable {
             cdata.setMaxUnitID(MaxUnitID.get());
             // final. 执行打包程序
             ofdDir.jar(outPath.toAbsolutePath());
-        }finally {
-            if (ofdDir != null) {
+        } finally {
+            if (reader != null) {
+                reader.close();
+            } else if (ofdDir != null) {
                 // 清除在生成OFD过程中的工作区产生的文件
                 ofdDir.clean();
             }

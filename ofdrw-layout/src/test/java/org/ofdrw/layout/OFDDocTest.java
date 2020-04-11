@@ -1,7 +1,9 @@
 package org.ofdrw.layout;
 
 import org.junit.jupiter.api.Test;
+import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.element.*;
+import org.ofdrw.reader.OFDReader;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -15,6 +17,68 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 2020-03-22 11:38:48
  */
 class OFDDocTest {
+    @Test
+    void appendTest() throws IOException {
+        Path srcP = Paths.get("src/test/resources", "helloworld.ofd");
+        Path outP = Paths.get("target/AppendNewPage.ofd");
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+            String plaintext = "小时候\n" +
+                    "乡愁是一枚小小的邮票\n" +
+                    "我在这头\n" +
+                    "母亲在那头\n" +
+                    "\n" +
+                    "长大后\n" +
+                    "乡愁是一张窄窄的船票\n" +
+                    "我在这头\n" +
+                    "新娘在那头\n" +
+                    "\n" +
+                    "后来啊\n" +
+                    "乡愁是一方矮矮的坟墓\n" +
+                    "我在外头\n" +
+                    "母亲在里头\n" +
+                    "\n" +
+                    "而现在\n" +
+                    "乡愁是一湾浅浅的海峡\n" +
+                    "我在这头\n" +
+                    "大陆在那头\n";
+            Span titleContent = new Span("乡愁").setBold(true).setFontSize(13d).setLetterSpacing(10d);
+            Paragraph title = new Paragraph().add(titleContent);
+            title.setFloat(AFloat.center).setMarginBottom(5d);
+            ofdDoc.add(title);
+            final String[] txtCollect = plaintext.split("\\\n");
+            for (String txt : txtCollect) {
+                Paragraph p = new Paragraph().setFontSize(4d)
+                        .setLineSpace(3d)
+                        .add(txt);
+                ofdDoc.add(p);
+            }
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+
+    /**
+     * 修改页面测试
+     */
+    @Test
+    void editTest() throws IOException {
+        Path srcP = Paths.get("src/test/resources", "helloworld.ofd");
+        Path outP = Paths.get("target/EditedDoc.ofd");
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+            AdditionVPage avPage = ofdDoc.getAVPage(1);
+            Div e = new Div(10d, 10d)
+                    .setPosition(Position.Absolute)
+                    .setX(70d).setY(113.5)
+                    .setBackgroundColor(255, 192, 203)
+                    .setBorder(0.353d)
+                    .setPadding(5d);
+
+            avPage.add(e);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
 
 
     @Test
@@ -222,7 +286,6 @@ class OFDDocTest {
             ofdDoc.add(p5);
             ofdDoc.add(p6);
             ofdDoc.add(p7);
-
         }
         System.out.println("生成文档位置: " + path.toAbsolutePath());
     }

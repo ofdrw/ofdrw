@@ -32,6 +32,11 @@
             <artifactId>ofdrw-font</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-reader</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

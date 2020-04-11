@@ -73,7 +73,7 @@ public class Res extends OFDElement {
      * @return this
      */
     public Res addResource(OFDResource resource) {
-        this.set(resource);
+        this.add(resource);
         return this;
     }
 
