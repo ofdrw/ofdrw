@@ -48,7 +48,7 @@ class OFDReaderTest {
             OFDDir ofdDir = reader.getOFDDir();
             OFD ofd = ofdDir.getOfd();
             String docID = ofd.getDocBody().getDocInfo().getDocID();
-            assertEquals("969cc3cdd34e407cba54214bf08d7718", docID);
+            assertEquals("6b9c7c83cff048e7b427ef0567f3e065", docID);
         }
     }
 
@@ -58,7 +58,7 @@ class OFDReaderTest {
         try (OFDReader reader = new OFDReader(src)) {
             OFDDir ofdDir = reader.getOFDDir();
             Page page = reader.getPage(1);
-
+            assertEquals(1, page.getContent().getLayers().size());
         }
     }
 }

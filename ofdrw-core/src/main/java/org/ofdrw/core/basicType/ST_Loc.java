@@ -77,6 +77,19 @@ public class ST_Loc extends STBase {
         return this.loc.split("/");
     }
 
+    /**
+     * 获取父母路径
+     *
+     * @return 父母路径字符串
+     */
+    public String parent() {
+        int indexOf = loc.lastIndexOf('/');
+        if (indexOf == -1) {
+            return "";
+        }
+        return loc.substring(0, indexOf);
+    }
+
     @Override
     public String toString() {
         return loc;

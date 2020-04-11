@@ -89,21 +89,28 @@ public class OFDReader implements Closeable {
         }
         try {
             int index = numberOfPage - 1;
+            // 保存切换目录前的工作区
+            rl.save();
             DocBody docBody = ofdDir.getOfd().getDocBody();
             ST_Loc docRoot = docBody.getDocRoot();
             // 路径解析对象获取并缓存虚拟容器
             Document document = rl.get(docRoot, Document::new);
+            rl.cd(docRoot.parent());
             Pages pages = document.getPages();
             ST_Loc pageLoc = pages.getPageByIndex(index).getBaseLoc();
             return rl.get(pageLoc, Page::new);
         } catch (FileNotFoundException | DocumentException e) {
             throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
+        } finally {
+            // 还原原有工作区
+            rl.restore();
         }
 
     }
 
     /**
      * 获取资源定位器
+     *
      * @return 资源定位器
      */
     public ResourceLocator getResourceLocator() {

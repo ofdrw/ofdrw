@@ -130,7 +130,7 @@ public class ResManager {
                     .setFontName(font.getName())
                     .setFamilyName(familyName)
                     .setID(id)
-                    .setFontFile("Res/" + font.getFontFileName());
+                    .setFontFile(font.getFontFileName());
             // 设置特殊字族属性
             if (familyName != null) {
                 switch (familyName.toLowerCase()) {

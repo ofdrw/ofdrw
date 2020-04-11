@@ -109,10 +109,11 @@ public class OFDElement extends DefaultElementProxy {
      * @param name OFD元素名称
      * @return OFD元素或null
      */
-    public OFDElement getOFDElement(String name) {
-        Element e = this.element(new QName(name, Const.OFD_NAMESPACE));
-        return e == null ? null : new OFDElement(e);
+    public Element getOFDElement(String name) {
+        return this.element(new QName(name, Const.OFD_NAMESPACE));
     }
+
+
 
     /**
      * 代理对象创建
@@ -123,7 +124,7 @@ public class OFDElement extends DefaultElementProxy {
      * @return 代理对象
      */
     public <R extends OFDElement> R getOFDElement(String name, Function<? super Element, ? extends R> mapper) {
-        OFDElement e = this.getOFDElement(name);
+        Element e = this.getOFDElement(name);
         if (e == null) {
             return null;
         }

@@ -157,7 +157,7 @@ public class VirtualContainer implements Closeable {
         if (element == null) {
             return this;
         }
-        if (element instanceof DefaultElementProxy) {
+        while (element instanceof DefaultElementProxy) {
             // 如果是代理元素对象那么取出被代理的对象存储
             element = ((DefaultElementProxy) element).getProxy();
         }
@@ -185,10 +185,6 @@ public class VirtualContainer implements Closeable {
             element = ElemCup.inject(file);
             // 从文件加载元素，那么缓存该元素对象
             fileCache.put(fileName, element);
-        }
-        // 如果是代理元素对象那么取出被代理的对象存储
-        if (element instanceof DefaultElementProxy) {
-            element = ((DefaultElementProxy) element).getProxy();
         }
         return element;
     }

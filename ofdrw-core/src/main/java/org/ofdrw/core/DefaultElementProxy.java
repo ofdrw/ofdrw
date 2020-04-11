@@ -45,6 +45,9 @@ public abstract class DefaultElementProxy implements Element {
 
 
     public DefaultElementProxy(Element proxy) {
+        if (proxy == null) {
+            throw new IllegalArgumentException("被代理对象(proxy)不能为空");
+        }
         this.proxy = proxy;
     }
 

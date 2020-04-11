@@ -103,7 +103,7 @@ public class OFD extends OFDElement {
      * @return 文件对象入口（如果有多个则获取第一个）
      */
     public DocBody getDocBody() {
-        OFDElement e = this.getOFDElement("DocBody");
+        Element e = this.getOFDElement("DocBody");
         return e == null ? null : new DocBody(e);
     }
 

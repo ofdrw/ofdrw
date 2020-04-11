@@ -374,7 +374,7 @@ public class Annot extends OFDElement {
         if (name == null || name.trim().length() == 0) {
             return this;
         }
-        OFDElement parameters = this.getOFDElement("Parameters");
+        Element parameters = this.getOFDElement("Parameters");
         if (parameters == null) {
             parameters = OFDElement.getInstance("Parameters");
         }
@@ -392,10 +392,12 @@ public class Annot extends OFDElement {
      * @return 注解参数映射表
      */
     public Map<String, String> getParameters() {
-        OFDElement parameters = this.getOFDElement("Parameters");
-        if (parameters == null) {
+        Element e = this.getOFDElement("Parameters");
+        if (e == null) {
             return Collections.emptyMap();
         }
+        OFDElement parameters = new OFDElement(e);
+
         HashMap<String, String> res = new HashMap<>(5);
         parameters.getOFDElements("Parameter", OFDElement::new).forEach(p -> {
             String name = p.attributeValue("Name");

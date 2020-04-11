@@ -36,6 +36,11 @@ public class ResourceLocator {
      */
     private OFDDir ofdDir;
 
+    /**
+     * 保存的路径
+     */
+    private LinkedList<String> saved;
+
     private ResourceLocator() {
 
     }
@@ -44,7 +49,35 @@ public class ResourceLocator {
         this.ofdDir = ofdDir;
         // 默认工作目录为OFD容器的根目录
         this.workDir = new LinkedList<>();
+        this.saved = new LinkedList<>();
         this.workDir.add("/");
+    }
+
+    /**
+     * 保存当前工作路径
+     *
+     * @return this
+     */
+    public ResourceLocator save() {
+        saved.clear();
+        saved.addAll(workDir);
+        return this;
+    }
+
+    /**
+     * 还原原有工作区
+     * <p>
+     * 如果没有保存过工作区，那么不会造成任何影响
+     *
+     * @return this
+     */
+    public ResourceLocator restore() {
+        if (!saved.isEmpty()) {
+            workDir.clear();
+            workDir.addAll(saved);
+            saved.clear();
+        }
+        return this;
     }
 
     /**
@@ -87,8 +120,11 @@ public class ResourceLocator {
             workDir.add("/");
             return this;
         }
-
         LinkedList<String> workDirCopy = new LinkedList<>(workDir);
+        if (path.startsWith("/")) {
+            workDirCopy.clear();
+            workDirCopy.add("/");
+        }
         for (String item : path.split("/")) {
             item = item.trim();
             if (item.equals(".") || item.equals("")) {
