@@ -166,7 +166,7 @@ public class OFDDoc implements Closeable {
                 .setDocID(UUID.randomUUID())
                 .setCreationDate(LocalDate.now())
                 .setCreator("OFD R&W")
-                .setCreatorVersion("1.1.0-SNAPSHOT");
+                .setCreatorVersion("1.1.0");
         DocBody docBody = new DocBody()
                 .setDocInfo(docInfo)
                 .setDocRoot(new ST_Loc("Doc_0/Document.xml"));

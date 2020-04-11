@@ -5,11 +5,12 @@
     <parent>
         <artifactId>ofdrw</artifactId>
         <groupId>org.ofdrw</groupId>
-        <version>1.1.0-SNAPSHOT</version>
+        <version>1.1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>ofdrw-reader</artifactId>
+    <description>OFD 文件解析器，用于解析文件内容，为修改和签名提供基本的API访问能力。</description>
 
     <dependencies>
         <dependency>
