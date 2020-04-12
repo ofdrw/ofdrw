@@ -2,14 +2,18 @@ package org.ofdrw.reader;
 
 import org.dom4j.DocumentException;
 import org.junit.jupiter.api.Test;
+import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
+import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
 import org.ofdrw.core.basicStructure.pageObj.Page;
+import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -59,6 +63,42 @@ class OFDReaderTest {
             OFDDir ofdDir = reader.getOFDDir();
             Page page = reader.getPage(1);
             assertEquals(1, page.getContent().getLayers().size());
+        }
+    }
+
+
+    /**
+     * 低层次的文档操作
+     *
+     * @throws IOException       IO异常
+     * @throws DocumentException 文档解析异常
+     */
+    @Test
+    void lowLevelOp() throws IOException, DocumentException {
+        Path out = Paths.get("target/EditTitleAuthor.ofd");
+        try (OFDReader reader = new OFDReader(src)) {
+            OFDDir ofdDir = reader.getOFDDir();
+            OFD ofd = ofdDir.getOfd();
+            DocBody docBody = ofd.getDocBody();
+            CT_DocInfo docInfo = docBody.getDocInfo();
+            System.out.println(">> 文档标题：[" + docInfo.getTile() +"] -> [Hello World]");
+            System.out.println(">> 文档作者：[" + docInfo.getAuthor()+"] -> [权观宇]" );
+            docInfo.setTile("Hello World");
+            docInfo.setAuthor("权观宇");
+            docInfo.setModDate(LocalDate.now());
+            // 重新打包为OFD文档
+            ofdDir.jar(out);
+        }
+        System.out.println(">> 文档生成位置："+ out.toAbsolutePath().toString());
+
+        // 验证
+        try (OFDReader reader = new OFDReader(out)) {
+            OFDDir ofdDir = reader.getOFDDir();
+            OFD ofd = ofdDir.getOfd();
+            DocBody docBody = ofd.getDocBody();
+            CT_DocInfo docInfo = docBody.getDocInfo();
+            assertEquals(docInfo.getTile(), "Hello World");
+            assertEquals(docInfo.getAuthor(), "权观宇");
         }
     }
 }
