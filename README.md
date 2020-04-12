@@ -23,7 +23,7 @@
 - [**ofdrw-pkg**](./ofdrw-pkg) OFD文件的容器，用于文档的打包。
     - 实施状态：**重构完成**。
 - [**ofdrw-reader**](./ofdrw-reader) OFD文档解析器，用于OFD的反序列化以及签名签章。
-    - 实施状态：*阶段性完成*。
+    - 实施状态：**阶段性完成**。
 - [**ofdrw-full**](./ofdrw-full) 上述所有模块整合包，用于简化依赖引入。
 
 ## QuickStart
