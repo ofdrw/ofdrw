@@ -6,8 +6,6 @@
 
 > **Talk is cheap,Show me the code. ——Linus Torvalds**
 
-
-
 **像写HTML和Word那样简单的编写OFD。**
 
 根据[《GB/T 33190-2016 电子文件存储与交换格式版式文档》](./GBT_33190-2016_电子文件存储与交换格式版式文档.pdf)标准实现版式文档OFD库（含有书签）。
@@ -69,6 +67,15 @@ public class HelloWorld {
 - [布局示例](https://github.com/Trisia/ofdrw/blob/master/ofdrw-layout/src/test/java/org/ofdrw/layout/LayoutTest.java)
 
 > **关于OFD布局设计，请参考 [《OFD R&W 布局设计》](./ofdrw-layout/doc/README.md)**
+
+---
+
+> 推荐的免费OFD阅读器
+> 
+> [福昕OFD版式办公套件 . http://www.htfoxit.com/Download/index/id/712](http://www.htfoxit.com/Download/index/id/712)
+>
+> 该阅读器是我目前发现对OFD渲染和支持程度最高最规范的阅读器。
+
 
 ## 源码安装
 
