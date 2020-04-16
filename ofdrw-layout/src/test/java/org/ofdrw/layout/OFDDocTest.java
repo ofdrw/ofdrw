@@ -1,6 +1,9 @@
 package org.ofdrw.layout;
 
 import org.junit.jupiter.api.Test;
+import org.ofdrw.font.Font;
+import org.ofdrw.font.FontName;
+import org.ofdrw.font.FontSet;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.element.*;
 import org.ofdrw.reader.OFDReader;
@@ -17,6 +20,43 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 2020-03-22 11:38:48
  */
 class OFDDocTest {
+
+    /**
+     * 测试加入操作系统中的字体
+     *
+     * @throws IOException
+     */
+    @Test
+    void testAddSysFont() throws IOException {
+        Path outP = Paths.get("target/SystemFont.ofd");
+        try (OFDDoc doc = new OFDDoc(outP)) {
+            Font font = new Font("等线 Light", "等线 Light");
+            Paragraph p = new Paragraph()
+                    .setDefaultFont(font)
+                    .setFontSize(10d)
+                    .add("字体名称：等线 Light");
+
+            doc.add(p);
+
+            font = FontSet.get(FontName.MSYahei);
+            p = new Paragraph()
+                    .setDefaultFont(font)
+                    .setFontSize(10d)
+                    .add("字体名称：微软雅黑");
+            doc.add(p);
+
+            // 注意：在使用操作系统字体时，默认采用ACSII 0.5 其余1的比例计算宽度，因此可能需要手动设置宽度比例才可以达到相应的效果
+            font = new Font("Times New Roman", "Times New Roman")
+                    .setPrintableAsciiWidthMap(FontSet.TIMES_NEW_ROMAN_PRINTABLE_ASCII_MAP);
+            p = new Paragraph()
+                    .setDefaultFont(font)
+                    .setFontSize(10d)
+                    .add("Font Name: Time New Roman");
+            doc.add(p);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+
+    }
 
     @Test
     void appendTest() throws IOException {

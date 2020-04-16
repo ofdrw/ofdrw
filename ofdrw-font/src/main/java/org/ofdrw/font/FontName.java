@@ -46,8 +46,11 @@ public enum FontName {
      * 仿宋
      */
     FangSong(),
+
     /**
      * Times New Roman
+     * <p>
+     * 注意该字体只支持英文
      */
     TimesNewRoman();
 
@@ -56,7 +59,8 @@ public enum FontName {
      */
     private String fileName;
 
-    FontName(){}
+    FontName() {
+    }
 
     FontName(String fileName) {
         this.fileName = fileName;
