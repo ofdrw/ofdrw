@@ -16,10 +16,12 @@ class FontSetTest {
 
     @Test
     public void get() throws IOException {
-         Font font = FontSet.get(FontName.NotoSans);
+        Font font = FontSet.get(FontName.NotoSans);
         final Path fontFile = font.getFontFile();
-        assertNotNull(fontFile);
-        long size = Files.size(fontFile);
-        assertEquals(size, 16489616);
+        assertTrue(Files.exists(fontFile));
+
+        font = FontSet.get(FontName.SimSun);
+        assertEquals("宋体", font.getName());
+        assertEquals("宋体", font.getFamilyName());
     }
 }

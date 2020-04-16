@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 2020-03-22 11:38:48
  */
 class OFDDocTest {
+
     @Test
     void appendTest() throws IOException {
         Path srcP = Paths.get("src/test/resources", "helloworld.ofd");
@@ -179,6 +180,7 @@ class OFDDocTest {
             vPage.add(p);
             ofdDoc.addVPage(vPage);
         }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
     }
 
     @Test
