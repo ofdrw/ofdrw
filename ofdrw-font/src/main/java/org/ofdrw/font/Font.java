@@ -20,9 +20,14 @@ public class Font {
     private String familyName;
 
     /**
-     * 字体文件目录
+     * 字体文件路径
      */
     private Path fontFile;
+
+    /**
+     * 可打印字符宽度映射
+     */
+    private double[] printableAsciiWidthMap = null;
 
     private Font() {
     }
@@ -31,7 +36,8 @@ public class Font {
      * @return 默认字体（Noto思源宋体）
      */
     public static Font getDefault() {
-        return FontSet.get(FontName.NotoSerif);
+//        return FontSet.get(FontName.NotoSerif);
+        return FontSet.get(FontName.SimSun);
     }
 
     public Font(String name, String familyName, Path fontFile) {
@@ -40,9 +46,57 @@ public class Font {
         this.fontFile = fontFile;
     }
 
+    public Font(String name, String familyName) {
+        this.name = name;
+        this.familyName = familyName;
+    }
+
     public Font(String name, Path fontFile) {
         this.name = name;
         this.fontFile = fontFile;
+    }
+
+    public Font(String name, String familyName, Path fontFile, double[] printableAsciiWidthMap) {
+        this.name = name;
+        this.familyName = familyName;
+        this.fontFile = fontFile;
+        this.printableAsciiWidthMap = printableAsciiWidthMap;
+    }
+
+    /**
+     * 获取字符占比
+     *
+     * @param txt 字符
+     * @return 0~1 占比
+     */
+    public double getCharWidthScale(char txt) {
+        // 如果存在字符映射那么从字符映射中获取宽度占比
+        if (printableAsciiWidthMap != null) {
+            // 所有 ASCII码均采用半角
+            if (txt >= 32 && txt <= 126) {
+                // 根据可打印宽度比例映射表打印
+                return printableAsciiWidthMap[txt - 32];
+            } else {
+                // 非英文字符
+                return 1;
+            }
+        } else {
+            // 不存在字符映射，那么认为是等宽度比例 ASCII 为 0.5 其他为 1
+            return (txt >= 32 && txt <= 126) ? 0.5 : 1;
+        }
+    }
+
+    /**
+     * 设置可打印字符宽度映射表
+     *
+     * 在使用操作系统字体时，默认采用ACSII 0.5 其余1的比例计算宽度，因此可能需要手动设置宽度比例才可以达到相应的效果
+     *
+     * @param map 映射比例表
+     * @return this
+     */
+    public Font setPrintableAsciiWidthMap(double[] map) {
+        this.printableAsciiWidthMap = map;
+        return this;
     }
 
     /**

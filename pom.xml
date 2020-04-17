@@ -23,6 +23,7 @@
         <module>ofdrw-font</module>
         <module>ofdrw-full</module>
         <module>ofdrw-reader</module>
+        <module>ofdrw-sign</module>
     </modules>
 
     <developers>

@@ -6,8 +6,6 @@
 
 > **Talk is cheap,Show me the code. ——Linus Torvalds**
 
-
-
 **像写HTML和Word那样简单的编写OFD。**
 
 根据[《GB/T 33190-2016 电子文件存储与交换格式版式文档》](./GBT_33190-2016_电子文件存储与交换格式版式文档.pdf)标准实现版式文档OFD库（含有书签）。
@@ -24,6 +22,8 @@
     - 实施状态：**重构完成**。
 - [**ofdrw-reader**](./ofdrw-reader) OFD文档解析器，用于OFD的反序列化以及签名签章。
     - 实施状态：**阶段性完成**。
+- [**ofdrw-sign**](./ofdrw-sign) OFD文档数字签章。
+    - 实施状态：*初期设计*。
 - [**ofdrw-full**](./ofdrw-full) 上述所有模块整合包，用于简化依赖引入。
 
 ## QuickStart
@@ -70,6 +70,15 @@ public class HelloWorld {
 
 > **关于OFD布局设计，请参考 [《OFD R&W 布局设计》](./ofdrw-layout/doc/README.md)**
 
+---
+
+> 推荐的免费OFD阅读器
+> 
+> [福昕OFD版式办公套件 . http://www.htfoxit.com/Download/index/id/712](http://www.htfoxit.com/Download/index/id/712)
+>
+> 该阅读器是我目前发现对OFD渲染和支持程度最高最规范的阅读器。
+
+
 ## 源码安装
 
 在项目根目录下运行
@@ -82,6 +91,7 @@ mvn install
 
 ## 进展
 
+- *2020-04-15* 启动了ofdrw-sign 模块分析设计。
 - *2020-04-12* 发布ofdrw 1.1.0版本。
 - *2020-04-11* 【里程碑】实现了向已有OFD增加内容，以及追加内容的功能，考虑发布 1.1.0-RELEASE版本。
 - *2020-04-04* 采用虚拟容器的方式重写ofdrw-pkg，为文档的反序列化和修改做准备。
@@ -112,7 +122,7 @@ mvn install
 
 > 如果各位对 OFD R&W 有 **问题** 或是 **建议** 欢迎提交issue和PullRequest，这样的大家的问题都可以很好的得到分享，我也很乐意解答各位问题。
 > 
-> 目前OFD R&W 还处于开发阶段...
+> 如果你有好的意见建议，欢迎在issue区域提交issue，我都会看的哦。
 
 ## 项目关注度
 

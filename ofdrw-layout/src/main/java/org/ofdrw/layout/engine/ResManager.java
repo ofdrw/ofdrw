@@ -129,8 +129,11 @@ public class ResManager {
             CT_Font ctFont = new CT_Font()
                     .setFontName(font.getName())
                     .setFamilyName(familyName)
-                    .setID(id)
-                    .setFontFile(font.getFontFileName());
+                    .setID(id);
+            Path fontFile = font.getFontFile();
+            if (fontFile != null) {
+                ctFont.setFontFile(font.getFontFileName());
+            }
             // 设置特殊字族属性
             if (familyName != null) {
                 switch (familyName.toLowerCase()) {
@@ -148,8 +151,10 @@ public class ResManager {
                         break;
                 }
             }
-            // 将字体文件加入到文档容器中
-            docDir.addResource(font.getFontFile());
+            if (fontFile != null) {
+                // 将字体文件加入到文档容器中
+                docDir.addResource(fontFile);
+            }
             // 把字体加入到字体清单中
             fonts.addFont(ctFont);
             // 缓存字体

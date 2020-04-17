@@ -24,12 +24,43 @@ public enum FontName {
     /**
      * 思源宋体-粗体
      */
-    NotoSerifBold("NotoSerifCJKsc-Bold.otf");
+    NotoSerifBold("NotoSerifCJKsc-Bold.otf"),
+
+    /**
+     * 宋体
+     */
+    SimSun(),
+    /**
+     * 黑体
+     */
+    SimHei(),
+    /**
+     * 微软雅黑
+     */
+    MSYahei(),
+    /**
+     * 楷体
+     */
+    KaiTi(),
+    /**
+     * 仿宋
+     */
+    FangSong(),
+
+    /**
+     * Times New Roman
+     * <p>
+     * 注意该字体只支持英文
+     */
+    TimesNewRoman();
 
     /**
      * 字体名称
      */
     private String fileName;
+
+    FontName() {
+    }
 
     FontName(String fileName) {
         this.fileName = fileName;
