@@ -117,7 +117,7 @@ public class DocBody extends OFDElement {
      */
     public ST_Loc getSignatures() {
         String locStr = this.getOFDElementText("Signatures");
-        if (locStr == null || locStr.trim().length() == 0) {
+        if (locStr == null || locStr.trim().isEmpty()) {
             return null;
         }
         return new ST_Loc(locStr);

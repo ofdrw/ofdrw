@@ -35,6 +35,11 @@ public class VirtualContainer implements Closeable {
     private String name;
 
     /**
+     * 所属容器
+     */
+    private VirtualContainer parent;
+
+    /**
      * 文件缓存
      */
     private Map<String, Element> fileCache;
@@ -57,6 +62,7 @@ public class VirtualContainer implements Closeable {
     private VirtualContainer() {
         fileCache = new HashMap<>(7);
         dirCache = new HashMap<>(5);
+        this.parent = this;
     }
 
     /**
@@ -81,6 +87,7 @@ public class VirtualContainer implements Closeable {
         }
         this.fullPath = fullDir.toAbsolutePath().toString();
         this.name = fullDir.getFileName().toString();
+
     }
 
     /**
@@ -261,12 +268,34 @@ public class VirtualContainer implements Closeable {
         if (target == null) {
             // 调用指定构造器创建容器对象
             R ct = mapper.apply(p);
+            // 设置所属容器为创建者
+            ct.setParent(this);
             // 加入缓存中
             dirCache.put(name, ct);
             return ct;
         } else {
             return (R) target;
         }
+    }
+
+    /**
+     * 获取该容器所属容器
+     *
+     * @return 所属容器对象
+     */
+    public VirtualContainer getParent() {
+        return parent;
+    }
+
+    /**
+     * 设置所属容器
+     *
+     * @param parent 容器
+     * @return this
+     */
+    protected VirtualContainer setParent(VirtualContainer parent) {
+        this.parent = parent;
+        return this;
     }
 
     /**
@@ -279,14 +308,16 @@ public class VirtualContainer implements Closeable {
     }
 
 
-
     /**
      * 删除整个虚拟容器
      */
     public void clean() {
         try {
+            Path path = getContainerPath();
             // 删除整个文件目录
-            FileUtils.deleteDirectory(Paths.get(fullPath).toFile());
+            if (Files.exists(path)) {
+                FileUtils.deleteDirectory(path.toFile());
+            }
             this.fileCache.clear();
             this.dirCache.clear();
         } catch (Exception e) {
@@ -310,6 +341,45 @@ public class VirtualContainer implements Closeable {
         for (VirtualContainer container : dirCache.values()) {
             container.flush();
         }
+        fileCache.clear();
+        dirCache.clear();
+    }
+
+    /**
+     * 从缓存中刷新指定容器到文件系统中
+     *
+     * @param name 容器名称
+     * @return this
+     * @throws IOException 写入文件IO异常
+     */
+    public VirtualContainer flushContainerByName(String name) throws IOException {
+        if (name == null || name.trim().isEmpty()) {
+            return this;
+        }
+        VirtualContainer virtualContainer = dirCache.get(name);
+        if (virtualContainer != null) {
+            virtualContainer.flush();
+        }
+        return this;
+    }
+
+    /**
+     * 从缓存将指定对象写入到文件系统中
+     *
+     * @param name 文件名称
+     * @return this
+     * @throws IOException 写入文件IO异常
+     */
+    public VirtualContainer flushFileByName(String name) throws IOException {
+        if (name == null || name.trim().isEmpty()) {
+            return this;
+        }
+        Element element = fileCache.get(name);
+        if (element != null) {
+            Path filePath = Paths.get(fullPath, name);
+            ElemCup.dump(element, filePath);
+        }
+        return this;
     }
 
     @Override
