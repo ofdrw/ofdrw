@@ -3,11 +3,13 @@ package org.ofdrw.reader;
 import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
+import org.dom4j.Element;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.core.signatures.Signatures;
 import org.ofdrw.pkg.container.OFDDir;
 
 import java.io.Closeable;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * OFD解析器
@@ -81,6 +84,22 @@ public class OFDReader implements Closeable {
      */
     public OFDDir getOFDDir() {
         return ofdDir;
+    }
+
+    /**
+     * 文档是否包含数字签名
+     *
+     * @return true - 含有；false - 不含；
+     */
+    public boolean hasSignature() {
+        DocBody docBody = null;
+        try {
+            docBody = ofdDir.getOfd().getDocBody();
+            ST_Loc signaturesLoc = docBody.getSignatures();
+            return signaturesLoc != null;
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new BadOFDException("错误OFD结构和文件格式", e);
+        }
     }
 
     /**

@@ -127,30 +127,4 @@ public class SignDir extends VirtualContainer {
         this.putFile(signedValue);
         return this;
     }
-
-
-//    /**
-//     * 创建目录并复制文件
-//     *
-//     * @param base 基础路径
-//     * @return 创建的目录路径
-//     * @throws IOException IO异常
-//     */
-//    @Override
-//    public Path collect(String base) throws IOException {
-//        Path path = Paths.get(base, "Sign_" + index);
-//        path = Files.createDirectories(path);
-//        String dir = path.toAbsolutePath().toString();
-//        if (signature == null) {
-//            throw new IllegalArgumentException("缺少签名/签章描述文件（signature）");
-//        }
-//        ElemCup.dump(signature, Paths.get(dir, "Signature.xml"));
-//        if (seal != null) {
-//            Files.copy(seal, Paths.get(dir, "Seal.esl"));
-//        }
-//        if (signedValue != null) {
-//            Files.copy(signedValue, Paths.get(dir, "SignedValue.dat"));
-//        }
-//        return path;
-//    }
 }
