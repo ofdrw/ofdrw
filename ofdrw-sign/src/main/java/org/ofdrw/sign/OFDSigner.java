@@ -5,6 +5,9 @@ import org.dom4j.DocumentException;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.signatures.Signatures;
+import org.ofdrw.core.signatures.range.Reference;
+import org.ofdrw.core.signatures.range.References;
+import org.ofdrw.core.signatures.sig.Signature;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.reader.BadOFDException;
 import org.ofdrw.reader.OFDReader;
@@ -13,6 +16,7 @@ import org.ofdrw.reader.ResourceLocator;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * OFD文档数字签章引擎
@@ -70,6 +74,8 @@ public class OFDSigner implements Closeable {
         try {
             docBody = ofdDir.getOfd().getDocBody();
             ST_Loc signaturesLoc = docBody.getSignatures();
+            // 签名列表文件完整路径
+            String signListFileAbsPath = rl.toAbsolutePath(signaturesLoc);
             // 如果OFD.xml 不含有签名列表文件路径，那么设置需要更新
             if (signaturesLoc == null) {
                 needUpdateOFDMainEntry = true;
@@ -78,7 +84,7 @@ public class OFDSigner implements Closeable {
                 return;
             }
             rl.save();
-            rl.cd("");
+            rl.cd("/");
             // 获取签名列表对象
             Signatures signatures = rl.get(signaturesLoc, Signatures::new);
 
@@ -90,9 +96,16 @@ public class OFDSigner implements Closeable {
             String parent = signaturesLoc.parent();
             // 切换工作路径到签名容器中
             rl.cd(parent);
-
-            // TODO 遍历所有签名容器，判断保护文件中是否包含Signatures.xml
-
+            List<org.ofdrw.core.signatures.Signature> signatureList = signatures.getSignatures();
+            // 遍历所有签名容器，判断保护文件中是否包含Signatures.xml
+            for (org.ofdrw.core.signatures.Signature sig : signatureList) {
+                ST_Loc baseLoc = sig.getBaseLoc();
+                Signature sigObj = rl.get(baseLoc, Signature::new);
+                References refList = sigObj.getSignedInfo().getReferences();
+                if (refList.hasFile(signListFileAbsPath)) {
+                    throw new SignatureTerminateException("签名列表文件（Signatures.xml）已经被保护，文档不允许继续追加签名");
+                }
+            }
         } catch (FileNotFoundException | DocumentException e) {
             throw new BadOFDException("错误OFD结构和文件格式", e);
         } finally {
