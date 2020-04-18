@@ -43,9 +43,10 @@ public class SignsDir extends VirtualContainer {
         if (files != null) {
             // 遍历容器中已经有的签名目录，初始签名数量
             for (File f : files) {
+                String dirName = f.getName();
                 // 签名目录名为： Sign_N
-                if (f.getName().startsWith(SignDir.SignContainerPrefix)) {
-                    String numb = f.getName().replace(SignDir.SignContainerPrefix, "");
+                if (dirName.startsWith(SignDir.SignContainerPrefix)) {
+                    String numb = dirName.replace(SignDir.SignContainerPrefix, "");
                     int num = Integer.parseInt(numb);
                     if (maxSignIndex <= num) {
                         maxSignIndex = num + 1;

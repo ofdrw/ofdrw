@@ -99,4 +99,15 @@ class VirtualContainerTest {
         Assertions.assertNotNull(pages1);
     }
 
+    @Test
+    void getAbsLoc() {
+        Assertions.assertEquals("/", vc.getAbsLoc().toString());
+
+        PagesDir pages = vc.obtainContainer("Pages", PagesDir::new);
+        Assertions.assertEquals("/Pages", pages.getAbsLoc().toString());
+
+        PageDir pageDir = pages.newPageDir();
+        Assertions.assertEquals("/Pages/Page_0", pageDir.getAbsLoc().toString());
+    }
+
 }

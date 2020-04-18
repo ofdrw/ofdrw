@@ -87,6 +87,50 @@ public class OFDReader implements Closeable {
     }
 
     /**
+     * 获取默认文档Doc_0中的签名列表文件的绝对路径
+     *
+     * @return 签名列表文件绝对路径
+     * @throws BadOFDException 错误OFD结构和文件格式导致结构无法解析
+     */
+    public ST_Loc getDefaultDocSignaturesPath() {
+        try {
+            rl.save();
+            rl.cd("/");
+            DocBody docBody = ofdDir.getOfd().getDocBody();
+            // 签名列表文件路径
+            ST_Loc loc = docBody.getSignatures();
+            if (loc == null) {
+                return null;
+            }
+            // 转化为绝对路径
+            String signListFileAbsPath = rl.toAbsolutePath(loc);
+            return ST_Loc.getInstance(signListFileAbsPath);
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new BadOFDException("错误OFD结构和文件格式", e);
+        } finally {
+            rl.restore();
+        }
+    }
+
+    /**
+     * 获取默认的签名列表对象
+     *
+     * @return 签名列表对象
+     */
+    public Signatures getDefaultSignatures() {
+        ST_Loc signaturesLoc = getDefaultDocSignaturesPath();
+        if (signaturesLoc == null) {
+            throw new BadOFDException("OFD文档中不存在Signatures.xml");
+        }
+        // 获取签名列表对象
+        try {
+            return rl.get(signaturesLoc, Signatures::new);
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new BadOFDException("错误OFD结构和文件格式", e);
+        }
+    }
+
+    /**
      * 文档是否包含数字签名
      *
      * @return true - 含有；false - 不含；

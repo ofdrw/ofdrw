@@ -49,9 +49,11 @@ public class ResourceLocator {
     private OFDDir ofdDir;
 
     /**
-     * 保存的路径
+     * 保存的路径栈
+     * <p>
+     * 每次调用Save都会入栈
      */
-    private LinkedList<String> saved;
+    private LinkedList<LinkedList<String>> savedStack;
 
     private ResourceLocator() {
 
@@ -61,7 +63,7 @@ public class ResourceLocator {
         this.ofdDir = ofdDir;
         // 默认工作目录为OFD容器的根目录
         this.workDir = new LinkedList<>();
-        this.saved = new LinkedList<>();
+        this.savedStack = new LinkedList<>();
         this.workDir.add("/");
     }
 
@@ -71,8 +73,9 @@ public class ResourceLocator {
      * @return this
      */
     public ResourceLocator save() {
-        saved.clear();
-        saved.addAll(workDir);
+        LinkedList<String> toBeSaveWd = new LinkedList<>(workDir);
+        // 入栈
+        savedStack.addFirst(toBeSaveWd);
         return this;
     }
 
@@ -84,10 +87,11 @@ public class ResourceLocator {
      * @return this
      */
     public ResourceLocator restore() {
-        if (!saved.isEmpty()) {
+        if (!savedStack.isEmpty()) {
             workDir.clear();
-            workDir.addAll(saved);
-            saved.clear();
+            // 出栈
+            LinkedList<String> lastSaved = savedStack.removeFirst();
+            workDir.addAll(lastSaved);
         }
         return this;
     }

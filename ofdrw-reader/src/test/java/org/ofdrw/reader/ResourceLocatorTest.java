@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class ResourceLocatorTest {
     private Path src = Paths.get("src/test/resources/helloworld.ofd");
+
     @Test
     public void toAbsolutePath() throws IOException {
         try (OFDReader reader = new OFDReader(src)) {
@@ -54,6 +55,27 @@ class ResourceLocatorTest {
             assertEquals("/", rl.pwd());
 
             rl.cd("Doc_0/Pages/Page_0");
+            assertEquals("/Doc_0/Pages/Page_0", rl.pwd());
+
+            /*
+             * 保存和恢复路径测试
+             */
+            rl.save();
+            rl.cd("/");
+            rl.restore();
+            assertEquals("/Doc_0/Pages/Page_0", rl.pwd());
+
+            /*
+             * 多次保存栈测试
+             */
+            rl.save();
+            rl.cd("/Doc_0");
+            rl.save();
+            rl.cd("Pages");
+            assertEquals("/Doc_0/Pages", rl.pwd());
+            rl.restore();
+            assertEquals("/Doc_0", rl.pwd());
+            rl.restore();
             assertEquals("/Doc_0/Pages/Page_0", rl.pwd());
         }
     }
