@@ -24,6 +24,7 @@
         <module>ofdrw-full</module>
         <module>ofdrw-reader</module>
         <module>ofdrw-sign</module>
+        <module>ofdrw-gv</module>
     </modules>
 
     <developers>
@@ -68,6 +69,14 @@
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-gv</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 
     <dependencyManagement>
         <dependencies>

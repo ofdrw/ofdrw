@@ -9,11 +9,9 @@ import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -186,7 +184,7 @@ public class ResourceLocator {
         }
         // 转换路径为绝对路径
         String absPath = toAbsolutePath(path);
-        String ofwTmp = ofdDir.getFullPath();
+        String ofwTmp = ofdDir.getSysAbsPath();
         Path sysPath = Paths.get(ofwTmp + absPath);
         if (Files.exists(sysPath) && Files.isDirectory(sysPath)) {
             // 刷新工作区到指定区域
@@ -214,7 +212,7 @@ public class ResourceLocator {
      */
     public boolean exist(LinkedList<String> workDir) {
         String pwd = pwd(workDir);
-        String ofwTmp = ofdDir.getFullPath();
+        String ofwTmp = ofdDir.getSysAbsPath();
         Path path = Paths.get(ofwTmp + pwd);
         return Files.exists(path);
     }
@@ -228,7 +226,7 @@ public class ResourceLocator {
      */
     public boolean dirExit(LinkedList<String> workDir) {
         String pwd = pwd(workDir);
-        String ofwTmp = ofdDir.getFullPath();
+        String ofwTmp = ofdDir.getSysAbsPath();
         Path path = Paths.get(ofwTmp + pwd);
         return Files.exists(path) && Files.isDirectory(path);
     }

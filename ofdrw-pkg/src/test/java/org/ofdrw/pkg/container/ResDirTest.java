@@ -15,6 +15,6 @@ class ResDirTest {
         ResDir res = new ResDir(p)
                 .add(path);
         res.flush();
-        System.out.println("生成目录位置: " +res.getFullPath());
+        System.out.println("生成目录位置: " +res.getSysAbsPath());
     }
 }

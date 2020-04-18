@@ -23,7 +23,8 @@
 - [**ofdrw-reader**](./ofdrw-reader) OFD文档解析器，用于OFD的反序列化以及签名签章。
     - 实施状态：**阶段性完成**。
 - [**ofdrw-sign**](./ofdrw-sign) OFD文档数字签章。
-    - 实施状态：*初期设计*。
+    - 实施状态：*编码开发*。
+- [**ofdrw-gv**](./ofdrw-gv) OFDRW 所有模块所共用的全局变量。
 - [**ofdrw-full**](./ofdrw-full) 上述所有模块整合包，用于简化依赖引入。
 
 ## QuickStart
@@ -91,6 +92,7 @@ mvn install
 
 ## 进展
 
+- *2020-04-18* 增加了ofdrw-sign模块【未完成】，加入了ofdrw-gv用于共享全局变量。
 - *2020-04-15* 启动了ofdrw-sign 模块分析设计。
 - *2020-04-12* 发布ofdrw 1.1.0版本。
 - *2020-04-11* 【里程碑】实现了向已有OFD增加内容，以及追加内容的功能，考虑发布 1.1.0-RELEASE版本。

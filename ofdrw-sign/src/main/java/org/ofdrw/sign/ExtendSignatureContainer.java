@@ -4,6 +4,7 @@ package org.ofdrw.sign;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.ofdrw.core.signatures.SigType;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 
@@ -34,8 +35,10 @@ public interface ExtendSignatureContainer {
      *
      * @param inData 待签名数据流
      * @return 签名或签章结果值
+     * @throws IOException       流操作异常
+     * @throws SecurityException 签名计算异常
      */
-    byte[] sign(InputStream inData);
+    byte[] sign(InputStream inData) throws IOException, SecurityException;
 
     /**
      * 获取电子印章二进制编码
@@ -43,8 +46,9 @@ public interface ExtendSignatureContainer {
      * 如果{@link #getSignType()} 返还类型为{@link SigType#Sign}那么请返回null
      *
      * @return 电子印章二进制编码
+     * @throws IOException 获取印章IO异常
      */
-    byte[] getSeal();
+    byte[] getSeal() throws IOException;
 
     /**
      * 获取签名节点类型

@@ -49,6 +49,15 @@ public class AtomicSignID {
     }
 
     /**
+     * 获取当前签名ID
+     * @return 签名ID
+     */
+    public String get(){
+        int maxSignId = provider.get();
+        return String.format("s%03d", maxSignId);
+    }
+
+    /**
      * 解析出电子签名的ID数字
      *
      * @param id ID字符串

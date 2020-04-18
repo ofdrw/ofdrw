@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,6 +22,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class OFDSignerTest {
 
+
+    @Test
+    void df(){
+        System.out.println(OFDSigner.DF.format(LocalDateTime.now()));
+    }
 
     @Test
     void fileWalk() throws IOException {

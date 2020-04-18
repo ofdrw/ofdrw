@@ -38,7 +38,7 @@ public class SignsDir extends VirtualContainer {
      * 初始化容器
      */
     private void initContainer() {
-        File fullDirFile = new File(getFullPath());
+        File fullDirFile = new File(getSysAbsPath());
         File[] files = fullDirFile.listFiles();
         if (files != null) {
             // 遍历容器中已经有的签名目录，初始签名数量

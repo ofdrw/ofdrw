@@ -123,7 +123,7 @@ public class VirtualContainer implements Closeable {
      *
      * @return 容器完整路径（绝对路径）
      */
-    public String getFullPath() {
+    public String getSysAbsPath() {
         return fullPath;
     }
 

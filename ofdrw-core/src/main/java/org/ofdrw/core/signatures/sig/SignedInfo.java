@@ -1,5 +1,6 @@
 package org.ofdrw.core.signatures.sig;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.signatures.appearance.Seal;
@@ -64,6 +65,22 @@ public class SignedInfo extends OFDElement {
     public SignedInfo setSignatureMethod(String signatureMethod) {
         this.setOFDEntity("SignatureMethod", signatureMethod);
         return this;
+    }
+
+    /**
+     * 【可选】
+     * 设置 签名方法
+     * <p>
+     * 记录安全模块返回的签名算法代码，以便验证时使用
+     *
+     * @param oid 签名方法ASN1对象标识符
+     * @return this
+     */
+    public SignedInfo setSignatureMethod(ASN1ObjectIdentifier oid) {
+        if (oid == null) {
+            throw new IllegalArgumentException("签名方法ASN1对象标识符(oid)为空");
+        }
+        return setSignatureMethod(oid.toString());
     }
 
     /**
