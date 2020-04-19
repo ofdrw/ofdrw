@@ -25,6 +25,7 @@
         <module>ofdrw-reader</module>
         <module>ofdrw-sign</module>
         <module>ofdrw-gv</module>
+        <module>ofdrw-gm</module>
     </modules>
 
     <developers>
@@ -90,7 +91,7 @@
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk15on</artifactId>
-                <version>1.64</version>
+                <version>1.65</version>
             </dependency>
             <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
             <dependency>
