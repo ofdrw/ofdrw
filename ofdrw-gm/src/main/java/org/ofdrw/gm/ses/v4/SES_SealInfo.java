@@ -44,7 +44,7 @@ public class SES_SealInfo extends ASN1Object {
 
     public SES_SealInfo(SES_Header header,
                         DERIA5String esID,
-                       SES_ESPropertyInfo property,
+                        SES_ESPropertyInfo property,
                         SES_ESPictrueInfo picture,
                         ExtensionDatas extDatas) {
         this.header = header;

@@ -2,6 +2,8 @@ package org.ofdrw.gm.ses.v4;
 
 import org.bouncycastle.asn1.*;
 
+import java.util.Enumeration;
+
 /**
  * 电子印章数据
  *
@@ -29,9 +31,83 @@ public class SESeal extends ASN1Object {
      * 签名值
      */
     private ASN1BitString signedValue;
-    
+
+    public SESeal(SES_SealInfo eSealInfo,
+                  ASN1OctetString cert,
+                  ASN1ObjectIdentifier signAlgID,
+                  ASN1BitString signedValue) {
+        this.eSealInfo = eSealInfo;
+        this.cert = cert;
+        this.signAlgID = signAlgID;
+        this.signedValue = signedValue;
+    }
+
+    public SESeal(ASN1Sequence seq) {
+        Enumeration<?> e = seq.getObjects();
+        eSealInfo = SES_SealInfo.getInstance(e.nextElement());
+        cert = ASN1OctetString.getInstance(e.nextElement());
+        signAlgID = ASN1ObjectIdentifier.getInstance(e.nextElement());
+        signedValue = DERBitString.getInstance(e.nextElement());
+    }
+
+
+    public static SESeal getInstance(Object o) {
+        if (o instanceof SESeal) {
+            return (SESeal) o;
+        } else if (o != null) {
+            return new SESeal(ASN1Sequence.getInstance(o));
+        }
+        return null;
+    }
+
+    public SES_SealInfo geteSealInfo() {
+        return eSealInfo;
+    }
+
+    public SESeal seteSealInfo(SES_SealInfo eSealInfo) {
+        this.eSealInfo = eSealInfo;
+        return this;
+    }
+
+    public ASN1OctetString getCert() {
+        return cert;
+    }
+
+    public SESeal setCert(ASN1OctetString cert) {
+        this.cert = cert;
+        return this;
+    }
+
+    public ASN1ObjectIdentifier getSignAlgID() {
+        return signAlgID;
+    }
+
+    public SESeal setSignAlgID(ASN1ObjectIdentifier signAlgID) {
+        this.signAlgID = signAlgID;
+        return this;
+    }
+
+    public ASN1BitString getSignedValue() {
+        return signedValue;
+    }
+
+    public SESeal setSignedValue(ASN1BitString signedValue) {
+        this.signedValue = signedValue;
+        return this;
+    }
+
+    public SESeal setSignedValue(byte[] signedValue) {
+        this.signedValue = new DERBitString(signedValue);
+        return this;
+    }
+
     @Override
     public ASN1Primitive toASN1Primitive() {
-        return null;
+        ASN1EncodableVector v = new ASN1EncodableVector(4);
+        v.add(eSealInfo);
+        v.add(cert);
+        v.add(signAlgID);
+        v.add(signedValue);
+        return new BERSequence(v);
     }
 }
