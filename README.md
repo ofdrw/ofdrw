@@ -90,6 +90,17 @@ mvn install
 
 就可以完成项目的构建打包，安装到本地Maven仓库中。
 
+## 交流
+
+***Share and Communicate***
+
+为了方便大家的交流提供QQ群
+
+![QQ群](./img/QQLink.png)
+
+
+群号： **577682453**
+
 ## 进展
 
 - *2020-04-18* 增加了ofdrw-sign模块【未完成】，加入了ofdrw-gv用于共享全局变量。
