@@ -247,7 +247,7 @@ public class OFDSigner implements Closeable {
 
         // 获取OFD容器在文件系统中的路径
         Path containerPath = ofdDir.getContainerPath();
-        // 文件系统中的容器Unix类型绝对路径，如："/Doc_0/Pages"
+        // 文件系统中的容器Unix类型绝对路径，如："/home/root/tmp"
         String sysRoot = FilenameUtils.separatorsToUnix(containerPath.toAbsolutePath().toString());
         // 遍历OFD文件目录中的所有文件
         Files.walkFileTree(containerPath, new SimpleFileVisitor<Path>() {
