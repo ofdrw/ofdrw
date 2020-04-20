@@ -34,11 +34,12 @@ public interface ExtendSignatureContainer {
      * 对待签名数据签名
      *
      * @param inData 待签名数据流
+     * @param propertyInfo 签章属性信息
      * @return 签名或签章结果值
      * @throws IOException       流操作异常
      * @throws SecurityException 签名计算异常
      */
-    byte[] sign(InputStream inData) throws IOException, SecurityException;
+    byte[] sign(InputStream inData, String propertyInfo) throws IOException, SecurityException;
 
     /**
      * 获取电子印章二进制编码

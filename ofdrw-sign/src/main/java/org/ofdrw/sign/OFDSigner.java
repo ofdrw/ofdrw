@@ -343,7 +343,10 @@ public class OFDSigner implements Closeable {
         /*
          * 4. 计算数字签名获取签名值
          */
-        byte[] signedValue = signContainer.sign(Files.newInputStream(signatureFilePath));
+        // 设置签章原文的保护信息为：签名文件容器中绝对路径。
+        String propertyInfo = signDir.getAbsLoc().cat(SignDir.SignatureFileName).toString();
+        // 调用容器提供方法计算签章值。
+        byte[] signedValue = signContainer.sign(Files.newInputStream(signatureFilePath), propertyInfo);
         Path signedValuePath = Paths.get(signDir.getSysAbsPath(), SignDir.SignedValueFileName);
         // 将签名值写入到 SignedValue.dat中
         Files.write(signedValuePath, signedValue);
