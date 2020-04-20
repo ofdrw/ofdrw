@@ -3,12 +3,10 @@ package org.ofdrw.pkg.container;
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.dom4j.tree.DefaultEntity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.core.OFDElement;
-import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.pkg.tool.ElemCup;
 
 import java.io.IOException;
@@ -68,7 +66,7 @@ class VirtualContainerTest {
         inject.add(OFDElement.getInstance("TestEmptyElem"));
         vc.putObj("C.xml", inject);
         vc.flush();
-        System.out.println(vc.getFullPath());
+        System.out.println(vc.getSysAbsPath());
         Assertions.assertTrue(Files.exists(Paths.get(target, "C.xml")));
 
     }
@@ -97,6 +95,17 @@ class VirtualContainerTest {
         VirtualContainer vc2 = new VirtualContainer(path);
         VirtualContainer pages1 = vc2.getContainer("Pages", VirtualContainer::new);
         Assertions.assertNotNull(pages1);
+    }
+
+    @Test
+    void getAbsLoc() {
+        Assertions.assertEquals("/", vc.getAbsLoc().toString());
+
+        PagesDir pages = vc.obtainContainer("Pages", PagesDir::new);
+        Assertions.assertEquals("/Pages", pages.getAbsLoc().toString());
+
+        PageDir pageDir = pages.newPageDir();
+        Assertions.assertEquals("/Pages/Page_0", pageDir.getAbsLoc().toString());
     }
 
 }

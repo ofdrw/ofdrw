@@ -12,7 +12,6 @@ import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -26,6 +25,17 @@ import java.util.regex.Pattern;
 public class ResourceLocator {
 
     /**
+     * 路径匹配正则列表
+     */
+    public static Pattern PtDoc = Pattern.compile("/(Doc_\\d+)");
+    public static Pattern PtSigns = Pattern.compile("/(Doc_\\d+)/Signs");
+    public static Pattern PtSign = Pattern.compile("/(Doc_\\d+)/Signs/(Sign_\\d+)");
+    public static Pattern PtPages = Pattern.compile("/(Doc_\\d+)/Pages");
+    public static Pattern PtPage = Pattern.compile("/(Doc_\\d+)/Pages/(Page_\\d+)");
+    public static Pattern PtPageRes = Pattern.compile("/(Doc_\\d+)/Pages/(Page_\\d+)/Res");
+    public static Pattern PtDocRes = Pattern.compile("/(Doc_\\d+)/Res");
+
+    /**
      * 当前目录
      */
     private LinkedList<String> workDir;
@@ -37,9 +47,11 @@ public class ResourceLocator {
     private OFDDir ofdDir;
 
     /**
-     * 保存的路径
+     * 保存的路径栈
+     * <p>
+     * 每次调用Save都会入栈
      */
-    private LinkedList<String> saved;
+    private LinkedList<LinkedList<String>> savedStack;
 
     private ResourceLocator() {
 
@@ -49,7 +61,7 @@ public class ResourceLocator {
         this.ofdDir = ofdDir;
         // 默认工作目录为OFD容器的根目录
         this.workDir = new LinkedList<>();
-        this.saved = new LinkedList<>();
+        this.savedStack = new LinkedList<>();
         this.workDir.add("/");
     }
 
@@ -59,8 +71,9 @@ public class ResourceLocator {
      * @return this
      */
     public ResourceLocator save() {
-        saved.clear();
-        saved.addAll(workDir);
+        LinkedList<String> toBeSaveWd = new LinkedList<>(workDir);
+        // 入栈
+        savedStack.addFirst(toBeSaveWd);
         return this;
     }
 
@@ -72,13 +85,60 @@ public class ResourceLocator {
      * @return this
      */
     public ResourceLocator restore() {
-        if (!saved.isEmpty()) {
+        if (!savedStack.isEmpty()) {
             workDir.clear();
-            workDir.addAll(saved);
-            saved.clear();
+            // 出栈
+            LinkedList<String> lastSaved = savedStack.removeFirst();
+            workDir.addAll(lastSaved);
         }
         return this;
     }
+
+    /**
+     * 转换路径对象为绝对路径字符串
+     *
+     * @param path 路径对象
+     * @return 绝对路径字符串
+     */
+    public String toAbsolutePath(ST_Loc path) {
+        if (path == null) {
+            return pwd();
+        }
+        return toAbsolutePath(path.getLoc());
+    }
+
+    /**
+     * 路径转换为绝对路径
+     *
+     * @param path 容器路径
+     * @return 绝对路径字符串
+     */
+    public String toAbsolutePath(String path) {
+        if (path == null || path.trim().isEmpty()) {
+            return pwd();
+        }
+        LinkedList<String> workDirCopy = new LinkedList<>(workDir);
+        if (path.startsWith("/")) {
+            workDirCopy.clear();
+            workDirCopy.add("/");
+        }
+        for (String item : path.split("/")) {
+            item = item.trim();
+            if (item.equals(".") || item.isEmpty()) {
+                // 表示但前目录不做任何操作
+                continue;
+            } else if (item.equals("..")) {
+                workDirCopy.removeLast();
+                if (workDirCopy.isEmpty()) {
+                    workDirCopy.add("/");
+                }
+            } else {
+                workDirCopy.add(item);
+            }
+        }
+        return pwd(workDirCopy);
+    }
+
 
     /**
      * 重置工作路径
@@ -104,6 +164,8 @@ public class ResourceLocator {
 
     /**
      * 改变目录  Change Directory
+     * <p>
+     * 路径最后如果是目录也不加 "/"
      *
      * @param path    路径位置
      * @param workDir 已有工作目录
@@ -120,31 +182,25 @@ public class ResourceLocator {
             workDir.add("/");
             return this;
         }
-        LinkedList<String> workDirCopy = new LinkedList<>(workDir);
-        if (path.startsWith("/")) {
-            workDirCopy.clear();
-            workDirCopy.add("/");
-        }
-        for (String item : path.split("/")) {
-            item = item.trim();
-            if (item.equals(".") || item.equals("")) {
-                // 表示但前目录不做任何操作
-            } else if (item.equals("..")) {
-                workDirCopy.removeLast();
-                if (workDirCopy.isEmpty()) {
-                    workDirCopy.add("/");
+        // 转换路径为绝对路径
+        String absPath = toAbsolutePath(path);
+        String ofwTmp = ofdDir.getSysAbsPath();
+        Path sysPath = Paths.get(ofwTmp + absPath);
+        if (Files.exists(sysPath) && Files.isDirectory(sysPath)) {
+            // 刷新工作区到指定区域
+            workDir.clear();
+            workDir.add("/");
+            for (String item : absPath.split("/")) {
+                item = item.trim();
+                if (item.isEmpty()) {
+                    continue;
                 }
-            } else {
-                workDirCopy.add(item);
-                // 如果工作路径不存在，那么报错
-                if (!dirExit(workDirCopy)) {
-                    throw new ErrorPathException("无法切换路径到" + path + "，目录不存在。");
-                }
+                workDir.add(item);
             }
+        } else {
+            // 如果路径不存在，那么报错
+            throw new ErrorPathException("无法切换路径到" + path + "，目录不存在。");
         }
-        // 刷新工作区到指定区域
-        workDir.clear();
-        workDir.addAll(workDirCopy);
         return this;
     }
 
@@ -156,7 +212,7 @@ public class ResourceLocator {
      */
     public boolean exist(LinkedList<String> workDir) {
         String pwd = pwd(workDir);
-        String ofwTmp = ofdDir.getFullPath();
+        String ofwTmp = ofdDir.getSysAbsPath();
         Path path = Paths.get(ofwTmp + pwd);
         return Files.exists(path);
     }
@@ -170,7 +226,7 @@ public class ResourceLocator {
      */
     public boolean dirExit(LinkedList<String> workDir) {
         String pwd = pwd(workDir);
-        String ofwTmp = ofdDir.getFullPath();
+        String ofwTmp = ofdDir.getSysAbsPath();
         Path path = Paths.get(ofwTmp + pwd);
         return Files.exists(path) && Files.isDirectory(path);
     }
@@ -178,6 +234,8 @@ public class ResourceLocator {
 
     /**
      * 打印工作目录 Print Work Directory
+     * <p>
+     * 路径最后如果是目录也不加 "/"
      *
      * @return 工作目录路径
      */
@@ -196,25 +254,20 @@ public class ResourceLocator {
             return "/";
         }
         StringBuilder sb = new StringBuilder();
-        for (String item : workDir) {
+        for (int i = 0, len = workDir.size(); i < len; i++) {
+            String item = workDir.get(i);
+            item = item.trim();
+            if (item.isEmpty()) {
+                continue;
+            }
             sb.append(item);
-            if (!item.equals("/")) {
+            // 最后一个路径不加"/"
+            if (!item.equals("/") && (i != len - 1)) {
                 sb.append("/");
             }
         }
         return sb.toString();
     }
-
-    /**
-     * 路径匹配正则列表
-     */
-    public static Pattern PtDoc = Pattern.compile("/(Doc_\\d+)");
-    public static Pattern PtSigns = Pattern.compile("/(Doc_\\d+)/Signs");
-    public static Pattern PtSign = Pattern.compile("/(Doc_\\d+)/Signs/(Sign_\\d+)");
-    public static Pattern PtPages = Pattern.compile("/(Doc_\\d+)/Pages");
-    public static Pattern PtPage = Pattern.compile("/(Doc_\\d+)/Pages/(Page_\\d+)");
-    public static Pattern PtPageRes = Pattern.compile("/(Doc_\\d+)/Pages/(Page_\\d+)/Res");
-    public static Pattern PtDocRes = Pattern.compile("/(Doc_\\d+)/Res");
 
 
     /**

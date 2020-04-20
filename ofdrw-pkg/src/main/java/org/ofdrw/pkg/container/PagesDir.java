@@ -28,7 +28,7 @@ public class PagesDir extends VirtualContainer {
      * 初始化容器
      */
     private void initContainer() {
-        File fullDirFile = new File(getFullPath());
+        File fullDirFile = new File(getSysAbsPath());
         File[] files = fullDirFile.listFiles();
         if (files != null) {
             // 遍历容器中已经有的页面目录，初始页面数量

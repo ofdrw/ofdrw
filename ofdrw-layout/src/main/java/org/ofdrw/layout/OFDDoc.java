@@ -10,6 +10,7 @@ import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.gv.GlobalVar;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.engine.*;
@@ -166,7 +167,7 @@ public class OFDDoc implements Closeable {
                 .setDocID(UUID.randomUUID())
                 .setCreationDate(LocalDate.now())
                 .setCreator("OFD R&W")
-                .setCreatorVersion("1.1.0");
+                .setCreatorVersion(GlobalVar.Version);
         DocBody docBody = new DocBody()
                 .setDocInfo(docInfo)
                 .setDocRoot(new ST_Loc("Doc_0/Document.xml"));

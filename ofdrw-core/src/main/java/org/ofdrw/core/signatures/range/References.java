@@ -2,6 +2,7 @@ package org.ofdrw.core.signatures.range;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicType.ST_Loc;
 
 import java.util.List;
 
@@ -67,6 +68,24 @@ public class References extends OFDElement {
         }
         this.add(reference);
         return this;
+    }
+
+    /**
+     * 检查是否包含文件
+     *
+     * @param absLoc 文件绝对路径
+     * @return true - 含有文件；false - 不含
+     */
+    public boolean hasFile(String absLoc) {
+        if (absLoc == null || absLoc.trim().isEmpty()) {
+            return false;
+        }
+        for (Reference refItem : getReferences()) {
+            if (absLoc.equals(refItem.getFileRef().getLoc())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

@@ -8,7 +8,7 @@ package org.ofdrw.sign;
  * @author 权观宇
  * @since 2020-04-17 03:10:39
  */
-public class SignatureTerminateException extends SecurityException {
+public class SignatureTerminateException extends SignatureException {
 
 
     public SignatureTerminateException() {

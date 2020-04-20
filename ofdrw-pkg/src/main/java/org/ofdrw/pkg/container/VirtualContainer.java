@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.ofdrw.core.DefaultElementProxy;
+import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.pkg.tool.ElemCup;
 
 import java.io.Closeable;
@@ -122,7 +123,7 @@ public class VirtualContainer implements Closeable {
      *
      * @return 容器完整路径（绝对路径）
      */
-    public String getFullPath() {
+    public String getSysAbsPath() {
         return fullPath;
     }
 
@@ -240,6 +241,8 @@ public class VirtualContainer implements Closeable {
             Path p = Paths.get(fullPath, name);
             // 如果目录不存在那么创建，如果已经存在那么就是加载
             R ct = mapper.apply(p);
+            // 设置父母路径
+            ct.setParent(this);
             // 加入缓存中
             dirCache.put(name, ct);
             return ct;
@@ -380,6 +383,21 @@ public class VirtualContainer implements Closeable {
             ElemCup.dump(element, filePath);
         }
         return this;
+    }
+
+    /**
+     * 获取在容器中的绝对路径
+     *
+     * @return 绝对路径对象
+     */
+    public ST_Loc getAbsLoc() {
+        ST_Loc absRes = null;
+        if (parent == this) {
+            absRes = new ST_Loc("/");
+        } else {
+            absRes = parent.getAbsLoc().cat(this.name);
+        }
+        return absRes;
     }
 
     @Override

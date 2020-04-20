@@ -66,7 +66,7 @@ public class OFDDir extends VirtualContainer {
      * 容器初始化
      */
     private void initContainer() {
-        File fullDirFile = new File(getFullPath());
+        File fullDirFile = new File(getSysAbsPath());
         File[] files = fullDirFile.listFiles();
         if (files != null) {
             // 遍历容器中已经有的文档目录，初始文档数量
@@ -180,7 +180,7 @@ public class OFDDir extends VirtualContainer {
         this.flush();
         String fullOfFilePath = filePath.toAbsolutePath().toString();
         // 打包OFD文件
-        this.zip(getFullPath(), fullOfFilePath);
+        this.zip(getSysAbsPath(), fullOfFilePath);
     }
 
     /**

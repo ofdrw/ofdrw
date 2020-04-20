@@ -24,6 +24,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class ResourceLocatorTest {
     private Path src = Paths.get("src/test/resources/helloworld.ofd");
 
+    @Test
+    public void toAbsolutePath() throws IOException {
+        try (OFDReader reader = new OFDReader(src)) {
+            OFDDir ofdDir = reader.getOFDDir();
+            ResourceLocator rl = new ResourceLocator(ofdDir);
+            rl.cd("/Doc_0/Pages/Page_0");
+
+            String absPath = rl.toAbsolutePath("../../Signs/Signatures.xml");
+            System.out.println(absPath);
+        }
+    }
 
     @Test
     void testCd() throws IOException {
@@ -32,15 +43,40 @@ class ResourceLocatorTest {
 
             ResourceLocator rl = new ResourceLocator(ofdDir);
             rl.cd("/Doc_0/Pages/");
-            assertEquals("/Doc_0/Pages/", rl.pwd());
+            assertEquals("/Doc_0/Pages", rl.pwd());
+
             rl.restWd();
             assertEquals("/", rl.pwd());
 
             rl.cd("../");
             assertEquals("/", rl.pwd());
 
-            rl.cd("./Doc_0/../temo");
+            rl.cd("./Doc_0/../");
             assertEquals("/", rl.pwd());
+
+            rl.cd("Doc_0/Pages/Page_0");
+            assertEquals("/Doc_0/Pages/Page_0", rl.pwd());
+
+            /*
+             * 保存和恢复路径测试
+             */
+            rl.save();
+            rl.cd("/");
+            rl.restore();
+            assertEquals("/Doc_0/Pages/Page_0", rl.pwd());
+
+            /*
+             * 多次保存栈测试
+             */
+            rl.save();
+            rl.cd("/Doc_0");
+            rl.save();
+            rl.cd("Pages");
+            assertEquals("/Doc_0/Pages", rl.pwd());
+            rl.restore();
+            assertEquals("/Doc_0", rl.pwd());
+            rl.restore();
+            assertEquals("/Doc_0/Pages/Page_0", rl.pwd());
         }
     }
 
@@ -82,7 +118,7 @@ class ResourceLocatorTest {
             OFDDir ofdDir = reader.getOFDDir();
             ResourceLocator rl = new ResourceLocator(ofdDir);
             OFD ofd = rl.get("OFD.xml", OFD::new);
-            assertEquals("969cc3cdd34e407cba54214bf08d7718", ofd.getDocBody().getDocInfo().getDocID());
+            assertEquals("6b9c7c83cff048e7b427ef0567f3e065", ofd.getDocBody().getDocInfo().getDocID());
             // 检查缓存是否生效
             assertEquals(ofd.getProxy(), ofdDir.getOfd().getProxy());
             Page page = rl.get("/Doc_0/Pages/Page_0/Content.xml", Page::new);

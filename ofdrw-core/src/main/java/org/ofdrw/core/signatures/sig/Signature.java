@@ -6,7 +6,7 @@ import org.ofdrw.core.OFDSimpleTypeElement;
 import org.ofdrw.core.basicType.ST_Loc;
 
 /**
- * 签名接口
+ * 签名描述文件的根节点
  * <p>
  * OFD的数字签名通过对描述文件的保护间接实现对OFD原文的保护。
  * 签名结构中的签名信息（SignedInfo）是这一过程中的关键点，
