@@ -8,12 +8,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SignaturesTest {
     public static Signatures signaturesCase() {
         return new Signatures()
-                .setMaxSignId("s002")
+                .setMaxSignId("s001")
                 .addSignature(SignatureTest.signatureCase());
     }
 
     @Test
     public void gen() throws Exception {
-        TestTool.genXml("Signatures", signaturesCase());
+        Signatures element = signaturesCase();
+        assertEquals("s001", element.getMaxSignId());
+        TestTool.genXml("Signatures", element);
     }
 }

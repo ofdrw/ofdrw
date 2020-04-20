@@ -2,6 +2,7 @@ package org.ofdrw.core.signatures;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicStructure.doc.CT_CommonData;
 
 import java.util.List;
 
@@ -42,10 +43,9 @@ public class Signatures extends OFDElement {
      */
     public Signatures setMaxSignId(String maxSignId) {
         if (maxSignId == null) {
-            this.removeAttr("MaxSignId");
-            return this;
+            this.removeOFDElemByNames("MaxSignId");
         }
-        this.addAttribute("MaxSignId", maxSignId);
+        this.addOFDEntity("MaxSignId", maxSignId);
         return this;
     }
 
@@ -62,7 +62,8 @@ public class Signatures extends OFDElement {
      * @return 安全标识的最大值
      */
     public String getMaxSignId() {
-        return this.attributeValue("MaxSignId");
+        Element e = this.getOFDElement("MaxSignId");
+        return e == null ? null :e.getStringValue();
     }
 
     /**

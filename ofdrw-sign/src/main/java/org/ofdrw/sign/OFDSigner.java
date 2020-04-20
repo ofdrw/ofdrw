@@ -316,7 +316,7 @@ public class OFDSigner implements Closeable {
             signsDir.setSignatures(signListObj);
 
             // 构造签名列表文件路径
-            signaturesLoc = signDir.getAbsLoc()
+            signaturesLoc = signsDir.getAbsLoc()
                     .cat(SignsDir.SignaturesFileName);
             // 设置OFD.xml 的签名列表文件入口
             try {
