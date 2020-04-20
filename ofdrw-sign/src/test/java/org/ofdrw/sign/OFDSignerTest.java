@@ -32,24 +32,18 @@ import static org.junit.jupiter.api.Assertions.*;
 class OFDSignerTest {
 
     /**
-     * 测试SM2公钥
-     */
-    public static final String PubKeyEnc = "MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEpB5/ghLxG4mIuhwieT9LR4ytC40mepFKR83qAgC42q7bk71JwTbuHyWQtHDZsK3LXhMUWvZHJUxO7ZzgJEz2+g==";
-    /**
-     * 测试用SM2私钥
-     */
-    public static final String PriKeyEnc = "MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgmGm+OaFgYTVmCoGKBfWgdcBICj/QB+9ReUOu1TsJi4ugCgYIKoEcz1UBgi2hRANCAASkHn+CEvEbiYi6HCJ5P0tHjK0LjSZ6kUpHzeoCALjartuTvUnBNu4fJZC0cNmwrcteExRa9kclTE7tnOAkTPb6";
-
-    /**
      * 获取测试用SM2密钥对
      *
      * @return 密钥对
      */
-    public static KeyPair keyPair() throws GeneralSecurityException {
+    public static KeyPair keyPair() throws GeneralSecurityException, IOException {
         KeyFactory keyFact = KeyFactory.getInstance("EC", new BouncyCastleProvider());
+        Path pubPath = Paths.get("src/test/resources", "PubKey.txt");
+        Path prvPath = Paths.get("src/test/resources", "PrvKey.txt");
+
         // 根据采用的编码结构反序列化公私钥
-        PublicKey pub = keyFact.generatePublic(new X509EncodedKeySpec(Base64.decode(PubKeyEnc)));
-        PrivateKey priv = keyFact.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(PriKeyEnc)));
+        PublicKey pub = keyFact.generatePublic(new X509EncodedKeySpec(Base64.decode(Files.readAllBytes(pubPath))));
+        PrivateKey priv = keyFact.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(Files.readAllBytes(prvPath))));
         return new KeyPair(pub, priv);
     }
 
