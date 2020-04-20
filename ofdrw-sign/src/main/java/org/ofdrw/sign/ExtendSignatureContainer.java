@@ -6,6 +6,7 @@ import org.ofdrw.core.signatures.SigType;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 
 /**
@@ -37,9 +38,9 @@ public interface ExtendSignatureContainer {
      * @param propertyInfo 签章属性信息
      * @return 签名或签章结果值
      * @throws IOException       流操作异常
-     * @throws SecurityException 签名计算异常
+     * @throws GeneralSecurityException 签名计算异常
      */
-    byte[] sign(InputStream inData, String propertyInfo) throws IOException, SecurityException;
+    byte[] sign(InputStream inData, String propertyInfo) throws IOException, GeneralSecurityException;
 
     /**
      * 获取电子印章二进制编码
