@@ -24,6 +24,7 @@ import org.ofdrw.sign.stamppos.StampAppearance;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.GeneralSecurityException;
@@ -108,7 +109,7 @@ public class OFDSigner implements Closeable {
     /**
      * 是否已经执行exeSign
      */
-    private boolean hasSign ;
+    private boolean hasSign;
 
 
     /**
@@ -280,7 +281,6 @@ public class OFDSigner implements Closeable {
     }
 
 
-
     /**
      * 签名或签章执行器
      * <p>
@@ -361,7 +361,10 @@ public class OFDSigner implements Closeable {
         // 设置签章原文的保护信息为：签名文件容器中绝对路径。
         String propertyInfo = signDir.getAbsLoc().cat(SignDir.SignatureFileName).toString();
         // 调用容器提供方法计算签章值。
-        byte[] signedValue = signContainer.sign(Files.newInputStream(signatureFilePath), propertyInfo);
+        byte[] signedValue;
+        try (InputStream inData = Files.newInputStream(signatureFilePath)) {
+            signedValue = signContainer.sign(inData, propertyInfo);
+        }
         Path signedValuePath = Paths.get(signDir.getSysAbsPath(), SignDir.SignedValueFileName);
         // 将签名值写入到 SignedValue.dat中
         Files.write(signedValuePath, signedValue);
