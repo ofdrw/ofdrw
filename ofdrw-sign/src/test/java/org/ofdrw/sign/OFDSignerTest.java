@@ -64,7 +64,8 @@ class OFDSignerTest {
              OFDSigner signer = new OFDSigner(reader, out)) {
             GMDigestSignatureContainer signContainer = new GMDigestSignatureContainer(keyPair.getPrivate());
             // 2. 设置签名模式
-            signer.setSignMode(SignMode.WholeProtected);
+//            signer.setSignMode(SignMode.WholeProtected);
+            signer.setSignMode(SignMode.ContinueSign);
             // 3. 设置签名使用的扩展签名容器
             signer.setSignContainer(signContainer);
             // 4. 执行签名
