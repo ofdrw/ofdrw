@@ -394,8 +394,7 @@ public class OFDSigner implements Closeable {
         if (!apList.isEmpty()) {
             for (StampAppearance sa : apList) {
                 // 解析除外观注解然后加入签名信息中
-                sa.getAppearance(ofdDir, MaxSignID)
-                        .forEach(signedInfo::addStampAnnot);
+                sa.getAppearance(reader, MaxSignID).forEach(signedInfo::addStampAnnot);
             }
         }
 
