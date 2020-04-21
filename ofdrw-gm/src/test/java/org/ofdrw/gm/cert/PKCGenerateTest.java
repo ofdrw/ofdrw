@@ -53,9 +53,9 @@ class PKCGenerateTest {
         // 生成用户证书
         X509Certificate userCert = PKCGenerate.GenCert(p12Req, rootCert, rootPriKey);
 
-        Path out = Paths.get("target/USER.p12");
+        Path out = Paths.get("target/SealBuilder.p12");
         // 保存用户公私钥对和证书到文件
-        PKCGenerate.SaveToPKCS12(keyPair, new Certificate[]{userCert, rootCert}, "777777", out);
+        PKCGenerate.SaveToPKCS12(keyPair, new Certificate[]{userCert}, "777777", out);
     }
 
 }

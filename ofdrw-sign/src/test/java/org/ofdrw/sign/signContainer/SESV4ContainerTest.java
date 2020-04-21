@@ -29,7 +29,7 @@ class SESV4ContainerTest {
         SESeal seal = SESeal.getInstance(Files.readAllBytes(sealPath));
 
         Path src = Paths.get("src/test/resources", "helloworld.ofd");
-        Path out = Paths.get("target/SESV1SignDoc.ofd");
+        Path out = Paths.get("target/SESV4SignDoc.ofd");
         // 1. 构造签名引擎
         try (OFDReader reader = new OFDReader(src);
              OFDSigner signer = new OFDSigner(reader, out)) {

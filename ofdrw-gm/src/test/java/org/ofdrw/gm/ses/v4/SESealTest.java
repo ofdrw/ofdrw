@@ -25,6 +25,24 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SESealTest {
 
+    @Test
+    void signVerify() throws GeneralSecurityException, IOException {
+        Path sealerPath = Paths.get("src/test/resources", "SealBuilder.p12");
+
+        PrivateKey sealerPrvKey = PKCS12Tools.ReadPrvKey(sealerPath, "private", "777777");
+        Signature sg = Signature.getInstance("SM3WithSM2", new BouncyCastleProvider());
+        sg.initSign(sealerPrvKey);
+        sg.update(new byte[32]);
+        byte[] sigVal = sg.sign();
+        System.out.println(sigVal.length);
+
+        Certificate certificate = PKCS12Tools.ReadUserCert(sealerPath, "private", "777777");
+
+        sg = Signature.getInstance("SM3WithSM2", new BouncyCastleProvider());
+        sg.initVerify(certificate);
+        sg.update(new byte[32]);
+        System.out.println(sg.verify(sigVal));
+    }
 
     @Test
     public void build() throws GeneralSecurityException, IOException {
@@ -68,7 +86,6 @@ class SESealTest {
         sg.initSign(sealerPrvKey);
         sg.update(sesSealInfo.getEncoded());
         byte[] sigVal = sg.sign();
-        System.out.println(sigVal.length);
 
         SESeal seal = new SESeal()
                 .seteSealInfo(sesSealInfo)
@@ -79,27 +96,26 @@ class SESealTest {
         Path out = Paths.get("target/UserV4.esl");
         Files.write(out, seal.getEncoded());
         System.out.println(">> V4版本印章存储于: " + out.toAbsolutePath().toAbsolutePath());
+
     }
 
 
     @Test
     public void verify() throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, SignatureException {
-//        final Path path = Paths.get("src/test/resources", "UserV4.esl");
-        final Path path = Paths.get("target", "UserV4.esl");
-//        final Path path = Paths.get("src/test/resources", "Seal.esl");
-//        final Path path = Paths.get("target", "Seal.esl");
+//        final Path path = Paths.get("target", "UserV4.esl");
+        Path path = Paths.get("src/test/resources", "Seal.esl");
         SESeal seal = SESeal.getInstance(Files.readAllBytes(path));
 
-        final SES_SealInfo ses_sealInfo = seal.geteSealInfo();
         ASN1OctetString cert = seal.getCert();
         CertificateFactory factory = new CertificateFactory();
         X509Certificate certificate = (X509Certificate) factory.engineGenerateCertificate(cert.getOctetStream());
 
+        SES_SealInfo ses_sealInfo = seal.geteSealInfo();
+
         Signature sg = Signature.getInstance("SM3WithSM2", new BouncyCastleProvider());
         sg.initVerify(certificate);
         sg.update(ses_sealInfo.getEncoded());
-        final byte[] octets = seal.getSignedValue().getBytes();
-
+        byte[] octets = seal.getSignedValue().getBytes();
         System.out.println(sg.verify(octets));
     }
 

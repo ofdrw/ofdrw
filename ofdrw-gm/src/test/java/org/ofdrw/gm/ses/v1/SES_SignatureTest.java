@@ -4,6 +4,7 @@ import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Test;
+import org.ofdrw.gm.cert.PKCS12Tools;
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -12,6 +13,7 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Signature;
+import java.security.cert.Certificate;
 import java.util.Date;
 import java.util.Locale;
 
@@ -30,12 +32,13 @@ class SES_SignatureTest {
 
     @Test
     void build() throws Exception {
+        Path p = Paths.get("src/test/resources", "UserV1.esl");
+        final Path out = Paths.get("target/SignedValue.dat");
 
         Path userP12 = Paths.get("src/test/resources", "USER.p12");
-        DEROctetString derOctetString = SESealTest.GetUserCert(userP12, "777777");
+        Certificate userCert = PKCS12Tools.ReadUserCert(userP12, "private", "777777");
 
         byte[] mockDigest = new byte[32];
-        Path p = Paths.get("src/test/resources", "UserV1.esl");
         SESeal seal = SESeal.getInstance(Files.readAllBytes(p));
         String propertyInfo = "/Doc_0/Signs/Signatures.xml";
         ASN1UTCTime signUTCTime = new ASN1UTCTime(new Date(), Locale.CHINA);
@@ -45,11 +48,10 @@ class SES_SignatureTest {
                 .setTimeInfo(new DERBitString(signUTCTime))
                 .setDataHash(new DERBitString(mockDigest))
                 .setPropertyInfo(new DERIA5String(propertyInfo))
-                .setCert(derOctetString)
+                .setCert(new DEROctetString(userCert.getEncoded()))
                 .setSignatureAlgorithm(GMObjectIdentifiers.sm2sign_with_sm3);
 
 
-        final Path out = Paths.get("target/SignedValue.dat");
         char[] pwd = "777777".toCharArray();
         KeyStore userKs = KeyStore.getInstance("PKCS12", new BouncyCastleProvider());
         try (InputStream rootKsIn = Files.newInputStream(userP12)) {
