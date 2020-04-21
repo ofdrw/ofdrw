@@ -2,6 +2,8 @@ package org.ofdrw.gm.ses.v4;
 
 import org.bouncycastle.asn1.*;
 
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.util.Enumeration;
 
 /**
@@ -77,44 +79,54 @@ public class SES_Signature extends ASN1Object {
         return toSign;
     }
 
-    public void setToSign(TBS_Sign toSign) {
+    public SES_Signature setToSign(TBS_Sign toSign) {
         this.toSign = toSign;
+        return this;
     }
 
     public ASN1OctetString getCert() {
         return cert;
     }
 
-    public void setCert(ASN1OctetString cert) {
+    public SES_Signature setCert(ASN1OctetString cert) {
         this.cert = cert;
+        return this;
+    }
+    public SES_Signature setCert(Certificate cert) throws CertificateEncodingException {
+        this.cert = new DEROctetString(cert.getEncoded());
+        return this;
     }
 
     public ASN1ObjectIdentifier getSignatureAlgID() {
         return signatureAlgID;
     }
 
-    public void setSignatureAlgID(ASN1ObjectIdentifier signatureAlgID) {
+    public SES_Signature setSignatureAlgID(ASN1ObjectIdentifier signatureAlgID) {
         this.signatureAlgID = signatureAlgID;
+        return this;
     }
 
     public ASN1BitString getSignature() {
         return signature;
     }
 
-    public void setSignature(ASN1BitString signature) {
+    public SES_Signature setSignature(ASN1BitString signature) {
         this.signature = signature;
+        return this;
     }
 
-    public void setSignature(byte[] signature) {
+    public SES_Signature setSignature(byte[] signature) {
         this.signature = new DERBitString(signature);
+        return this;
     }
 
     public ASN1BitString getTimeStamp() {
         return timeStamp;
     }
 
-    public void setTimeStamp(ASN1BitString timeStamp) {
+    public SES_Signature setTimeStamp(ASN1BitString timeStamp) {
         this.timeStamp = timeStamp;
+        return this;
     }
 
     @Override

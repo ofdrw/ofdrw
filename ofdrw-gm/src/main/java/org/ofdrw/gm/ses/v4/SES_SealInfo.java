@@ -105,8 +105,9 @@ public class SES_SealInfo extends ASN1Object {
         return property;
     }
 
-    public void setProperty(SES_ESPropertyInfo property) {
+    public SES_SealInfo setProperty(SES_ESPropertyInfo property) {
         this.property = property;
+        return this;
     }
 
     public SES_ESPictrueInfo getPicture() {

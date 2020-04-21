@@ -47,7 +47,7 @@ class SESV1ContainerTest {
             // 3. 设置签名使用的扩展签名容器
             signer.setSignContainer(signContainer);
             // 4. 设置显示位置
-            signer.addApPos(new NormalStampPos(1, 31.7, 25.4, 40, 40));
+            signer.addApPos(new NormalStampPos(1, 50, 50, 40, 40));
             // 5. 执行签名
             signer.exeSign();
             // 6. 关闭签名引擎，生成文档。

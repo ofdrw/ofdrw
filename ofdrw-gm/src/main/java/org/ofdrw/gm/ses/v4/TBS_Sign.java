@@ -132,6 +132,11 @@ public class TBS_Sign extends ASN1Object {
         return this;
     }
 
+    public TBS_Sign setPropertyInfo(String propertyInfo) {
+        this.propertyInfo = new DERIA5String(propertyInfo);
+        return this;
+    }
+
     public ExtensionDatas getExtDatas() {
         return extDatas;
     }

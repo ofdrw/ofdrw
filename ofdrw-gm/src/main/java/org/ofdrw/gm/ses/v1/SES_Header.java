@@ -13,6 +13,12 @@ import java.util.Enumeration;
 public class SES_Header extends ASN1Object {
 
     /**
+     * 电子印章数据结构版本号，V4
+     */
+    public static final ASN1Integer V4 = new ASN1Integer(4);
+
+
+    /**
      * 电子印章数据标识符
      * 固定值“ES”
      */
