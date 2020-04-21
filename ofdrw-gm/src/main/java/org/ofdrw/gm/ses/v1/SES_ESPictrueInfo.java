@@ -44,7 +44,10 @@ public class SES_ESPictrueInfo extends ASN1Object {
     }
 
 
-    public SES_ESPictrueInfo(DERIA5String type, ASN1OctetString data, ASN1Integer width, ASN1Integer height) {
+    public SES_ESPictrueInfo(DERIA5String type,
+                             ASN1OctetString data,
+                             ASN1Integer width,
+                             ASN1Integer height) {
         this.type = type;
         this.data = data;
         this.width = width;
