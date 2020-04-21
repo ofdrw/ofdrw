@@ -39,6 +39,10 @@ public class SES_SealInfo extends ASN1Object {
      */
     private ExtensionDatas extDatas;
 
+    public SES_SealInfo() {
+        super();
+    }
+
     public SES_SealInfo(SES_Header header,
                         DERIA5String esID,
                         SES_ESPropertyInfo property,

@@ -29,6 +29,10 @@ public class ExtData extends ASN1Object {
      */
     private ASN1OctetString extnValue;
 
+    public ExtData() {
+        super();
+    }
+
     public ExtData(ASN1ObjectIdentifier extnID, ASN1Boolean critical, ASN1OctetString extnValue) {
         this.extnID = extnID;
         this.critical = critical;
@@ -65,7 +69,8 @@ public class ExtData extends ASN1Object {
     }
 
     public ExtData setCritical(ASN1Boolean critical) {
-        this.critical = critical;return this;
+        this.critical = critical;
+        return this;
     }
 
     public ASN1OctetString getExtnValue() {
@@ -73,7 +78,8 @@ public class ExtData extends ASN1Object {
     }
 
     public ExtData setExtnValue(ASN1OctetString extnValue) {
-        this.extnValue = extnValue;return this;
+        this.extnValue = extnValue;
+        return this;
     }
 
     @Override

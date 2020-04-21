@@ -59,6 +59,10 @@ public class SES_ESPropertyInfo extends ASN1Object {
      */
     private ASN1GeneralizedTime validEnd;
 
+    public SES_ESPropertyInfo() {
+        super();
+    }
+
     public SES_ESPropertyInfo(ASN1Integer type,
                               DERUTF8String name,
                               ASN1Integer certListType,

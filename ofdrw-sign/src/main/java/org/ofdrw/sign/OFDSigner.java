@@ -335,9 +335,8 @@ public class OFDSigner implements Closeable {
          *
          * 如果签名列表文件不存在那么创建，如果已经存在那么更新到文件系统
          */
-        // 签名文件 相对路径
-        ST_Loc signatureLoc = ST_Loc.getInstance(
-                signDir.getContainerName() + "/" + SignDir.SignatureFileName);
+        // 签名文件
+        ST_Loc signatureLoc = signDir.getAbsLoc().cat(SignDir.SignatureFileName);
         // 构造列表文件中的签名记录并放入签名列表中
         signListObj.addSignature(new org.ofdrw.core.signatures.Signature()
                 // 设置ID
@@ -396,6 +395,7 @@ public class OFDSigner implements Closeable {
                 .setSignatureDateTime(DF.format(LocalDateTime.now()));
 
         // 如果是电子签章，那么设置电子印章
+        final ST_Loc signDirAbsLoc = signDir.getAbsLoc();
         if (signContainer.getSignType() == SigType.Seal) {
             Path sealPath = Paths.get(signDir.getSysAbsPath(), SignDir.SealFileName);
             // 获取电子印章二进制字节
@@ -406,7 +406,7 @@ public class OFDSigner implements Closeable {
             // 将电子印章写入文件
             Files.write(sealPath, sealBin);
             // 构造印章信息
-            Seal seal = new Seal().setBaseLoc(new ST_Loc(SignDir.SealFileName));
+            Seal seal = new Seal().setBaseLoc(signDirAbsLoc.cat(SignDir.SealFileName));
             signedInfo.setSeal(seal);
         }
 
@@ -460,7 +460,7 @@ public class OFDSigner implements Closeable {
          */
         Signature signature = new Signature()
                 // 设置签名数据文件位置
-                .setSignedValue(new ST_Loc(SignDir.SignedValueFileName))
+                .setSignedValue(signDirAbsLoc.cat(SignDir.SignedValueFileName))
                 .setSignedInfo(signedInfo);
         signDir.setSignature(signature);
         // 将签名描述文件根节点写入到文件系统中

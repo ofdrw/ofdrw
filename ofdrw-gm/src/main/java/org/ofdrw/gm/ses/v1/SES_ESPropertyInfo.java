@@ -54,6 +54,10 @@ public class SES_ESPropertyInfo extends ASN1Object {
      */
     private ASN1UTCTime validEnd;
 
+    public SES_ESPropertyInfo() {
+        super();
+    }
+
     public SES_ESPropertyInfo(ASN1Sequence seq) {
         Enumeration<?> e = seq.getObjects();
         type = ASN1Integer.getInstance(e.nextElement());

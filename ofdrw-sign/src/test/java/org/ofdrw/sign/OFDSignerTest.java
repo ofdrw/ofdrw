@@ -4,6 +4,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.Test;
+import org.ofdrw.gm.cert.PKCS12Tools;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.sign.signContainer.GMDigestSignatureContainer;
@@ -32,20 +33,6 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class OFDSignerTest {
 
-    /**
-     * 从P12中获取私钥
-     *
-     * @param userP12 PKCS12文件路径
-     * @param pwd     解密密钥
-     * @return 私钥
-     */
-    public static PrivateKey ReadPrvKey(Path userP12, String pwd) throws GeneralSecurityException, IOException {
-        KeyStore ks = KeyStore.getInstance("PKCS12", new BouncyCastleProvider());
-        try (InputStream rootKsIn = Files.newInputStream(userP12)) {
-            ks.load(rootKsIn, pwd.toCharArray());
-            return (PrivateKey) ks.getKey("private", pwd.toCharArray());
-        }
-    }
 
     /**
      * OFD电子签名演示
@@ -53,7 +40,7 @@ class OFDSignerTest {
     @Test
     void testDigestSign() throws GeneralSecurityException, IOException {
         Path userP12Path = Paths.get("src/test/resources", "USER.p12");
-        PrivateKey prvKey = ReadPrvKey(userP12Path, "777777");
+        PrivateKey prvKey = PKCS12Tools.ReadPrvKey(userP12Path, "private", "777777");
 
         Path src = Paths.get("src/test/resources", "helloworld.ofd");
         Path out = Paths.get("target/DigestSign.ofd");

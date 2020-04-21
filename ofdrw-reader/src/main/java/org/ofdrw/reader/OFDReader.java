@@ -8,6 +8,7 @@ import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
+import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.signatures.Signatures;
 import org.ofdrw.pkg.container.OFDDir;
@@ -147,6 +148,29 @@ public class OFDReader implements Closeable {
     }
 
     /**
+     * 获取OFD含有的总页面数量
+     *
+     * @return 总页数
+     */
+    public int getNumberOfPages() {
+        try {
+            rl.save();
+            DocBody docBody = ofdDir.getOfd().getDocBody();
+            ST_Loc docRoot = docBody.getDocRoot();
+            // 路径解析对象获取并缓存虚拟容器
+            Document document = rl.get(docRoot, Document::new);
+            rl.cd(docRoot.parent());
+            Pages pages = document.getPages();
+            return pages.getSize();
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
+        } finally {
+            // 还原原有工作区
+            rl.restore();
+        }
+    }
+
+    /**
      * 通过页面页码获取页面对象
      *
      * @param pageNum 页码，从1起
@@ -173,6 +197,39 @@ public class OFDReader implements Closeable {
             // 获取页面的路径
             ST_Loc pageLoc = pageList.get(index).getBaseLoc();
             return rl.get(pageLoc, Page::new);
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
+        } finally {
+            // 还原原有工作区
+            rl.restore();
+        }
+    }
+
+    /**
+     * 获取页面的对象ID
+     *
+     * @param pageNum 页码
+     * @return 对象ID
+     */
+    public ST_ID getPageObjectId(int pageNum) {
+        if (pageNum <= 0) {
+            throw new NumberFormatException("页码(pageNum)不能小于0");
+        }
+        try {
+            int index = pageNum - 1;
+            // 保存切换目录前的工作区
+            rl.save();
+            DocBody docBody = ofdDir.getOfd().getDocBody();
+            ST_Loc docRoot = docBody.getDocRoot();
+            // 路径解析对象获取并缓存虚拟容器
+            Document document = rl.get(docRoot, Document::new);
+            rl.cd(docRoot.parent());
+            Pages pages = document.getPages();
+            List<org.ofdrw.core.basicStructure.pageTree.Page> pageList = pages.getPages();
+            if (index >= pageList.size()) {
+                throw new NumberFormatException(pageNum + "超过最大页码:" + pageList.size());
+            }
+            return pageList.get(index).getID();
         } catch (FileNotFoundException | DocumentException e) {
             throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
         } finally {

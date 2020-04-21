@@ -22,6 +22,10 @@ public class CertDigestObj extends ASN1Object {
      */
     private ASN1OctetString value;
 
+    public CertDigestObj() {
+        super();
+    }
+
     public CertDigestObj(DERPrintableString type
             , ASN1OctetString value) {
         this.type = type;

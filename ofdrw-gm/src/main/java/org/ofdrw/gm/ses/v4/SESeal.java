@@ -32,6 +32,10 @@ public class SESeal extends ASN1Object {
      */
     private ASN1BitString signedValue;
 
+    public SESeal() {
+        super();
+    }
+
     public SESeal(SES_SealInfo eSealInfo,
                   ASN1OctetString cert,
                   ASN1ObjectIdentifier signAlgID,

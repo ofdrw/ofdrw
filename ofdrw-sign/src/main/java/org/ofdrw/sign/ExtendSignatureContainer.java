@@ -33,11 +33,13 @@ public interface ExtendSignatureContainer {
 
     /**
      * 对待签名数据签名
+     * <p>
+     * 在操作过程中请勿对流进行关闭
      *
-     * @param inData 待签名数据流
+     * @param inData       待签名数据流
      * @param propertyInfo 签章属性信息
      * @return 签名或签章结果值
-     * @throws IOException       流操作异常
+     * @throws IOException              流操作异常
      * @throws GeneralSecurityException 签名计算异常
      */
     byte[] sign(InputStream inData, String propertyInfo) throws IOException, GeneralSecurityException;

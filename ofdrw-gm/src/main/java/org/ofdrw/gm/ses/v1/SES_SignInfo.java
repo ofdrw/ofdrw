@@ -31,6 +31,10 @@ public class SES_SignInfo extends ASN1Object {
      */
     private ASN1BitString signData;
 
+    public SES_SignInfo() {
+        super();
+    }
+
     public static SES_SignInfo getInstance(Object o) {
         if (o instanceof SES_SignInfo) {
             return (SES_SignInfo) o;

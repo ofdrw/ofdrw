@@ -17,7 +17,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2020-04-18 09:38:50
  */
-public class NormalStampPos implements StampAppearance{
+public class NormalStampPos implements StampAppearance {
 
     /**
      * 图章所在页面页码
@@ -117,7 +117,7 @@ public class NormalStampPos implements StampAppearance{
     @Override
     public List<StampAnnot> getAppearance(OFDReader ctx, AtomicSignID idProvider) {
         // 解析OFD页码获取页面对应的ID
-        ST_RefID ref = ctx.getPage(page).getObjID().ref();
+        ST_RefID ref = ctx.getPageObjectId(page).ref();
         StampAnnot annot = new StampAnnot()
                 .setID(idProvider.incrementAndGet())
                 .setBoundary(new ST_Box(tlx, tly, width, height))

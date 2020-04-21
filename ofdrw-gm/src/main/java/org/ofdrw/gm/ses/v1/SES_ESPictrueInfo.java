@@ -34,6 +34,10 @@ public class SES_ESPictrueInfo extends ASN1Object {
      */
     private ASN1Integer height;
 
+    public SES_ESPictrueInfo() {
+        super();
+    }
+
     public SES_ESPictrueInfo(
             ASN1Sequence seq) {
         Enumeration<?> e = seq.getObjects();

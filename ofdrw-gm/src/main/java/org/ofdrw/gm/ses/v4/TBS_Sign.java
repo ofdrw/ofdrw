@@ -43,6 +43,10 @@ public class TBS_Sign extends ASN1Object {
      */
     private ExtensionDatas extDatas;
 
+    public TBS_Sign() {
+        super();
+    }
+
     public TBS_Sign(ASN1Integer version,
                     SESeal eseal,
                     ASN1GeneralizedTime timeInfo,

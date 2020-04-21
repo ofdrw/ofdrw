@@ -21,6 +21,10 @@ public class SESeal extends ASN1Object {
      */
     private SES_SignInfo signInfo;
 
+    public SESeal() {
+        super();
+    }
+
     public SESeal(SES_SealInfo esealInfo, SES_SignInfo signInfo) {
         this.esealInfo = esealInfo;
         this.signInfo = signInfo;

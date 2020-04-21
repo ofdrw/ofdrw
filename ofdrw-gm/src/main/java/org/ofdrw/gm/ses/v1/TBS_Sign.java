@@ -52,6 +52,10 @@ public class TBS_Sign extends ASN1Object {
      */
     private ASN1ObjectIdentifier signatureAlgorithm;
 
+    public TBS_Sign() {
+        super();
+    }
+
     public TBS_Sign(ASN1Integer version,
                     SESeal eseal,
                     ASN1BitString timeInfo,

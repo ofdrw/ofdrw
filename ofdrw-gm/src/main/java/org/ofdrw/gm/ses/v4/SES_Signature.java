@@ -37,6 +37,10 @@ public class SES_Signature extends ASN1Object {
      */
     private ASN1BitString timeStamp;
 
+    public SES_Signature() {
+        super();
+    }
+
     public SES_Signature(TBS_Sign toSign,
                          ASN1OctetString cert,
                          ASN1ObjectIdentifier signatureAlgID,
@@ -100,6 +104,7 @@ public class SES_Signature extends ASN1Object {
     public void setSignature(ASN1BitString signature) {
         this.signature = signature;
     }
+
     public void setSignature(byte[] signature) {
         this.signature = new DERBitString(signature);
     }

@@ -22,6 +22,10 @@ public class SES_Signature extends ASN1Object {
      */
     private ASN1BitString signature;
 
+    public SES_Signature() {
+        super();
+    }
+
     public SES_Signature(TBS_Sign toSign, ASN1BitString signature) {
         this.toSign = toSign;
         this.signature = signature;

@@ -36,6 +36,10 @@ public class SES_Header extends ASN1Object {
      */
     private DERIA5String vid;
 
+    public SES_Header() {
+        super();
+    }
+
     public SES_Header(ASN1Integer version, DERIA5String vid) {
         this.id = ID;
         this.version = version;
