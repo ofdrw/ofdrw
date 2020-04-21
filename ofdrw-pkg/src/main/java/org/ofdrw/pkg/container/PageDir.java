@@ -2,6 +2,7 @@ package org.ofdrw.pkg.container;
 
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.ofdrw.core.annotation.pageannot.PageAnnot;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.res.Res;
 
@@ -31,6 +32,12 @@ public class PageDir extends VirtualContainer {
      * 记录了资源描述文件名称
      */
     public static final String PageResFileName = "PageRes.xml";
+
+    /**
+     * 记录了页面关联的注解对象
+     */
+    public static final String AnnotationFileName = "Annotation.xml";
+
 
     /**
      * 代表OFD中第几页
@@ -81,6 +88,29 @@ public class PageDir extends VirtualContainer {
      */
     public PageDir setPageRes(Res pageRes) {
         this.putObj(PageResFileName, pageRes);
+        return this;
+    }
+
+    /**
+     * 获取分页注释文件
+     *
+     * @return 分页注释文件
+     * @throws FileNotFoundException 描述文件不存在
+     * @throws DocumentException     描述文件内容错误
+     */
+    public PageAnnot getPageAnnot() throws FileNotFoundException, DocumentException {
+        Element obj = this.getObj(AnnotationFileName);
+        return new PageAnnot(obj);
+    }
+
+    /**
+     * 设置分页注释文件
+     *
+     * @param pageAnnot 分页注释文件
+     * @return this
+     */
+    public PageDir setPageAnnot(PageAnnot pageAnnot) {
+        this.putObj(AnnotationFileName, pageAnnot);
         return this;
     }
 

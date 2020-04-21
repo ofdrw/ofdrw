@@ -1,6 +1,7 @@
 package org.ofdrw.layout.engine.render;
 
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicType.ST_Box;
@@ -35,7 +36,7 @@ public class ParagraphRender {
      * @param e          段落对象
      * @param maxUnitID  对象ID提供者
      */
-    public static void render(CT_Layer layer, ResManager resManager, Paragraph e, AtomicInteger maxUnitID) {
+    public static void render(CT_PageBlock layer, ResManager resManager, Paragraph e, AtomicInteger maxUnitID) {
         if (e == null) {
             return;
         }

@@ -1,6 +1,6 @@
 package org.ofdrw.layout.engine.render;
 
-import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
@@ -24,7 +24,7 @@ public class DivRender {
      * @param e         元素
      * @param maxUnitID 自增的最大ID提供器
      */
-    public static void render(CT_Layer layer, Div e, AtomicInteger maxUnitID) {
+    public static void render(CT_PageBlock layer, Div e, AtomicInteger maxUnitID) {
         final int[] bgColor = e.getBackgroundColor();
         if (bgColor == null && e.isNoBorder()) {
             // 没有背景颜色没有边框，那么这个Div就不需要绘制

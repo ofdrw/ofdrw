@@ -1,6 +1,7 @@
 package org.ofdrw.layout.engine.render;
 
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_ID;
@@ -30,7 +31,7 @@ public class ImgRender {
      * @param e          图片对象
      * @param maxUnitID  最大元素ID提供器
      */
-    public static void render(CT_Layer layer, ResManager resManager, Img e, AtomicInteger maxUnitID) {
+    public static void render(CT_PageBlock layer, ResManager resManager, Img e, AtomicInteger maxUnitID) {
         if (e == null) {
             return;
         }

@@ -2,6 +2,8 @@ package org.ofdrw.gm.ses.v4;
 
 import org.bouncycastle.asn1.*;
 
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.util.Enumeration;
 
 /**
@@ -79,6 +81,10 @@ public class SESeal extends ASN1Object {
 
     public SESeal setCert(ASN1OctetString cert) {
         this.cert = cert;
+        return this;
+    }
+    public SESeal setCert(Certificate cert) throws CertificateEncodingException {
+        this.cert = new DEROctetString(cert.getEncoded());
         return this;
     }
 

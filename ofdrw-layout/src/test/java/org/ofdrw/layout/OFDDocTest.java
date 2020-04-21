@@ -1,16 +1,31 @@
 package org.ofdrw.layout;
 
+import org.dom4j.DocumentException;
 import org.junit.jupiter.api.Test;
+import org.ofdrw.core.annotation.Annotations;
+import org.ofdrw.core.annotation.pageannot.*;
+import org.ofdrw.core.basicStructure.doc.Document;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
+import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.core.basicType.ST_RefID;
+import org.ofdrw.core.text.TextCode;
 import org.ofdrw.font.Font;
 import org.ofdrw.font.FontName;
 import org.ofdrw.font.FontSet;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.element.*;
+import org.ofdrw.pkg.container.DocDir;
+import org.ofdrw.pkg.container.OFDDir;
+import org.ofdrw.pkg.container.PageDir;
 import org.ofdrw.reader.OFDReader;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,6 +37,56 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 2020-03-22 11:38:48
  */
 class OFDDocTest {
+
+    @Test
+    void addAnnot() throws IOException, DocumentException {
+        Path srcP = Paths.get("src/test/resources", "helloworld.ofd");
+        Path outP = Paths.get("target/AppendAnnot.ofd");
+        try (OFDReader reader = new OFDReader(srcP)) {
+            OFDDir ofdDir = reader.getOFDDir();
+            DocDir docDir = ofdDir.obtainDocDefault();
+            Document document = docDir.getDocument();
+            document.setAnnotations(new ST_Loc(DocDir.AnnotationsFileName));
+            Annotations annotations = new Annotations()
+                    .addPage(new AnnPage()
+                            .setPageID(new ST_ID(1))
+                            .setFileLoc(new ST_Loc("Pages/Page_0/Annotation.xml")));
+            docDir.setAnnotations(annotations);
+
+
+            Annot annot = new Annot()
+                    .setID(new ST_ID(5))
+                    .setType(AnnotType.Stamp)
+                    .setCreator("Cliven")
+                    .setLastModDate(LocalDate.now());
+
+            TextObject tObj = new TextObject(7);
+            TextCode txc = new TextCode()
+                    .setX(0d)
+                    .setY(11d)
+                    .setDeltaX(10d, 10d)
+                    .setContent("嘿嘿");
+            tObj.setBoundary(new ST_Box(0, 0, 50, 50))
+                    .setFont(new ST_RefID(3))
+                    .setSize(10d)
+                    .addTextCode(txc);
+
+            Appearance appearance = new Appearance(new ST_Box(40, 40, 50, 50))
+                    .addPageBlock(tObj);
+            appearance.setObjID(6);
+            annot.setAppearance(appearance);
+
+            PageAnnot pageAnnot = new PageAnnot()
+                    .addAnnot(annot);
+            PageDir pageDir = docDir.getPages().getByIndex(0);
+            pageDir.setPageAnnot(pageAnnot);
+
+            document.getCommonData().setMaxUnitID(7);
+
+            ofdDir.jar(outP);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
 
     /**
      * 测试加入操作系统中的字体
@@ -57,7 +122,6 @@ class OFDDocTest {
             doc.add(p);
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
-
     }
 
     @Test

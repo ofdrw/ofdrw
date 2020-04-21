@@ -2,6 +2,7 @@ package org.ofdrw.pkg.container;
 
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.ofdrw.core.annotation.Annotations;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.res.Res;
 
@@ -36,6 +37,11 @@ public class DocDir extends VirtualContainer {
      * 文档自身资源索引描述文件名称
      */
     public static final String DocumentResFileName = "DocumentRes.xml";
+
+    /**
+     * 注释入口文件名称
+     */
+    public static final String AnnotationsFileName = "Annotations.xml";
 
     /**
      * 表示第几份文档，从0开始
@@ -123,6 +129,28 @@ public class DocDir extends VirtualContainer {
         return new Res(obj);
     }
 
+
+    /**
+     * 获取注释列表对象
+     * @return 注释列表对象
+     * @throws FileNotFoundException 文档自身资源索引文件不存在
+     * @throws DocumentException     文档自身资源索引文件解析异常
+     */
+    public Annotations getAnnotations() throws FileNotFoundException, DocumentException {
+        Element obj = this.getObj(AnnotationsFileName);
+        return new Annotations(obj);
+    }
+
+    /**
+     * 设置注释列表对象
+     *
+     * @return 注释列表对象
+     */
+    public DocDir setAnnotations(Annotations annotations) {
+        this.putObj(AnnotationsFileName, annotations);
+        return this;
+    }
+
     /**
      * 设置 文档自身资源索引
      *
@@ -143,6 +171,7 @@ public class DocDir extends VirtualContainer {
     public ResDir getRes() throws FileNotFoundException {
         return this.getContainer("Res", ResDir::new);
     }
+
 
     /**
      * 获取 资源文件夹
