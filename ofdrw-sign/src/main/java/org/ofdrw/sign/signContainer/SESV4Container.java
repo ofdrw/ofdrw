@@ -108,7 +108,7 @@ public class SESV4Container implements ExtendSignatureContainer {
 
         Signature sg = Signature.getInstance("SM3WithSM2", new BouncyCastleProvider());
         sg.initSign(privateKey);
-        sg.update(toSign.getEncoded());
+        sg.update(toSign.getEncoded("DER"));
         final byte[] sigVal = sg.sign();
         SES_Signature signature = new SES_Signature()
                 .setToSign(toSign)
@@ -116,7 +116,7 @@ public class SESV4Container implements ExtendSignatureContainer {
                 .setSignatureAlgID(GMObjectIdentifiers.sm2sign_with_sm3)
                 .setSignature(sigVal);
 
-        return signature.getEncoded();
+        return signature.getEncoded("DER");
     }
 
     /**
@@ -129,7 +129,7 @@ public class SESV4Container implements ExtendSignatureContainer {
      */
     @Override
     public byte[] getSeal() throws IOException {
-        return seal.getEncoded();
+        return seal.getEncoded("DER");
     }
 
     /**

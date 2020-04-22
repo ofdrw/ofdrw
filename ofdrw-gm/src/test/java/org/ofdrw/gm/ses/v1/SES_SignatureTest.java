@@ -61,10 +61,10 @@ class SES_SignatureTest {
             PrivateKey privateKey = (PrivateKey) userKs.getKey("private", pwd);
             Signature signature = Signature.getInstance("SM3withSm2", "BC");
             signature.initSign(privateKey);
-            signature.update(tbsSign.getEncoded());
+            signature.update(tbsSign.getEncoded("DER"));
             byte[] sign = signature.sign();
             SES_Signature sesSignature = new SES_Signature(tbsSign, new DERBitString(sign));
-            Files.write(out, sesSignature.getEncoded());
+            Files.write(out, sesSignature.getEncoded("DER"));
         }
 
     }

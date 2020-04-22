@@ -1,8 +1,12 @@
 package org.ofdrw.gm.ses.v4;
 
+import org.bouncycastle.asn1.ASN1BitString;
 import org.bouncycastle.asn1.ASN1GeneralizedTime;
+import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.DERIA5String;
 import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
+import org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory;
+import org.bouncycastle.jcajce.provider.digest.SM3;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.gm.cert.PKCS12Tools;
@@ -12,10 +16,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.GeneralSecurityException;
-import java.security.PrivateKey;
-import java.security.Signature;
+import java.security.*;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,7 +46,7 @@ class SES_SignatureTest {
 
         Signature sg = Signature.getInstance("SM3WithSM2", new BouncyCastleProvider());
         sg.initSign(prvKey);
-        sg.update(toSign.getEncoded());
+        sg.update(toSign.getEncoded("DER"));
         final byte[] sigVal = sg.sign();
         SES_Signature signature = new SES_Signature()
                 .setToSign(toSign)
@@ -50,7 +55,40 @@ class SES_SignatureTest {
                 .setSignature(sigVal);
 
         Path out = Paths.get("target/SignedValueV4.dat");
-        Files.write(out, signature.getEncoded());
+        Files.write(out, signature.getEncoded("DER"));
         System.out.println(">> V4版本电子签章存储于: " + out.toAbsolutePath().toAbsolutePath());
     }
+
+
+    @Test
+    public void verify() throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, SignatureException {
+
+        Path path = Paths.get("src/test/resources", "SignedValue.dat");
+        Path srcPath = Paths.get("src/test/resources", "Signature.xml");
+
+//        Path path = Paths.get("target", "UserV4.esl");
+//        Path path = Paths.get("src/test/resources", "Seal.esl");
+        SES_Signature sesSignature = SES_Signature.getInstance(Files.readAllBytes(path));
+
+        MessageDigest md = new SM3.Digest();
+        byte[] digest = md.digest(Files.readAllBytes(srcPath));
+        final ASN1BitString dataHash = sesSignature.getToSign().getDataHash();
+        System.out.println(Arrays.equals(digest, dataHash.getOctets()));
+
+        ASN1OctetString cert = sesSignature.getCert();
+        CertificateFactory factory = new CertificateFactory();
+        X509Certificate certificate = (X509Certificate) factory.engineGenerateCertificate(cert.getOctetStream());
+
+        TBS_Sign toSign = sesSignature.getToSign();
+
+        Signature sg = Signature.getInstance(
+                sesSignature.getSignatureAlgID().toString()
+                , new BouncyCastleProvider());
+        sg.initVerify(certificate);
+        sg.update(toSign.getEncoded("DER"));
+        byte[] sigVal = sesSignature.getSignature().getBytes();
+
+        System.out.println(sg.verify(sigVal));
+    }
+
 }

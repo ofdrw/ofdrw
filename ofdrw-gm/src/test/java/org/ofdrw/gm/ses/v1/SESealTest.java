@@ -103,7 +103,7 @@ public class SESealTest {
 
         Signature signature = Signature.getInstance("SM3withSm2", "BC");
         signature.initSign(privateKey);
-        signature.update(new DERSequence(v).getEncoded());
+        signature.update(new DERSequence(v).getEncoded("DER"));
         byte[] sign = signature.sign();
         SES_SignInfo signInfo = new SES_SignInfo()
                 .setCert(signCert)
@@ -112,14 +112,14 @@ public class SESealTest {
 
         SESeal seal = new SESeal(sealInfo, signInfo);
 
-        Files.write(out, seal.getEncoded());
+        Files.write(out, seal.getEncoded("DER"));
     }
 
 
     @Test
     public void verify() throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, SignatureException {
-//        Path path = Paths.get("target", "UserV1.esl");
-        Path path = Paths.get("target", "2_980_1587284330714.es");
+        Path path = Paths.get("target", "UserV1.esl");
+//        Path path = Paths.get("target", "2_980_1587284330714.es");
 
         SESeal seal = SESeal.getInstance(Files.readAllBytes(path));
         SES_SignInfo signInfo = seal.getSignInfo();
@@ -135,7 +135,7 @@ public class SESealTest {
 
         Signature sg = Signature.getInstance("SM3WithSM2", new BouncyCastleProvider());
         sg.initVerify(certificate);
-        sg.update(new DERSequence(v).getEncoded());
+        sg.update(new DERSequence(v).getEncoded("DER"));
         byte[] sigVal = signInfo.getSignData().getBytes();
         System.out.println(sg.verify(sigVal));
     }

@@ -107,10 +107,10 @@ public class SESV1Container implements ExtendSignatureContainer {
                 .setSignatureAlgorithm(GMObjectIdentifiers.sm2sign_with_sm3);
         Signature signature = Signature.getInstance("SM3withSm2", new BouncyCastleProvider());
         signature.initSign(privateKey);
-        signature.update(tbsSign.getEncoded());
+        signature.update(tbsSign.getEncoded("DER"));
         byte[] sign = signature.sign();
         SES_Signature sesSignature = new SES_Signature(tbsSign, new DERBitString(sign));
-        return sesSignature.getEncoded();
+        return sesSignature.getEncoded("DER");
     }
 
     /**
@@ -123,7 +123,7 @@ public class SESV1Container implements ExtendSignatureContainer {
      */
     @Override
     public byte[] getSeal() throws IOException {
-        return seal.getEncoded();
+        return seal.getEncoded("DER");
     }
 
     /**

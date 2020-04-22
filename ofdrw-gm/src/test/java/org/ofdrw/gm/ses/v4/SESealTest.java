@@ -84,7 +84,7 @@ class SESealTest {
         PrivateKey sealerPrvKey = PKCS12Tools.ReadPrvKey(sealerPath, "private", "777777");
         Signature sg = Signature.getInstance("SM3WithSM2", new BouncyCastleProvider());
         sg.initSign(sealerPrvKey);
-        sg.update(sesSealInfo.getEncoded());
+        sg.update(sesSealInfo.getEncoded("DER"));
         byte[] sigVal = sg.sign();
 
         SESeal seal = new SESeal()
@@ -94,7 +94,7 @@ class SESealTest {
                 .setSignedValue(sigVal);
 
         Path out = Paths.get("target/UserV4.esl");
-        Files.write(out, seal.getEncoded());
+        Files.write(out, seal.getEncoded("DER"));
         System.out.println(">> V4版本印章存储于: " + out.toAbsolutePath().toAbsolutePath());
 
     }
@@ -102,8 +102,9 @@ class SESealTest {
 
     @Test
     public void verify() throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, SignatureException {
-//        final Path path = Paths.get("target", "UserV4.esl");
-        Path path = Paths.get("src/test/resources", "Seal.esl");
+        Path path = Paths.get("src/test/resources", "UserV4.esl");
+//        Path path = Paths.get("target", "UserV4.esl");
+//        Path path = Paths.get("src/test/resources", "Seal.esl");
         SESeal seal = SESeal.getInstance(Files.readAllBytes(path));
 
         ASN1OctetString cert = seal.getCert();
@@ -112,11 +113,13 @@ class SESealTest {
 
         SES_SealInfo ses_sealInfo = seal.geteSealInfo();
 
-        Signature sg = Signature.getInstance("SM3WithSM2", new BouncyCastleProvider());
+        Signature sg = Signature.getInstance(seal.getSignAlgID().toString()
+                , new BouncyCastleProvider());
         sg.initVerify(certificate);
-        sg.update(ses_sealInfo.getEncoded());
-        byte[] octets = seal.getSignedValue().getBytes();
-        System.out.println(sg.verify(octets));
+        sg.update(ses_sealInfo.getEncoded("DER"));
+        byte[] sigVal = seal.getSignedValue().getBytes();
+
+        System.out.println(sg.verify(sigVal));
     }
 
 }
