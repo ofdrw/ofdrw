@@ -66,13 +66,18 @@ public class Span {
     private int[] fillColor;
 
     /**
+     * 是否占满剩下行空间
+     */
+    private boolean linebreak = false;
+
+    /**
      * 当渲染空间不足时可能会拆分元素
      * <p>
      * true为不拆分，false为拆分。默认值为false
      */
     private Boolean integrity = false;
 
-    private LinkedList<TxtGlyph> txtGlyphsCache;
+    private LinkedList<TxtGlyph> txtGlyphsCache = null;
 
     protected Span() {
         this.setFont(Font.getDefault());
@@ -270,11 +275,57 @@ public class Span {
         if (index < 0 || index >= text.length()) {
             throw new IllegalArgumentException("非法的切分数组坐标(index): " + index);
         }
-        Span s1 = this.clone();
-        s1.text = this.text.substring(0, index);
-        Span s2 = this.clone();
-        s2.text = this.text.substring(index);
+        Span s1 = this.clone()
+                .setText(this.text.substring(0, index));
+        Span s2 = this.clone()
+                .setText(this.text.substring(index));
         return new Span[]{s1, s2};
+    }
+
+    /**
+     * 设置Span为占满剩下行空间的元素
+     *
+     * @param linebreak 是否占满剩下行空间 true 标识占满；false标识不占满
+     * @return this
+     */
+    public Span setLinebreak(boolean linebreak) {
+        this.linebreak = linebreak;
+        return this;
+    }
+
+    /**
+     * 是否是一个占满剩余行空间的Span
+     *
+     * @return true 标识span会占满剩余的行空间； false 不占满
+     */
+    public boolean hasLinebreak() {
+        return linebreak;
+    }
+
+    /**
+     * 获取经过行内换行处理之后的Span列表
+     *
+     * @return 带有占满行剩余内容的Span序列
+     */
+    public LinkedList<Span> splitLineBreak() {
+        LinkedList<Span> res = new LinkedList<>();
+        if (!this.text.contains("\n")) {
+            res.add(this);
+        } else {
+            String[] split = this.text.split("\n");
+            for (String item : split) {
+                Span lineSpan = this.clone()
+                        .setText(item)
+                        // 设置该元素为占满剩下行空间的Span
+                        .setLinebreak(true);
+                res.add(lineSpan);
+            }
+            if (!this.text.endsWith("\n")) {
+                // 如果最后一个字符不是换行符，那么清除换行标志
+                res.getLast().setLinebreak(false);
+            }
+        }
+        return res;
     }
 
     @Override

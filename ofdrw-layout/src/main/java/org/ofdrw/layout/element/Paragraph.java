@@ -197,6 +197,26 @@ public class Paragraph extends Div {
     }
 
     /**
+     * 处理Span内部含有换行符转换为占满剩余行空间的多个元素队列
+     *
+     * @param seq 待处理Span队列
+     * @return 处理后含有占满剩余行空间的Span队列
+     */
+    private LinkedList<Span> spanLinebreakSplit(LinkedList<Span> seq) {
+        LinkedList<Span> sps = new LinkedList<>();
+        if (seq == null || seq.isEmpty()) {
+            return sps;
+        }
+        while (!seq.isEmpty()) {
+            Span pop = seq.pop();
+            // 通过换行符对span内容进行分割，获取新的队列
+            LinkedList<Span> spans = pop.splitLineBreak();
+            sps.addAll(spans);
+        }
+        return sps;
+    }
+
+    /**
      * 处理占位符
      *
      * @param seq 段落中的span队列
@@ -225,6 +245,7 @@ public class Paragraph extends Div {
         seq.push(new PlaceholderSpan(firstLineIndent, firstSpan.getFontSize()));
 
     }
+
     /**
      * 如果元素高度不存在那么设置高度
      * <p>
@@ -237,6 +258,7 @@ public class Paragraph extends Div {
             setHeight(height);
         }
     }
+
     /**
      * 预布局
      *
@@ -261,6 +283,8 @@ public class Paragraph extends Div {
         LinkedList<Span> seq = new LinkedList<>(contents);
         // 处理相对列中插入或调整首行缩进占位符
         processPlaceholder(seq);
+        // 处理Span中含有换行符的情况
+        seq = spanLinebreakSplit(seq);
         while (!seq.isEmpty()) {
             Span s = seq.pop();
 
@@ -274,6 +298,11 @@ public class Paragraph extends Div {
             // 尝试向行中加入元素
             boolean added = line.tryAdd(s);
             if (added) {
+                // 如果加入的Span是一个需要占满剩余行空间的元素，那么新起一行
+                if (s.hasLinebreak()) {
+                    lines.add(line);
+                    line = newLine();
+                }
                 // 成功加入
                 continue;
             }

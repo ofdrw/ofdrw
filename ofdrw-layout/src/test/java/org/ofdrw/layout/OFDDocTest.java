@@ -476,6 +476,21 @@ class OFDDocTest {
     }
 
     @Test
+    void splitStrToParagraph2() throws IOException {
+        String plaintext = "只……只要我把那家伙给拖进来……\n交给你的话……\n你……你真的会……饶我一命吗？\n\n" +
+                "嘻嘻~当然\n我可是说话算话的啦~\n这算是以他的养分为筹码的交易Give&Take啦……快……快点叫吧！\n\n\n\n" +
+                "但是我拒绝！\n——JOJO 岸边露伴";
+
+        Path path = Paths.get("target/SplitStrToParagraphDoc2.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            Paragraph p = new Paragraph(plaintext);
+            ofdDoc.add(p);
+            ofdDoc.add(new Paragraph("\nOFD R&W"));
+        }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+    }
+
+    @Test
     public void fillPageParagraph() throws IOException {
         Path path = Paths.get("target/FillPageParagraphDoc.ofd").toAbsolutePath();
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
