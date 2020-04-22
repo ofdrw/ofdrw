@@ -21,7 +21,7 @@ import org.ofdrw.reader.ResourceLocator;
 import org.ofdrw.sign.verify.exceptions.DocNotSignException;
 import org.ofdrw.sign.verify.exceptions.FileIntegrityException;
 import org.ofdrw.sign.verify.exceptions.OFDVerifyException;
-import org.ofdrw.sign.verify.exceptions.SESInvalidException;
+import org.ofdrw.sign.verify.exceptions.InvalidSignedValueException;
 
 import java.io.Closeable;
 import java.io.FileNotFoundException;
@@ -29,10 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
+import java.security.*;
 import java.util.Arrays;
 import java.util.List;
 
@@ -65,7 +62,7 @@ public class OFDValidator implements Closeable {
     /**
      * 电子印章
      */
-    private SESValidateContainer validator;
+    private SignedDataValidateContainer validator;
 
     /**
      * 创建一个OFD验证引擎
@@ -88,7 +85,7 @@ public class OFDValidator implements Closeable {
      * @throws IOException              文件读写过程中IO异常
      * @throws NoSuchAlgorithmException 未知的杂凑算法
      */
-    public void exeValidate() throws OFDVerifyException, IOException, NoSuchAlgorithmException {
+    public void exeValidate() throws OFDVerifyException, IOException, GeneralSecurityException {
         rl.save();
         try {
             rl.cd("/");
@@ -125,8 +122,10 @@ public class OFDValidator implements Closeable {
                         // 2. 检查印章匹配
                         checkSealMatch(sealFilePath, signedValueFilePath);
                     }
+                    // 签名算法名称
+                    String alg = sig.getSignedInfo().getSignatureMethod();
                     // 3. 验证电子签名或签章数据
-                    checkSES(type, signatureFilePath, signedValueFilePath);
+                    checkSES(type, alg, signatureFilePath, signedValueFilePath);
                 } finally {
                     rl.restore();
                 }
@@ -142,30 +141,37 @@ public class OFDValidator implements Closeable {
      * 设置用于电子签章数据验证的容器
      *
      * @param validator 验证容器
+     * @return this
      */
-    public void setValidator(SESValidateContainer validator) {
+    public OFDValidator setValidator(SignedDataValidateContainer validator) {
         if (validator == null) {
             throw new IllegalArgumentException("电子签章数据验证容器（validator）为空");
         }
         this.validator = validator;
+        return this;
     }
 
     /**
      * 检查电子签章数据
      *
+     * @param type              验证类型 数字签名/电子签章
+     * @param alg               算法名称
      * @param signatureFilePath 签名文件（Signature.xml）路径
      * @param signedValuePath   签名值文件（SignedValue.dat）路径
-     * @throws SESInvalidException 电子签章数据失效
-     * @throws IOException         IO异常
+     * @throws InvalidSignedValueException 电子签章数据失效
+     * @throws IOException                 IO异常
      */
-    public void checkSES(SigType type, Path signatureFilePath, Path signedValuePath) throws IOException, SESInvalidException {
+    public void checkSES(SigType type, String alg, Path signatureFilePath, Path signedValuePath) throws IOException, GeneralSecurityException {
         if (validator == null) {
             throw new IllegalArgumentException("电子签章数据验证容器（validator）为空,Call #setValidator");
         }
         if (type == null) {
             type = SigType.Seal;
         }
-        validator.validate(type, Files.readAllBytes(signatureFilePath), Files.readAllBytes(signedValuePath));
+        validator.validate(type,
+                alg,
+                Files.readAllBytes(signatureFilePath),
+                Files.readAllBytes(signedValuePath));
     }
 
     /**

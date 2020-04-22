@@ -154,10 +154,11 @@ public class ResourceLocator {
 
     /**
      * 切换到制定的虚拟容器目录下
+     *
      * @param vc 虚拟容器
      * @return this
      */
-    public ResourceLocator cd(VirtualContainer vc){
+    public ResourceLocator cd(VirtualContainer vc) {
         if (vc == null) {
             throw new IllegalArgumentException("改变目录的容器对象（vc）为空");
         }
@@ -319,7 +320,7 @@ public class ResourceLocator {
         int indexOf = loc.lastIndexOf('/');
         if (indexOf != -1) {
             // 切换工作目录
-            this.cd(wd, loc.substring(0, indexOf));
+            this.cd(wd, loc.substring(0, indexOf + 1));
             fileName = loc.substring(indexOf + 1);
         } else {
             fileName = loc;
@@ -349,7 +350,7 @@ public class ResourceLocator {
         int indexOf = loc.lastIndexOf('/');
         if (indexOf != -1) {
             // 切换工作目录
-            this.cd(wd, loc.substring(0, indexOf));
+            this.cd(wd, loc.substring(0, indexOf + 1));
             fileName = loc.substring(indexOf + 1);
         } else {
             fileName = loc;
