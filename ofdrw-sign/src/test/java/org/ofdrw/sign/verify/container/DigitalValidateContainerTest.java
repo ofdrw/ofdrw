@@ -1,6 +1,5 @@
 package org.ofdrw.sign.verify.container;
 
-import org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.gm.cert.PKCS12Tools;
 import org.ofdrw.reader.OFDReader;
@@ -12,12 +11,10 @@ import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.cert.Certificate;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
  * 数字电子签章验证
  */
-class DigitalSignContainerTest {
+class DigitalValidateContainerTest {
 
     @Test
     void validate() throws IOException, GeneralSecurityException {
@@ -30,7 +27,7 @@ class DigitalSignContainerTest {
 
         try (OFDReader reader = new OFDReader(src);
              OFDValidator validator = new OFDValidator(reader)) {
-            DigitalSignContainer dsc = new DigitalSignContainer(cert);
+            DigitalValidateContainer dsc = new DigitalValidateContainer(cert);
             validator.setValidator(dsc);
             validator.exeValidate();
             System.out.println(">> 验证通过");

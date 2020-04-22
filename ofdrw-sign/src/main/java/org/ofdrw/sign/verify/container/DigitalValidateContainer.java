@@ -1,18 +1,14 @@
 package org.ofdrw.sign.verify.container;
 
-import org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.ofdrw.core.signatures.SigType;
 import org.ofdrw.sign.verify.SignedDataValidateContainer;
 import org.ofdrw.sign.verify.exceptions.InvalidSignedValueException;
 
-import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
 
 /**
  * 数字签名验证容器
@@ -20,20 +16,20 @@ import java.security.cert.X509Certificate;
  * @author 权观宇
  * @since 2020-04-22 03:22:22
  */
-public class DigitalSignContainer implements SignedDataValidateContainer {
+public class DigitalValidateContainer implements SignedDataValidateContainer {
     /**
      * 验证使用的公钥
      */
     public PublicKey pk;
 
-    public DigitalSignContainer(PublicKey pk) {
+    public DigitalValidateContainer(PublicKey pk) {
         if (pk == null) {
             throw new IllegalArgumentException("验证使用的公钥参数(pk)不能为空");
         }
         this.pk = pk;
     }
 
-    public DigitalSignContainer(Certificate certificate) {
+    public DigitalValidateContainer(Certificate certificate) {
         this(certificate.getPublicKey());
     }
 
