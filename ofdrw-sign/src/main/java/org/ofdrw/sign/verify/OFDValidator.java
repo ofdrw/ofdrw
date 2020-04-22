@@ -125,7 +125,7 @@ public class OFDValidator implements Closeable {
                     // 签名算法名称
                     String alg = sig.getSignedInfo().getSignatureMethod();
                     // 3. 验证电子签名或签章数据
-                    checkSES(type, alg, signatureFilePath, signedValueFilePath);
+                    checkSignedValue(type, alg, signatureFilePath, signedValueFilePath);
                 } finally {
                     rl.restore();
                 }
@@ -161,7 +161,7 @@ public class OFDValidator implements Closeable {
      * @throws InvalidSignedValueException 电子签章数据失效
      * @throws IOException                 IO异常
      */
-    public void checkSES(SigType type, String alg, Path signatureFilePath, Path signedValuePath) throws IOException, GeneralSecurityException {
+    public void checkSignedValue(SigType type, String alg, Path signatureFilePath, Path signedValuePath) throws IOException, GeneralSecurityException {
         if (validator == null) {
             throw new IllegalArgumentException("电子签章数据验证容器（validator）为空,Call #setValidator");
         }

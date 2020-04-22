@@ -12,15 +12,13 @@ import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
  * 数据签名演示
  *
  * @author 权观宇
  * @since 2020-04-22 03:16:01
  */
-class GMDigestSignatureContainerTest {
+class DigitalSignContainerTest {
 
     /**
      * OFD电子签名演示
@@ -31,11 +29,11 @@ class GMDigestSignatureContainerTest {
         PrivateKey prvKey = PKCS12Tools.ReadPrvKey(userP12Path, "private", "777777");
 
         Path src = Paths.get("src/test/resources", "helloworld.ofd");
-        Path out = Paths.get("target/DigestSign.ofd");
+        Path out = Paths.get("target/DigitalSign.ofd");
         // 1. 构造签名引擎
         try (OFDReader reader = new OFDReader(src);
              OFDSigner signer = new OFDSigner(reader, out)) {
-            GMDigestSignatureContainer signContainer = new GMDigestSignatureContainer(prvKey);
+            DigitalSignContainer signContainer = new DigitalSignContainer(prvKey);
             // 2. 设置签名模式
 //            signer.setSignMode(SignMode.WholeProtected);
             signer.setSignMode(SignMode.ContinueSign);

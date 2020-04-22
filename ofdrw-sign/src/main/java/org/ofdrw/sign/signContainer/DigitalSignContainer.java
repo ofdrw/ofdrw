@@ -18,14 +18,14 @@ import java.security.*;
  * @author 权观宇
  * @since 2020-04-20 12:26:33
  */
-public class GMDigestSignatureContainer implements ExtendSignatureContainer {
+public class DigitalSignContainer implements ExtendSignatureContainer {
 
     /**
      * 签名私钥
      */
     private final PrivateKey prvKey;
 
-    public GMDigestSignatureContainer(PrivateKey prvKey) {
+    public DigitalSignContainer(PrivateKey prvKey) {
         if (prvKey == null) {
             throw new IllegalArgumentException("签名使用私钥（prvKey）不能为空");
         }
