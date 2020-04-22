@@ -151,6 +151,19 @@ public class ResourceLocator {
         return cd("/");
     }
 
+
+    /**
+     * 切换到制定的虚拟容器目录下
+     * @param vc 虚拟容器
+     * @return this
+     */
+    public ResourceLocator cd(VirtualContainer vc){
+        if (vc == null) {
+            throw new IllegalArgumentException("改变目录的容器对象（vc）为空");
+        }
+        return cd(vc.getAbsLoc().getLoc());
+    }
+
     /**
      * 改变目录  Change Directory
      *
@@ -242,6 +255,7 @@ public class ResourceLocator {
     public String pwd() {
         return pwd(this.workDir);
     }
+
 
     /**
      * 打印工作目录 Print Work Directory

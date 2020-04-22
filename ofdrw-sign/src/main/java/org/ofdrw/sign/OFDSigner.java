@@ -20,6 +20,7 @@ import org.ofdrw.reader.BadOFDException;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.ResourceLocator;
 import org.ofdrw.sign.stamppos.StampAppearance;
+import org.ofdrw.sign.verify.exceptions.FileIntegrityException;
 
 import java.io.Closeable;
 import java.io.FileNotFoundException;
@@ -27,10 +28,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.DigestInputStream;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -439,10 +442,8 @@ public class OFDSigner implements Closeable {
         // 获取要被保护的文件信息序列
         List<ToDigestFileInfo> toDigestFileInfos = toBeDigestFileList();
         for (ToDigestFileInfo fileInfo : toDigestFileInfos) {
-            // 获取待保护文件的二进制序列
-            byte[] fileBin = Files.readAllBytes(fileInfo.getSysPath());
             // 计算文件杂凑值
-            byte[] digest = md.digest(fileBin);
+            byte[] digest = calculateFileDigest(md, fileInfo.getSysPath());
             // 重置杂凑函数
             md.reset();
             Reference ref = new Reference()
@@ -469,6 +470,26 @@ public class OFDSigner implements Closeable {
         return Paths.get(signDir.getSysAbsPath(), SignDir.SignatureFileName);
     }
 
+    /**
+     * 使用多次读取计算文件杂凑值
+     * <p>
+     * 减少内存使用
+     *
+     * @param md   杂凑计算函数
+     * @param path 文件路径
+     * @return 杂凑值
+     * @throws IOException IO读写异常
+     */
+    private byte[] calculateFileDigest(MessageDigest md, Path path) throws IOException {
+        try (InputStream in = Files.newInputStream(path);
+             DigestInputStream dis = new DigestInputStream(in, md)) {
+            byte[] buffer = new byte[4096];
+            // 根据缓存读入
+            while (dis.read(buffer) > -1) ;
+            // 计算最终文件杂凑值
+            return md.digest();
+        }
+    }
 
     /**
      * 进行签名/章
