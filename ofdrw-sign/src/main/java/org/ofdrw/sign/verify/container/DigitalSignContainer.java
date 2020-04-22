@@ -45,6 +45,7 @@ public class DigitalSignContainer implements SignedDataValidateContainer {
         }
         Signature sg = Signature.getInstance(alg, new BouncyCastleProvider());
         sg.initVerify(pk);
+        sg.update(tbsContent);
         if (!sg.verify(signedValue)) {
             throw new InvalidSignedValueException("签名值不一致");
         }

@@ -21,8 +21,11 @@ class DigitalSignContainerTest {
 
     @Test
     void validate() throws IOException, GeneralSecurityException {
-        final Path src = Paths.get("src/test/resources", "DigitalSign.ofd");
+//        Path src = Paths.get("src/test/resources", "DigitalSign.ofd");
+        Path src = Paths.get("target/DigitalSign", "DigitalSign.ofd");
+
         Path userP12Path = Paths.get("src/test/resources", "USER.p12");
+
         Certificate cert = PKCS12Tools.ReadUserCert(userP12Path, "private", "777777");
 
         try (OFDReader reader = new OFDReader(src);
