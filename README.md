@@ -38,7 +38,7 @@
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
 </dependency>
 ```
 
@@ -74,9 +74,9 @@ public class HelloWorld {
 > 推荐的免费OFD阅读器
 > 
 > [福昕OFD版式办公套件 . http://www.htfoxit.com/Download/index/id/712](http://www.htfoxit.com/Download/index/id/712)
->
-> 该阅读器是我目前发现对OFD渲染和支持程度最高最规范的阅读器。
 
+
+ - [OFD 签名签章快速入门](ofdrw-sign/doc/quickstart/README.md)
 
 ## 源码安装
 
@@ -103,11 +103,8 @@ mvn install
 
 ### TODO 列表
 
-
 期望新功能
 
-- ~~电子签名/签章以及验证~~。
-- ~~行内换行~~。
 - 段落的行内布局控制（text-align）能让固定布局样式文字居中。
 - 页面模板、页面模板导入使用。
 - 水印。
@@ -116,6 +113,7 @@ mvn install
 
 ### 进展
 
+- *2020-04-23* 发布`1.2.0`版本，支持OFD电子签章。
 - *2020-04-22* 实现了行内的换行符换行功能。
 - *2020-04-20* ofdrw-sign 成功完成一次数字签名。
 - *2020-04-19* 增加了ofdrw-gm 模块用于支持电子签章。
