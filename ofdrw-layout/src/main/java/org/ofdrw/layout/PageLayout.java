@@ -201,7 +201,7 @@ public class PageLayout {
         return new CT_PageArea()
                 // 物理区域为实际页面大小
                 .setPhysicalBox(0, 0, this.getWidth(), this.getHeight())
-                // 显示区域为减去margin的区域
+                // 为了兼容骑缝章，不减去页面边距
                 .setApplicationBox(getStartX(),
                         getStartY(),
                         this.getWidth(),
