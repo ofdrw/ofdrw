@@ -13,47 +13,47 @@ import java.util.Arrays;
  */
 public class PageLayout {
 
-    public static final PageLayout A0() {
+    public static PageLayout A0() {
         return new PageLayout(841d, 1189d);
     }
 
-    public static final PageLayout A1() {
+    public static PageLayout A1() {
         return new PageLayout(594d, 841d);
     }
 
-    public static final PageLayout A2() {
+    public static PageLayout A2() {
         return new PageLayout(420d, 594d);
     }
 
-    public static final PageLayout A3() {
+    public static PageLayout A3() {
         return new PageLayout(297d, 420d);
     }
 
-    public static final PageLayout A4() {
+    public static PageLayout A4() {
         return new PageLayout(210d, 297d);
     }
 
-    public static final PageLayout A5() {
+    public static PageLayout A5() {
         return new PageLayout(148d, 210d);
     }
 
-    public static final PageLayout A6() {
+    public static PageLayout A6() {
         return new PageLayout(105d, 148d);
     }
 
-    public static final PageLayout A7() {
+    public static PageLayout A7() {
         return new PageLayout(74d, 105d);
     }
 
-    public static final PageLayout A8() {
+    public static PageLayout A8() {
         return new PageLayout(52d, 74d);
     }
 
-    public static final PageLayout A9() {
+    public static PageLayout A9() {
         return new PageLayout(37d, 52d);
     }
 
-    public static final PageLayout A10() {
+    public static PageLayout A10() {
         return new PageLayout(26d, 37d);
     }
 
@@ -204,8 +204,8 @@ public class PageLayout {
                 // 显示区域为减去margin的区域
                 .setApplicationBox(getStartX(),
                         getStartY(),
-                        this.contentWidth(),
-                        this.contentHeight());
+                        this.getWidth(),
+                        this.getHeight());
     }
 
     @Override

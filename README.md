@@ -1,9 +1,5 @@
 # OFD Reader & Writer
 
-**深切悼念，新冠肺炎疫情牺牲烈士和逝世同胞！**
-
----
-
 > **Talk is cheap,Show me the code. ——Linus Torvalds**
 
 **像写HTML和Word那样简单的编写OFD。**
@@ -110,7 +106,7 @@ mvn install
 
 期望新功能
 
-- 电子签名/签章以及验证。
+- ~~电子签名/签章以及验证~~。
 - ~~行内换行~~。
 - 段落的行内布局控制（text-align）能让固定布局样式文字居中。
 - 页面模板、页面模板导入使用。
