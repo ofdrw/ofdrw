@@ -12,6 +12,11 @@
     <artifactId>ofdrw-core</artifactId>
     <description>根据《GB/T 33190-2016 电子文件存储与交换格式版式文档》实现的OFD文档结构。</description>
     <dependencies>
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-gv</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
         <dependency>

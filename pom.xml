@@ -71,14 +71,6 @@
         </snapshotRepository>
     </distributionManagement>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.ofdrw</groupId>
-            <artifactId>ofdrw-gv</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
-
     <dependencyManagement>
         <dependencies>
             <dependency>

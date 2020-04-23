@@ -12,6 +12,11 @@
     <artifactId>ofdrw-sign</artifactId>
 
     <dependencies>
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-gv</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.ofdrw</groupId>

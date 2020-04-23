@@ -20,6 +20,12 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-gv</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-tiff -->
         <dependency>
             <groupId>com.twelvemonkeys.imageio</groupId>
