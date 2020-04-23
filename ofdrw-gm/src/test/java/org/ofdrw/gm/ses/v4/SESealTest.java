@@ -102,9 +102,9 @@ class SESealTest {
 
     @Test
     public void verify() throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, SignatureException {
-        Path path = Paths.get("src/test/resources", "UserV4.esl");
+//        Path path = Paths.get("src/test/resources", "UserV4.esl");
 //        Path path = Paths.get("target", "UserV4.esl");
-//        Path path = Paths.get("src/test/resources", "Seal.esl");
+        Path path = Paths.get("target", "Seal.esl");
         SESeal seal = SESeal.getInstance(Files.readAllBytes(path));
 
         ASN1OctetString cert = seal.getCert();
@@ -116,7 +116,7 @@ class SESealTest {
         Signature sg = Signature.getInstance(seal.getSignAlgID().toString()
                 , new BouncyCastleProvider());
         sg.initVerify(certificate);
-        sg.update(ses_sealInfo.getEncoded("DER"));
+        sg.update(ses_sealInfo.getEncoded());
         byte[] sigVal = seal.getSignedValue().getBytes();
 
         System.out.println(sg.verify(sigVal));

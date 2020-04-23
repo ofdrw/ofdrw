@@ -67,7 +67,6 @@ class SES_SignatureTest {
         Path srcPath = Paths.get("src/test/resources", "Signature.xml");
 
 //        Path path = Paths.get("target", "UserV4.esl");
-//        Path path = Paths.get("src/test/resources", "Seal.esl");
         SES_Signature sesSignature = SES_Signature.getInstance(Files.readAllBytes(path));
 
         MessageDigest md = new SM3.Digest();
