@@ -131,6 +131,6 @@ public class SES_ESPictrueInfo extends ASN1Object {
         v.add(data);
         v.add(width);
         v.add(height);
-        return new BERSequence(v);
+        return new DERSequence(v);
     }
 }

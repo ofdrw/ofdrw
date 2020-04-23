@@ -138,6 +138,6 @@ public class SES_SealInfo extends ASN1Object {
         if (extDatas != null) {
             v.add(extDatas);
         }
-        return new BERSequence(v);
+        return new DERSequence(v);
     }
 }

@@ -68,6 +68,6 @@ public class SESeal extends ASN1Object {
         ASN1EncodableVector v = new ASN1EncodableVector(3);
         v.add(esealInfo);
         v.add(signInfo);
-        return new BERSequence(v);
+        return new DERSequence(v);
     }
 }

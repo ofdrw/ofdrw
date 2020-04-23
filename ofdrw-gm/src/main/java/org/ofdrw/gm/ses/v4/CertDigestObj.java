@@ -81,6 +81,6 @@ public class CertDigestObj extends ASN1Object {
         ASN1EncodableVector v = new ASN1EncodableVector(2);
         v.add(type);
         v.add(value);
-        return new BERSequence(v);
+        return new DERSequence(v);
     }
 }

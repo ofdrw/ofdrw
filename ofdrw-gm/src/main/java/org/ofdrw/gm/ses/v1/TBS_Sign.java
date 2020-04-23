@@ -165,6 +165,6 @@ public class TBS_Sign extends ASN1Object {
         v.add(propertyInfo);
         v.add(cert);
         v.add(signatureAlgorithm);
-        return new BERSequence(v);
+        return new DERSequence(v);
     }
 }

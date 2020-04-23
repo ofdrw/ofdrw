@@ -160,6 +160,6 @@ public class SES_ESPropertyInfo extends ASN1Object {
         v.add(createDate);
         v.add(validStart);
         v.add(validEnd);
-        return new BERSequence(v);
+        return new DERSequence(v);
     }
 }

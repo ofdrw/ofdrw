@@ -88,6 +88,6 @@ public class ExtData extends ASN1Object {
         v.add(extnID);
         v.add(critical);
         v.add(extnValue);
-        return new BERSequence(v);
+        return new DERSequence(v);
     }
 }

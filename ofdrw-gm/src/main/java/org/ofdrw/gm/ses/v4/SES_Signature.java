@@ -139,6 +139,6 @@ public class SES_Signature extends ASN1Object {
         if (timeStamp != null) {
             v.add(timeStamp);
         }
-        return new BERSequence(v);
+        return new DERSequence(v);
     }
 }

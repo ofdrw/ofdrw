@@ -96,6 +96,6 @@ public class SES_SignInfo extends ASN1Object {
         v.add(cert);
         v.add(signatureAlgorithm);
         v.add(signData);
-        return new BERSequence(v);
+        return new DERSequence(v);
     }
 }

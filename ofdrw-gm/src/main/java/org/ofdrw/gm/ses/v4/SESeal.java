@@ -118,6 +118,6 @@ public class SESeal extends ASN1Object {
         v.add(cert);
         v.add(signAlgID);
         v.add(signedValue);
-        return new BERSequence(v);
+        return new DERSequence(v);
     }
 }

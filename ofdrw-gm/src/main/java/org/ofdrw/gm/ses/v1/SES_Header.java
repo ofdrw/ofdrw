@@ -107,6 +107,6 @@ public class SES_Header extends ASN1Object {
         v.add(ID);
         v.add(version);
         v.add(vid);
-        return new BERSequence(v);
+        return new DERSequence(v);
     }
 }
