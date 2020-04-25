@@ -4,10 +4,13 @@ import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.ofdrw.core.basicStructure.doc.CT_CommonData;
+import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
+import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.signatures.Signatures;
@@ -163,11 +166,36 @@ public class OFDReader implements Closeable {
             Pages pages = document.getPages();
             return pages.getSize();
         } catch (FileNotFoundException | DocumentException e) {
-            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
+            throw new BadOFDException("OFD解析失败，原因:" + e.getMessage(), e);
         } finally {
             // 还原原有工作区
             rl.restore();
         }
+    }
+
+    /**
+     * 获取页面物理大小
+     * <p>
+     * 如果页面没有定义页面区域，则使用文件 CommonData中的定义
+     *
+     * @param page 页面对象
+     * @return 页面大小
+     */
+    public ST_Box getPageSize(Page page) {
+        CT_PageArea pageArea = page.getArea();
+        if (pageArea == null) {
+            // 如果页面没有定义页面区域，则使用文件 CommonData中的定义
+            Document document;
+            try {
+                document = ofdDir.obtainDocDefault().getDocument();
+            } catch (FileNotFoundException | DocumentException e) {
+                throw new BadOFDException("OFD解析失败，原因:" + e.getMessage(), e);
+            }
+            CT_CommonData commonData = document.getCommonData();
+            pageArea = commonData.getPageArea();
+        }
+
+        return pageArea.getPhysicalBox();
     }
 
     /**
@@ -231,7 +259,7 @@ public class OFDReader implements Closeable {
             }
             return pageList.get(index).getID();
         } catch (FileNotFoundException | DocumentException e) {
-            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
+            throw new BadOFDException("OFD解析失败，原因:" + e.getMessage(), e);
         } finally {
             // 还原原有工作区
             rl.restore();

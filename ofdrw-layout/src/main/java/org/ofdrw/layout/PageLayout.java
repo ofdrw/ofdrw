@@ -202,8 +202,7 @@ public class PageLayout {
                 // 物理区域为实际页面大小
                 .setPhysicalBox(0, 0, this.getWidth(), this.getHeight())
                 // 为了兼容骑缝章，不减去页面边距
-                .setApplicationBox(getStartX(),
-                        getStartY(),
+                .setApplicationBox(0, 0,
                         this.getWidth(),
                         this.getHeight());
     }
