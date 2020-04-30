@@ -91,6 +91,12 @@ public class OFDDoc implements Closeable {
      */
     private CT_CommonData cdata;
 
+    /**
+     * 文档是否已经关闭
+     * true 表示已经关闭，false 表示未关闭
+     */
+    private boolean closed = false;
+
 
     /**
      * 在指定路径位置上创建一个OFD文件
@@ -273,6 +279,12 @@ public class OFDDoc implements Closeable {
 
     @Override
     public void close() throws IOException {
+        if (this.closed) {
+            return;
+        }else{
+            closed = true;
+        }
+
         try {
             if (!streamQueue.isEmpty()) {
                 /*
