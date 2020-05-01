@@ -17,18 +17,18 @@ import java.util.LinkedList;
  * @author 权观宇
  * @since 2019-10-16 09:09:15
  */
-public class AbbreviatedData extends OFDElement {
+public class AbbreviatedData extends OFDElement implements Cloneable {
 
     /**
      * 绘制数据队列
      */
     private LinkedList<String[]> dataQueue;
 
+
     public AbbreviatedData(Element proxy) {
         super(proxy);
         dataQueue = parse(proxy.getText());
     }
-
 
 
     public AbbreviatedData() {
@@ -38,6 +38,7 @@ public class AbbreviatedData extends OFDElement {
 
     /**
      * 解析字符串构造数据队列
+     *
      * @param txt 紧缩字符串
      * @return 数据队列
      */
@@ -48,11 +49,12 @@ public class AbbreviatedData extends OFDElement {
 
     /**
      * 刷新元素
-     *
+     * <p>
      * 默认情况下，每次调用C都将会刷新元素内容
+     *
      * @return this
      */
-    public AbbreviatedData flush(){
+    public AbbreviatedData flush() {
         this.setText(this.toString());
         return this;
     }
@@ -296,5 +298,20 @@ public class AbbreviatedData extends OFDElement {
             }
         }
         return dataBuilder.toString();
+    }
+
+    /**
+     * 复制路径对象
+     *
+     * @return 复制之后的路径对象
+     */
+    @Override
+    public AbbreviatedData clone() {
+        AbbreviatedData clone = new AbbreviatedData();
+        clone.dataQueue = new LinkedList<>();
+        for (String[] item : dataQueue) {
+            clone.dataQueue.add(item.clone());
+        }
+        return clone;
     }
 }

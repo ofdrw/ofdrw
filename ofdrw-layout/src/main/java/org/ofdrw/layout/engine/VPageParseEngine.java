@@ -12,6 +12,8 @@ import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.Img;
 import org.ofdrw.layout.element.PageAreaFiller;
 import org.ofdrw.layout.element.Paragraph;
+import org.ofdrw.layout.element.canvas.Canvas;
+import org.ofdrw.layout.engine.render.CanvasRender;
 import org.ofdrw.layout.engine.render.DivRender;
 import org.ofdrw.layout.engine.render.ImgRender;
 import org.ofdrw.layout.engine.render.ParagraphRender;
@@ -182,6 +184,9 @@ public class VPageParseEngine {
             } else if (elem instanceof Paragraph) {
                 // 渲染段落对象
                 ParagraphRender.render(to, resManager, (Paragraph) elem, maxUnitID);
+            } else if (elem instanceof Canvas) {
+                // 渲染Canvas
+                CanvasRender.render(to, resManager, (Canvas) elem, maxUnitID);
             }
         }
     }
