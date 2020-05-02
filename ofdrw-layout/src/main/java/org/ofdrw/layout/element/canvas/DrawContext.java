@@ -459,9 +459,15 @@ public class DrawContext implements Closeable {
      * 将当前绘制的路径更新到容器中去变为可视化的对象
      */
     private void flush2Canvas() {
-        PathObject tbAdded = workPathObj.setAbbreviatedData(pathData)
-                .toObj(new ST_ID(maxUnitID.incrementAndGet()));
-        container.addPageBlock(tbAdded);
+        if (workPathObj == null) {
+            return;
+        }
+        // 只有 描边或填充过的路径才认为是有效路径
+        if (workPathObj.getStroke() || workPathObj.getFill()) {
+            PathObject tbAdded = workPathObj.setAbbreviatedData(pathData)
+                    .toObj(new ST_ID(maxUnitID.incrementAndGet()));
+            container.addPageBlock(tbAdded);
+        }
     }
 
     /**
