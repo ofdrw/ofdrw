@@ -46,8 +46,8 @@ public class CanvasRender {
         try (DrawContext ctx = new DrawContext(block, boundary, maxUnitID, resManager)) {
             // 执行绘制工作
             drawer.draw(ctx);
-        } catch (IOException ioException) {
-            throw new RenderException("Canvas绘制过程中发生异常", ioException);
+        } catch (IOException e) {
+            throw new RenderException("Canvas绘制过程中发生异常", e);
         }
     }
 }

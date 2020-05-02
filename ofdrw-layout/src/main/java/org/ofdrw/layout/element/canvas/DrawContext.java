@@ -320,6 +320,62 @@ public class DrawContext implements Closeable {
 
 
     /**
+     * 创建矩形路径
+     *
+     * @param x      左上角X坐标
+     * @param y      左上角Y坐标
+     * @param width  宽度
+     * @param height 高度
+     * @return this
+     */
+    public DrawContext rect(double x, double y, double width, double height) {
+        if (this.workPathObj == null) {
+            this.beginPath();
+        }
+
+        this.pathData.moveTo(x, y)
+                .lineTo(x + width, y)
+                .lineTo(x + width, y + height)
+                .lineTo(x, y + height)
+                .close();
+        return this;
+    }
+
+    /**
+     * 创建并填充矩形路径
+     * <p>
+     * 默认的填充颜色是黑色。
+     *
+     * @param x      左上角X坐标
+     * @param y      左上角Y坐标
+     * @param width  宽度
+     * @param height 高度
+     * @return this
+     */
+    public DrawContext fillRect(double x, double y, double width, double height) {
+        // 创建路径
+        rect(x, y, width, height);
+        // 填充颜色
+        return this.fill();
+    }
+
+    /**
+     * 创建并描边矩形路径
+     *
+     * @param x      左上角X坐标
+     * @param y      左上角Y坐标
+     * @param width  宽度
+     * @param height 高度
+     * @return this
+     */
+    public DrawContext strokeRect(double x, double y, double width, double height) {
+        // 创建路径
+        rect(x, y, width, height);
+        // 描边
+        return this.stroke();
+    }
+
+    /**
      * 绘制已定义的路径
      *
      * @return this
@@ -334,13 +390,16 @@ public class DrawContext implements Closeable {
 
     /**
      * 填充已定义路径
+     * <p>
+     * 默认的填充颜色是黑色。
      *
      * @return this
      */
     public DrawContext fill() {
-        if (fillColor == null || this.workPathObj == null) {
+        if (this.workPathObj == null) {
             return this;
         }
+        workPathObj.setFillColor(CT_Color.rgb(0, 0, 0));
         workPathObj.setFill(true);
         return this;
     }
