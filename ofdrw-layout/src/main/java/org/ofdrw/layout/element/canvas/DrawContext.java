@@ -1,11 +1,15 @@
 package org.ofdrw.layout.element.canvas;
 
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
+import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.layout.engine.ResManager;
 
+import java.io.Closeable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -19,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author 权观宇
  * @since 2020-05-01 11:29:20
  */
-public class DrawContext {
+public class DrawContext implements Closeable {
 
     /**
      * 用于容纳所绘制的所有图像的容器
@@ -38,9 +42,16 @@ public class DrawContext {
 
 
     /**
-     * 路径数据
+     * 路径对象
      */
-    private CT_Path pathData = null;
+    private CT_Path workPathObj = null;
+
+    /**
+     * 路径数据
+     * <p>
+     * 他与workPathObj 成对出现和存在
+     */
+    private AbbreviatedData pathData = null;
 
     /**
      * 描边RGB颜色
@@ -52,6 +63,19 @@ public class DrawContext {
      */
     private int[] fillColor;
 
+    /**
+     * 边框位置，也就是画布大小以及位置
+     */
+    private ST_Box boundary;
+
+
+    /**
+     * 线宽度
+     * <p>
+     * 默认值 0.353 mm
+     */
+    private double lineWidth = 0.353;
+
 
     private DrawContext() {
     }
@@ -60,13 +84,16 @@ public class DrawContext {
      * 创建绘制上下文
      *
      * @param container  绘制内容缩所放置容器
+     * @param boundary   画布大小以及位置
      * @param maxUnitID  自增的对象ID
      * @param resManager 资源管理器
      */
     public DrawContext(CT_PageBlock container,
+                       ST_Box boundary,
                        AtomicInteger maxUnitID,
                        ResManager resManager) {
         this.container = container;
+        this.boundary = boundary;
         this.maxUnitID = maxUnitID;
         this.resManager = resManager;
     }
@@ -78,17 +105,18 @@ public class DrawContext {
      * @return 路径对象
      */
     private CT_Path newPathWithCtx() {
-        CT_Path path = new CT_Path();
+        CT_Path path = new CT_Path()
+                .setBoundary(this.boundary.clone());
         // 设置描边颜色
         if (this.strokeColor != null) {
-            path.setStroke(true)
-                    .setStrokeColor(CT_Color.rgb(this.strokeColor.clone()));
+            path.setStrokeColor(CT_Color.rgb(this.strokeColor.clone()));
         }
         // 设置填充颜色
         if (this.fillColor != null) {
-            path.setFill(true)
-                    .setFillColor(CT_Color.rgb(this.fillColor.clone()));
+            path.setFillColor(CT_Color.rgb(this.fillColor.clone()));
         }
+        // 默认线宽度0.353
+        path.setLineWidth(lineWidth);
         return path;
     }
 
@@ -100,11 +128,13 @@ public class DrawContext {
      * @return this
      */
     public DrawContext beginPath() {
-        // 如果已经存在路径，那么关闭路径
-        if (this.pathData != null) {
-            closePath();
+        if (this.workPathObj != null) {
+            // 如果已经存在路径，将上一个路径更新到画板中
+            flush2Canvas();
+            this.workPathObj = null;
         }
-        this.pathData = newPathWithCtx();
+        this.workPathObj = newPathWithCtx();
+        this.pathData = new AbbreviatedData();
         return this;
     }
 
@@ -119,18 +149,201 @@ public class DrawContext {
      * @return this
      */
     public DrawContext closePath() {
-        if (this.pathData == null) {
+        if (this.workPathObj == null) {
             return this;
         }
-        // 如果路径存在描边或者填充，那么改路径将会被加入到图形容器中进行渲染
-        if (pathData.getFill() || pathData.getStroke()) {
-            // 创建路径对象，放入图形容器中
-            container.addPageBlock(pathData.toObj(new ST_ID(maxUnitID.incrementAndGet())));
-        }
-        this.pathData = null;
+        // 创建路径对象，放入图形容器中
+        pathData.close();
         return this;
     }
 
+    /**
+     * 移动绘制点到指定位置
+     *
+     * @param x X坐标
+     * @param y Y坐标
+     * @return this
+     */
+    public DrawContext moveTo(double x, double y) {
+        if (this.workPathObj == null) {
+            return this;
+        }
+        this.pathData.moveTo(x, y);
+        return this;
+    }
+
+    /**
+     * 从当前点连线到指定点
+     *
+     * @param x X坐标
+     * @param y Y坐标
+     * @return this
+     */
+    public DrawContext lineTo(double x, double y) {
+        if (this.workPathObj == null) {
+            return this;
+        }
+        this.pathData.lineTo(x, y);
+        return this;
+    }
+
+
+    /**
+     * 通过二次贝塞尔曲线的指定控制点，向当前路径添加一个点。
+     *
+     * @param cpx 贝塞尔控制点的 x 坐标
+     * @param cpy 贝塞尔控制点的 y 坐标
+     * @param x   结束点的 x 坐标
+     * @param y   结束点的 y 坐标
+     * @return this
+     */
+    public DrawContext quadraticCurveTo(double cpx, double cpy, double x, double y) {
+        if (this.workPathObj == null) {
+            return this;
+        }
+        this.pathData.quadraticBezier(cpx, cpy, x, y);
+        return this;
+    }
+
+    /**
+     * 方法三次贝塞尔曲线的指定控制点，向当前路径添加一个点。
+     *
+     * @param cp1x 第一个贝塞尔控制点的 x 坐标
+     * @param cp1y 第一个贝塞尔控制点的 y 坐标
+     * @param cp2x 第二个贝塞尔控制点的 x 坐标
+     * @param cp2y 第二个贝塞尔控制点的 y 坐标
+     * @param x    结束点的 x 坐标
+     * @param y    结束点的 y 坐标
+     * @return this
+     */
+    public DrawContext bezierCurveTo(double cp1x, double cp1y,
+                                     double cp2x, double cp2y,
+                                     double x, double y) {
+        if (this.workPathObj == null) {
+            return this;
+        }
+        this.pathData.cubicBezier(cp1x, cp1y, cp2x, cp2y, x, y);
+        return this;
+    }
+
+    /**
+     * 从当前点连接到点（x，y）的圆弧，并将当前点移动到点（x，y）。
+     * rx 表示椭圆的长轴长度，ry 表示椭圆的短轴长度。angle 表示
+     * 椭圆在当前坐标系下旋转的角度，正值为顺时针，负值为逆时针，
+     * large 为 1 时表示对应度数大于180°的弧，为 0 时表示对应
+     * 度数小于 180°的弧。sweep 为 1 时表示由圆弧起始点到结束点
+     * 是顺时针旋转，为 0 时表示由圆弧起始点到结束点是逆时针旋转。
+     *
+     * @param a     椭圆长轴长度
+     * @param b     椭圆短轴长度
+     * @param angle 旋转角度，正值 - 顺时针，负值 - 逆时针
+     * @param large true表示对应度数大于 180°的弧，false 表示对应度数小于 180°的弧
+     * @param sweep sweep  true 表示由圆弧起始点到结束点是顺时针旋转，false表示由圆弧起始点到结束点是逆时针旋转。
+     * @param x     目标点 x
+     * @param y     目标点 y
+     * @return this
+     */
+    public DrawContext arc(double a, double b,
+                           double angle,
+                           boolean large,
+                           boolean sweep,
+                           double x, double y) {
+        if (this.workPathObj == null) {
+            return this;
+        }
+        this.pathData.arc(a, b, angle % 360, large ? 1 : 0, sweep ? 1 : 0, x, y);
+        return this;
+    }
+
+
+    /**
+     * 创建弧/曲线（用于创建圆或部分圆）
+     *
+     * @param x                圆的中心的 x 坐标。
+     * @param y                圆的中心的 y 坐标。
+     * @param r                圆的半径。
+     * @param sAngle           起始角，单位度（弧的圆形的三点钟位置是 0 度）。
+     * @param eAngle           结束角，单位度
+     * @param counterclockwise 规定应该逆时针还是顺时针绘图。false = 顺时针，true = 逆时针。
+     * @return this
+     */
+    public DrawContext arc(double x, double y,
+                           double r,
+                           double sAngle, double eAngle,
+                           boolean counterclockwise) {
+        if (this.workPathObj == null) {
+            return this;
+        }
+
+        // 首先移动点到起始位置
+        double x1 = x + r * Math.cos(sAngle * Math.PI / 180);
+        double y1 = y + r * Math.sin(sAngle * Math.PI / 180);
+        this.moveTo(x1, y1);
+
+
+        double angle = eAngle - sAngle;
+        if (angle == 360) {
+            // 整个圆的时候需要分为两次路径进行绘制
+            // 绘制结束位置起始位置
+            this.pathData.arc(r, r, angle, 1, counterclockwise ? 1 : 0, x - r, y)
+                    .arc(r, r, angle, 1, counterclockwise ? 1 : 0, x1, y1);
+        } else {
+            // 绘制结束位置起始位置
+            double x2 = x + r * Math.cos(eAngle * Math.PI / 180);
+            double y2 = y + r * Math.sin(eAngle * Math.PI / 180);
+            this.pathData.arc(r, r, angle,
+                    angle > 180 ? 1 : 0,
+                    counterclockwise ? 1 : 0,
+                    x2, y2);
+        }
+
+        return this;
+    }
+
+    /**
+     * 创建弧/曲线（用于创建圆或部分圆）
+     * <p>
+     * 默认顺时针方向
+     *
+     * @param x      圆的中心的 x 坐标。
+     * @param y      圆的中心的 y 坐标。
+     * @param r      圆的半径。
+     * @param sAngle 起始角，单位度（弧的圆形的三点钟位置是 0 度）。
+     * @param eAngle 结束角，单位度
+     * @return this
+     */
+    public DrawContext arc(double x, double y,
+                           double r,
+                           double sAngle, double eAngle) {
+        return arc(x, y, r, sAngle, eAngle, true);
+    }
+
+
+    /**
+     * 绘制已定义的路径
+     *
+     * @return this
+     */
+    public DrawContext stroke() {
+        if (strokeColor == null || this.workPathObj == null) {
+            return this;
+        }
+        workPathObj.setStroke(true);
+        return this;
+    }
+
+    /**
+     * 填充已定义路径
+     *
+     * @return this
+     */
+    public DrawContext fill() {
+        if (fillColor == null || this.workPathObj == null) {
+            return this;
+        }
+        workPathObj.setFill(true);
+        return this;
+    }
 
     /**
      * 读取当前描边颜色（只读）
@@ -155,9 +368,8 @@ public class DrawContext {
         }
 
         this.strokeColor = strokeColor;
-        if (this.pathData != null) {
-            this.pathData.setStroke(true)
-                    .setStrokeColor(CT_Color.rgb(strokeColor));
+        if (this.workPathObj != null) {
+            this.workPathObj.setStrokeColor(CT_Color.rgb(strokeColor));
         }
         return this;
     }
@@ -199,12 +411,12 @@ public class DrawContext {
         }
 
         this.fillColor = fillColor;
-        if (this.pathData != null) {
-            this.pathData.setFill(true)
-                    .setFillColor(CT_Color.rgb(strokeColor));
+        if (this.workPathObj != null) {
+            this.workPathObj.setFillColor(CT_Color.rgb(fillColor));
         }
         return this;
     }
+
 
     /**
      * 设置填充颜色
@@ -218,5 +430,48 @@ public class DrawContext {
      */
     public DrawContext setFillColor(int r, int g, int b) {
         return setFillColor(new int[]{r, g, b});
+    }
+
+    /**
+     * 获取当前线宽度
+     *
+     * @return 线宽度（单位毫米mm）
+     */
+    public double getLineWidth() {
+        return lineWidth;
+    }
+
+    /**
+     * 获取当前线宽度
+     *
+     * @param lineWidth 线宽度（单位毫米mm）
+     * @return this
+     */
+    public DrawContext setLineWidth(double lineWidth) {
+        this.lineWidth = lineWidth;
+        if (this.workPathObj != null) {
+            this.workPathObj.setLineWidth(lineWidth);
+        }
+        return this;
+    }
+
+    /**
+     * 将当前绘制的路径更新到容器中去变为可视化的对象
+     */
+    private void flush2Canvas() {
+        PathObject tbAdded = workPathObj.setAbbreviatedData(pathData)
+                .toObj(new ST_ID(maxUnitID.incrementAndGet()));
+        container.addPageBlock(tbAdded);
+    }
+
+    /**
+     * 结束绘制器绘制工作
+     */
+    @Override
+    public void close() {
+        if (this.workPathObj == null) {
+            return;
+        }
+        flush2Canvas();
     }
 }

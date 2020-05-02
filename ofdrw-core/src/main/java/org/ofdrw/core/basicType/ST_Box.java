@@ -15,7 +15,7 @@ import java.io.Serializable;
  * @author 权观宇
  * @since 2019-09-28 11:05:06
  */
-public class ST_Box extends STBase {
+public class ST_Box extends STBase implements Cloneable {
 
     /**
      * 左上角 x坐标
@@ -150,5 +150,10 @@ public class ST_Box extends STBase {
     @Override
     public String toString() {
         return fmt(topLeftX) + " " + fmt(topLeftY) + " " + fmt(width) + " " + fmt(height);
+    }
+
+    @Override
+    public ST_Box clone() {
+        return new ST_Box(topLeftX, topLeftY, width, height);
     }
 }

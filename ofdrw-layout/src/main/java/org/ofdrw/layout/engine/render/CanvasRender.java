@@ -1,6 +1,7 @@
 package org.ofdrw.layout.engine.render;
 
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
+import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.layout.element.canvas.Canvas;
 import org.ofdrw.layout.element.canvas.DrawContext;
 import org.ofdrw.layout.element.canvas.Drawer;
@@ -40,9 +41,9 @@ public class CanvasRender {
         block.setObjID(maxUnitID.incrementAndGet());
         layer.addPageBlock(block);
 
+        ST_Box boundary = new ST_Box(canvas.getX(), canvas.getY(), canvas.getWidth(), canvas.getHeight());
         // 构建上下文
-        DrawContext ctx = new DrawContext(block, maxUnitID, resManager);
-        try {
+        try (DrawContext ctx = new DrawContext(block, boundary, maxUnitID, resManager)) {
             // 执行绘制工作
             drawer.draw(ctx);
         } catch (IOException ioException) {

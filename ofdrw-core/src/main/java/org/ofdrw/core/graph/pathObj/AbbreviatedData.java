@@ -256,8 +256,6 @@ public class AbbreviatedData extends OFDElement implements Cloneable {
      */
     public AbbreviatedData close() {
         dataQueue.add(new String[]{"C"});
-        // 重新设置元素内容
-        this.flush();
         return this;
     }
 

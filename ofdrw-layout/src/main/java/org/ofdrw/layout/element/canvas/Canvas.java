@@ -1,5 +1,6 @@
 package org.ofdrw.layout.element.canvas;
 
+import org.ofdrw.layout.PageLayout;
 import org.ofdrw.layout.Rectangle;
 import org.ofdrw.layout.element.Div;
 
@@ -20,6 +21,7 @@ public class Canvas extends Div {
 
     private Canvas() {
     }
+
 
     /**
      * 创建Canvas对象，并指定绘制器
@@ -45,6 +47,15 @@ public class Canvas extends Div {
      */
     public Canvas(Double width, Double height) {
         super(width, height);
+    }
+
+    /**
+     * 创建Canvas对象
+     *
+     * @param style 页面样式属性
+     */
+    public Canvas(PageLayout style) {
+        this(style.getWidth(), style.getHeight());
     }
 
 
