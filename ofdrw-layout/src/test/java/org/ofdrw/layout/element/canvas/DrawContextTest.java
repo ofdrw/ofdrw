@@ -124,8 +124,8 @@ class DrawContextTest {
 
             canvas.setDrawer(ctx -> {
                 ctx.beginPath();
-                ctx.moveTo(20,20);
-                ctx.quadraticCurveTo(20,100,200,20);
+                ctx.moveTo(20, 20);
+                ctx.quadraticCurveTo(20, 100, 200, 20);
                 ctx.stroke();
             });
             vPage.add(canvas);
@@ -148,8 +148,8 @@ class DrawContextTest {
 
             canvas.setDrawer(ctx -> {
                 ctx.beginPath();
-                ctx.moveTo(20,20);
-                ctx.bezierCurveTo(20,100,200,100,200,20);
+                ctx.moveTo(20, 20);
+                ctx.bezierCurveTo(20, 100, 200, 100, 200, 20);
                 ctx.stroke();
             });
             vPage.add(canvas);
@@ -172,7 +172,7 @@ class DrawContextTest {
 
             canvas.setDrawer(ctx -> {
                 ctx.beginPath();
-                ctx.arc(100,75,50,0,360);
+                ctx.arc(100, 75, 50, 0, 360);
                 ctx.stroke();
             });
             vPage.add(canvas);
@@ -195,7 +195,7 @@ class DrawContextTest {
                     .setBorder(1d);
 
             canvas.setDrawer(ctx -> {
-                ctx.rect(20,20,150,100);
+                ctx.rect(20, 20, 150, 100);
                 ctx.stroke();
             });
             vPage.add(canvas);
@@ -217,7 +217,7 @@ class DrawContextTest {
                     .setBorder(1d);
 
             canvas.setDrawer(ctx -> {
-                ctx.strokeRect(20,20,150,100);
+                ctx.strokeRect(20, 20, 150, 100);
             });
             vPage.add(canvas);
 
@@ -238,7 +238,58 @@ class DrawContextTest {
                     .setBorder(1d);
 
             canvas.setDrawer(ctx -> {
-                ctx.fillRect(20,20,150,100);
+                ctx.fillRect(20, 20, 150, 100);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+
+    @Test
+    void drawImage() throws IOException {
+        Path outP = Paths.get("target/Canvas-drawImage.ofd");
+        Path imgPath = Paths.get("src/test/resources/eg_tulip.jpg");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.drawImage(imgPath, 10, 10, 120, 80);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+
+    @Test
+    void scale() throws IOException {
+        Path outP = Paths.get("target/Canvas-scale.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.strokeRect(5,5,10,6);
+                ctx.scale(2,2);
+                ctx.strokeRect(5,5,10,6);
+                ctx.scale(2,2);
+                ctx.strokeRect(5,5,10,6);
+                ctx.scale(2,2);
+                ctx.strokeRect(5,5,10,6);
             });
             vPage.add(canvas);
 

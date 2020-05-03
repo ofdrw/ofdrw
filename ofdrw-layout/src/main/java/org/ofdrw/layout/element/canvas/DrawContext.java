@@ -1,7 +1,9 @@
 package org.ofdrw.layout.element.canvas;
 
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
+import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
@@ -10,6 +12,9 @@ import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.layout.engine.ResManager;
 
 import java.io.Closeable;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -55,18 +60,27 @@ public class DrawContext implements Closeable {
 
     /**
      * 描边RGB颜色
+     * <p>
+     * 默认黑色
      */
-    private int[] strokeColor;
+    private int[] strokeColor = {0, 0, 0};
 
     /**
      * 填充RGB颜色
+     * <p>
+     * 默认黑色
      */
-    private int[] fillColor;
+    private int[] fillColor = {0, 0, 0};
 
     /**
      * 边框位置，也就是画布大小以及位置
      */
     private ST_Box boundary;
+
+    /**
+     * 变换矩阵
+     */
+    private ST_Array ctm;
 
 
     /**
@@ -108,13 +122,13 @@ public class DrawContext implements Closeable {
         CT_Path path = new CT_Path()
                 .setBoundary(this.boundary.clone());
         // 设置描边颜色
-        if (this.strokeColor != null) {
-            path.setStrokeColor(CT_Color.rgb(this.strokeColor.clone()));
-        }
+        path.setStrokeColor(CT_Color.rgb(this.strokeColor.clone()));
         // 设置填充颜色
-        if (this.fillColor != null) {
-            path.setFillColor(CT_Color.rgb(this.fillColor.clone()));
+        path.setFillColor(CT_Color.rgb(this.fillColor.clone()));
+        if (this.ctm != null) {
+            path.setCTM(this.ctm);
         }
+
         // 默认线宽度0.353
         path.setLineWidth(lineWidth);
         return path;
@@ -345,6 +359,8 @@ public class DrawContext implements Closeable {
      * 创建并填充矩形路径
      * <p>
      * 默认的填充颜色是黑色。
+     * <p>
+     * 如果已经存在路径那么改路径将会提前关闭，并创建新的路径。
      *
      * @param x      左上角X坐标
      * @param y      左上角Y坐标
@@ -353,14 +369,19 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext fillRect(double x, double y, double width, double height) {
-        // 创建路径
-        rect(x, y, width, height);
-        // 填充颜色
-        return this.fill();
+        this.beginPath();
+        // 创建路径,填充颜色
+        rect(x, y, width, height).fill();
+        flush2Canvas();
+        return this;
     }
 
     /**
      * 创建并描边矩形路径
+     * <p>
+     * 如果已经存在路径那么改路径将会提前关闭，并创建新的路径。
+     * <p>
+     * 默认描边颜色为黑色
      *
      * @param x      左上角X坐标
      * @param y      左上角Y坐标
@@ -369,10 +390,11 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext strokeRect(double x, double y, double width, double height) {
+        this.beginPath();
         // 创建路径
-        rect(x, y, width, height);
-        // 描边
-        return this.stroke();
+        rect(x, y, width, height).stroke();
+        flush2Canvas();
+        return this;
     }
 
     /**
@@ -381,10 +403,11 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext stroke() {
-        if (strokeColor == null || this.workPathObj == null) {
+        if (this.workPathObj == null) {
             return this;
         }
-        workPathObj.setStroke(true);
+        workPathObj.setStroke(true)
+                .setStrokeColor(CT_Color.rgb(this.strokeColor));
         return this;
     }
 
@@ -399,10 +422,60 @@ public class DrawContext implements Closeable {
         if (this.workPathObj == null) {
             return this;
         }
-        workPathObj.setFillColor(CT_Color.rgb(0, 0, 0));
-        workPathObj.setFill(true);
+        workPathObj.setFill(true)
+                .setFillColor(CT_Color.rgb(this.fillColor));
         return this;
     }
+
+    /**
+     * 缩放当前绘图，更大或更小
+     *
+     * @param scalewidth  缩放当前绘图的宽度 (1=100%, 0.5=50%, 2=200%, 依次类推)
+     * @param scaleheight 缩放当前绘图的高度 (1=100%, 0.5=50%, 2=200%, 依次类推)
+     * @return this
+     */
+    public DrawContext scale(double scalewidth, double scaleheight) {
+        if (this.ctm == null) {
+            this.ctm = ST_Array.unitCTM();
+        }
+        ST_Array scale = new ST_Array(scalewidth, 0, 0, scaleheight, 0, 0);
+        this.ctm = this.ctm.mtxMul(scale);
+        if (this.workPathObj != null) {
+            this.workPathObj.setCTM(ctm);
+        }
+        return this;
+    }
+
+    /**
+     * 在OFD上绘制图像
+     *
+     * @param img    要使用的图像
+     * @param x      在画布上放置图像的 x 坐标位置
+     * @param y      在画布上放置图像的 y 坐标位置
+     * @param width  要使用的图像的宽度（伸展或缩小图像）
+     * @param height 要使用的图像的高度（伸展或缩小图像）
+     * @return this
+     * @throws IOException 图片文件读写异常
+     */
+    public DrawContext drawImage(Path img,
+                                 double x, double y,
+                                 double width, double height) throws IOException {
+        if (img == null || Files.notExists(img)) {
+            throw new IOException("图片(img)不存在");
+        }
+
+        ST_ID id = resManager.addImage(img);
+        // 在公共资源中加入图片
+        ImageObject imgObj = new ImageObject(maxUnitID.incrementAndGet());
+        imgObj.setResourceID(id.ref());
+        imgObj.setBoundary(boundary.clone());
+        imgObj.setCTM(new ST_Array(width, 0, 0, height, x, y));
+        // TODO 透明度设置
+        container.addPageBlock(imgObj);
+
+        return this;
+    }
+
 
     /**
      * 读取当前描边颜色（只读）
@@ -521,12 +594,11 @@ public class DrawContext implements Closeable {
         if (workPathObj == null) {
             return;
         }
-        // 只有 描边或填充过的路径才认为是有效路径
-        if (workPathObj.getStroke() || workPathObj.getFill()) {
-            PathObject tbAdded = workPathObj.setAbbreviatedData(pathData)
-                    .toObj(new ST_ID(maxUnitID.incrementAndGet()));
-            container.addPageBlock(tbAdded);
-        }
+        PathObject tbAdded = workPathObj.setAbbreviatedData(pathData)
+                .toObj(new ST_ID(maxUnitID.incrementAndGet()));
+        container.addPageBlock(tbAdded);
+        this.workPathObj = null;
+        this.pathData = null;
     }
 
     /**

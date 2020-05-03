@@ -39,8 +39,37 @@ public class ST_Array extends STBase {
                 "0", "1", // 0
                 "0", "0"  // 1
         );
-
     }
+
+    /**
+     * 矩阵相乘
+     *
+     * @return 相乘后的结果矩阵
+     */
+    public ST_Array mtxMul(ST_Array array) {
+        if (this.array.size() != 6 || array.size() != 6) {
+            throw new IllegalArgumentException("矩阵乘法数组规模必须 6元素(a b c d e f)");
+        }
+        double[][] a = this.toMtx();
+        double[][] b = array.toMtx();
+
+        double[][] res = new double[3][3];
+
+        for (int k = 0; k < 3; k++) {
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    res[i][j] += a[i][k] * b[k][j];
+                }
+            }
+        }
+
+        return new ST_Array(
+                fmt(res[0][0]), fmt(res[0][1]),
+                fmt(res[1][0]), fmt(res[1][1]),
+                fmt(res[2][0]), fmt(res[2][1])
+        );
+    }
+
 
     /**
      * 获取 ST_Array 实例如果参数非法则返还null
@@ -72,6 +101,8 @@ public class ST_Array extends STBase {
                 }
             } else if (item instanceof Double) {
                 item = STBase.fmt((Double) item);
+            } else if (item instanceof Number) {
+                item = item.toString();
             }
             array.add(item.toString());
         }
@@ -122,6 +153,42 @@ public class ST_Array extends STBase {
      */
     public int size() {
         return this.array.size();
+    }
+
+    /**
+     * 反序列化为矩阵数组
+     *
+     * @return 矩阵
+     */
+    public double[][] toMtx() {
+        if (size() != 6) {
+            throw new IllegalArgumentException("矩阵数组必须有 9个元素");
+        }
+
+        double[][] mtx = new double[3][3];
+        mtx[0][0] = Double.parseDouble(array.get(0));
+        mtx[0][1] = Double.parseDouble(array.get(1));
+        mtx[0][2] = 0;
+
+        mtx[1][0] = Double.parseDouble(array.get(2));
+        mtx[1][1] = Double.parseDouble(array.get(3));
+        mtx[1][2] = 0;
+
+        mtx[2][0] = Double.parseDouble(array.get(4));
+        mtx[2][1] = Double.parseDouble(array.get(5));
+        mtx[2][2] = 1;
+
+        return mtx;
+    }
+
+    public void printMtx(){
+        double[][] m = toMtx();
+        for (int i = 0; i < m.length; i++) {
+            for (int j = 0; j < m[i].length; j++) {
+                System.out.print(fmt(m[i][j]) + "\t");
+            }
+            System.out.println();
+        }
     }
 
     @Override
