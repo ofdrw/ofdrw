@@ -59,18 +59,23 @@ public class DrawContext implements Closeable {
     private AbbreviatedData pathData = null;
 
     /**
+     * 待裁剪区域构造工厂
+     */
+    private ClipFactory clipFactory;
+
+    /**
      * 描边RGB颜色
      * <p>
      * 默认黑色
      */
-    private int[] strokeColor = {0, 0, 0};
+    private int[] strokeColor = null;
 
     /**
      * 填充RGB颜色
      * <p>
      * 默认黑色
      */
-    private int[] fillColor = {0, 0, 0};
+    private int[] fillColor = null;
 
     /**
      * 边框位置，也就是画布大小以及位置
@@ -121,14 +126,12 @@ public class DrawContext implements Closeable {
     private CT_Path newPathWithCtx() {
         CT_Path path = new CT_Path()
                 .setBoundary(this.boundary.clone());
-        // 设置描边颜色
-        path.setStrokeColor(CT_Color.rgb(this.strokeColor.clone()));
-        // 设置填充颜色
-        path.setFillColor(CT_Color.rgb(this.fillColor.clone()));
         if (this.ctm != null) {
             path.setCTM(this.ctm);
         }
-
+        if (this.clipFactory != null) {
+            path.setClips(clipFactory.clips());
+        }
         // 默认线宽度0.353
         path.setLineWidth(lineWidth);
         return path;
@@ -168,6 +171,31 @@ public class DrawContext implements Closeable {
         }
         // 创建路径对象，放入图形容器中
         pathData.close();
+        return this;
+    }
+
+    /**
+     * 从原始画布中剪切任意形状和尺寸
+     * <p>
+     * 裁剪路径以当前的路径作为裁剪参数
+     * <p>
+     * 裁剪区域受变换矩阵影响
+     *
+     * @return this
+     */
+    public DrawContext clip() {
+        if (this.workPathObj == null) {
+            return this;
+        }
+        if (clipFactory == null) {
+            clipFactory = new ClipFactory();
+        }
+
+        if (this.ctm != null) {
+            clipFactory.setCtm(this.ctm.clone());
+        }
+        clipFactory.setData(pathData.clone());
+
         return this;
     }
 
@@ -406,8 +434,11 @@ public class DrawContext implements Closeable {
         if (this.workPathObj == null) {
             return this;
         }
+        CT_Color color =
+                this.fillColor == null ?
+                        CT_Color.rgb(0, 0, 0) : CT_Color.rgb(this.fillColor);
         workPathObj.setStroke(true)
-                .setStrokeColor(CT_Color.rgb(this.strokeColor));
+                .setStrokeColor(color);
         return this;
     }
 
@@ -422,8 +453,12 @@ public class DrawContext implements Closeable {
         if (this.workPathObj == null) {
             return this;
         }
+        CT_Color color =
+                this.fillColor == null ?
+                        CT_Color.rgb(0, 0, 0) : CT_Color.rgb(this.fillColor);
+
         workPathObj.setFill(true)
-                .setFillColor(CT_Color.rgb(this.fillColor));
+                .setFillColor(color);
         return this;
     }
 
@@ -440,6 +475,102 @@ public class DrawContext implements Closeable {
         }
         ST_Array scale = new ST_Array(scalewidth, 0, 0, scaleheight, 0, 0);
         this.ctm = this.ctm.mtxMul(scale);
+        if (this.workPathObj != null) {
+            this.workPathObj.setCTM(ctm);
+        }
+        return this;
+    }
+
+    /**
+     * 旋转当前的绘图
+     *
+     * @param angle 旋转角度（0~360）
+     * @return this
+     */
+    public DrawContext rotate(double angle) {
+        if (this.ctm == null) {
+            this.ctm = ST_Array.unitCTM();
+        }
+        double alpha = angle * Math.PI / 180d;
+        ST_Array r = new ST_Array(
+                Math.cos(alpha), Math.sin(alpha),
+                -Math.sin(alpha), Math.cos(alpha),
+                0, 0);
+        this.ctm = this.ctm.mtxMul(r);
+        if (this.workPathObj != null) {
+            this.workPathObj.setCTM(ctm);
+        }
+        return this;
+    }
+
+    /**
+     * 重新映射画布上的 (0,0) 位置
+     *
+     * @param x 添加到水平坐标（x）上的值
+     * @param y 添加到垂直坐标（y）上的值
+     * @return this
+     */
+    public DrawContext translate(double x, double y) {
+        if (this.ctm == null) {
+            this.ctm = ST_Array.unitCTM();
+        }
+        ST_Array r = new ST_Array(
+                1, 0,
+                0, 1,
+                x, y);
+        this.ctm = this.ctm.mtxMul(r);
+        if (this.workPathObj != null) {
+            this.workPathObj.setCTM(ctm);
+        }
+        return this;
+    }
+
+    /**
+     * 变换矩阵
+     * <p>
+     * 每次变换矩阵都会在前一个变换的基础上进行
+     *
+     * @param a 水平缩放绘图
+     * @param b 水平倾斜绘图
+     * @param c 垂直倾斜绘图
+     * @param d 垂直缩放绘图
+     * @param e 水平移动绘图
+     * @param f 垂直移动绘图
+     * @return this
+     */
+    public DrawContext transform(double a, double b, double c, double d, double e, double f) {
+        if (this.ctm == null) {
+            this.ctm = ST_Array.unitCTM();
+        }
+        ST_Array r = new ST_Array(
+                a, b,
+                c, d,
+                e, f);
+        this.ctm = this.ctm.mtxMul(r);
+        if (this.workPathObj != null) {
+            this.workPathObj.setCTM(ctm);
+        }
+        return this;
+    }
+
+    /**
+     * 设置变换矩阵
+     * <p>
+     * 每当调用 setTransform() 时，它都会重置前一个变换矩阵然后构建新的矩阵
+     *
+     * @param a 水平缩放绘图
+     * @param b 水平倾斜绘图
+     * @param c 垂直倾斜绘图
+     * @param d 垂直缩放绘图
+     * @param e 水平移动绘图
+     * @param f 垂直移动绘图
+     * @return this
+     */
+    public DrawContext setTransform(double a, double b, double c, double d, double e, double f) {
+        this.ctm = new ST_Array(
+                a, b,
+                c, d,
+                e, f);
         if (this.workPathObj != null) {
             this.workPathObj.setCTM(ctm);
         }
@@ -469,7 +600,10 @@ public class DrawContext implements Closeable {
         ImageObject imgObj = new ImageObject(maxUnitID.incrementAndGet());
         imgObj.setResourceID(id.ref());
         imgObj.setBoundary(boundary.clone());
-        imgObj.setCTM(new ST_Array(width, 0, 0, height, x, y));
+        ST_Array ctm = this.ctm == null ? ST_Array.unitCTM() : this.ctm;
+        ctm = new ST_Array(width, 0, 0, height, x, y).mtxMul(ctm);
+        imgObj.setCTM(ctm);
+
         // TODO 透明度设置
         container.addPageBlock(imgObj);
 
@@ -594,9 +728,11 @@ public class DrawContext implements Closeable {
         if (workPathObj == null) {
             return;
         }
-        PathObject tbAdded = workPathObj.setAbbreviatedData(pathData)
-                .toObj(new ST_ID(maxUnitID.incrementAndGet()));
-        container.addPageBlock(tbAdded);
+        if (workPathObj.getStroke() || workPathObj.getFill()) {
+            PathObject tbAdded = workPathObj.setAbbreviatedData(pathData)
+                    .toObj(new ST_ID(maxUnitID.incrementAndGet()));
+            container.addPageBlock(tbAdded);
+        }
         this.workPathObj = null;
         this.pathData = null;
     }

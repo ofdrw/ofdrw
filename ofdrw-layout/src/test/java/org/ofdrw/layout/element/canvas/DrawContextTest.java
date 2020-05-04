@@ -112,6 +112,33 @@ class DrawContextTest {
     }
 
     @Test
+    void clip() throws IOException {
+        Path outP = Paths.get("target/Canvas-clip.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                // 剪切矩形区域
+                ctx.rect(50, 20, 200, 120);
+                ctx.stroke();
+                ctx.clip();
+                // 在 clip() 之后绘制绿色矩形
+                ctx.setFillColor(0, 255, 0);
+                ctx.fillRect(0, 0, 150, 100);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    @Test
     void quadraticCurveTo() throws IOException {
         Path outP = Paths.get("target/Canvas-quadraticCurveTo.ofd");
         try (OFDDoc ofdDoc = new OFDDoc(outP)) {
@@ -270,6 +297,28 @@ class DrawContextTest {
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
 
+    @Test
+    void drawImage2() throws IOException {
+        Path outP = Paths.get("target/Canvas-drawImage2.ofd");
+        Path imgPath = Paths.get("src/test/resources/eg_tulip.jpg");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.rotate(20);
+                ctx.drawImage(imgPath, 10, 10, 60, 40);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
 
     @Test
     void scale() throws IOException {
@@ -283,13 +332,121 @@ class DrawContextTest {
                     .setBorder(1d);
 
             canvas.setDrawer(ctx -> {
-                ctx.strokeRect(5,5,10,6);
-                ctx.scale(2,2);
-                ctx.strokeRect(5,5,10,6);
-                ctx.scale(2,2);
-                ctx.strokeRect(5,5,10,6);
-                ctx.scale(2,2);
-                ctx.strokeRect(5,5,10,6);
+                ctx.strokeRect(5, 5, 10, 6);
+                ctx.scale(2, 2);
+                ctx.strokeRect(5, 5, 10, 6);
+                ctx.scale(2, 2);
+                ctx.strokeRect(5, 5, 10, 6);
+                ctx.scale(2, 2);
+                ctx.strokeRect(5, 5, 10, 6);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    @Test
+    void rotate() throws IOException {
+        Path outP = Paths.get("target/Canvas-rotate.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.rotate(20);
+                ctx.fillRect(50, 20, 100, 50);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    @Test
+    void translate() throws IOException {
+        Path outP = Paths.get("target/Canvas-translate.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.fillRect(10, 10, 50, 25);
+                ctx.translate(30, 30);
+                ctx.fillRect(10, 10, 50, 25);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    @Test
+    void transform() throws IOException {
+        Path outP = Paths.get("target/Canvas-transform.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+
+                ctx.setFillColor(255, 255, 0);
+                ctx.fillRect(0, 0, 100, 50);
+
+                ctx.transform(1, 0.5, -0.5, 1, 30, 10);
+                ctx.setFillColor(255, 0, 0);
+                ctx.fillRect(0, 0, 100, 50);
+
+                ctx.transform(1, 0.5, -0.5, 1, 30, 10);
+                ctx.setFillColor(0, 0, 255);
+                ctx.fillRect(0, 0, 100, 50);
+
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    @Test
+    void setTransform() throws IOException {
+        Path outP = Paths.get("target/Canvas-setTransform.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.setFillColor(255, 255, 0);
+                ctx.fillRect(0, 0, 100, 50);
+
+                ctx.setTransform(1, 0.5, -0.5, 1, 30, 10);
+                ctx.setFillColor(255, 0, 0);
+                ctx.fillRect(0, 0, 100, 50);
+
+                ctx.setTransform(1, 0.5, -0.5, 1, 30, 10);
+                ctx.setFillColor(0, 0, 255);
+                ctx.fillRect(0, 0, 100, 50);
+
             });
             vPage.add(canvas);
 

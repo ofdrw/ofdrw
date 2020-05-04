@@ -30,6 +30,16 @@ public class Clips extends OFDElement {
     }
 
     /**
+     * 使用一个裁剪对象初始化裁剪序列
+     *
+     * @param clip 裁剪对象
+     */
+    public Clips(CT_Clip clip) {
+        this();
+        addClip(clip);
+    }
+
+    /**
      * 【必选】
      * 增加 图元对象的裁剪区域
      * <p>

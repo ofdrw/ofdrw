@@ -16,7 +16,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2019-09-28 10:40:37
  */
-public class ST_Array extends STBase {
+public class ST_Array extends STBase implements Cloneable{
 
     /**
      * 元素收容
@@ -189,6 +189,15 @@ public class ST_Array extends STBase {
             }
             System.out.println();
         }
+    }
+
+    @Override
+    public ST_Array clone(){
+        ST_Array res = new ST_Array();
+        for (String item : this.array) {
+            res.add(item);
+        }
+        return res;
     }
 
     @Override
