@@ -13,10 +13,16 @@ import org.ofdrw.core.pageDescription.clips.Clips;
  * @author 权观宇
  * @since 2020-05-04 16:11:55
  */
-public class ClipFactory {
+public class ClipFactory implements Cloneable {
 
+    /**
+     * 裁剪路径数据
+     */
     private AbbreviatedData data;
 
+    /**
+     * 裁剪路径的变换矩阵
+     */
     private ST_Array ctm;
 
 
@@ -63,5 +69,17 @@ public class ClipFactory {
         }
         area.setClipObj(new CT_Path().setAbbreviatedData(data.clone()));
         return clips.addClip(new CT_Clip().addArea(area));
+    }
+
+    @Override
+    public ClipFactory clone() {
+        ClipFactory that = new ClipFactory();
+        if (ctm != null) {
+            that.ctm = this.ctm.clone();
+        }
+        if (data != null) {
+            that.data = this.data.clone();
+        }
+        return that;
     }
 }
