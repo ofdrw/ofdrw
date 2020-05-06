@@ -95,6 +95,19 @@ public class DrawContext implements Closeable {
      */
     private double lineWidth = 0.353;
 
+    /**
+     * 绘制文字设置
+     * <p>
+     * 默认为宋体，字号为1
+     */
+    private FontSetting font = null;
+
+
+    /**
+     * 透明值。必须介于 0.0（完全透明） 与 1.0（不透明） 之间。
+     */
+    private Double globalAlpha = null;
+
 
     private DrawContext() {
     }
@@ -126,14 +139,19 @@ public class DrawContext implements Closeable {
     private CT_Path newPathWithCtx() {
         CT_Path path = new CT_Path()
                 .setBoundary(this.boundary.clone());
+        // 变换矩阵
         if (this.ctm != null) {
             path.setCTM(this.ctm);
         }
+        // 裁剪区域
         if (this.clipFactory != null) {
             path.setClips(clipFactory.clips());
         }
-        // 默认线宽度0.353
-        path.setLineWidth(lineWidth);
+        // 透明度
+        if (this.globalAlpha != null) {
+            path.setAlpha((int) (255 * this.globalAlpha));
+        }
+
         return path;
     }
 
@@ -434,6 +452,8 @@ public class DrawContext implements Closeable {
         if (this.workPathObj == null) {
             return this;
         }
+        // 设置线宽度，默认值0.353
+        workPathObj.setLineWidth(lineWidth);
         CT_Color color =
                 this.fillColor == null ?
                         CT_Color.rgb(0, 0, 0) : CT_Color.rgb(this.fillColor);
@@ -604,7 +624,10 @@ public class DrawContext implements Closeable {
         ctm = new ST_Array(width, 0, 0, height, x, y).mtxMul(ctm);
         imgObj.setCTM(ctm);
 
-        // TODO 透明度设置
+        // 透明度
+        if (this.globalAlpha != null) {
+            imgObj.setAlpha((int) (255 * this.globalAlpha));
+        }
         container.addPageBlock(imgObj);
 
         return this;
@@ -718,6 +741,53 @@ public class DrawContext implements Closeable {
         if (this.workPathObj != null) {
             this.workPathObj.setLineWidth(lineWidth);
         }
+        return this;
+    }
+
+    /**
+     * 获取当前使用的绘制文字设置
+     *
+     * @return 绘制文字设置，可能为null
+     */
+    public FontSetting getFont() {
+        return font;
+    }
+
+    /**
+     * 设置绘制文字信息
+     *
+     * @param font 文字配置
+     * @return this
+     */
+    public DrawContext setFont(FontSetting font) {
+        this.font = font;
+        return this;
+    }
+
+
+    /**
+     * 获取绘图透明度值
+     *
+     * @return 透明度值 0.0到1.0
+     */
+    public Double getGlobalAlpha() {
+        return globalAlpha;
+    }
+
+    /**
+     * 设置 绘图透明度值
+     *
+     * @param globalAlpha 透明度值 0.0到1.0
+     * @return this
+     */
+    public DrawContext setGlobalAlpha(Double globalAlpha) {
+        if (globalAlpha == null || globalAlpha > 1) {
+            globalAlpha = 1.0;
+        } else if (globalAlpha < 0) {
+            globalAlpha = 0d;
+        }
+
+        this.globalAlpha = globalAlpha;
         return this;
     }
 

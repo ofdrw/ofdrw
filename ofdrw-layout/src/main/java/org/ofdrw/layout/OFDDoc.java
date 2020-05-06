@@ -181,9 +181,7 @@ public class OFDDoc implements Closeable {
 
         // 创建一个低层次的文档对象
         Document lowDoc = new Document();
-        cdata = new CT_CommonData()
-                // 由于有字形资源所以一定存在公共资源，这里县创建
-                .setPublicRes(new ST_Loc("PublicRes.xml"));
+        cdata = new CT_CommonData();
         // 默认使用RGB颜色空间所以此处不设置颜色空间
         // 设置页面属性
         this.setDefaultPageLayout(this.pageLayout);

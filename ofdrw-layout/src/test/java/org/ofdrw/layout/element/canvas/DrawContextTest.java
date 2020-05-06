@@ -454,4 +454,33 @@ class DrawContextTest {
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
+
+    @Test
+    void getGlobalAlpha() throws IOException {
+        Path outP = Paths.get("target/Canvas-globalAlpha.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.setFillColor(255,0,0);
+                ctx.fillRect(20,20,75,50);
+                // 调节透明度
+                ctx.setGlobalAlpha(0.2);
+                ctx.setFillColor(0,0,255);
+                ctx.fillRect(50,50,75,50);
+                ctx.setFillColor(0,255,0);
+                ctx.fillRect(80,80,75,50);
+
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
 }
