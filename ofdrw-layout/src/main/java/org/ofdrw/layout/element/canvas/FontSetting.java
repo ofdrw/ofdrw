@@ -1,6 +1,7 @@
 package org.ofdrw.layout.element.canvas;
 
 import org.ofdrw.font.Font;
+import org.ofdrw.layout.element.TextFontInfo;
 
 /**
  * 字体设置
@@ -8,7 +9,7 @@ import org.ofdrw.font.Font;
  * @author 权观宇
  * @since 2020-05-06 18:21:02
  */
-public class FontSetting implements Cloneable {
+public class FontSetting implements Cloneable, TextFontInfo {
 
     /**
      * 字体对象
@@ -34,7 +35,26 @@ public class FontSetting implements Cloneable {
      * <p>
      * 预设加粗为：800
      */
-    private Integer fontWeight;
+    private Integer fontWeight = 400;
+
+    /**
+     * 字间距
+     */
+    private double letterSpacing = 0d;
+
+    /**
+     * 字符方向
+     * <p>
+     * 指定了文字放置的方式（基线方向）
+     */
+    private int charDirection = 0;
+
+    /**
+     * 阅读方向
+     * <p>
+     * 指定了文字排列的方向
+     */
+    private int readDirection = 0;
 
     public FontSetting(double fontSize, Font fontObj) {
         this.fontObj = fontObj;
@@ -49,7 +69,8 @@ public class FontSetting implements Cloneable {
      *
      * @return 文字对象
      */
-    public Font getFontObj() {
+    @Override
+    public Font getFont() {
         return fontObj;
     }
 
@@ -59,7 +80,7 @@ public class FontSetting implements Cloneable {
      * @param fontObj 文字对象
      * @return this
      */
-    public FontSetting setFontObj(Font fontObj) {
+    public FontSetting setFont(Font fontObj) {
         this.fontObj = fontObj;
         return this;
     }
@@ -70,7 +91,8 @@ public class FontSetting implements Cloneable {
      *
      * @return 字号（单位毫米）
      */
-    public double getFontSize() {
+    @Override
+    public Double getFontSize() {
         return fontSize;
     }
 
@@ -127,6 +149,82 @@ public class FontSetting implements Cloneable {
     }
 
     /**
+     * 获取字符方向
+     *
+     * @return 字符方向
+     */
+    public int getCharDirection() {
+        return charDirection;
+    }
+
+    /**
+     * 设置字符方向
+     *
+     * @param charDirection 字符方向(charDirection) 允许值：0、90、180、270
+     * @return this
+     */
+    public FontSetting setCharDirection(int charDirection) {
+        if (charDirection == 0 || charDirection == 90 || charDirection == 180 || charDirection == 270) {
+            this.charDirection = charDirection;
+        } else {
+            throw new IllegalArgumentException("字符方向(charDirection) 允许值：0、90、180、270，错误值：" + charDirection);
+        }
+        return this;
+    }
+
+    /**
+     * 获取阅读方向
+     *
+     * @return 阅读方向
+     */
+    public int getReadDirection() {
+        return readDirection;
+    }
+
+
+
+    /**
+     * 获取字间距
+     *
+     * @return 字间距，单位毫米mm，默认值0
+     */
+    @Override
+    public Double getLetterSpacing() {
+        return letterSpacing;
+    }
+
+    /**
+     * 设置字间距
+     * <p>
+     * 如果字间距小于0，那么将会自动修正为0
+     *
+     * @param letterSpacing 字间距，单位毫米mm
+     * @return this
+     */
+    public FontSetting setLetterSpacing(double letterSpacing) {
+        if (letterSpacing < 0) {
+            letterSpacing = 0;
+        }
+        this.letterSpacing = letterSpacing;
+        return this;
+    }
+
+    /**
+     * 设置阅读方向
+     *
+     * @param readDirection 设置阅读方向(charDirection) 允许值：0、90、180、270
+     * @return this
+     */
+    public FontSetting setReadDirection(int readDirection) {
+        if (readDirection == 0 || readDirection == 90 || readDirection == 180 || readDirection == 270) {
+            this.readDirection = readDirection;
+        } else {
+            throw new IllegalArgumentException("阅读方向(readDirection) 允许值：0、90、180、270，错误值：" + readDirection);
+        }
+        return this;
+    }
+
+    /**
      * 设置字体宽度
      *
      * @param fontWeight 字体宽度，可选值：100、200、300、400、500、600、700、800、900
@@ -153,11 +251,13 @@ public class FontSetting implements Cloneable {
 
 
     @Override
-    public FontSetting clone()  {
+    public FontSetting clone() {
         return new FontSetting()
-                .setFontObj(this.fontObj)
+                .setFont(this.fontObj)
                 .setItalic(this.italic)
                 .setFontSize(this.fontSize)
-                .setFontWeight(this.fontWeight);
+                .setFontWeight(this.fontWeight)
+                .setCharDirection(this.charDirection)
+                .setReadDirection(this.readDirection);
     }
 }

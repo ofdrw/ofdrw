@@ -33,6 +33,10 @@ public enum Weight {
 
     Integer weight;
 
+    public static Weight getInstance(int weight) {
+        return getInstance(String.valueOf(weight));
+    }
+
     public static Weight getInstance(String weight) {
         if (weight == null || weight.trim().length() == 0) {
             weight = "400";

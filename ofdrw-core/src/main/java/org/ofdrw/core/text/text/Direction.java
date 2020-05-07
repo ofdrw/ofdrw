@@ -25,6 +25,10 @@ public enum Direction {
         this.angle = angle;
     }
 
+    public static Direction getInstance(Integer angleStr) {
+        return getInstance(String.valueOf(angleStr));
+    }
+
     public static Direction getInstance(String angleStr) {
         if (angleStr == null || angleStr.trim().length() == 0) {
             angleStr = "0";

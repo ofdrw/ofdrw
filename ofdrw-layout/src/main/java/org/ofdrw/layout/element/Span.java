@@ -14,7 +14,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2020-02-03 02:01:53
  */
-public class Span {
+public class Span implements TextFontInfo {
 
     /**
      * 字体
@@ -132,6 +132,7 @@ public class Span {
         return text.length();
     }
 
+    @Override
     public Font getFont() {
         return font;
     }
@@ -140,7 +141,7 @@ public class Span {
         this.font = font;
         return this;
     }
-
+    @Override
     public Double getFontSize() {
         return fontSize;
     }
@@ -150,6 +151,7 @@ public class Span {
         return this;
     }
 
+    @Override
     public Double getLetterSpacing() {
         return letterSpacing;
     }

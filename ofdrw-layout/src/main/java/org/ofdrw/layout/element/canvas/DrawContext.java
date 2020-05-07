@@ -3,12 +3,20 @@ package org.ofdrw.layout.element.canvas;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.text.TextCode;
+import org.ofdrw.core.text.text.CT_Text;
+import org.ofdrw.core.text.text.Direction;
+import org.ofdrw.core.text.text.Weight;
+import org.ofdrw.font.Font;
+import org.ofdrw.font.FontName;
+import org.ofdrw.font.FontSet;
 import org.ofdrw.layout.engine.ResManager;
 
 import java.io.Closeable;
@@ -622,6 +630,97 @@ public class DrawContext implements Closeable {
         this.state = stack.pop();
         return this;
     }
+
+    /**
+     * 填充文字
+     *
+     * @param text 填充文字
+     * @param x    第一个字符左下角 x 坐标
+     * @param y    第一个字符左下角 x 坐标
+     * @return this
+     */
+    public DrawContext fillText(String text, double x, double y) throws IOException {
+        if (text == null || text.trim().isEmpty()) {
+            return this;
+        }
+
+        FontSetting fontSetting = null;
+        if (state.font != null) {
+            fontSetting = state.font;
+        } else {
+            fontSetting = new FontSetting(1d, FontSet.get(FontName.SimSun));
+        }
+
+        int readDirection = state.font.getReadDirection();
+        int charDirection = state.font.getCharDirection();
+
+        Font font = fontSetting.getFont();
+        Double fontSize = state.font.getFontSize();
+        Double letterSpacing = state.font.getLetterSpacing();
+
+        ST_ID id = resManager.addFont(font);
+
+        // 新建字体对象
+        TextObject txtObj = new CT_Text()
+                .setBoundary(this.boundary.clone())
+                .setFont(id.ref())
+                .setSize(fontSize)
+                .toObj(new ST_ID(maxUnitID.incrementAndGet()));
+        // 设置字体宽度
+        if (state.font.getFontWeight() != null && state.font.getFontWeight() != 400) {
+            txtObj.setWeight(Weight.getInstance(state.font.getFontWeight()));
+        }
+        // 是否斜体
+        if (state.font.isItalic()) {
+            txtObj.setItalic(true);
+        }
+        // 设置颜色
+        if (state.fillColor != null) {
+            txtObj.setFillColor(CT_Color.rgb(state.fillColor));
+        }
+        // 设置变换矩阵
+        if (state.ctm != null) {
+            txtObj.setCTM(state.ctm.clone());
+        }
+        // 设置透明度
+        if (state.globalAlpha != null && state.globalAlpha != 1) {
+            txtObj.setAlpha((int) (255 * this.state.globalAlpha));
+        }
+        // 设置阅读方向
+        if (readDirection != 0) {
+            txtObj.setReadDirection(Direction.getInstance(readDirection));
+        }
+        // 设置文字方向
+        if (charDirection != 0) {
+            txtObj.setCharDirection(Direction.getInstance(charDirection));
+        }
+
+        TextCode tcSTTxt = new TextCode().setContent(text);
+
+        if (readDirection == 0) {
+            if (charDirection == 0) {
+                tcSTTxt.setY(y).setX(x);
+                if (text.length() > 1) {
+                    Double[] offsetX = new Double[text.length() - 1];
+                    for (int i = 0, len = text.length() - 1; i < len; i++) {
+                        offsetX[i] = font.getCharWidthScale(text.charAt(i)) * fontSize + letterSpacing;
+                    }
+                    tcSTTxt.setDeltaX(offsetX);
+                }
+            } else if (charDirection == 180) {
+                // TODO 2020-5-7 22:38:37
+            }
+        } else if (readDirection == 180) {
+            // TODO 2020-5-7 22:38:48
+        }
+
+
+        txtObj.addTextCode(tcSTTxt);
+        // 加入容器
+        container.addPageBlock(txtObj);
+        return this;
+    }
+
 
     /**
      * 读取当前描边颜色（只读）

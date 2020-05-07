@@ -14,22 +14,22 @@ public class TxtGlyph {
      */
     private char txt;
     /**
-     * 父类元素
+     * 文字字体信息
      */
-    private Span parent;
+    private TextFontInfo textFontInfo;
 
-    public TxtGlyph(char txt, Span span) {
+    public TxtGlyph(char txt, TextFontInfo span) {
         this.txt = txt;
-        this.parent = span;
+        this.textFontInfo = span;
     }
 
     /**
      * @return 字符宽度(字符宽度 + 字间距)
      */
     public double getW() {
-        Font font = parent.getFont();
-        double w = parent.getLetterSpacing();
-        w += parent.getFontSize() * font.getCharWidthScale(txt);
+        Font font = textFontInfo.getFont();
+        double w = textFontInfo.getLetterSpacing();
+        w += textFontInfo.getFontSize() * font.getCharWidthScale(txt);
         return w;
     }
 
@@ -37,7 +37,7 @@ public class TxtGlyph {
      * @return 字符高度
      */
     public double getH() {
-        return parent.getFontSize();
+        return textFontInfo.getFontSize();
     }
 
 }
