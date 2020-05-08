@@ -215,7 +215,7 @@ public class TextCode extends OFDElement implements ClipAble {
      * @param arr 文字之间在 Y 方向上的偏移数值
      * @return this
      */
-    public TextCode setDeltaY(Double arr) {
+    public TextCode setDeltaY(Double... arr) {
         return setDeltaY(new ST_Array(arr));
     }
 

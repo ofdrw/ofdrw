@@ -23,6 +23,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -635,8 +636,8 @@ public class DrawContext implements Closeable {
      * 填充文字
      *
      * @param text 填充文字
-     * @param x    第一个字符左下角 x 坐标
-     * @param y    第一个字符左下角 x 坐标
+     * @param x    第一个字符基线起点 x坐标
+     * @param y    第一个字符基线起点 y坐标
      * @return this
      */
     public DrawContext fillText(String text, double x, double y) throws IOException {
@@ -656,7 +657,6 @@ public class DrawContext implements Closeable {
 
         Font font = fontSetting.getFont();
         Double fontSize = state.font.getFontSize();
-        Double letterSpacing = state.font.getLetterSpacing();
 
         ST_ID id = resManager.addFont(font);
 
@@ -695,26 +695,16 @@ public class DrawContext implements Closeable {
             txtObj.setCharDirection(Direction.getInstance(charDirection));
         }
 
-        TextCode tcSTTxt = new TextCode().setContent(text);
-
-        if (readDirection == 0) {
-            if (charDirection == 0) {
-                tcSTTxt.setY(y).setX(x);
-                if (text.length() > 1) {
-                    Double[] offsetX = new Double[text.length() - 1];
-                    for (int i = 0, len = text.length() - 1; i < len; i++) {
-                        offsetX[i] = font.getCharWidthScale(text.charAt(i)) * fontSize + letterSpacing;
-                    }
-                    tcSTTxt.setDeltaX(offsetX);
-                }
-            } else if (charDirection == 180) {
-                // TODO 2020-5-7 22:38:37
-            }
-        } else if (readDirection == 180) {
-            // TODO 2020-5-7 22:38:48
+        TextCode tcSTTxt = new TextCode()
+                .setContent(text)
+                .setY(y).setX(x);
+        // 测量字间距
+        Double[] offset = TextMeasureTool.measure(text, fontSetting);
+        if (readDirection == 90 || readDirection == 270) {
+            tcSTTxt.setDeltaY(offset);
+        } else {
+            tcSTTxt.setDeltaX(offset);
         }
-
-
         txtObj.addTextCode(tcSTTxt);
         // 加入容器
         container.addPageBlock(txtObj);

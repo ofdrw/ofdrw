@@ -511,6 +511,7 @@ class DrawContextTest {
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
 
+
     @Test
     void fillText() throws IOException {
         Path outP = Paths.get("target/Canvas-fillText.ofd");
@@ -523,8 +524,11 @@ class DrawContextTest {
                     .setBorder(1d);
 
             canvas.setDrawer(ctx -> {
-                ctx.setFont(new FontSetting(5, FontSet.get(FontName.SimSun)));
-                ctx.fillText("Hello World!",10,50);
+                FontSetting fontSetting = new FontSetting(5, FontSet.get(FontName.NotoSerif))
+                        .setCharDirection(180)
+                        .setReadDirection(90);
+                ctx.setFont(fontSetting);
+                ctx.fillText("你好 Hello World!", 10, 50);
             });
             vPage.add(canvas);
 
@@ -532,4 +536,39 @@ class DrawContextTest {
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
+
+    @Test
+    void fillTextAllDirection() throws IOException {
+        int[] readDirect = {0, 90, 180, 270};
+        int[] charDirect = {0, 90, 180, 270};
+        for (int r : readDirect) {
+            for (int c : charDirect) {
+                String fileName = String.format("Canvas-fillText-C%dR%d.ofd", r, c);
+                Path outP = Paths.get("target", fileName);
+                try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+                    VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+                    Canvas canvas = new Canvas(200d, 200d);
+                    canvas.setPosition(Position.Absolute)
+                            .setX(5d).setY(45d)
+                            .setBorder(1d);
+
+                    canvas.setDrawer(ctx -> {
+                        FontSetting fontSetting = new FontSetting(5, FontSet.get(FontName.NotoSerif))
+                                .setCharDirection(c)
+                                .setReadDirection(r);
+                        ctx.setFont(fontSetting);
+                        ctx.fillText("你好 Hello World!", 100, 100);
+                    });
+                    vPage.add(canvas);
+
+                    ofdDoc.addVPage(vPage);
+                }
+                System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+            }
+        }
+
+
+    }
+
 }
