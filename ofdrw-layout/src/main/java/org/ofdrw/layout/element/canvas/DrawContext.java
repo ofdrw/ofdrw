@@ -711,6 +711,29 @@ public class DrawContext implements Closeable {
         return this;
     }
 
+    /**
+     * 测量文本的宽度或高度
+     * <p>
+     * 如果 readDirection为 0或180，测量文本宽度
+     * <p>
+     * 如果 readDirection为 0或180，测量文本高度
+     *
+     * @param text 带测量文本
+     * @return 测量文本信息
+     */
+    public TextMetrics measureText(String text) {
+        TextMetrics tm = new TextMetrics();
+        tm.readDirection = state.font.getReadDirection();
+        // 测量字间距
+        Double[] offset = TextMeasureTool.measure(text, state.font);
+        if (offset.length == 0) {
+            tm.width = 0d;
+            return tm;
+        }
+        tm.width = TextMeasureTool.measureWithWith(text, state.font).width;
+        return tm;
+    }
+
 
     /**
      * 读取当前描边颜色（只读）

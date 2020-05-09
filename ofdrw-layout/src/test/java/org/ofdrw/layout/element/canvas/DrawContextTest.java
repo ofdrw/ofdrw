@@ -1,5 +1,6 @@
 package org.ofdrw.layout.element.canvas;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.font.FontName;
 import org.ofdrw.font.FontSet;
@@ -510,8 +511,6 @@ class DrawContextTest {
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
-
-
     @Test
     void fillText() throws IOException {
         Path outP = Paths.get("target/Canvas-fillText.ofd");
@@ -529,6 +528,34 @@ class DrawContextTest {
                         .setReadDirection(90);
                 ctx.setFont(fontSetting);
                 ctx.fillText("你好 Hello World!", 10, 50);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    @Test
+    void measureText() throws IOException {
+        Path outP = Paths.get("target/Canvas-measureText.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                FontSetting fontSetting = new FontSetting(5, FontSet.get(FontName.SimSun));
+                ctx.setFont(fontSetting);
+
+                String text = "你好 Hello World!";
+                double width = ctx.measureText(text).width;
+                System.out.println(">> 文字宽度: " + width + "mm" );
+                ctx.fillText(text, 10, 50);
+//                Assertions.assertEquals();
             });
             vPage.add(canvas);
 
@@ -567,8 +594,6 @@ class DrawContextTest {
                 System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
             }
         }
-
-
     }
 
 }

@@ -249,6 +249,15 @@ public class FontSetting implements Cloneable, TextFontInfo {
         return this;
     }
 
+    /**
+     * 字符宽度
+     * @param c 字符
+     * @return 宽度单位毫米
+     */
+    public Double charWidth(char c){
+        return fontObj.getCharWidthScale(c) * fontSize;
+    }
+
 
     @Override
     public FontSetting clone() {

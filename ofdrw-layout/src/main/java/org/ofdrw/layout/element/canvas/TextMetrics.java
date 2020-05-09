@@ -9,22 +9,16 @@ package org.ofdrw.layout.element.canvas;
 public class TextMetrics {
 
     /**
-     * 文字方向
-     */
-    public int charDirection;
-
-    /**
      * 阅读方向
      */
     public int readDirection;
 
     /**
      * 文字宽度
+     * <p>
+     * 如果 readDirection == 0 || 180 为宽度
+     * <p>
+     * 如果 readDirection == 90 || 270 为高度
      */
-    public double width;
-
-    /**
-     * 文字高度
-     */
-    public double height;
+    public Double width;
 }
