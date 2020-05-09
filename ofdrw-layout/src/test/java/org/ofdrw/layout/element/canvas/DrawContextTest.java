@@ -548,13 +548,14 @@ class DrawContextTest {
                     .setBorder(1d);
 
             canvas.setDrawer(ctx -> {
-                FontSetting fontSetting = new FontSetting(5, FontSet.get(FontName.SimSun));
+                FontSetting fontSetting = new FontSetting(5, FontSet.get(FontName.NotoSerif));
                 ctx.setFont(fontSetting);
 
                 String text = "你好 Hello World!";
                 double width = ctx.measureText(text).width;
                 System.out.println(">> 文字宽度: " + width + "mm" );
                 ctx.fillText(text, 10, 50);
+                ctx.fillText(text, 10 + width, 50);
 //                Assertions.assertEquals();
             });
             vPage.add(canvas);
