@@ -1,6 +1,5 @@
 package org.ofdrw.layout.element.canvas;
 
-import org.ofdrw.font.Font;
 
 import java.util.Arrays;
 
@@ -13,12 +12,30 @@ import java.util.Arrays;
 public final class TextMeasureTool {
 
     public static class MeasureBody {
+        /**
+         * 文本字符间相对偏移量
+         */
         public Double[] offset;
+        /**
+         * 文本在阅读方向上的总宽度
+         */
         public double width;
+
+        /**
+         * 文本在第一个字符相对偏移 x坐标
+         */
+        public double firstCharOffsetX;
+        /**
+         * 文本在第一个字符相对偏移 y坐标
+         */
+        public double firstCharOffsetY;
+
 
         public MeasureBody() {
             offset = new Double[0];
             width = 0;
+            firstCharOffsetX = 0;
+            firstCharOffsetY = 0;
         }
 
         /**
@@ -52,6 +69,7 @@ public final class TextMeasureTool {
         char firstChar = text.charAt(0);
         char lastChar = text.charAt(text.length() - 1);
 
+        final Double fontSize = fontSetting.getFontSize();
         if (readDirection == 0) {
             if (charDirection == 0) {
                 body.offset = offset(text, fontSetting, 0, "W", 1);
@@ -59,42 +77,68 @@ public final class TextMeasureTool {
             } else if (charDirection == 180) {
                 body.offset = offset(text, fontSetting, 1, "W", 1);
                 body.with(fontSetting.charWidth(firstChar));
+                body.firstCharOffsetX = fontSetting.charWidth(firstChar);
+                body.firstCharOffsetY = -fontSize;
             } else if (charDirection == 90 || charDirection == 270) {
                 body.offset = offset(text, fontSetting, 0, "H", 1);
-                body.with(fontSetting.getFontSize());
+                body.with(fontSize);
+                if (charDirection == 90) {
+                    body.firstCharOffsetY = -fontSize;
+                } else {
+                    body.firstCharOffsetX = fontSize;
+                }
             }
         } else if (readDirection == 180) {
             if (charDirection == 0) {
                 body.offset = offset(text, fontSetting, 1, "W", -1);
                 body.with(fontSetting.charWidth(firstChar));
+                body.firstCharOffsetX = -fontSetting.charWidth(firstChar);
             } else if (charDirection == 180) {
                 body.offset = offset(text, fontSetting, 0, "W", -1);
                 body.with(fontSetting.charWidth(lastChar));
+                body.firstCharOffsetY = -fontSize;
             } else if (charDirection == 90 || charDirection == 270) {
                 body.offset = offset(text, fontSetting, 0, "H", -1);
-                body.with(fontSetting.getFontSize());
+                body.with(fontSize);
+                if (charDirection == 90) {
+                    body.firstCharOffsetX = -fontSize;
+                    body.firstCharOffsetY = -fontSize;
+                }
             }
         } else if (readDirection == 90) {
             if (charDirection == 0 || charDirection == 180) {
                 body.offset = offset(text, fontSetting, 0, "H", 1);
-                body.with(fontSetting.getFontSize());
+                body.with(fontSize);
+                if (charDirection == 0) {
+                    body.firstCharOffsetY = fontSize;
+                } else {
+                    body.firstCharOffsetX = fontSize;
+                }
             } else if (charDirection == 90) {
                 body.offset = offset(text, fontSetting, 0, "W", 1);
                 body.with(fontSetting.charWidth(lastChar));
             } else if (charDirection == 270) {
                 body.offset = offset(text, fontSetting, 1, "W", 1);
                 body.with(fontSetting.charWidth(firstChar));
+                body.firstCharOffsetX = fontSize;
+                body.firstCharOffsetY = fontSetting.charWidth(firstChar);
             }
         } else if (readDirection == 270) {
             if (charDirection == 0 || charDirection == 180) {
                 body.offset = offset(text, fontSetting, 0, "H", -1);
-                body.with(fontSetting.getFontSize());
+                body.with(fontSize);
+                if (charDirection == 180) {
+                    body.firstCharOffsetX = fontSize;
+                    body.firstCharOffsetY = -fontSize;
+                }
             } else if (charDirection == 90) {
                 body.offset = offset(text, fontSetting, 1, "W", -1);
                 body.with(fontSetting.charWidth(firstChar));
+                body.firstCharOffsetY = -fontSetting.charWidth(firstChar);
             } else if (charDirection == 270) {
                 body.offset = offset(text, fontSetting, 0, "W", -1);
                 body.with(fontSetting.charWidth(lastChar));
+                body.firstCharOffsetX = fontSize;
             }
         }
         return body;

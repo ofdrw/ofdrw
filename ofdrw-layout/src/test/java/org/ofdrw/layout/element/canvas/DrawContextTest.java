@@ -511,6 +511,7 @@ class DrawContextTest {
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
+
     @Test
     void fillText() throws IOException {
         Path outP = Paths.get("target/Canvas-fillText.ofd");
@@ -553,7 +554,7 @@ class DrawContextTest {
 
                 String text = "你好 Hello World!";
                 double width = ctx.measureText(text).width;
-                System.out.println(">> 文字宽度: " + width + "mm" );
+                System.out.println(">> 文字宽度: " + width + "mm");
                 ctx.fillText(text, 10, 50);
                 ctx.fillText(text, 10 + width, 50);
 //                Assertions.assertEquals();
@@ -567,11 +568,11 @@ class DrawContextTest {
 
     @Test
     void fillTextAllDirection() throws IOException {
-        int[] readDirect = {0, 90, 180, 270};
-        int[] charDirect = {0, 90, 180, 270};
+        int[] readDirect = {270};
+        int[] charDirect = {0, 180, 90, 270};
         for (int r : readDirect) {
             for (int c : charDirect) {
-                String fileName = String.format("Canvas-fillText-C%dR%d.ofd", r, c);
+                String fileName = String.format("Canvas-fillText-C%dR%d.ofd", c, r);
                 Path outP = Paths.get("target", fileName);
                 try (OFDDoc ofdDoc = new OFDDoc(outP)) {
                     VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
@@ -586,7 +587,24 @@ class DrawContextTest {
                                 .setCharDirection(c)
                                 .setReadDirection(r);
                         ctx.setFont(fontSetting);
-                        ctx.fillText("你好 Hello World!", 100, 100);
+
+                        ctx.fillText("li 你好 Hello World!", 100, 100);
+                        ctx.beginPath();
+                        if (r == 0 || r == 180) {
+                            ctx.moveTo(100, 90);
+                            ctx.lineTo(100, 110);
+
+                            ctx.moveTo(40, 100);
+                            ctx.lineTo(160, 100);
+                            ctx.stroke();
+                        } else {
+                            ctx.moveTo(90, 100);
+                            ctx.lineTo(110, 100);
+
+                            ctx.moveTo(100, 40);
+                            ctx.lineTo(100, 160);
+                            ctx.stroke();
+                        }
                     });
                     vPage.add(canvas);
 

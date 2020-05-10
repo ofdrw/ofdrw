@@ -695,15 +695,16 @@ public class DrawContext implements Closeable {
             txtObj.setCharDirection(Direction.getInstance(charDirection));
         }
 
+        TextMeasureTool.MeasureBody measureBody = TextMeasureTool.measureWithWith(text, fontSetting);
         TextCode tcSTTxt = new TextCode()
                 .setContent(text)
-                .setY(y).setX(x);
+                .setY(y + measureBody.firstCharOffsetY)
+                .setX(x + measureBody.firstCharOffsetX);
         // 测量字间距
-        Double[] offset = TextMeasureTool.measure(text, fontSetting);
         if (readDirection == 90 || readDirection == 270) {
-            tcSTTxt.setDeltaY(offset);
+            tcSTTxt.setDeltaY(measureBody.offset);
         } else {
-            tcSTTxt.setDeltaX(offset);
+            tcSTTxt.setDeltaX(measureBody.offset);
         }
         txtObj.addTextCode(tcSTTxt);
         // 加入容器
