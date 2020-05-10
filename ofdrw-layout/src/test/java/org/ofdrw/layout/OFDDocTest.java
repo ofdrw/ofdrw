@@ -526,8 +526,7 @@ class OFDDocTest {
                 ctx.stroke();
             });
             Paragraph p2 = new Paragraph("是不是很好看");
-            p2.setClear(Clear.none);
-            ofdDoc.add(p)
+            p2.setClear(Clear.none);ofdDoc.add(p)
                     .add(canvas)
                     .add(p2);
         }

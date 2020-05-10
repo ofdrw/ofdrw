@@ -38,7 +38,7 @@
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.2.0</version>
+  <version>1.3.0</version>
 </dependency>
 ```
 
@@ -66,8 +66,11 @@ public class HelloWorld {
 
 - [生成示例](https://github.com/Trisia/ofdrw/blob/master/ofdrw-layout/src/test/java/org/ofdrw/layout/OFDDocTest.java)
 - [布局示例](https://github.com/Trisia/ofdrw/blob/master/ofdrw-layout/src/test/java/org/ofdrw/layout/LayoutTest.java)
+- [Canvas示例](https://github.com/Trisia/ofdrw/blob/master/ofdrw-layout/src/test/java/org/ofdrw/layout/element/DrawContextTest.java)
 
-> **关于OFD布局设计，请参考 [《OFD R&W 布局设计》](./ofdrw-layout/doc/README.md)**
+> - **关于OFD布局设计，请参考 [《OFD R&W 布局设计》](./ofdrw-layout/doc/README.md)**
+> 
+> - **Canvas API 请参考 [OFD R&W Canvas](./ofdrw-layout/doc/canvas/README.md)**
 
 ---
 
@@ -113,6 +116,7 @@ mvn install
 
 ### 进展
 
+- *2020-05-10* 完成了Canvas系列API的开发。
 - *2020-05-01* 增加了Canvas设计，用于更加灵活的绘制和水印效果。
 - *2020-04-23* 发布`1.2.0`版本，支持OFD电子签章。
 - *2020-04-22* 实现了行内的换行符换行功能。
