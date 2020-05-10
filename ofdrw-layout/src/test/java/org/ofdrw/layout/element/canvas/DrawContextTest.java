@@ -1,16 +1,11 @@
 package org.ofdrw.layout.element.canvas;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.font.FontName;
 import org.ofdrw.font.FontSet;
 import org.ofdrw.layout.OFDDoc;
-import org.ofdrw.layout.PageLayout;
 import org.ofdrw.layout.VirtualPage;
-import org.ofdrw.layout.edit.AdditionVPage;
-import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.Position;
-import org.ofdrw.reader.OFDReader;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -641,8 +636,7 @@ class DrawContextTest {
                 ctx.setTextAlign(TextAlign.start);
                 ctx.fillText("textAlign=start", 150, 60);
                 ctx.setTextAlign(TextAlign.end);
-                ctx.fillText("textAlign=end", 150, 80);
-                ctx.setTextAlign(TextAlign.left);
+                ctx.fillText("textAlign=end", 150, 80).setTextAlign(TextAlign.left);
                 ctx.fillText("textAlign=left", 150, 100);
                 ctx.setTextAlign(TextAlign.center);
                 ctx.fillText("textAlign=center", 150, 120);

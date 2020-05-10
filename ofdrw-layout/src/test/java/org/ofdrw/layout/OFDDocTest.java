@@ -16,6 +16,7 @@ import org.ofdrw.font.FontName;
 import org.ofdrw.font.FontSet;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.element.*;
+import org.ofdrw.layout.element.canvas.Canvas;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.pkg.container.PageDir;
@@ -507,6 +508,28 @@ class OFDDocTest {
             p.setMargin(0.0);
             virtualPage.add(p);
             ofdDoc.addVPage(virtualPage);
+        }
+        System.out.println("生成文档位置：" + path.toAbsolutePath());
+    }
+
+    @Test
+    public void canvasInflow() throws IOException {
+        Path path = Paths.get("target/CanvasInflow.ofd").toAbsolutePath();
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            Paragraph p = new Paragraph("这是一个圆形哦");
+            p.setClear(Clear.none);
+            Canvas canvas = new Canvas(20d, 20d);
+            canvas.setClear(Clear.none);
+            canvas.setDrawer(ctx -> {
+                ctx.beginPath();
+                ctx.arc(10, 10, 5, 0, 360);
+                ctx.stroke();
+            });
+            Paragraph p2 = new Paragraph("是不是很好看");
+            p2.setClear(Clear.none);
+            ofdDoc.add(p)
+                    .add(canvas)
+                    .add(p2);
         }
         System.out.println("生成文档位置：" + path.toAbsolutePath());
     }
