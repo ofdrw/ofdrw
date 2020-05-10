@@ -568,7 +568,7 @@ class DrawContextTest {
 
     @Test
     void fillTextAllDirection() throws IOException {
-        int[] readDirect = {270};
+        int[] readDirect = {0, 180, 90, 270};
         int[] charDirect = {0, 180, 90, 270};
         for (int r : readDirect) {
             for (int c : charDirect) {
@@ -615,4 +615,45 @@ class DrawContextTest {
         }
     }
 
+
+    @Test
+    void textAlign() throws IOException {
+
+        Path outP = Paths.get("target/Canvas-textAlign.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                // 在位置 150 创建蓝线
+                ctx.setStrokeColor(0, 0, 255);
+                ctx.moveTo(150, 20);
+                ctx.lineTo(150, 170);
+                ctx.stroke();
+
+                ctx.setFont(new FontSetting(5, FontSet.get(FontName.NotoSerif)));
+
+                // 显示不同的 textAlign 值
+                ctx.setTextAlign(TextAlign.start);
+                ctx.fillText("textAlign=start", 150, 60);
+                ctx.setTextAlign(TextAlign.end);
+                ctx.fillText("textAlign=end", 150, 80);
+                ctx.setTextAlign(TextAlign.left);
+                ctx.fillText("textAlign=left", 150, 100);
+                ctx.setTextAlign(TextAlign.center);
+                ctx.fillText("textAlign=center", 150, 120);
+                ctx.setTextAlign(TextAlign.right);
+                ctx.fillText("textAlign=right", 150, 140);
+
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
 }

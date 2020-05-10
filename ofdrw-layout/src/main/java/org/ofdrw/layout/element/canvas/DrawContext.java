@@ -23,6 +23,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.UnrecoverableEntryException;
+import java.security.UnrecoverableKeyException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -201,7 +203,7 @@ public class DrawContext implements Closeable {
      */
     public DrawContext moveTo(double x, double y) {
         if (this.workPathObj == null) {
-            return this;
+            beginPath();
         }
         this.pathData.moveTo(x, y);
         return this;
@@ -430,8 +432,8 @@ public class DrawContext implements Closeable {
         // 设置线宽度，默认值0.353
         workPathObj.setLineWidth(state.lineWidth);
         CT_Color color =
-                this.state.fillColor == null ?
-                        CT_Color.rgb(0, 0, 0) : CT_Color.rgb(this.state.fillColor);
+                this.state.strokeColor == null ?
+                        CT_Color.rgb(0, 0, 0) : CT_Color.rgb(this.state.strokeColor);
         workPathObj.setStroke(true)
                 .setStrokeColor(color);
         return this;
@@ -636,8 +638,8 @@ public class DrawContext implements Closeable {
      * 填充文字
      *
      * @param text 填充文字
-     * @param x    第一个字符基线起点 x坐标
-     * @param y    第一个字符基线起点 y坐标
+     * @param x    阅读方向上的左下角 x坐标
+     * @param y    阅读方向上的左下角 y坐标
      * @return this
      */
     public DrawContext fillText(String text, double x, double y) throws IOException {
@@ -694,13 +696,27 @@ public class DrawContext implements Closeable {
         if (charDirection != 0) {
             txtObj.setCharDirection(Direction.getInstance(charDirection));
         }
+        // 测量字间距
+        MeasureBody measureBody = TextMeasureTool.measureWithWith(text, fontSetting);
 
-        TextMeasureTool.MeasureBody measureBody = TextMeasureTool.measureWithWith(text, fontSetting);
+        // 第一个字母的偏移量计算
+        double xx = x + measureBody.firstCharOffsetX;
+        double yy = y + measureBody.firstCharOffsetY;
+        switch (readDirection) {
+            case 0:
+            case 180:
+                xx += textFloatFactor(state.font.getTextAlign(), measureBody.width, readDirection);
+                break;
+            case 90:
+            case 270:
+                yy += textFloatFactor(state.font.getTextAlign(), measureBody.width, readDirection);
+                break;
+        }
         TextCode tcSTTxt = new TextCode()
                 .setContent(text)
-                .setY(y + measureBody.firstCharOffsetY)
-                .setX(x + measureBody.firstCharOffsetX);
-        // 测量字间距
+                .setX(xx)
+                .setY(yy);
+
         if (readDirection == 90 || readDirection == 270) {
             tcSTTxt.setDeltaY(measureBody.offset);
         } else {
@@ -709,6 +725,55 @@ public class DrawContext implements Closeable {
         txtObj.addTextCode(tcSTTxt);
         // 加入容器
         container.addPageBlock(txtObj);
+        return this;
+    }
+
+    /**
+     * 文本浮动带来的偏移量因子
+     *
+     * @param align         对齐方向
+     * @param width         文本宽度
+     * @param readDirection 阅读方向
+     * @return 浮动因子
+     */
+    private double textFloatFactor(TextAlign align, double width, int readDirection) {
+        double factor = 0;
+        switch (align) {
+            case start:
+            case left:
+                factor = 0;
+                break;
+            case end:
+            case right:
+                factor = -width;
+                break;
+            case center:
+                factor = -width / 2;
+                break;
+        }
+        if (readDirection == 180 || readDirection == 270) {
+            factor = -factor;
+        }
+        return factor;
+    }
+
+    /**
+     * 获取文本对齐方式
+     *
+     * @return 文本对齐方式
+     */
+    public TextAlign getTextAlign() {
+        return this.state.font.getTextAlign();
+    }
+
+    /**
+     * 设置文本对齐方式
+     *
+     * @param textAlign 文本对齐方式
+     * @return this
+     */
+    public DrawContext setTextAlign(TextAlign textAlign) {
+        this.state.font.setTextAlign(textAlign);
         return this;
     }
 
@@ -725,6 +790,7 @@ public class DrawContext implements Closeable {
     public TextMetrics measureText(String text) {
         TextMetrics tm = new TextMetrics();
         tm.readDirection = state.font.getReadDirection();
+        tm.fontSize = state.font.getFontSize();
         // 测量字间距
         Double[] offset = TextMeasureTool.measure(text, state.font);
         if (offset.length == 0) {

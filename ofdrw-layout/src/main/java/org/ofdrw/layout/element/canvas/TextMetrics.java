@@ -14,11 +14,16 @@ public class TextMetrics {
     public int readDirection;
 
     /**
-     * 文字宽度
+     * 文字宽度（单位毫米mm）
      * <p>
      * 如果 readDirection == 0 || 180 为宽度
      * <p>
      * 如果 readDirection == 90 || 270 为高度
      */
     public Double width;
+
+    /**
+     * 文本字体大小（单位毫米mm）
+     */
+    public Double fontSize;
 }

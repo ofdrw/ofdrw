@@ -56,12 +56,40 @@ public class FontSetting implements Cloneable, TextFontInfo {
      */
     private int readDirection = 0;
 
+    /**
+     * 文本内容的当前对齐方式。
+     */
+    private TextAlign textAlign = TextAlign.start;
+
     public FontSetting(double fontSize, Font fontObj) {
         this.fontObj = fontObj;
         this.fontSize = fontSize;
     }
 
     private FontSetting() {
+    }
+
+    /**
+     * 获取文本对齐方式
+     *
+     * @return 文本对齐方式
+     */
+    public TextAlign getTextAlign() {
+        return textAlign;
+    }
+
+    /**
+     * 设置文本对齐方式
+     *
+     * @param textAlign 文本对齐方式
+     * @return this
+     */
+    public FontSetting setTextAlign(TextAlign textAlign) {
+        if (textAlign == null) {
+            return this;
+        }
+        this.textAlign = textAlign;
+        return this;
     }
 
     /**
@@ -182,7 +210,6 @@ public class FontSetting implements Cloneable, TextFontInfo {
     }
 
 
-
     /**
      * 获取字间距
      *
@@ -251,10 +278,11 @@ public class FontSetting implements Cloneable, TextFontInfo {
 
     /**
      * 字符宽度
+     *
      * @param c 字符
      * @return 宽度单位毫米
      */
-    public Double charWidth(char c){
+    public Double charWidth(char c) {
         return fontObj.getCharWidthScale(c) * fontSize;
     }
 
@@ -267,6 +295,7 @@ public class FontSetting implements Cloneable, TextFontInfo {
                 .setFontSize(this.fontSize)
                 .setFontWeight(this.fontWeight)
                 .setCharDirection(this.charDirection)
-                .setReadDirection(this.readDirection);
+                .setReadDirection(this.readDirection)
+                .setTextAlign(this.textAlign);
     }
 }
