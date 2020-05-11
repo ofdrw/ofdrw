@@ -66,8 +66,7 @@ public class HelloWorld {
 
 - [生成示例](https://github.com/Trisia/ofdrw/blob/master/ofdrw-layout/src/test/java/org/ofdrw/layout/OFDDocTest.java)
 - [布局示例](https://github.com/Trisia/ofdrw/blob/master/ofdrw-layout/src/test/java/org/ofdrw/layout/LayoutTest.java)
-- [Canvas示例](https://github.com/Trisia/ofdrw/blob/master/ofdrw-layout/src/test/java/org/ofdrw/layout/element/DrawContextTest.java)
-
+- [Canvas示例](https://github.com/Trisia/ofdrw/blob/master/ofdrw-layout/src/test/java/org/ofdrw/layout/element/canvas/DrawContextTest.java)
 > - **关于OFD布局设计，请参考 [《OFD R&W 布局设计》](./ofdrw-layout/doc/README.md)**
 > 
 > - **Canvas API 请参考 [OFD R&W Canvas](./ofdrw-layout/doc/canvas/README.md)**
