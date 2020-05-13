@@ -1,5 +1,7 @@
 # OFD Reader & Writer
 
+> 如何clone和预览存在困难，请移步 [https://gitee.com/Trisia/ofdrw](https://gitee.com/Trisia/ofdrw)
+
 > **Talk is cheap,Show me the code. ——Linus Torvalds**
 
 **像写HTML和Word那样简单的编写OFD。**
