@@ -4,6 +4,7 @@ import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.ofdrw.core.annotation.Annotations;
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.doc.Document;
@@ -134,6 +135,7 @@ public class OFDReader implements Closeable {
         }
     }
 
+
     /**
      * 文档是否包含数字签名
      *
@@ -147,6 +149,35 @@ public class OFDReader implements Closeable {
             return signaturesLoc != null;
         } catch (FileNotFoundException | DocumentException e) {
             throw new BadOFDException("错误OFD结构和文件格式", e);
+        }
+    }
+
+    /**
+     * 获取注解列表文件对象
+     * <p>
+     * 如果文档中没有注释文件，那么返还null
+     *
+     * @return 注解列表文件对象或null
+     */
+    public Annotations getAnnotations() {
+        try {
+            rl.save();
+            DocBody docBody = ofdDir.getOfd().getDocBody();
+            ST_Loc docRoot = docBody.getDocRoot();
+            // 路径解析对象获取并缓存虚拟容器
+            Document document = rl.get(docRoot, Document::new);
+            rl.cd(docRoot.parent());
+
+            ST_Loc annotations = document.getAnnotations();
+            if (annotations == null) {
+                return null;
+            }
+            return rl.get(annotations, Annotations::new);
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new BadOFDException("OFD解析失败，原因:" + e.getMessage(), e);
+        } finally {
+            // 还原原有工作区
+            rl.restore();
         }
     }
 
@@ -167,6 +198,48 @@ public class OFDReader implements Closeable {
             return pages.getSize();
         } catch (FileNotFoundException | DocumentException e) {
             throw new BadOFDException("OFD解析失败，原因:" + e.getMessage(), e);
+        } finally {
+            // 还原原有工作区
+            rl.restore();
+        }
+    }
+
+    /**
+     * 获取页面信息
+     *
+     * @param pageNum 页码，从1开始
+     * @return 页面信息
+     */
+    public PageInfo getPageInfo(int pageNum) {
+        if (pageNum <= 0) {
+            throw new NumberFormatException("页码(pageNum)不能小于0");
+        }
+        try {
+            int index = pageNum - 1;
+            // 保存切换目录前的工作区
+            rl.save();
+            DocBody docBody = ofdDir.getOfd().getDocBody();
+            ST_Loc docRoot = docBody.getDocRoot();
+            // 路径解析对象获取并缓存虚拟容器
+            Document document = rl.get(docRoot, Document::new);
+            rl.cd(docRoot.parent());
+            Pages pages = document.getPages();
+            List<org.ofdrw.core.basicStructure.pageTree.Page> pageList = pages.getPages();
+            if (index >= pageList.size()) {
+                throw new NumberFormatException(pageNum + "超过最大页码:" + pageList.size());
+            }
+            // 获取页面的路径
+            ST_Loc pageLoc = pageList.get(index).getBaseLoc();
+
+            Page obj = rl.get(pageLoc, Page::new);
+            ST_Box pageSize = getPageSize(obj);
+            return new PageInfo()
+                    .setIndex(pageNum)
+                    .setId(pageList.get(index).getID())
+                    .setObj(obj)
+                    .setSize(pageSize.clone());
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
         } finally {
             // 还原原有工作区
             rl.restore();
@@ -205,32 +278,7 @@ public class OFDReader implements Closeable {
      * @return 页面对象
      */
     public Page getPage(int pageNum) {
-        if (pageNum <= 0) {
-            throw new NumberFormatException("页码(pageNum)不能小于0");
-        }
-        try {
-            int index = pageNum - 1;
-            // 保存切换目录前的工作区
-            rl.save();
-            DocBody docBody = ofdDir.getOfd().getDocBody();
-            ST_Loc docRoot = docBody.getDocRoot();
-            // 路径解析对象获取并缓存虚拟容器
-            Document document = rl.get(docRoot, Document::new);
-            rl.cd(docRoot.parent());
-            Pages pages = document.getPages();
-            List<org.ofdrw.core.basicStructure.pageTree.Page> pageList = pages.getPages();
-            if (index >= pageList.size()) {
-                throw new NumberFormatException(pageNum + "超过最大页码:" + pageList.size());
-            }
-            // 获取页面的路径
-            ST_Loc pageLoc = pageList.get(index).getBaseLoc();
-            return rl.get(pageLoc, Page::new);
-        } catch (FileNotFoundException | DocumentException e) {
-            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
-        } finally {
-            // 还原原有工作区
-            rl.restore();
-        }
+        return getPageInfo(pageNum).getObj();
     }
 
     /**
@@ -240,30 +288,7 @@ public class OFDReader implements Closeable {
      * @return 对象ID
      */
     public ST_ID getPageObjectId(int pageNum) {
-        if (pageNum <= 0) {
-            throw new NumberFormatException("页码(pageNum)不能小于0");
-        }
-        try {
-            int index = pageNum - 1;
-            // 保存切换目录前的工作区
-            rl.save();
-            DocBody docBody = ofdDir.getOfd().getDocBody();
-            ST_Loc docRoot = docBody.getDocRoot();
-            // 路径解析对象获取并缓存虚拟容器
-            Document document = rl.get(docRoot, Document::new);
-            rl.cd(docRoot.parent());
-            Pages pages = document.getPages();
-            List<org.ofdrw.core.basicStructure.pageTree.Page> pageList = pages.getPages();
-            if (index >= pageList.size()) {
-                throw new NumberFormatException(pageNum + "超过最大页码:" + pageList.size());
-            }
-            return pageList.get(index).getID();
-        } catch (FileNotFoundException | DocumentException e) {
-            throw new BadOFDException("OFD解析失败，原因:" + e.getMessage(), e);
-        } finally {
-            // 还原原有工作区
-            rl.restore();
-        }
+        return getPageInfo(pageNum).getId();
     }
 
     /**

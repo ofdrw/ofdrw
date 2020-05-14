@@ -6,7 +6,7 @@ import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicType.ST_Box;
 
 /**
- * 注释的金泰呈现效果
+ * 注释的静态呈现效果
  * <p>
  * 使用页面块定义来描述
  * <p>
