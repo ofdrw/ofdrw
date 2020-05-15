@@ -1,4 +1,4 @@
-package org.ofdrw.layout.element;
+package org.ofdrw.layout.edit;
 
 import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.annotation.pageannot.AnnotType;
@@ -17,7 +17,7 @@ import java.util.Map;
  * @author 权观宇
  * @since 2020-05-14 19:09:37
  */
-public class Annotation extends Div implements DivContainer {
+public class Annotation {
 
     /**
      * 绘制器
@@ -36,7 +36,6 @@ public class Annotation extends Div implements DivContainer {
 
     private Annotation() {
         annot = new Annot()
-                .setAppearance(container)
                 .setLastModDate(LocalDate.now())
                 .setCreator("OFD R&W");
     }
@@ -53,7 +52,7 @@ public class Annotation extends Div implements DivContainer {
      * @param drawer 注解绘制器
      */
     public Annotation(Double x, Double y, Double width, Double height, AnnotType type, Drawer drawer) {
-        super(width, height);
+        this();
         if (type == null) {
             throw new IllegalArgumentException("注解对象类型(type)不能为空");
         }
@@ -61,11 +60,9 @@ public class Annotation extends Div implements DivContainer {
             throw new IllegalArgumentException("注解绘制器(drawer)不能为空");
         }
         this.setType(type)
-                .setDrawer(drawer)
-                .setPosition(Position.Absolute)
-                .setX(x)
-                .setY(y);
-        container.setBoundary(new ST_Box(x, y, width, height));
+                .setDrawer(drawer);
+        this.container = new Appearance(new ST_Box(x, y, width, height));
+        this.annot.setAppearance(container);
     }
 
     /**

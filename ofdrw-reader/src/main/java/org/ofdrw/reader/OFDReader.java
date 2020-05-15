@@ -232,12 +232,16 @@ public class OFDReader implements Closeable {
             ST_Loc pageLoc = pageList.get(index).getBaseLoc();
 
             Page obj = rl.get(pageLoc, Page::new);
+            // 获取页面的容器绝对路径
+            pageLoc = rl.getAbsTo(pageLoc);
+
             ST_Box pageSize = getPageSize(obj);
             return new PageInfo()
                     .setIndex(pageNum)
                     .setId(pageList.get(index).getID())
                     .setObj(obj)
-                    .setSize(pageSize.clone());
+                    .setSize(pageSize.clone())
+                    .setPageAbsLoc(pageLoc);
         } catch (FileNotFoundException | DocumentException e) {
             throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
         } finally {

@@ -10,10 +10,7 @@ import org.ofdrw.layout.VirtualPage;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.element.*;
 import org.ofdrw.layout.element.canvas.Canvas;
-import org.ofdrw.layout.engine.render.CanvasRender;
-import org.ofdrw.layout.engine.render.DivRender;
-import org.ofdrw.layout.engine.render.ImgRender;
-import org.ofdrw.layout.engine.render.ParagraphRender;
+import org.ofdrw.layout.engine.render.*;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.PageDir;
 import org.ofdrw.pkg.container.PagesDir;
@@ -172,11 +169,8 @@ public class VPageParseEngine {
                     || elem.isPlaceholder()) {
                 continue;
             }
-            //
-            if (!(elem instanceof DivContainer)) {
-                // 处理每一个元素的基础盒式模型属性，背景边框等，并加入到图层中
-                DivRender.render(to, elem, maxUnitID);
-            }
+            // 处理每一个元素的基础盒式模型属性，背景边框等，并加入到图层中
+            DivRender.render(to, elem, maxUnitID);
 
             if (elem instanceof Img) {
                 // 渲染图片对象

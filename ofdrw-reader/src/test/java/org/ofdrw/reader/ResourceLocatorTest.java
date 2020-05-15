@@ -2,10 +2,13 @@ package org.ofdrw.reader;
 
 import org.dom4j.DocumentException;
 import org.junit.jupiter.api.Test;
+import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
+import org.ofdrw.pkg.container.PageDir;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -33,6 +36,36 @@ class ResourceLocatorTest {
 
             String absPath = rl.toAbsolutePath("../../Signs/Signatures.xml");
             System.out.println(absPath);
+        }
+    }
+
+    @Test
+    public void getAbsTo() throws IOException, DocumentException {
+        try (OFDReader reader = new OFDReader(src)) {
+            OFDDir ofdDir = reader.getOFDDir();
+            ResourceLocator rl = new ResourceLocator(ofdDir);
+            rl.cd("/Doc_0");
+            Document document = rl.get("Document.xml", Document::new);
+            ST_Loc pageLoc = document.getPages().getPageByIndex(0).getBaseLoc();
+
+            ST_Loc abs = rl.getAbsTo(pageLoc);
+            assertEquals("/Doc_0/Pages/Page_0/Content.xml", abs.toString());
+        }
+    }
+
+    @Test
+    public void ConstructWithVC() throws IOException {
+        try (OFDReader reader = new OFDReader(src)) {
+            OFDDir ofdDir = reader.getOFDDir();
+            PageDir pageDir = ofdDir.obtainDocDefault().getPages().getByIndex(0);
+
+            ResourceLocator rl = new ResourceLocator(pageDir);
+            assertEquals("/Doc_0/Pages/Page_0", rl.pwd());
+
+            rl.cd("/Doc_0/Res");
+            Path file = rl.getFile(new ST_Loc("NotoSerifCJKsc-Regular.otf"));
+            assertTrue(Files.exists(file));
+
         }
     }
 

@@ -3,6 +3,7 @@ package org.ofdrw.core.annotation;
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.annotation.pageannot.AnnPage;
+import org.ofdrw.core.basicType.ST_RefID;
 
 import java.util.List;
 
@@ -41,6 +42,22 @@ public class Annotations extends OFDElement {
         }
         this.add(page);
         return this;
+    }
+
+    /**
+     * 根据ID获取页面注解
+     *
+     * @param id 页面ID
+     * @return null或注释所在页
+     */
+    public AnnPage getByPageId(String id) {
+        List<AnnPage> pages = getPages();
+        for (AnnPage page : pages) {
+            if (page.getPageID().toString().equals(id)) {
+                return page;
+            }
+        }
+        return null;
     }
 
     /**

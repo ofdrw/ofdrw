@@ -3,6 +3,7 @@ package org.ofdrw.reader;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.basicType.ST_Loc;
 
 /**
  * 页面信息
@@ -28,6 +29,11 @@ public class PageInfo {
      * 页码，从1起
      */
     private Integer index;
+
+    /**
+     * 页面的绝对路径
+     */
+    private ST_Loc pageAbsLoc;
 
     public PageInfo() {
     }
@@ -65,6 +71,15 @@ public class PageInfo {
 
     public PageInfo setIndex(Integer index) {
         this.index = index;
+        return this;
+    }
+
+    public ST_Loc getPageAbsLoc() {
+        return pageAbsLoc;
+    }
+
+    public PageInfo setPageAbsLoc(ST_Loc pageAbsLoc) {
+        this.pageAbsLoc = pageAbsLoc;
         return this;
     }
 }

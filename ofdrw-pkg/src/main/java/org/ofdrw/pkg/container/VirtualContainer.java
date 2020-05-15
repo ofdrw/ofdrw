@@ -310,6 +310,30 @@ public class VirtualContainer implements Closeable {
         return Paths.get(fullPath);
     }
 
+    /**
+     * 判断文件或对象是否存在
+     *
+     * @param fileName 文件名称
+     * @return true - 存在;false - 不存在
+     */
+    public boolean exit(String fileName) {
+        if (fileName == null || fileName.length() == 0) {
+            return false;
+        }
+        Element element = fileCache.get(fileName);
+        if (element == null) {
+            // 缓存中不存在，从文件目录中尝试读取
+            Path res = Paths.get(fullPath, fileName);
+            if (Files.isDirectory(res) || Files.notExists(res)) {
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+
 
     /**
      * 删除整个虚拟容器

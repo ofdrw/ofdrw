@@ -12,12 +12,15 @@ import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.gv.GlobalVar;
 import org.ofdrw.layout.edit.AdditionVPage;
+import org.ofdrw.layout.edit.Annotation;
+import org.ofdrw.layout.edit.AnnotationRender;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.engine.*;
 import org.ofdrw.layout.exception.DocReadException;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.reader.OFDReader;
+import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.ResourceLocator;
 
 import java.io.Closeable;
@@ -66,6 +69,19 @@ public class OFDDoc implements Closeable {
      * 同时需要修改此 MaxUnitID值。
      */
     private AtomicInteger MaxUnitID = new AtomicInteger(0);
+
+    /**
+     * 外部资源管理器
+     */
+    ResManager prm;
+
+    /**
+     * 注释渲染器
+     *
+     * 仅在需要增加注释时进行初始化
+     */
+    private AnnotationRender annotationRender;
+
     /**
      * 流式布局元素队列
      */
@@ -192,7 +208,9 @@ public class OFDDoc implements Closeable {
         ofdDir = OFDDir.newOFD()
                 .setOfd(ofd);
         // 创建一个新的文档
-        ofdDir.newDoc().setDocument(lowDoc);
+        DocDir docDir = ofdDir.newDoc();
+        docDir.setDocument(lowDoc);
+        prm = new ResManager(docDir, MaxUnitID);
     }
 
     /**
@@ -217,6 +235,7 @@ public class OFDDoc implements Closeable {
         ST_ID maxUnitID = cdata.getMaxUnitID();
         // 设置当前文档最大ID
         MaxUnitID = new AtomicInteger(maxUnitID.getId().intValue());
+        prm = new ResManager(ofdDir.obtainDocDefault(), MaxUnitID);
     }
 
     /**
@@ -267,6 +286,30 @@ public class OFDDoc implements Closeable {
     }
 
     /**
+     * 向页面中增加注释对象
+     *
+     * @param pageNum    页码
+     * @param annotation 注释对象
+     * @return this
+     */
+    public OFDDoc addAnnotation(int pageNum, Annotation annotation) {
+        if (annotation == null) {
+            return this;
+        }
+
+        if (reader == null) {
+            throw new RuntimeException("仅在修改模式下允许获取追加注释对象，请使用reader构造");
+        }
+        if (annotationRender == null) {
+            annotationRender = new AnnotationRender(reader.getOFDDir().obtainDocDefault(), prm, MaxUnitID);
+        }
+        PageInfo pageInfo = reader.getPageInfo(pageNum);
+        annotationRender.render(pageInfo, annotation);
+
+        return this;
+    }
+
+    /**
      * 获取页面样式
      *
      * @return 页面样式
@@ -279,7 +322,7 @@ public class OFDDoc implements Closeable {
     public void close() throws IOException {
         if (this.closed) {
             return;
-        }else{
+        } else {
             closed = true;
         }
 
@@ -300,7 +343,6 @@ public class OFDDoc implements Closeable {
                 throw new IllegalStateException("OFD文档中没有页面，无法生成OFD文档");
             }
             DocDir docDefault = ofdDir.obtainDocDefault();
-            ResManager prm = new ResManager(docDefault, MaxUnitID);
             // 创建虚拟页面解析引擎，并持有文档上下文。
             VPageParseEngine parseEngine = new VPageParseEngine(pageLayout, docDefault, prm, MaxUnitID);
             // 解析虚拟页面

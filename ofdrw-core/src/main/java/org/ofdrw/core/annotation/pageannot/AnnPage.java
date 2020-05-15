@@ -4,6 +4,7 @@ import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.core.basicType.ST_RefID;
 
 /**
  * 注释所在页
@@ -22,6 +23,7 @@ public class AnnPage extends OFDElement {
         super("Page");
     }
 
+
     /**
      * 【必选 属性】
      * 设置 引用注释所在页面的标识
@@ -29,7 +31,7 @@ public class AnnPage extends OFDElement {
      * @param pageId 引用注释所在页面的标识
      * @return this
      */
-    public AnnPage setPageID(ST_ID pageId) {
+    public AnnPage setPageID(ST_RefID pageId) {
         if (pageId == null) {
             throw new IllegalArgumentException("引用注释所在页面的标识（PageID）不能为空");
         }
@@ -37,14 +39,17 @@ public class AnnPage extends OFDElement {
         return this;
     }
 
+    public AnnPage setPageID(ST_ID pageId) {
+        return setPageID(pageId.ref());
+    }
     /**
      * 【必选 属性】
      * 获取 引用注释所在页面的标识
      *
      * @return 引用注释所在页面的标识
      */
-    public ST_ID getPageID() {
-        return ST_ID.getInstance(this.attributeValue("PageID"));
+    public ST_RefID getPageID() {
+        return ST_RefID.getInstance(this.attributeValue("PageID"));
     }
 
 
@@ -73,4 +78,6 @@ public class AnnPage extends OFDElement {
         Element e = this.getOFDElement("FileLoc");
         return e == null ? null : new ST_Loc(e.getTextTrim());
     }
+
+
 }
