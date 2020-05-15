@@ -40,7 +40,7 @@
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.3.0</version>
+  <version>1.4.0</version>
 </dependency>
 ```
 
@@ -109,14 +109,16 @@ mvn install
 
 期望新功能
 
-- 段落的行内布局控制（text-align）能让固定布局样式文字居中。
 - 页面模板、页面模板导入使用。
-- 水印。
 - 文字提取。
-- OFD转图片、PDF。
+- ~~OFD转图片、PDF。~~，无计划
+- ~~段落的行内布局控制（text-align）能让固定布局样式文字居中~~，需求不足。
 
 ### 进展
 
+- *2020-05-15* 完成OFD的注释功能
+
+    测试用例参考`org.ofdrw.layout.OFDDocTest#addAnnotation(void)`。
 - *2020-05-14* 启动注解对象构想，用于支持水印等注解的加入。
 - *2020-05-10* 完成了Canvas系列API的开发。
 - *2020-05-01* 增加了Canvas设计，用于更加灵活的绘制和水印效果。
