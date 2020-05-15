@@ -15,6 +15,7 @@ import org.ofdrw.font.Font;
 import org.ofdrw.font.FontName;
 import org.ofdrw.font.FontSet;
 import org.ofdrw.layout.edit.AdditionVPage;
+import org.ofdrw.layout.edit.Annotation;
 import org.ofdrw.layout.element.*;
 import org.ofdrw.layout.element.canvas.Canvas;
 import org.ofdrw.pkg.container.DocDir;
@@ -26,8 +27,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,6 +37,59 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 2020-03-22 11:38:48
  */
 class OFDDocTest {
+
+    /**
+     * 加入印章类型注释对象
+     *
+     * @throws IOException
+     * @throws DocumentException
+     */
+    @Test
+    void addAnnotationStamp() throws IOException, DocumentException {
+        Path srcP = Paths.get("src/test/resources", "AddWatermarkAnnot.ofd");
+        Path outP = Paths.get("target/AddAnnotationStamp.ofd");
+        Path imgPath = Paths.get("src/test/resources", "StampImg.png");
+
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+            Annotation annotation = new Annotation(70d, 100d, 60d, 60d, AnnotType.Stamp, ctx -> {
+                ctx.setGlobalAlpha(0.53);
+                ctx.drawImage(imgPath, 0, 0, 40d, 40d);
+            });
+            ofdDoc.addAnnotation(1, annotation);
+
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+
+    /**
+     * 加入水印类型注释对象
+     *
+     * @throws IOException
+     * @throws DocumentException
+     */
+    @Test
+    void addAnnotation() throws IOException, DocumentException {
+        Path srcP = Paths.get("src/test/resources", "拿来主义_page6.ofd");
+        Path outP = Paths.get("target/AddWatermarkAnnot.ofd");
+        Path imgPath = Paths.get("src/test/resources", "eg_tulip.jpg");
+
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+            Annotation annotation = new Annotation(50d, 50d, 60d, 60d, AnnotType.Watermark, ctx -> {
+                ctx.setGlobalAlpha(0.53);
+                ctx.drawImage(imgPath, 0, 0, 40d, 30d);
+            });
+
+            ofdDoc.addAnnotation(1, annotation);
+            ofdDoc.addAnnotation(3, annotation);
+            ofdDoc.addAnnotation(5, annotation);
+
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
 
     @Test
     void addAnnot() throws IOException, DocumentException {
@@ -526,7 +578,8 @@ class OFDDocTest {
                 ctx.stroke();
             });
             Paragraph p2 = new Paragraph("是不是很好看");
-            p2.setClear(Clear.none);ofdDoc.add(p)
+            p2.setClear(Clear.none);
+            ofdDoc.add(p)
                     .add(canvas)
                     .add(p2);
         }

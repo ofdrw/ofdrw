@@ -7,7 +7,7 @@ import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.layout.element.canvas.Drawer;
 
 import java.time.LocalDate;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 注释对象
@@ -24,54 +24,111 @@ public class Annotation {
      */
     private Drawer drawer;
 
-    /**
-     * 底层的注解对象
-     */
-    private Annot annot;
 
     /**
-     * 容器用于真正放置注解对象
+     * 注释类型
      */
-    private Appearance container;
+    private AnnotType type;
+
+    /**
+     * 注释创建者
+     */
+    private String creator;
+
+    /**
+     * 最近一次修改的时间
+     */
+    private LocalDate lastModDate;
+
+    /**
+     * 注释子类型
+     */
+    private String subtype = null;
+
+    /**
+     * 表示该注释对象是否显示
+     */
+    private Boolean visible = null;
+
+    /**
+     * 对象的 Remark 信息是否不随页面旋转而旋转
+     */
+    private Boolean noRotate = null;
+
+    /**
+     * 一组注释参数
+     * <p>
+     * 为了保证参数的顺序采用List存储
+     */
+    private LinkedHashMap<String, String> parameters = null;
+
+    /**
+     * 注释说明内容
+     */
+    private String remark = null;
+
+    /**
+     * 对象的 Remark 信息是否不能被用户更改
+     */
+    private Boolean readOnly;
+
+    /**
+     * 对象的Remark 信息是否随页面一起打印
+     */
+    private Boolean print = null;
+
+    /**
+     * 对象的 Remark 信息是否不随页面缩放而同步缩放
+     */
+    private Boolean noZoom;
+
+    /**
+     * 注释空间
+     */
+    private ST_Box boundary;
+
 
     private Annotation() {
-        annot = new Annot()
-                .setLastModDate(LocalDate.now())
-                .setCreator("OFD R&W");
     }
 
 
     /**
-     * 创建注解对象
+     * 创建注释对象
      *
      * @param x      所处页面 y坐标
      * @param y      所处页面 y坐标
      * @param width  画布宽度
      * @param height 画布高度
-     * @param type   注解类型
-     * @param drawer 注解绘制器
+     * @param type   注释类型
+     * @param drawer 注释绘制器
      */
-    public Annotation(Double x, Double y, Double width, Double height, AnnotType type, Drawer drawer) {
-        this();
+    public Annotation(double x, double y,
+                      double width, double height,
+                      AnnotType type,
+                      Drawer drawer) {
+        this(new ST_Box(x, y, width, height), type, drawer);
+    }
+
+    /**
+     * 创建注解对象
+     *
+     * @param boundary 注释对象绘制空间
+     * @param type     注释类型
+     * @param drawer   注释绘制器
+     */
+    public Annotation(ST_Box boundary, AnnotType type, Drawer drawer) {
+        if (boundary == null) {
+            throw new IllegalArgumentException("注释对象绘制空间(boundary)不能为空");
+        }
         if (type == null) {
             throw new IllegalArgumentException("注解对象类型(type)不能为空");
         }
         if (drawer == null) {
             throw new IllegalArgumentException("注解绘制器(drawer)不能为空");
         }
-        this.setType(type)
-                .setDrawer(drawer);
-        this.container = new Appearance(new ST_Box(x, y, width, height));
-        this.annot.setAppearance(container);
-    }
-
-    /**
-     * 获取注解外观容器对象
-     *
-     * @return 注释的静态呈现效果
-     */
-    public Appearance getContainer() {
-        return container;
+        this.setDrawer(drawer);
+        this.type = type;
+        this.boundary = boundary;
     }
 
 
@@ -80,8 +137,47 @@ public class Annotation {
      *
      * @return 注释对象
      */
-    public Annot getAnnot() {
+    public Annot build() {
+        Annot annot = new Annot()
+                .setType(type)
+                .setCreator(creator == null ? "OFD R&W" : creator)
+                .setLastModDate(lastModDate == null ? LocalDate.now() : lastModDate);
+
+        if (visible != null) {
+            annot.setVisible(visible);
+        }
+        if (subtype != null) {
+            annot.setSubtype(subtype);
+        }
+        if (print != null) {
+            annot.setPrint(print);
+        }
+        if (noZoom != null) {
+            annot.setNoZoom(noZoom);
+        }
+        if (noRotate != null) {
+            annot.setNoRotate(noRotate);
+        }
+        if (readOnly != null) {
+            annot.setReadOnly(readOnly);
+        }
+        if (remark != null) {
+            annot.setRemark(remark);
+        }
+        if (parameters != null) {
+            parameters.forEach(annot::addParameter);
+        }
+        annot.setAppearance(new Appearance(boundary));
         return annot;
+    }
+
+
+    public ST_Box getBoundary() {
+        return boundary;
+    }
+
+    public void setBoundary(ST_Box boundary) {
+        this.boundary = boundary;
     }
 
     /**
@@ -104,6 +200,7 @@ public class Annotation {
         return this;
     }
 
+
     /**
      * 设置 注释类型
      * <p>
@@ -113,9 +210,10 @@ public class Annotation {
      * @return this
      */
     public Annotation setType(AnnotType type) {
-        annot.setType(type);
+        this.type = type;
         return this;
     }
+
 
     /**
      * 获取 注释类型
@@ -125,9 +223,8 @@ public class Annotation {
      * @return 注释类型
      */
     public AnnotType getType() {
-        return annot.getType();
+        return type;
     }
-
 
     /**
      * 设置 注释创建者
@@ -136,7 +233,7 @@ public class Annotation {
      * @return this
      */
     public Annotation setCreator(String creator) {
-        annot.setCreator(creator);
+        this.creator = creator;
         return this;
     }
 
@@ -146,8 +243,9 @@ public class Annotation {
      * @return 注释创建者
      */
     public String getCreator() {
-        return annot.getCreator();
+        return creator;
     }
+
 
     /**
      * 设置 最近一次修改的时间
@@ -156,7 +254,7 @@ public class Annotation {
      * @return this
      */
     public Annotation setLastModDate(LocalDate lastModDate) {
-        annot.setLastModDate(lastModDate);
+        this.lastModDate = lastModDate;
         return this;
     }
 
@@ -166,8 +264,9 @@ public class Annotation {
      * @return 最近一次修改的时间
      */
     public LocalDate getLastModDate() {
-        return annot.getLastModDate();
+        return lastModDate;
     }
+
 
     /**
      * 设置 注释子类型
@@ -176,7 +275,7 @@ public class Annotation {
      * @return this
      */
     public Annotation setSubtype(String subtype) {
-        annot.setSubtype(subtype);
+        this.subtype = subtype;
         return this;
     }
 
@@ -186,8 +285,9 @@ public class Annotation {
      * @return 注释子类型
      */
     public String getSubtype() {
-        return annot.getSubtype();
+        return subtype;
     }
+
 
     /**
      * 设置 表示该注释对象是否显示
@@ -198,7 +298,7 @@ public class Annotation {
      * @return this
      */
     public Annotation setVisible(boolean visible) {
-        annot.setVisible(visible);
+        this.visible = visible;
         return this;
     }
 
@@ -209,9 +309,13 @@ public class Annotation {
      *
      * @return 表示该注释对象是否显示，默认值为 true
      */
-    public boolean getVisible() {
-        return annot.getVisible();
+    public Boolean getVisible() {
+        if (visible == null) {
+            return true;
+        }
+        return visible;
     }
+
 
     /**
      * 设置 对象的Remark 信息是否随页面一起打印
@@ -221,8 +325,8 @@ public class Annotation {
      * @param print 对象的Remark 信息是否随页面一起打印
      * @return this
      */
-    public Annotation setPrint(Boolean print) {
-        annot.setPrint(print);
+    public Annotation setPrint(boolean print) {
+        this.print = print;
         return this;
     }
 
@@ -234,7 +338,10 @@ public class Annotation {
      * @return 对象的Remark 信息是否随页面一起打印
      */
     public Boolean getPrint() {
-        return annot.getPrint();
+        if (print == null) {
+            return true;
+        }
+        return print;
     }
 
     /**
@@ -245,8 +352,8 @@ public class Annotation {
      * @param noZoom 对象的 Remark 信息是否不随页面缩放而同步缩放
      * @return this
      */
-    public Annotation setNoZoom(Boolean noZoom) {
-        annot.setNoZoom(noZoom);
+    public Annotation setNoZoom(boolean noZoom) {
+        this.noZoom = noZoom;
         return this;
     }
 
@@ -258,8 +365,12 @@ public class Annotation {
      * @return 对象的 Remark 信息是否不随页面缩放而同步缩放
      */
     public Boolean getNoZoom() {
-        return annot.getNoZoom();
+        if (noZoom == null) {
+            return false;
+        }
+        return noZoom;
     }
+
 
     /**
      * 设置 对象的 Remark 信息是否不随页面旋转而旋转
@@ -269,8 +380,8 @@ public class Annotation {
      * @param noRotate 对象的 Remark 信息是否不随页面旋转而旋转
      * @return this
      */
-    public Annotation setNoRotate(Boolean noRotate) {
-        annot.setNoRotate(noRotate);
+    public Annotation setNoRotate(boolean noRotate) {
+        this.noRotate = noRotate;
         return this;
     }
 
@@ -282,8 +393,12 @@ public class Annotation {
      * @return 对象的 Remark 信息是否不随页面旋转而旋转
      */
     public Boolean getNoRotate() {
-        return annot.getNoRotate();
+        if (noRotate == null) {
+            return false;
+        }
+        return noRotate;
     }
+
 
     /**
      * 设置 对象的 Remark 信息是否不能被用户更改
@@ -293,8 +408,8 @@ public class Annotation {
      * @param readOnly 对象的 Remark 信息是否不能被用户更改
      * @return this
      */
-    public Annotation setReadOnly(Boolean readOnly) {
-        annot.setReadOnly(readOnly);
+    public Annotation setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
         return this;
     }
 
@@ -306,7 +421,10 @@ public class Annotation {
      * @return 对象的 Remark 信息是否不能被用户更改
      */
     public Boolean getReadOnly() {
-        return annot.getReadOnly();
+        if (readOnly == null) {
+            return true;
+        }
+        return readOnly;
     }
 
 
@@ -317,7 +435,7 @@ public class Annotation {
      * @return this
      */
     public Annotation setRemark(String remark) {
-        annot.setRemark(remark);
+        this.remark = remark;
         return this;
     }
 
@@ -327,8 +445,9 @@ public class Annotation {
      * @return 注释说明内容，如果注释说明内容不存在返还null
      */
     public String getRemark() {
-        return annot.getRemark();
+        return remark;
     }
+
 
     /**
      * 增加 注释参数
@@ -338,9 +457,16 @@ public class Annotation {
      * @return this
      */
     public Annotation addParameter(String name, String parameter) {
-        annot.addParameter(name, parameter);
+        if (parameters == null) {
+            parameters = new LinkedHashMap<>();
+        }
+        if (name == null) {
+            return this;
+        }
+        parameters.put(name, parameter);
         return this;
     }
+
 
     /**
      * 获取 一组注释参数
@@ -348,7 +474,10 @@ public class Annotation {
      * @return 注解参数映射表, 如果注释参数不存在那么返还空的集合
      */
     public Map<String, String> getParameters() {
-        return annot.getParameters();
+        if (parameters == null) {
+            return Collections.emptyMap();
+        }
+        return parameters;
     }
 
 }

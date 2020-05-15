@@ -7,18 +7,15 @@ import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.annotation.pageannot.Appearance;
 import org.ofdrw.core.annotation.pageannot.PageAnnot;
 import org.ofdrw.core.basicStructure.doc.Document;
-import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
-import org.ofdrw.layout.edit.Annotation;
 import org.ofdrw.layout.element.canvas.DrawContext;
 import org.ofdrw.layout.element.canvas.Drawer;
 import org.ofdrw.layout.engine.ResManager;
 import org.ofdrw.layout.engine.render.RenderException;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.PageDir;
-import org.ofdrw.pkg.container.VirtualContainer;
 import org.ofdrw.reader.BadOFDException;
 import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.ResourceLocator;
@@ -43,7 +40,7 @@ public class AnnotationRender {
     /**
      * 注释文件目录
      */
-    private Annotations annotations;
+    private Annotations annotations = null;
 
     private ResourceLocator rl;
     private ResManager prm;
@@ -73,11 +70,7 @@ public class AnnotationRender {
         ST_Loc annListFileLoc = document.getAnnotations();
         // 文件加载器
         rl = new ResourceLocator(this.docDir);
-        if (annListFileLoc == null) {
-            // 不存在注释列表文件需要创建该文件
-            annotations = new Annotations();
-            docDir.putObj(DocDir.AnnotationsFileName, annotations);
-        } else {
+        if (annListFileLoc != null) {
             try {
                 annotations = rl.get(annListFileLoc, Annotations::new);
                 // 切换目录到注解目录文件所在目录中
@@ -85,10 +78,15 @@ public class AnnotationRender {
             } catch (FileNotFoundException | DocumentException e) {
                 System.err.println(e.getMessage());
                 // 无法获取到注解对象，因此重建注解对象
-                annotations = new Annotations();
-                docDir.putObj(DocDir.AnnotationsFileName, annotations);
             }
         }
+        if (annotations == null) {
+            // 不存在注释列表文件需要创建该文件
+            annotations = new Annotations();
+            document.setAnnotations(new ST_Loc(DocDir.AnnotationsFileName));
+            docDir.putObj(DocDir.AnnotationsFileName, annotations);
+        }
+
     }
 
 
@@ -105,8 +103,6 @@ public class AnnotationRender {
             return;
         }
         init();
-
-        // TODO 缓存防止重复加入浪费资源
 
         ST_ID id = pageInfo.getId();
         // 分页注释记录条目
@@ -148,11 +144,11 @@ public class AnnotationRender {
             record.setFileLoc(new ST_Loc(pageContainerPath).cat(PageDir.AnnotationFileName));
         }
         // 获取注解对象，设置ID
-        Annot annot = build.getAnnot();
+        Annot annot = build.build();
         annot.setObjID(maxUnitID.incrementAndGet());
         // 加入注释容器中
         annotContainer.addAnnot(annot);
-        Appearance container = build.getContainer();
+        Appearance container = annot.getAppearance();
         ST_Box box = container.getBoundary()
                 .clone()
                 .setTopLeftX(0d)

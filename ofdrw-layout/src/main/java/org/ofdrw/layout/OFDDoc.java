@@ -77,7 +77,7 @@ public class OFDDoc implements Closeable {
 
     /**
      * 注释渲染器
-     *
+     * <p>
      * 仅在需要增加注释时进行初始化
      */
     private AnnotationRender annotationRender;
@@ -292,7 +292,7 @@ public class OFDDoc implements Closeable {
      * @param annotation 注释对象
      * @return this
      */
-    public OFDDoc addAnnotation(int pageNum, Annotation annotation) {
+    public OFDDoc addAnnotation(int pageNum, Annotation annotation) throws IOException {
         if (annotation == null) {
             return this;
         }
@@ -303,9 +303,10 @@ public class OFDDoc implements Closeable {
         if (annotationRender == null) {
             annotationRender = new AnnotationRender(reader.getOFDDir().obtainDocDefault(), prm, MaxUnitID);
         }
+        // 获取页面信息
         PageInfo pageInfo = reader.getPageInfo(pageNum);
+        // 渲染注释内容
         annotationRender.render(pageInfo, annotation);
-
         return this;
     }
 
@@ -339,7 +340,7 @@ public class OFDDoc implements Closeable {
                 List<VirtualPage> virtualPageList = analyzer.analyze(sgmQueue);
                 vPageList.addAll(virtualPageList);
             }
-            if (vPageList.isEmpty()) {
+            if (vPageList.isEmpty() && (annotationRender == null)) {
                 throw new IllegalStateException("OFD文档中没有页面，无法生成OFD文档");
             }
             DocDir docDefault = ofdDir.obtainDocDefault();
