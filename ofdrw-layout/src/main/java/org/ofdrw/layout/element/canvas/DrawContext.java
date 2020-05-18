@@ -7,9 +7,11 @@ import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.core.text.text.CT_Text;
 import org.ofdrw.core.text.text.Direction;
@@ -54,7 +56,6 @@ public class DrawContext implements Closeable {
      */
     private ResManager resManager;
 
-
     /**
      * 路径对象
      */
@@ -72,14 +73,12 @@ public class DrawContext implements Closeable {
      */
     private ST_Box boundary;
 
-
     /**
      * 画布状态
      */
     private CanvasState state;
 
     private LinkedList<CanvasState> stack;
-
 
     private DrawContext() {
     }
@@ -956,6 +955,39 @@ public class DrawContext implements Closeable {
         return this;
     }
 
+
+    /**
+     * 设置端点样式
+     * <p>
+     * 默认值： LineCapType.Butt
+     *
+     * @param cap 端点样式
+     * @return this
+     */
+    public DrawContext setLineCap(LineCapType cap) {
+        if (cap == null) {
+            return this;
+        }
+        this.state.obtainDrawParamCache()
+                .setCap(cap);
+        return this;
+    }
+
+    /**
+     * 设置端点样式
+     * <p>
+     * 默认值： LineCapType.Butt
+     *
+     * @return 端点样式
+     */
+    public LineCapType getLineCap() {
+        if (this.state.drawParamCache == null) {
+            return LineCapType.Butt;
+        }
+        return this.state.drawParamCache.getCap();
+    }
+
+
     /**
      * 将当前绘制的路径更新到容器中去变为可视化的对象
      */
@@ -966,8 +998,14 @@ public class DrawContext implements Closeable {
         if (workPathObj.getStroke() || workPathObj.getFill()) {
             PathObject tbAdded = workPathObj.setAbbreviatedData(pathData)
                     .toObj(new ST_ID(maxUnitID.incrementAndGet()));
+            // 如果存在绘制参数，那么设置图元的绘制参数
+            if (this.state.drawParamCache != null) {
+                ST_ID paramObjId = this.state.drawParamCache.addToResource(resManager);
+                tbAdded.setDrawParam(paramObjId.ref());
+            }
             container.addPageBlock(tbAdded);
         }
+
         this.workPathObj = null;
         this.pathData = null;
     }

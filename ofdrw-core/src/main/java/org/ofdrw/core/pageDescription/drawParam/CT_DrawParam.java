@@ -42,7 +42,7 @@ public class CT_DrawParam extends OFDElement {
         super(proxy);
     }
 
-    public CT_DrawParam(String name) {
+    public CT_DrawParam() {
         super("DrawParam");
     }
 

@@ -6,10 +6,12 @@ import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicStructure.res.MediaType;
 import org.ofdrw.core.basicStructure.res.Res;
+import org.ofdrw.core.basicStructure.res.resources.DrawParams;
 import org.ofdrw.core.basicStructure.res.resources.Fonts;
 import org.ofdrw.core.basicStructure.res.resources.MultiMedias;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.font.Font;
 import org.ofdrw.pkg.container.DocDir;
@@ -44,6 +46,11 @@ public class ResManager {
      * 媒体资源列表
      */
     private MultiMedias medias;
+
+    /**
+     * 绘制参数列表
+     */
+    private DrawParams drawParams;
 
     /**
      * 字体资源列表
@@ -207,6 +214,27 @@ public class ResManager {
         }
     }
 
+    /**
+     * 加入一个绘制参数
+     * <p>
+     * 如果图片已经存在那么不会重复加入
+     *
+     * @param param 绘制参数
+     * @return 资源ID
+     */
+    public ST_ID addDrawParam(CT_DrawParam param) {
+        Res resMenu = docRes();
+        if (drawParams == null) {
+            this.drawParams = new DrawParams();
+            resMenu.addResource(drawParams);
+        }
+        // 生成加入资源的ID
+        ST_ID id = new ST_ID(maxUnitID.incrementAndGet());
+        param.setID(id);
+        // 加入媒体类型清单
+        drawParams.addDrawParam(param);
+        return id;
+    }
 
     /**
      * 根据图片名称推断图片格式

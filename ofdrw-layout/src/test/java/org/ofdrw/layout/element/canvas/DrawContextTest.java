@@ -1,6 +1,7 @@
 package org.ofdrw.layout.element.canvas;
 
 import org.junit.jupiter.api.Test;
+import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.font.FontName;
 import org.ofdrw.font.FontSet;
 import org.ofdrw.layout.OFDDoc;
@@ -643,6 +644,44 @@ class DrawContextTest {
                 ctx.setTextAlign(TextAlign.right);
                 ctx.fillText("textAlign=right", 150, 140);
 
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    @Test
+    void setLineCap() throws IOException {
+        Path outP = Paths.get("target/LineCap.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.beginPath();
+                ctx.setLineWidth(10d);
+                ctx.setLineCap(LineCapType.Butt);
+                ctx.moveTo(20,20);
+                ctx.lineTo(150,20);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.setLineCap(LineCapType.Round);
+                ctx.moveTo(20,40);
+                ctx.lineTo(150,40);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.setLineCap(LineCapType.Square);
+                ctx.moveTo(20,60);
+                ctx.lineTo(150,60);
+                ctx.stroke();
             });
             vPage.add(canvas);
 

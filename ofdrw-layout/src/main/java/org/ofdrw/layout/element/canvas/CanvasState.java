@@ -54,8 +54,29 @@ public class CanvasState implements Cloneable {
      */
     Double globalAlpha = null;
 
+    /**
+     * 绘制参数缓存
+     * <p>
+     * 只有在需要时候才进行创建
+     */
+    DrawParamCache drawParamCache = null;
+
 
     public CanvasState() {
+    }
+
+    /**
+     * 获取绘制参数缓存
+     * <p>
+     * 如果缓存不存在那么创建
+     *
+     * @return 绘制参数缓存
+     */
+    public DrawParamCache obtainDrawParamCache() {
+        if (drawParamCache == null) {
+            drawParamCache = new DrawParamCache();
+        }
+        return drawParamCache;
     }
 
     @Override
@@ -80,6 +101,10 @@ public class CanvasState implements Cloneable {
         if (globalAlpha != null) {
             that.globalAlpha = globalAlpha;
         }
+        if (drawParamCache != null) {
+            that.drawParamCache = drawParamCache.clone();
+        }
+
         return that;
     }
 }
