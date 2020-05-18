@@ -400,17 +400,17 @@ public class OFDSigner implements Closeable {
         // 如果是电子签章，那么设置电子印章
         final ST_Loc signDirAbsLoc = signDir.getAbsLoc();
         if (signContainer.getSignType() == SigType.Seal) {
-            Path sealPath = Paths.get(signDir.getSysAbsPath(), SignDir.SealFileName);
             // 获取电子印章二进制字节
             byte[] sealBin = signContainer.getSeal();
-            if (sealBin == null || sealBin.length == 0) {
-                throw new SignatureException("提供的电子印章数据（getSeal）为空");
+            // 由于电子印章参数为可选参数，这里移除非空检查
+            if (sealBin != null && sealBin.length != 0) {
+                Path sealPath = Paths.get(signDir.getSysAbsPath(), SignDir.SealFileName);
+                // 将电子印章写入文件
+                Files.write(sealPath, sealBin);
+                // 构造印章信息
+                Seal seal = new Seal().setBaseLoc(signDirAbsLoc.cat(SignDir.SealFileName));
+                signedInfo.setSeal(seal);
             }
-            // 将电子印章写入文件
-            Files.write(sealPath, sealBin);
-            // 构造印章信息
-            Seal seal = new Seal().setBaseLoc(signDirAbsLoc.cat(SignDir.SealFileName));
-            signedInfo.setSeal(seal);
         }
 
         // 加入签名关联的外观

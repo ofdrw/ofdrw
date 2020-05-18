@@ -5,6 +5,7 @@ import org.dom4j.DocumentException;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.signatures.SigType;
 import org.ofdrw.core.signatures.Signatures;
+import org.ofdrw.core.signatures.appearance.Seal;
 import org.ofdrw.core.signatures.range.Reference;
 import org.ofdrw.core.signatures.range.References;
 import org.ofdrw.core.signatures.sig.Signature;
@@ -117,10 +118,17 @@ public class OFDValidator implements Closeable {
                     // 获取 SignedValue.dat 文件路径
                     Path signedValueFilePath = rl.getFile(sig.getSignedValue());
                     if (type == null || type == SigType.Seal) {
-                        // 获取电子印章 Seal.esl 文件路径
-                        Path sealFilePath = rl.getFile(sig.getSignedInfo().getSeal().getBaseLoc());
-                        // 2. 检查印章匹配
-                        checkSealMatch(sealFilePath, signedValueFilePath);
+                        Seal seal = sig.getSignedInfo().getSeal();
+                        /*
+                         * 由于 Seal节点在OFD中是可选节点，即便是电子签章也为可选，
+                         * 所以这里只有在该元素存在的情况在进行匹配检查。
+                         */
+                        if (seal != null) {
+                            // 获取电子印章 Seal.esl 文件路径
+                            Path sealFilePath = rl.getFile(seal.getBaseLoc());
+                            // 2. 检查印章匹配
+                            checkSealMatch(sealFilePath, signedValueFilePath);
+                        }
                     }
                     // 签名算法名称
                     String alg = sig.getSignedInfo().getSignatureMethod();

@@ -70,14 +70,15 @@ class OFDDocTest {
      * @throws DocumentException
      */
     @Test
-    void addAnnotation() throws IOException, DocumentException {
+    void addAnnotation() throws IOException {
         Path srcP = Paths.get("src/test/resources", "拿来主义_page6.ofd");
         Path outP = Paths.get("target/AddWatermarkAnnot.ofd");
         Path imgPath = Paths.get("src/test/resources", "eg_tulip.jpg");
 
         try (OFDReader reader = new OFDReader(srcP);
              OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
-            Annotation annotation = new Annotation(50d, 50d, 60d, 60d, AnnotType.Watermark, ctx -> {
+            ST_Box boundary = new ST_Box(50d, 50d, 60d, 60d);
+            Annotation annotation = new Annotation(boundary, AnnotType.Watermark, ctx -> {
                 ctx.setGlobalAlpha(0.53);
                 ctx.drawImage(imgPath, 0, 0, 40d, 30d);
             });
