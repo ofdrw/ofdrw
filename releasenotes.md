@@ -27,7 +27,7 @@ Canvas 测试用例见 [DrawContextTest](./ofdrw-layout/src/test/java/org/ofdrw/
     - `#setLineJoin`
     - `#setLineCap`
 
-签章测试用用例间 [NoSealSignTest](./ofdrw-sign/src/test/java/org/ofdrw/sign/signContainer/NoSealSignTest.java)
+签章测试用用例见 [NoSealSignTest](./ofdrw-sign/src/test/java/org/ofdrw/sign/signContainer/NoSealSignTest.java)
 
 ### Old
 
