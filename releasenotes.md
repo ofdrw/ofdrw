@@ -22,6 +22,10 @@
     - 填充线时使用虚线模式，设置虚线间隔
 
 Canvas 测试用例见 [DrawContextTest](./ofdrw-layout/src/test/java/org/ofdrw/layout/element/canvas/DrawContextTest.java)
+    - `#setLineDash`
+    - `#setMiterLimit`
+    - `#setLineJoin`
+    - `#setLineCap`
 
 签章测试用用例间 [NoSealSignTest](./ofdrw-sign/src/test/java/org/ofdrw/sign/signContainer/NoSealSignTest.java)
 
