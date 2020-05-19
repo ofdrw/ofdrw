@@ -12,6 +12,7 @@ import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
+import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.core.text.text.CT_Text;
 import org.ofdrw.core.text.text.Direction;
@@ -426,12 +427,12 @@ public class DrawContext implements Closeable {
             return this;
         }
         // 设置线宽度，默认值0.353
-        workPathObj.setLineWidth(state.lineWidth);
-        CT_Color color =
-                this.state.strokeColor == null ?
-                        CT_Color.rgb(0, 0, 0) : CT_Color.rgb(this.state.strokeColor);
-        workPathObj.setStroke(true)
-                .setStrokeColor(color);
+        workPathObj.setLineWidth(state.lineWidth)
+                .setStroke(true);
+        if (this.state.strokeColor != null) {
+            workPathObj.setStrokeColor(CT_Color.rgb(this.state.strokeColor));
+        }
+
         return this;
     }
 
@@ -446,12 +447,11 @@ public class DrawContext implements Closeable {
         if (this.workPathObj == null) {
             return this;
         }
-        CT_Color color =
-                this.state.fillColor == null ?
-                        CT_Color.rgb(0, 0, 0) : CT_Color.rgb(this.state.fillColor);
+        workPathObj.setFill(true);
+        if (this.state.fillColor != null) {
+            workPathObj.setFillColor(CT_Color.rgb(this.state.fillColor));
+        }
 
-        workPathObj.setFill(true)
-                .setFillColor(color);
         return this;
     }
 
@@ -984,9 +984,131 @@ public class DrawContext implements Closeable {
         if (this.state.drawParamCache == null) {
             return LineCapType.Butt;
         }
-        return this.state.drawParamCache.getCap();
+        LineCapType cap = this.state.drawParamCache.getCap();
+        return cap == null ? LineCapType.Butt : cap;
     }
 
+    /**
+     * 设置线条连接样式，指定了两个线的端点结合时采用的样式。
+     * <p>
+     * 默认值：LineJoinType.Miter
+     *
+     * @param join 线条连接样式
+     * @return this
+     */
+    public DrawContext setLineJoin(LineJoinType join) {
+        if (join == null) {
+            return this;
+        }
+        this.state.obtainDrawParamCache()
+                .setJoin(join);
+        return this;
+    }
+
+    /**
+     * 获取线条连接样式
+     * <p>
+     * 默认值：LineJoinType.Miter
+     *
+     * @return 线条连接样式
+     */
+    public LineJoinType getLineJoin() {
+        if (this.state.drawParamCache == null) {
+            return LineJoinType.Miter;
+        }
+        LineJoinType join = this.state.drawParamCache.getJoin();
+        return join == null ? LineJoinType.Miter : join;
+    }
+
+    /**
+     * 设置最大斜接长度，也就是结合点长度截断值
+     * <p>
+     * 默认值：3.528
+     * <p>
+     * 当Join不等于Miter时改参数无效
+     *
+     * @param miterLimit 截断值
+     * @return this
+     */
+    public DrawContext setMiterLimit(Double miterLimit) {
+        if (miterLimit == null) {
+            return this;
+        }
+        this.state.obtainDrawParamCache()
+                .setMiterLimit(miterLimit);
+        return this;
+    }
+
+    /**
+     * 获取最大斜接长度，也就是结合点长度截断值
+     * <p>
+     * 默认值：3.528
+     *
+     * @return 截断值
+     */
+    public Double getMiterLimit() {
+        if (this.state.drawParamCache == null) {
+            return 3.528;
+        }
+        Double miterLimit = this.state.drawParamCache.getMiterLimit();
+        return miterLimit == null ? 3.528 : miterLimit;
+    }
+
+
+    /**
+     * 设置线段虚线样式
+     *
+     * @param dashOffset 虚线绘制偏移位置，如果没有则传入null
+     * @param pattern    虚线的线段长度和间隔长度,有两个或多个值，第一个值指定了虚线线段的长度，第二个值制定了线段间隔的长度，依次类推。
+     * @return this
+     */
+    public DrawContext setLineDash(Double dashOffset, Double[] pattern) {
+
+        if (pattern == null || pattern.length < 2) {
+            throw new IllegalArgumentException("虚线的线段长度和间隔长度(pattern)，不能为空并且需要大于两个以上的值");
+        }
+
+        DrawParamCache drawParam = this.state.obtainDrawParamCache()
+                .setDashPattern(new ST_Array(pattern));
+        if (dashOffset != null) {
+            drawParam.setDashOffset(dashOffset);
+        }
+        return this;
+    }
+
+    /**
+     * 设置线段虚线样式
+     *
+     * @param pattern 虚线的线段长度和间隔长度,有两个或多个值，第一个值指定了虚线线段的长度，第二个值制定了线段间隔的长度，依次类推。
+     * @return this
+     */
+    public DrawContext setLineDash(Double... pattern) {
+        return setLineDash(null, pattern);
+    }
+
+    /**
+     * 获取虚线间隔参数
+     *
+     * @return 虚线的线段长度和间隔长度, 有两个或多个值，第一个值指定了虚线线段的长度，第二个值制定了线段间隔的长度，依次类推。
+     */
+    public ST_Array getDashPattern() {
+        if (this.state.drawParamCache == null) {
+            return null;
+        }
+        return this.state.drawParamCache.getDashPattern();
+    }
+
+    /**
+     * 获取虚线绘制偏移位置
+     *
+     * @return 虚线绘制偏移位置
+     */
+    public Double getDashOffset() {
+        if (this.state.drawParamCache == null) {
+            return null;
+        }
+        return this.state.drawParamCache.getDashOffset();
+    }
 
     /**
      * 将当前绘制的路径更新到容器中去变为可视化的对象

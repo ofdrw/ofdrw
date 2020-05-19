@@ -2,6 +2,7 @@ package org.ofdrw.layout.element.canvas;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
+import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 import org.ofdrw.font.FontName;
 import org.ofdrw.font.FontSet;
 import org.ofdrw.layout.OFDDoc;
@@ -652,6 +653,11 @@ class DrawContextTest {
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
 
+    /**
+     * 设置端点样式
+     *
+     * @throws IOException
+     */
     @Test
     void setLineCap() throws IOException {
         Path outP = Paths.get("target/LineCap.ofd");
@@ -667,20 +673,150 @@ class DrawContextTest {
                 ctx.beginPath();
                 ctx.setLineWidth(10d);
                 ctx.setLineCap(LineCapType.Butt);
-                ctx.moveTo(20,20);
-                ctx.lineTo(150,20);
+                ctx.moveTo(20, 20);
+                ctx.lineTo(150, 20);
                 ctx.stroke();
 
                 ctx.beginPath();
                 ctx.setLineCap(LineCapType.Round);
-                ctx.moveTo(20,40);
-                ctx.lineTo(150,40);
+                ctx.moveTo(20, 40);
+                ctx.lineTo(150, 40);
                 ctx.stroke();
 
                 ctx.beginPath();
                 ctx.setLineCap(LineCapType.Square);
-                ctx.moveTo(20,60);
-                ctx.lineTo(150,60);
+                ctx.moveTo(20, 60);
+                ctx.lineTo(150, 60);
+                ctx.stroke();
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    /**
+     * 两条线相交时，所创建的拐角类型
+     *
+     * @throws IOException
+     */
+    @Test
+    void setLineJoin() throws IOException {
+        Path outP = Paths.get("target/LineJoin.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.beginPath();
+                ctx.setLineWidth(5d);
+                ctx.setLineJoin(LineJoinType.Round);
+                ctx.moveTo(20, 30);
+                ctx.lineTo(50, 50);
+                ctx.lineTo(20, 60);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.setLineJoin(LineJoinType.Bevel);
+                ctx.moveTo(80, 30);
+                ctx.lineTo(110, 50);
+                ctx.lineTo(80, 60);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.setLineJoin(LineJoinType.Miter);
+                ctx.moveTo(140, 30);
+                ctx.lineTo(170, 50);
+                ctx.lineTo(140, 60);
+                ctx.stroke();
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+
+    /**
+     * 两条线相交时，所创建的拐角类型
+     *
+     * @throws IOException
+     */
+    @Test
+    void setMiterLimit() throws IOException {
+        Path outP = Paths.get("target/MiterLimit.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.beginPath();
+                ctx.setLineWidth(5d);
+                ctx.setLineJoin(LineJoinType.Miter);
+                ctx.setMiterLimit(4d);
+                ctx.moveTo(20, 20);
+                ctx.lineTo(50, 27);
+                ctx.lineTo(20, 34);
+                ctx.stroke();
+
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    /**
+     * 设置线段虚线样式
+     *
+     * @throws IOException
+     */
+    @Test
+    void setLineDash() throws IOException {
+        Path outP = Paths.get("target/LineDash.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+
+                ctx.beginPath();
+                ctx.setLineWidth(10d);
+                ctx.moveTo(20, 30);
+                ctx.lineTo(150, 30);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.setLineDash(15d, 15d);
+                ctx.moveTo(20, 45);
+                ctx.lineTo(150, 45);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.setLineDash(5d, new Double[]{15d, 15d});
+                ctx.moveTo(20, 65);
+                ctx.lineTo(150, 65);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.setLineDash(15d, 7.5d);
+                ctx.moveTo(20, 80);
+                ctx.lineTo(150, 80);
                 ctx.stroke();
             });
             vPage.add(canvas);

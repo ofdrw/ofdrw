@@ -89,6 +89,7 @@ public class ST_Array extends STBase implements Cloneable{
         if (arr == null) {
             throw new IllegalArgumentException("参数不能为空");
         }
+
         array = new ArrayList<>(arr.length);
 
         for (Serializable item : arr) {

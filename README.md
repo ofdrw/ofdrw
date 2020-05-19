@@ -73,6 +73,7 @@ public class HelloWorld {
 - [OFD R&W Canvas](./ofdrw-layout/doc/canvas/README.md)
 - [OFD 签名签章快速入门](ofdrw-sign/doc/quickstart/README.md)
 
+> > ***如果您对OFDRW合法签名签章以及验证有意向，我们可以为您提供相关商务咨询服务，请联系QQ: 1009020096 或邮箱 quanguanyu@qq.com。***
 
 推荐的免费OFD阅读器: [福昕OFD版式办公套件 . http://www.htfoxit.com/Download/index/id/712](http://www.htfoxit.com/Download/index/id/712)
 

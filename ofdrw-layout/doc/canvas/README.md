@@ -87,6 +87,10 @@ try (OFDDoc ofdDoc = new OFDDoc(path)) {
 | `LineWidth` | 线宽度(get/set)，默认0.353mm |
 | `GlobalAlpha` | 透明度(get/set) |
 | `FontSetting` | 文字配置(get/set) |
+| `LineCap`| 回线条的结束端点样式(get/set) |
+| `LineJoin`| 两条线相交时，所创建的拐角类型(get/set) |
+| `MiterLimit` | 最大斜接长度，也就是结合点长度截断值(get/set) |
+| `LineDash` | 填充线时使用虚线模式，设置虚线间隔(get/set) |
 
 **FontSetting**
 
