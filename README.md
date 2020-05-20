@@ -1,11 +1,15 @@
 # OFD Reader & Writer
 
+![-](https://img.shields.io/badge/language-java-orange.svg) [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
+
+
 在使用OFDRW前请务必悉知 [***《OFD Reader & Writer免责声明》***](免责声明.md)。
 
 
 > 如何clone和预览存在困难，请移步 [https://gitee.com/Trisia/ofdrw](https://gitee.com/Trisia/ofdrw)
 
-> **Talk is cheap,Show me the code. ——Linus Torvalds**
+
+**Talk is cheap,Show me the code. ——Linus Torvalds**
 
 **像写HTML和Word那样简单的编写OFD。**
 
@@ -69,9 +73,9 @@ public class HelloWorld {
 
 相关文档目录：
 
-- [《OFD R&W 布局设计》](./ofdrw-layout/doc/README.md)
+- [OFD R&W 布局设计](./ofdrw-layout/doc/README.md)
 - [OFD R&W Canvas](./ofdrw-layout/doc/canvas/README.md)
-- [OFD 签名签章快速入门](ofdrw-sign/doc/quickstart/README.md)
+- [OFD  R&W 签名签章快速入门](./ofdrw-sign/doc/quickstart/README.md)
 
 > > ***如果您对OFDRW合法签名签章以及验证有意向，我们可以为您提供相关商务咨询服务，请联系QQ: 1009020096 或邮箱 quanguanyu@qq.com。***
 
@@ -97,6 +101,10 @@ mvn install
 
 
 群号： **577682453**
+
+## 参与贡献
+
+参考 [贡献指南](CONTRIBUTING.md)。
 
 ## 项目情况
 
