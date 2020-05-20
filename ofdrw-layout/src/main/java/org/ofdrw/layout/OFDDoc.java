@@ -1,6 +1,9 @@
 package org.ofdrw.layout;
 
 import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.ofdrw.core.attachment.Attachments;
+import org.ofdrw.core.attachment.CT_Attachment;
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
@@ -14,11 +17,13 @@ import org.ofdrw.gv.GlobalVar;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.edit.Annotation;
 import org.ofdrw.layout.edit.AnnotationRender;
+import org.ofdrw.layout.edit.Attachment;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.engine.*;
 import org.ofdrw.layout.exception.DocReadException;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
+import org.ofdrw.reader.BadOFDException;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.ResourceLocator;
@@ -113,6 +118,11 @@ public class OFDDoc implements Closeable {
      */
     private boolean closed = false;
 
+    /**
+     * OFD文档对象
+     */
+    private Document ofdDocument;
+
 
     /**
      * 在指定路径位置上创建一个OFD文件
@@ -196,12 +206,12 @@ public class OFDDoc implements Closeable {
         OFD ofd = new OFD().addDocBody(docBody);
 
         // 创建一个低层次的文档对象
-        Document lowDoc = new Document();
+        ofdDocument = new Document();
         cdata = new CT_CommonData();
         // 默认使用RGB颜色空间所以此处不设置颜色空间
         // 设置页面属性
         this.setDefaultPageLayout(this.pageLayout);
-        lowDoc.setCommonData(cdata)
+        ofdDocument.setCommonData(cdata)
                 // 空的页面引用集合，该集合将会在解析虚拟页面时得到填充
                 .setPages(new Pages());
 
@@ -209,7 +219,7 @@ public class OFDDoc implements Closeable {
                 .setOfd(ofd);
         // 创建一个新的文档
         DocDir docDir = ofdDir.newDoc();
-        docDir.setDocument(lowDoc);
+        docDir.setDocument(ofdDocument);
         prm = new ResManager(docDir, MaxUnitID);
     }
 
@@ -229,9 +239,9 @@ public class OFDDoc implements Closeable {
         ResourceLocator rl = reader.getResourceLocator();
         // 找到 Document.xml文件并且序列化
         ST_Loc docRoot = docBody.getDocRoot();
-        Document doc = rl.get(docRoot, Document::new);
+        ofdDocument = rl.get(docRoot, Document::new);
         // 取出文档修改前的文档最大ID
-        cdata = doc.getCommonData();
+        cdata = ofdDocument.getCommonData();
         ST_ID maxUnitID = cdata.getMaxUnitID();
         // 设置当前文档最大ID
         MaxUnitID = new AtomicInteger(maxUnitID.getId().intValue());
@@ -317,6 +327,63 @@ public class OFDDoc implements Closeable {
      */
     public PageLayout getPageLayout() {
         return pageLayout;
+    }
+
+    /**
+     * 向文档中添加附件文件
+     *
+     * @param attachment 附件文件对象
+     * @return this
+     */
+    public OFDDoc addAttachment(Attachment attachment) throws IOException {
+        if (attachment == null) {
+            return this;
+        }
+        DocDir docDefault = ofdDir.obtainDocDefault();
+        Path file = attachment.getFile();
+        docDefault.addResource(file);
+        // 构造附件文件存放路径
+        ST_Loc loc = docDefault.getRes().getAbsLoc()
+                .cat(file.getFileName().toString());
+        // 计算附件所占用的空间，单位KB。
+        double size = Files.size(file) / 1024d;
+        CT_Attachment ctAttachment = attachment.getAttachment()
+                .setID(String.valueOf(MaxUnitID.incrementAndGet()))
+                .setCreationDate(LocalDate.now())
+                .setSize(size)
+                .setFileLoc(loc);
+        // 获取附件目录
+        Attachments attachments = obtainAttachments(docDefault);
+        // 加入附件记录
+        attachments.addAttachment(ctAttachment);
+        return this;
+    }
+
+    /**
+     * 获取附件列表文件，如果文件不存在则创建
+     *
+     * @return 附件列表文件
+     */
+    private Attachments obtainAttachments(DocDir docDir) {
+        boolean exit = docDir.exit(DocDir.Attachments);
+        Attachments attachments = null;
+        if (exit) {
+            try {
+                Element obj = docDir.getObj(DocDir.Attachments);
+                attachments = new Attachments(obj);
+            } catch (FileNotFoundException e) {
+                // 不会发生
+            } catch (DocumentException e) {
+                // 忽略错误
+                System.err.println(">> 无法解析Attachments.xml文件，将重新创建该文件");
+            }
+        }
+        if (attachments == null) {
+            attachments = new Attachments();
+            docDir.putObj(DocDir.Attachments, attachments);
+            ofdDocument.setAttachments(docDir.getAbsLoc().cat(DocDir.Attachments));
+        }
+        return attachments;
     }
 
     @Override

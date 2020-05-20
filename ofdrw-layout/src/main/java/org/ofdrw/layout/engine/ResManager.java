@@ -11,6 +11,7 @@ import org.ofdrw.core.basicStructure.res.resources.Fonts;
 import org.ofdrw.core.basicStructure.res.resources.MultiMedias;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.font.Font;

@@ -44,6 +44,11 @@ public class DocDir extends VirtualContainer {
     public static final String AnnotationsFileName = "Annotations.xml";
 
     /**
+     * 附件入口文件名称
+     */
+    public static final String Attachments = "Attachments.xml";
+
+    /**
      * 表示第几份文档，从0开始
      */
     private int index = 0;

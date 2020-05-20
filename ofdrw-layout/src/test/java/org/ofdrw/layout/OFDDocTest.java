@@ -16,6 +16,7 @@ import org.ofdrw.font.FontName;
 import org.ofdrw.font.FontSet;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.edit.Annotation;
+import org.ofdrw.layout.edit.Attachment;
 import org.ofdrw.layout.element.*;
 import org.ofdrw.layout.element.canvas.Canvas;
 import org.ofdrw.pkg.container.DocDir;
@@ -37,6 +38,28 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 2020-03-22 11:38:48
  */
 class OFDDocTest {
+
+    /**
+     * 向文件中加入附件文件
+     *
+     * @throws IOException
+     */
+    @Test
+    void addAttachment() throws IOException {
+        Path outP = Paths.get("target/AddAttachment.ofd");
+        Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
+
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            Paragraph p = new Paragraph();
+            Span span = new Span("这是一个带有附件的OFD文件").setFontSize(10d);
+            p.add(span);
+            ofdDoc.add(p);
+
+            // 加入附件文件
+            ofdDoc.addAttachment(new Attachment("Gao", file));
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
 
     /**
      * 加入印章类型注释对象
