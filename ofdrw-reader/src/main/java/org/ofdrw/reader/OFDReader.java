@@ -1,10 +1,13 @@
 package org.ofdrw.reader;
 
+import com.sun.xml.internal.ws.api.message.Attachment;
 import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.ofdrw.core.annotation.Annotations;
+import org.ofdrw.core.attachment.Attachments;
+import org.ofdrw.core.attachment.CT_Attachment;
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.doc.Document;
@@ -15,6 +18,7 @@ import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.signatures.Signatures;
+import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
 
 import java.io.Closeable;
@@ -303,6 +307,106 @@ public class OFDReader implements Closeable {
     public ResourceLocator getResourceLocator() {
         return rl;
     }
+
+
+    /**
+     * 获取附件对象
+     *
+     * @param name 附件名称
+     * @return 如果附件或附件记录不存在，那么返还null
+     * @throws BadOFDException 文档结构损坏
+     */
+    public CT_Attachment getAttachment(String name) {
+        if (name == null || name.trim().length() == 0) {
+            return null;
+        }
+        rl.save();
+        try {
+            return getAttachment(name, rl);
+        } finally {
+            rl.restore();
+        }
+    }
+
+    /**
+     * 获取附件文件
+     * <p>
+     * 注意：该文件会在Close Reader时候被删除，请在之前复制到其他地方
+     *
+     * @param name 附件名称
+     * @return 附件文件路径
+     */
+    public Path getAttachmentFile(String name) {
+        if (name == null || name.trim().length() == 0) {
+            return null;
+        }
+        rl.save();
+        try {
+            CT_Attachment attachment = getAttachment(name, rl);
+            if (attachment == null) {
+                return null;
+            }
+            ST_Loc fileLoc = attachment.getFileLoc();
+            try {
+                return rl.getFile(fileLoc);
+            } catch (FileNotFoundException e) {
+                System.err.println(">> 无法根据附件对象的描述获取到附件: " + fileLoc.toString());
+                return null;
+            }
+        } finally {
+            rl.restore();
+        }
+    }
+
+    /**
+     * 获取附件对象
+     * <p>
+     * 该方法不会恢复资源定位器
+     *
+     * @param name 附件名称
+     * @param rl   资源定位器
+     * @return 附件对象
+     */
+    private CT_Attachment getAttachment(String name, ResourceLocator rl) {
+        if (name == null || name.trim().length() == 0) {
+            return null;
+        }
+        rl.save();
+        try {
+            DocDir docDir = ofdDir.obtainDocDefault();
+            rl.cd(docDir);
+            Document document = null;
+            Attachments attachments = null;
+            try {
+                document = docDir.getDocument();
+            } catch (FileNotFoundException | DocumentException e) {
+                throw new BadOFDException(e);
+            }
+            ST_Loc attachmentsLoc = document.getAttachments();
+            if (attachmentsLoc == null) {
+                // 文档中没有附件目录文件
+                return null;
+            }
+            try {
+                // 获取附件目录
+                attachments = rl.get(attachmentsLoc, Attachments::new);
+            } catch (FileNotFoundException | DocumentException e) {
+                System.err.println(">> 无法获取或解析Attachments.xml: " + e.getMessage());
+                return null;
+            }
+            for (CT_Attachment attachment : attachments.getAttachments()) {
+                // 寻找匹配名称的附件
+                if (attachment.getAttachmentName().equals(name)) {
+                    return attachment;
+                }
+            }
+        } finally {
+            rl.restore();
+        }
+        return null;
+    }
+
+
 
     /**
      * 关闭文档

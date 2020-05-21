@@ -1,7 +1,9 @@
 package org.ofdrw.reader;
 
 import org.dom4j.DocumentException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.ofdrw.core.attachment.CT_Attachment;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
@@ -24,6 +26,29 @@ import static org.junit.jupiter.api.Assertions.*;
 class OFDReaderTest {
 
     private Path src = Paths.get("src/test/resources/helloworld.ofd");
+
+    /**
+     * 获取附件对象
+     * @throws IOException
+     */
+    @Test
+    void getAttachment() throws IOException {
+        Path src = Paths.get("src/test/resources/AddAttachment.ofd");
+
+        try (OFDReader reader = new OFDReader(src)) {
+            CT_Attachment attachment = reader.getAttachment("AAABBB");
+            Assertions.assertNull(attachment);
+
+            Path file = reader.getAttachmentFile("AAABBB");
+            Assertions.assertNull(file);
+
+             file = reader.getAttachmentFile("Gao");
+            Assertions.assertTrue(Files.exists(file));
+
+        }
+
+    }
+
 
     @Test
     void oFDReader() throws IOException {
@@ -81,15 +106,15 @@ class OFDReaderTest {
             OFD ofd = ofdDir.getOfd();
             DocBody docBody = ofd.getDocBody();
             CT_DocInfo docInfo = docBody.getDocInfo();
-            System.out.println(">> 文档标题：[" + docInfo.getTile() +"] -> [Hello World]");
-            System.out.println(">> 文档作者：[" + docInfo.getAuthor()+"] -> [权观宇]" );
+            System.out.println(">> 文档标题：[" + docInfo.getTile() + "] -> [Hello World]");
+            System.out.println(">> 文档作者：[" + docInfo.getAuthor() + "] -> [权观宇]");
             docInfo.setTile("Hello World");
             docInfo.setAuthor("权观宇");
             docInfo.setModDate(LocalDate.now());
             // 重新打包为OFD文档
             ofdDir.jar(out);
         }
-        System.out.println(">> 文档生成位置："+ out.toAbsolutePath().toString());
+        System.out.println(">> 文档生成位置：" + out.toAbsolutePath().toString());
 
         // 验证
         try (OFDReader reader = new OFDReader(out)) {
