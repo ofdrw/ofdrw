@@ -331,9 +331,12 @@ public class OFDDoc implements Closeable {
 
     /**
      * 向文档中添加附件文件
+     * <p>
+     * 如果名称相同原有附件将会被替换
      *
      * @param attachment 附件文件对象
      * @return this
+     * @throws IOException 文件操作异常
      */
     public OFDDoc addAttachment(Attachment attachment) throws IOException {
         if (attachment == null) {
@@ -352,30 +355,64 @@ public class OFDDoc implements Closeable {
                 .setCreationDate(LocalDate.now())
                 .setSize(size)
                 .setFileLoc(loc);
-        // 获取附件目录
-        Attachments attachments = obtainAttachments(docDefault);
+        ResourceLocator rl = new ResourceLocator(ofdDir);
+        // 获取附件目录，并切换目录到与附件列表文件同级
+        Attachments attachments = obtainAttachments(docDefault, rl);
+        // 清理已经存在的同名附件
+        cleanOldAttachment(rl, attachments, attachment.getName());
         // 加入附件记录
         attachments.addAttachment(ctAttachment);
         return this;
     }
 
     /**
-     * 获取附件列表文件，如果文件不存在则创建
+     * 清理已经存在的资源
      *
+     * @param rl          资源加载器
+     * @param attachments 附件列表
+     * @param name        附件名称
+     */
+    private void cleanOldAttachment(ResourceLocator rl,
+                                    Attachments attachments,
+                                    String name) throws IOException {
+        final List<CT_Attachment> list = attachments.getAttachments();
+        for (CT_Attachment att : list) {
+            // 找到匹配的附件
+            if (att.getAttachmentName().equals(name)) {
+                // 删除附件记录
+                attachments.remove(att);
+                // 删除附件的文件
+                ST_Loc fileLoc = att.getFileLoc();
+                Path file = rl.getFile(fileLoc);
+                if (file != null && Files.exists(file)) {
+                    Files.delete(file);
+                }
+                break;
+            }
+        }
+    }
+
+    /**
+     * 获取附件列表文件，如果文件不存在则创建
+     * <p>
+     * 该操作将会切换资源加载器到与附件文件同级的位置
+     *
+     * @param rl     资源加载器
+     * @param docDir 文档目录
      * @return 附件列表文件
      */
-    private Attachments obtainAttachments(DocDir docDir) {
-        boolean exit = docDir.exit(DocDir.Attachments);
+    private Attachments obtainAttachments(DocDir docDir, ResourceLocator rl) {
+        ST_Loc attLoc = ofdDocument.getAttachments();
         Attachments attachments = null;
-        if (exit) {
+        if (attLoc != null) {
             try {
-                Element obj = docDir.getObj(DocDir.Attachments);
-                attachments = new Attachments(obj);
-            } catch (FileNotFoundException e) {
-                // 不会发生
-            } catch (DocumentException e) {
+                attachments = rl.get(attLoc, Attachments::new);
+                // 切换目录到资源文件所在目录
+                rl.cd(attLoc.parent());
+            } catch (DocumentException | FileNotFoundException e) {
                 // 忽略错误
                 System.err.println(">> 无法解析Attachments.xml文件，将重新创建该文件");
+                attachments = null;
             }
         }
         if (attachments == null) {
@@ -407,14 +444,18 @@ public class OFDDoc implements Closeable {
                 List<VirtualPage> virtualPageList = analyzer.analyze(sgmQueue);
                 vPageList.addAll(virtualPageList);
             }
-            if (vPageList.isEmpty() && (annotationRender == null)) {
+
+            if (!vPageList.isEmpty()) {
+                DocDir docDefault = ofdDir.obtainDocDefault();
+                // 创建虚拟页面解析引擎，并持有文档上下文。
+                VPageParseEngine parseEngine = new VPageParseEngine(pageLayout, docDefault, prm, MaxUnitID);
+                // 解析虚拟页面
+                parseEngine.process(vPageList);
+            } else if (annotationRender == null && reader == null) {
+                // 虚拟页面为空，也没有注解对象，也不是编辑模式，那么空的操作报错
                 throw new IllegalStateException("OFD文档中没有页面，无法生成OFD文档");
             }
-            DocDir docDefault = ofdDir.obtainDocDefault();
-            // 创建虚拟页面解析引擎，并持有文档上下文。
-            VPageParseEngine parseEngine = new VPageParseEngine(pageLayout, docDefault, prm, MaxUnitID);
-            // 解析虚拟页面
-            parseEngine.process(vPageList);
+
             // 设置最大对象ID
             cdata.setMaxUnitID(MaxUnitID.get());
             // final. 执行打包程序
