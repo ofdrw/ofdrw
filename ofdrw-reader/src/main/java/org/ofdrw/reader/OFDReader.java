@@ -1,10 +1,8 @@
 package org.ofdrw.reader;
 
-import com.sun.xml.internal.ws.api.message.Attachment;
 import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
-import org.dom4j.Element;
 import org.ofdrw.core.annotation.Annotations;
 import org.ofdrw.core.attachment.Attachments;
 import org.ofdrw.core.attachment.CT_Attachment;
