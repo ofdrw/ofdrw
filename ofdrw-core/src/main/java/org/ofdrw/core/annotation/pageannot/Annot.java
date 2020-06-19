@@ -376,7 +376,6 @@ public class Annot extends OFDElement {
             return this;
         }
 
-
         Element parameters = this.getOFDElement("Parameters");
         if (parameters == null) {
             parameters = OFDElement.getInstance("Parameters");
