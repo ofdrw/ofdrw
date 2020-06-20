@@ -381,11 +381,12 @@ public class Annot extends OFDElement {
             parameters = OFDElement.getInstance("Parameters");
             this.add(parameters);
         }
+
         Iterator<Element> iterator = parameters.elementIterator();
-        Boolean foundKey = false;
+        boolean foundKey = false;
         while (iterator.hasNext()) {
             Element element = iterator.next();
-            if (element.attribute("Name").getValue().equalsIgnoreCase(name)) {
+            if (name.equals(element.attribute("Name").getValue())) {
                 element.setText(parameter);
                 foundKey = true;
                 break;
