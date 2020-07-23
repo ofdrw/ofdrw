@@ -23,6 +23,8 @@ public class AnnotTest {
                 .setLastModDate(LocalDate.now())
                 .setRemark("这是一段说明内容")
                 .addParameter("Key", "Value")
+                .addParameter("Key", "Value2")
+                .addParameter("Key2", "Value3")
                 .setAppearance(appearance);
     }
     @Test

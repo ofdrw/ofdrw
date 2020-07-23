@@ -56,10 +56,8 @@ public class OFDSigner implements Closeable {
     /**
      * OFDRW 签名提供者
      */
-    public static Provider OFDRW_Provider;
-
-    static {
-        OFDRW_Provider = new Provider()
+    public static Provider OFDRW_Provider() {
+        return new Provider()
                 .setProviderName("ofdrw-sign")
                 .setCompany("ofdrw")
                 .setVersion(GlobalVar.Version);
@@ -391,7 +389,7 @@ public class OFDSigner implements Closeable {
         // 构造签名信息
         SignedInfo signedInfo = new SignedInfo()
                 // 设置签名模块提供者信息
-                .setProvider(OFDRW_Provider)
+                .setProvider(OFDRW_Provider())
                 // 设置签名方法
                 .setSignatureMethod(signContainer.getSignAlgOID())
                 // 设置签名时间

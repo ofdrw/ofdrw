@@ -10,6 +10,7 @@ import org.ofdrw.core.basicType.ST_ID;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -374,14 +375,28 @@ public class Annot extends OFDElement {
         if (name == null || name.trim().length() == 0) {
             return this;
         }
+
         Element parameters = this.getOFDElement("Parameters");
         if (parameters == null) {
             parameters = OFDElement.getInstance("Parameters");
+            this.add(parameters);
         }
-        OFDElement parameterEl = new OFDSimpleTypeElement("Parameter", parameter);
-        parameterEl.addAttribute("Name", name);
-        parameters.add(parameterEl);
-        this.add(parameters);
+
+        Iterator<Element> iterator = parameters.elementIterator();
+        boolean foundKey = false;
+        while (iterator.hasNext()) {
+            Element element = iterator.next();
+            if (name.equals(element.attribute("Name").getValue())) {
+                element.setText(parameter);
+                foundKey = true;
+                break;
+            }
+        }
+        if (!foundKey) {
+            OFDElement parameterEl = new OFDSimpleTypeElement("Parameter", parameter);
+            parameterEl.addAttribute("Name", name);
+            parameters.add(parameterEl);
+        }
         return this;
     }
 
