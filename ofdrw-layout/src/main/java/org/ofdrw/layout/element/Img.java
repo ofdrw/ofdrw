@@ -53,9 +53,11 @@ public class Img extends Div {
 
     private void parseImg() throws IOException {
         File picture = src.toFile();
-        BufferedImage sourceImg = ImageIO.read(new FileInputStream(picture));
-        this.setWidth((double) sourceImg.getWidth() / 5);
-        this.setHeight((double) sourceImg.getHeight() / 5);
+       try( FileInputStream fIn = new FileInputStream(picture);){
+           BufferedImage sourceImg = ImageIO.read(fIn);
+           this.setWidth((double) sourceImg.getWidth() / 5);
+           this.setHeight((double) sourceImg.getHeight() / 5);
+       }
     }
 
     public Path getSrc() {
