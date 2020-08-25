@@ -6,11 +6,11 @@ import java.util.regex.Matcher;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class AtomicSignIDTest {
+class StandFormatAtomicSignIDTest {
     @Test
     public void testPattern() {
         String str = "s001";
-        Matcher m = AtomicSignID.IDPattern.matcher(str);
+        Matcher m = StandFormatAtomicSignID.IDPattern.matcher(str);
         if (m.find()) {
             String idNumStr = m.group(1);
             System.out.println(idNumStr);
@@ -20,15 +20,15 @@ class AtomicSignIDTest {
 
     @Test
     public void incrementAndGet() {
-        AtomicSignID atomicSignID = new AtomicSignID();
-        String s = atomicSignID.incrementAndGet();
+        StandFormatAtomicSignID standFormatAtomicSignID = new StandFormatAtomicSignID();
+        String s = standFormatAtomicSignID.incrementAndGet();
         assertEquals("s001", s);
     }
 
     @Test
     public void constructTest(){
-        AtomicSignID atomicSignID = new AtomicSignID("s776");
-        String s = atomicSignID.incrementAndGet();
+        StandFormatAtomicSignID standFormatAtomicSignID = new StandFormatAtomicSignID("s776");
+        String s = standFormatAtomicSignID.incrementAndGet();
         assertEquals("s777", s);
     }
 }
