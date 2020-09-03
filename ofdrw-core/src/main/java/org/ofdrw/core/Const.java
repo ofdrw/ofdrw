@@ -16,6 +16,7 @@ public class Const {
      * 命名空间 URI,《GB/T_33190-2016》 7.1 命名空间
      */
     public static final String OFD_NAMESPACE_URI = "http://www.ofdspec.org/2016";
+    public static final String OFD_NAMESPACE_OLD_VERSION_URI = "http://www.ofdspec.org";
     /**
      * 元素节点应使用命名空间标识符
      * ————《GB/T 33190-2016》 7.1 命名空间
@@ -32,7 +33,7 @@ public class Const {
      */
     public static final Namespace OFD_NAMESPACE = new Namespace("ofd", OFD_NAMESPACE_URI);
     public static final Namespace OFD_NAMESPACE_DEFAULT = new Namespace("", OFD_NAMESPACE_URI);
-
+    public static final Namespace OFD_NAMESPACE_OLD_VERSION = new Namespace("ofd", OFD_NAMESPACE_OLD_VERSION_URI);
     /**
      * xs:date 类型日期格式化
      */
