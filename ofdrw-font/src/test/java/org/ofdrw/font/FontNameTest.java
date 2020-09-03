@@ -9,9 +9,14 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 2020-03-18 20:44:44
  */
 class FontNameTest {
-    @Test
-    public void getFilename(){
-        assertEquals(FontName.NotoSerif.getFilename(), "NotoSerifCJKsc-Medium.otf");
-    }
 
+    @Test
+    void font() {
+
+        Font font = FontName.SimSun.font();
+
+        assertEquals(font.getFamilyName(), "宋体");
+        assertEquals(font.getName(), "宋体");
+        assertNull(font.getFontFile());
+    }
 }

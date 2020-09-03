@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 import org.ofdrw.font.FontName;
-import org.ofdrw.font.FontSet;
 import org.ofdrw.layout.OFDDoc;
 import org.ofdrw.layout.VirtualPage;
 import org.ofdrw.layout.element.Position;
@@ -521,7 +520,7 @@ class DrawContextTest {
                     .setBorder(1d);
 
             canvas.setDrawer(ctx -> {
-                FontSetting fontSetting = new FontSetting(5, FontSet.get(FontName.NotoSerif))
+                FontSetting fontSetting = new FontSetting(5,FontName.SimSun.font())
                         .setCharDirection(180)
                         .setReadDirection(90);
                 ctx.setFont(fontSetting);
@@ -546,7 +545,7 @@ class DrawContextTest {
                     .setBorder(1d);
 
             canvas.setDrawer(ctx -> {
-                FontSetting fontSetting = new FontSetting(5, FontSet.get(FontName.NotoSerif));
+                FontSetting fontSetting = new FontSetting(5, FontName.SimSun.font());
                 ctx.setFont(fontSetting);
 
                 String text = "你好 Hello World!";
@@ -580,7 +579,7 @@ class DrawContextTest {
                             .setBorder(1d);
 
                     canvas.setDrawer(ctx -> {
-                        FontSetting fontSetting = new FontSetting(5, FontSet.get(FontName.NotoSerif))
+                        FontSetting fontSetting = new FontSetting(5, FontName.SimSun.font())
                                 .setCharDirection(c)
                                 .setReadDirection(r);
                         ctx.setFont(fontSetting);
@@ -632,7 +631,7 @@ class DrawContextTest {
                 ctx.lineTo(150, 170);
                 ctx.stroke();
 
-                ctx.setFont(new FontSetting(5, FontSet.get(FontName.NotoSerif)));
+                ctx.setFont(new FontSetting(5, FontName.SimSun.font()));
 
                 // 显示不同的 textAlign 值
                 ctx.setTextAlign(TextAlign.start);
