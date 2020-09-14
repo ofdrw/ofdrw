@@ -77,7 +77,7 @@ public class HelloWorld {
 - [OFD R&W Canvas](./ofdrw-layout/doc/canvas/README.md)
 - [OFD  R&W 签名签章快速入门](./ofdrw-sign/doc/quickstart/README.md)
 
-推荐的免费OFD阅读器: [福昕OFD版式办公套件 . http://www.htfoxit.com/Download/index/id/712](http://www.htfoxit.com/Download/index/id/712)
+OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwell.cn/)
 
 ### 推荐的预览解决方案
 
