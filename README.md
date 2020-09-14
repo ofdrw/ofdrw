@@ -77,9 +77,18 @@ public class HelloWorld {
 - [OFD R&W Canvas](./ofdrw-layout/doc/canvas/README.md)
 - [OFD  R&W 签名签章快速入门](./ofdrw-sign/doc/quickstart/README.md)
 
-> > ***如果您对OFDRW合法签名签章以及验证有意向，我们可以为您提供相关商务咨询服务，请联系QQ: 1009020096 或邮箱 quanguanyu@qq.com。***
-
 推荐的免费OFD阅读器: [福昕OFD版式办公套件 . http://www.htfoxit.com/Download/index/id/712](http://www.htfoxit.com/Download/index/id/712)
+
+### 推荐的预览解决方案
+
+**ofd.js**
+
+![ofd.js](https://raw.githubusercontent.com/DLTech21/ofd.js/master/ofd.jpg)
+
+推荐开源的OFD在线预览解决方案： [DLTech21/ofd.js . https://github.com/DLTech21/ofd.js](https://github.com/DLTech21/ofd.js)
+
+- 将OFD渲染为SVG实现矢量的无失真的OFD预览体验。
+- 完全基于浏览器在前端完成所有渲染工作，不需要服务端支持和插件。
 
 ## 源码安装
 
