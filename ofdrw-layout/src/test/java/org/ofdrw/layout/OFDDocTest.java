@@ -630,4 +630,34 @@ class OFDDocTest {
         System.out.println("生成文档位置：" + path.toAbsolutePath());
     }
 
+    @Test
+    public void virtualPagePositioning() throws IOException {
+        Path path = Paths.get("target/virtualPagePositioning.ofd").toAbsolutePath();
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+
+            VirtualPage vPage = new VirtualPage( ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas .setPosition(Position.Absolute)
+                    .setX(0d)
+                    .setY(0d)
+                    .setBorder(1d);
+            canvas.setDrawer(ctx -> {
+                ctx.beginPath();
+                ctx.arc(10, 10, 5, 0, 360);
+                ctx.stroke();
+            });
+
+            vPage.add(canvas);
+            ofdDoc.addVPage(vPage);
+
+            Paragraph p = new Paragraph("是不是很好看是不是很好看是不是很好看是不是很好看");
+            p.setPosition(Position.Absolute)
+                    .setWidth(30d)
+                    .setX(50d).setY(100d);
+            vPage.add(p);
+        }
+        System.out.println("生成文档位置：" + path.toAbsolutePath());
+    }
+
 }
