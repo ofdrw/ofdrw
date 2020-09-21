@@ -2,6 +2,13 @@
 
 ## 进展
 
+## Version 1.5.6 2020-9-21 23:14:58
+
+- 修复了无法解析OFD内含有中文目录的文件错误。
+- 新增了OFD页面文字抽取的方法：
+    
+    文字抽取参考[ContentExtractorTest.java](ofdrw-reader/src/test/java/org/ofdrw/reader/ContentExtractorTest.java)
+
 ## Version 1.5.5 2020-9-15 21:43:31
 
 - 修复了ST_Array 数组含有多空格抛出IAE的问题。
