@@ -19,7 +19,6 @@ import org.ofdrw.core.text.text.Direction;
 import org.ofdrw.core.text.text.Weight;
 import org.ofdrw.font.Font;
 import org.ofdrw.font.FontName;
-import org.ofdrw.font.FontSet;
 import org.ofdrw.layout.engine.ResManager;
 
 import java.io.Closeable;
@@ -647,7 +646,7 @@ public class DrawContext implements Closeable {
         if (state.font != null) {
             fontSetting = state.font;
         } else {
-            fontSetting = new FontSetting(1d, FontSet.get(FontName.SimSun));
+            fontSetting = new FontSetting(1d, FontName.SimSun.font());
         }
 
         int readDirection = state.font.getReadDirection();

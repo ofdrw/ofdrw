@@ -2,7 +2,7 @@ package org.ofdrw.sign.stamppos;
 
 import org.ofdrw.core.signatures.appearance.StampAnnot;
 import org.ofdrw.reader.OFDReader;
-import org.ofdrw.sign.AtomicSignID;
+import org.ofdrw.sign.SignIDProvider;
 
 import java.util.List;
 
@@ -21,5 +21,5 @@ public interface StampAppearance {
      * @param idProvider 签名ID提供器
      * @return 签章外观列表
      */
-    List<StampAnnot> getAppearance(OFDReader ctx, AtomicSignID idProvider);
+    List<StampAnnot> getAppearance(OFDReader ctx, SignIDProvider idProvider);
 }

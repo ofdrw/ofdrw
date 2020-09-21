@@ -37,7 +37,7 @@ public class Font {
      */
     public static Font getDefault() {
 //        return FontSet.get(FontName.NotoSerif);
-        return FontSet.get(FontName.SimSun);
+        return FontName.SimSun.font();
     }
 
     public Font(String name, String familyName, Path fontFile) {

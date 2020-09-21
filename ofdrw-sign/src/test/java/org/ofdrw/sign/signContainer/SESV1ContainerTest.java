@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.ofdrw.gm.cert.PKCS12Tools;
 import org.ofdrw.gm.ses.v1.SESeal;
 import org.ofdrw.reader.OFDReader;
+import org.ofdrw.sign.NumberFormatAtomicSignID;
 import org.ofdrw.sign.OFDSigner;
 import org.ofdrw.sign.SignMode;
 import org.ofdrw.sign.stamppos.NormalStampPos;
@@ -39,7 +40,9 @@ class SESV1ContainerTest {
         Path out = Paths.get("target/SESV1SignDoc.ofd");
         // 1. 构造签名引擎
         try (OFDReader reader = new OFDReader(src);
-             OFDSigner signer = new OFDSigner(reader, out)) {
+//             OFDSigner signer = new OFDSigner(reader, out)
+             OFDSigner signer = new OFDSigner(reader, out, new NumberFormatAtomicSignID())
+        ) {
             SESV1Container signContainer = new SESV1Container(prvKey, seal, signCert);
             // 2. 设置签名模式
 //            signer.setSignMode(SignMode.WholeProtected);

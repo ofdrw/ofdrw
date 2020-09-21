@@ -8,10 +8,7 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.function.Consumer;
 
 
@@ -31,6 +28,21 @@ public class TestTool {
             SAXReader reader = new SAXReader();
             String filePath = TEST_DEST + File.separator + name + ".xml";
             Document document = reader.read(filePath);
+            fn.accept(document.getRootElement());
+        } catch (DocumentException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 传入XML文本段验证
+     * @param content  XML文本段
+     * @param fn 验证方法
+     */
+    public static void validateWithXML(String content, Consumer<Element> fn) {
+        try {
+            SAXReader reader = new SAXReader();
+            Document document = reader.read(new ByteArrayInputStream(content.getBytes()));
             fn.accept(document.getRootElement());
         } catch (DocumentException e) {
             throw new RuntimeException(e);

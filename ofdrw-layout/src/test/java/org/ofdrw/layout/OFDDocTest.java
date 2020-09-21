@@ -13,7 +13,6 @@ import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.font.Font;
 import org.ofdrw.font.FontName;
-import org.ofdrw.font.FontSet;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.edit.Annotation;
 import org.ofdrw.layout.edit.Attachment;
@@ -203,7 +202,7 @@ class OFDDocTest {
 
             doc.add(p);
 
-            font = FontSet.get(FontName.MSYahei);
+            font = FontName.MSYahei.font();
             p = new Paragraph()
                     .setDefaultFont(font)
                     .setFontSize(10d)
@@ -212,7 +211,7 @@ class OFDDocTest {
 
             // 注意：在使用操作系统字体时，默认采用ACSII 0.5 其余1的比例计算宽度，因此可能需要手动设置宽度比例才可以达到相应的效果
             font = new Font("Times New Roman", "Times New Roman")
-                    .setPrintableAsciiWidthMap(FontSet.TIMES_NEW_ROMAN_PRINTABLE_ASCII_MAP);
+                    .setPrintableAsciiWidthMap(FontName.TIMES_NEW_ROMAN_PRINTABLE_ASCII_MAP);
             p = new Paragraph()
                     .setDefaultFont(font)
                     .setFontSize(10d)
