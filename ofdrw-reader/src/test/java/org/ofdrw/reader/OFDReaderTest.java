@@ -8,6 +8,10 @@ import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
 import org.ofdrw.core.basicStructure.pageObj.Page;
+import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
+import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
+import org.ofdrw.core.text.TextCode;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
 
@@ -16,6 +20,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -124,6 +131,35 @@ class OFDReaderTest {
             CT_DocInfo docInfo = docBody.getDocInfo();
             assertEquals(docInfo.getTile(), "Hello World");
             assertEquals(docInfo.getAuthor(), "权观宇");
+        }
+    }
+
+    /**
+     * 获取ofd文本节点
+     *
+     * @throws IOException 文件解析异常
+     */
+    @Test
+    void getContentText() throws IOException {
+        try (OFDReader reader = new OFDReader(src)) {
+            List<String> contents = new ArrayList<>();
+            int numberOfPages = reader.getNumberOfPages();
+            for (int i = 1; i <= numberOfPages; i++) {
+                List<CT_Layer> layers = reader.getPage(i).getContent().getLayers();
+                for (CT_Layer layer : layers) {
+                    List<PageBlockType> pageBlocks = layer.getPageBlocks();
+                    for (PageBlockType block : pageBlocks) {
+                        if (block instanceof TextObject) {
+                            TextObject text = (TextObject) block;
+                            List<TextCode> textCodes = text.getTextCodes();
+                            for (TextCode code : textCodes) {
+                                contents.add(code.getContent());
+                            }
+                        }
+                    }
+                }
+            }
+            System.out.println(">> " + Arrays.toString(contents.toArray()));
         }
     }
 }
