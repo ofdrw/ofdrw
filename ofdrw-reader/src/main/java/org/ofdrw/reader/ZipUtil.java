@@ -2,6 +2,7 @@ package org.ofdrw.reader;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -23,16 +24,19 @@ public class ZipUtil {
         if (!pathFile.exists()) {
             pathFile.mkdirs();
         }
-        //解决zip文件中有中文目录或者中文文件
-        ZipFile zip = new ZipFile(zipFile, Charset.forName("GBK"));
+        Charset charset = StandardCharsets.UTF_8;
+        if(System.getProperties().getProperty("os.name").toUpperCase().contains("WINDOWS")){
+            charset = Charset.forName("GBK");
+        }
+
+        // 解决zip文件中有中文目录或者中文文件
+        ZipFile zip = new ZipFile(zipFile, charset);
         for (Enumeration entries = zip.entries(); entries.hasMoreElements(); ) {
             ZipEntry entry = (ZipEntry) entries.nextElement();
             String zipEntryName = entry.getName();
             try (InputStream in = zip.getInputStream(entry)) {
                 String outPath = (descDir + zipEntryName).replaceAll("\\*", "/");
-                //输出文件路径信息
-//            System.out.println(outPath);
-                //判断路径是否存在,不存在则创建文件路径
+                // 判断路径是否存在,不存在则创建文件路径
                 int vIndex = outPath.lastIndexOf('/');
                 File file;
                 if (vIndex == -1) {
@@ -57,6 +61,5 @@ public class ZipUtil {
                 }
             }
         }
-//        System.out.println("******************解压完毕********************");
     }
 }

@@ -10,6 +10,8 @@ import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
+import org.ofdrw.pkg.container.ResDir;
+import org.ofdrw.pkg.container.VirtualContainer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,8 +29,28 @@ class OFDReaderTest {
 
     private Path src = Paths.get("src/test/resources/helloworld.ofd");
 
+    @Test
+    void testChineseDirName() throws IOException {
+        Path src = Paths.get("src/test/resources/chineseDirName.ofd");
+        try (OFDReader reader = new OFDReader(src);) {
+            System.out.println(reader.getWorkDir().toAbsolutePath());
+            OFDDir ofdDir = reader.getOFDDir();
+            DocDir docDir = ofdDir.obtainDocDefault();
+            ResDir res = docDir.getRes();
+            VirtualContainer chineseDirName = res.getContainer("这是一个中文目录", VirtualContainer::new);
+            assertNotNull(chineseDirName);
+
+            Path file = chineseDirName.getFile("数据文件.txt");
+            byte[] contentBin = Files.readAllBytes(file);
+            final String content = new String(contentBin);
+            System.out.println(content);
+            assertEquals("文件中有一些中文", content);
+        }
+    }
+
     /**
      * 获取附件对象
+     *
      * @throws IOException
      */
     @Test
@@ -42,7 +64,7 @@ class OFDReaderTest {
             Path file = reader.getAttachmentFile("AAABBB");
             Assertions.assertNull(file);
 
-             file = reader.getAttachmentFile("Gao");
+            file = reader.getAttachmentFile("Gao");
             Assertions.assertTrue(Files.exists(file));
 
         }
