@@ -2,7 +2,6 @@ package org.ofdrw.reader;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -24,13 +23,13 @@ public class ZipUtil {
         if (!pathFile.exists()) {
             pathFile.mkdirs();
         }
-        Charset charset = StandardCharsets.UTF_8;
-        if(System.getProperties().getProperty("os.name").toUpperCase().contains("WINDOWS")){
-            charset = Charset.forName("GBK");
-        }
+//        Charset charset = StandardCharsets.UTF_8;
+//        if(System.getProperties().getProperty("os.name").toUpperCase().contains("WINDOWS")){
+//            charset = Charset.forName("GBK");
+//        }
 
         // 解决zip文件中有中文目录或者中文文件
-        ZipFile zip = new ZipFile(zipFile, charset);
+        ZipFile zip = new ZipFile(zipFile, Charset.forName("GBK"));
         for (Enumeration entries = zip.entries(); entries.hasMoreElements(); ) {
             ZipEntry entry = (ZipEntry) entries.nextElement();
             String zipEntryName = entry.getName();
