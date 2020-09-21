@@ -24,6 +24,18 @@ public class PublicResContent {
                 .addResource(fonts);
     }
 
+    public static Res resSysFont() {
+        CT_Font serifCJKsc = new CT_Font()
+                .setFontName("宋体")
+                .setFamilyName("宋体")
+                .setID(4);
+
+        Fonts fonts = new Fonts()
+                .addFont(serifCJKsc);
+        return new Res()
+                .addResource(fonts);
+    }
+
     @Test
     public void printReview() throws Exception {
         Res res = res();
