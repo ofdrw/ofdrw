@@ -174,7 +174,7 @@ public class TextCode extends OFDElement implements ClipAble {
 
     /**
      * 【可选 属性】
-     * 设置 文字之间在 X 方向上的偏移值
+     * 获取 文字之间在 X 方向上的偏移值
      * <p>
      * double 型数值队列，列表中的每个值代表一个文字与前一个
      * 文字之间在 X 方向的偏移值
@@ -231,7 +231,7 @@ public class TextCode extends OFDElement implements ClipAble {
 
     /**
      * 【可选 属性】
-     * 设置 文字之间在 Y 方向上的偏移值
+     * 获取 文字之间在 Y 方向上的偏移值
      * <p>
      * double 型数值队列，列表中的每个值代表一个文字与前一个
      * 文字之间在 Y 方向的偏移值

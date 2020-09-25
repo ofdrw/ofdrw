@@ -2,8 +2,6 @@
 
 ***免责：电子文档的电子签章流程需要符合国家相关标准和规范。要产生具有效力的电子签名/签章，请使用符合国家密码局要求具有相关型号证书的密码设备进行。***
 
-> ***如果您对OFDRW合法签名签章以及验证有意向，我们可以为您提供相关商务咨询服务，请联系QQ: 1009020096 或邮箱 quanguanyu@qq.com。***
-
 
 `ofdrw-sign`已经对OFD文档的电子签章过程完成比较高程度的封装，
 开发者只需要关注如何实现签章即可。
@@ -13,7 +11,7 @@
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-sign</artifactId>
-    <version>1.5.4</version>
+    <version>1.5.6</version>
 </dependency>
 ```
 

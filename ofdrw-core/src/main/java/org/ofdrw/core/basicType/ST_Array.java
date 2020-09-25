@@ -96,7 +96,7 @@ public class ST_Array extends STBase implements Cloneable{
             if (item instanceof String || item == null) {
                 String str = (String) item;
                 if (item == null || str.trim().length() == 0) {
-                    throw new IllegalArgumentException("数组元素为空");
+                    continue;
                 } else {
                     item = str;
                 }
