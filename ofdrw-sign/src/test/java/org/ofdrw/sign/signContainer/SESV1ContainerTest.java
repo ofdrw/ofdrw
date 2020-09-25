@@ -40,8 +40,8 @@ class SESV1ContainerTest {
         Path out = Paths.get("target/SESV1SignDoc.ofd");
         // 1. 构造签名引擎
         try (OFDReader reader = new OFDReader(src);
-//             OFDSigner signer = new OFDSigner(reader, out)
-             OFDSigner signer = new OFDSigner(reader, out, new NumberFormatAtomicSignID())
+             OFDSigner signer = new OFDSigner(reader, out)
+//             OFDSigner signer = new OFDSigner(reader, out, new NumberFormatAtomicSignID()
         ) {
             SESV1Container signContainer = new SESV1Container(prvKey, seal, signCert);
             // 2. 设置签名模式

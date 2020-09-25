@@ -2,6 +2,18 @@
 
 ## 进展
 
+## Version 1.5.6 2020-9-21 23:14:58
+
+- 修复了无法解析OFD内含有中文目录的文件错误。
+- 新增了OFD页面文字抽取的方法：
+    
+    文字抽取参考[ContentExtractorTest.java](ofdrw-reader/src/test/java/org/ofdrw/reader/ContentExtractorTest.java)
+
+## Version 1.5.5 2020-9-15 21:43:31
+
+- 修复了ST_Array 数组含有多空格抛出IAE的问题。
+- 兼容了旧的OFD命名空间。
+
 ## Version 1.5.4 2020-8-26 20:10:15
 
 - 简化了`ofdrw-font`字体库以及相关API，移除了内嵌的几个noto字体，减少库体积。

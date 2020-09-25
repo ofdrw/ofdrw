@@ -110,7 +110,8 @@ public class OFDElement extends DefaultElementProxy {
      * @return OFD元素或null
      */
     public Element getOFDElement(String name) {
-        return this.element(new QName(name, Const.OFD_NAMESPACE));
+//        return this.element(new QName(name, Const.OFD_NAMESPACE));
+        return this.element(new OFDCommonQName(name));
     }
 
 
@@ -167,7 +168,7 @@ public class OFDElement extends DefaultElementProxy {
      * @return 指定名称OFD元素集合
      */
     public <R> List<R> getOFDElements(String name, Function<? super Element, ? extends R> mapper) {
-        List<Element> elements = this.elements(new QName(name, Const.OFD_NAMESPACE));
+        List<Element> elements = this.elements(new OFDCommonQName(name));
         if (elements == null || elements.isEmpty()) {
             return Collections.emptyList();
         }
