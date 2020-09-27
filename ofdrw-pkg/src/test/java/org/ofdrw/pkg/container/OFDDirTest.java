@@ -32,6 +32,17 @@ class OFDDirTest {
         return ofdDir;
     }
 
+    OFDDir build2() throws IOException {
+        FileUtils.deleteDirectory(p.toFile());
+        OFDDir ofdDir = new OFDDir(p)
+                .setOfd(OFDContent.ofd());
+        final DocDir docDir = ofdDir.newDoc()
+                .setPublicRes(PublicResContent.resSysFont())
+                .setDocument(DocumentContent.doc());
+        PagesDir ps = docDir.obtainPages();
+        ps.newPageDir().setContent(PageContent.page());
+        return ofdDir;
+    }
 
     @Test
     void collect() throws IOException {
@@ -45,6 +56,26 @@ class OFDDirTest {
         Path res = Paths.get("target/helloworld.ofd");
         ofdDir.jar(res);
         ofdDir.clean();
+        Assertions.assertTrue(Files.notExists(p));
+    }
+
+
+    @Test
+    void jarChinese() throws IOException {
+        final OFDDir ofdDir = build2();
+        Path res = Paths.get("target/chineseDirFile.ofd");
+
+        DocDir docDir = ofdDir.obtainDocDefault();
+        VirtualContainer resDir = docDir.obtainContainer("Res", VirtualContainer::new );
+        VirtualContainer dirC = resDir.obtainContainer("这是一个中文目录", VirtualContainer::new);
+        Path tempFile = Files.createTempFile("", "");
+        Files.write(tempFile, "文件中有一些中文".getBytes());
+        tempFile = Files.move(tempFile, tempFile.resolveSibling("数据文件.txt"));
+        dirC.putFile(tempFile);
+
+        ofdDir.jar(res);
+        ofdDir.clean();
+        Files.delete(tempFile);
         Assertions.assertTrue(Files.notExists(p));
     }
 }

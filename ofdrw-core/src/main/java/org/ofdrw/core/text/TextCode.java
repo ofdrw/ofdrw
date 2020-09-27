@@ -6,6 +6,12 @@ import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.pageDescription.clips.ClipAble;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 /**
  * 文字定位
  * <p>
@@ -178,7 +184,11 @@ public class TextCode extends OFDElement implements ClipAble {
      * @return 文字之间在 X 方向上的偏移值；null表示不偏移
      */
     public ST_Array getDeltaX() {
-        return ST_Array.getInstance(this.attributeValue("DeltaX"));
+        String str = this.attributeValue("DeltaX");
+        if (str == null || str.trim().length() == 0) {
+            return null;
+        }
+        return ST_Array.getInstance(deltaFormatter(str));
     }
 
 
@@ -235,6 +245,52 @@ public class TextCode extends OFDElement implements ClipAble {
         if (str == null || str.trim().length() == 0) {
             return null;
         }
-        return ST_Array.getInstance(str);
+        return ST_Array.getInstance(deltaFormatter(str));
+    }
+
+    /**
+     * 解析delta的值，处理g的格式
+     * @param delta
+     * @return
+     */
+    private String deltaFormatter(String delta) {
+        if(!delta.contains("g")) {
+            return delta;
+        } else {
+            List<String> tempList = Arrays.stream(delta.split(" "))
+                    .collect(Collectors.toList());
+
+            boolean gFlag = false;
+            boolean gProcessing = false;
+            int gItemCount = 0;
+
+            List<String> floatList = new ArrayList<>();
+            for (String s : tempList) {
+                if ("g".equals(s)) {
+                    gFlag = true;
+                } else {
+                    if (s == null || s.trim().length() == 0) {
+                        continue;
+                    }
+                    if (gFlag) {
+                        gItemCount = Integer.parseInt(s);
+                        gProcessing = true;
+                        gFlag = false;
+                    } else if (gProcessing) {
+                        for (int j = 0; j < gItemCount; j++) {
+                            floatList.add(s);
+                        }
+                        gProcessing = false;
+                    } else {
+                        floatList.add(s);
+                    }
+                }
+            }
+            StringBuilder sb = new StringBuilder();
+            for (String item : floatList) {
+                sb.append(' ').append(item);
+            }
+            return sb.toString().trim();
+        }
     }
 }
