@@ -137,7 +137,7 @@ public class SES_Signature extends ASN1Object {
         v.add(signatureAlgID);
         v.add(signature);
         if (timeStamp != null) {
-            v.add(timeStamp);
+            v.add(new DERTaggedObject(true, 0, timeStamp));
         }
         return new DERSequence(v);
     }

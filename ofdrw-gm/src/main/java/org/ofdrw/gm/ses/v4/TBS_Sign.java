@@ -155,7 +155,7 @@ public class TBS_Sign extends ASN1Object {
         v.add(dataHash);
         v.add(propertyInfo);
         if (extDatas != null) {
-            v.add(propertyInfo);
+            v.add(new DERTaggedObject(true, 0, extDatas));
         }
         return new DERSequence(v);
     }
