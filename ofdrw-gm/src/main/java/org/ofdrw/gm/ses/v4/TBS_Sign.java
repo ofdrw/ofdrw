@@ -69,7 +69,10 @@ public class TBS_Sign extends ASN1Object {
         dataHash = DERBitString.getInstance(e.nextElement());
         propertyInfo = DERIA5String.getInstance(e.nextElement());
         if (e.hasMoreElements()) {
-            extDatas = ExtensionDatas.getInstance(e.nextElement());
+            Object obj = e.nextElement();
+            if (obj instanceof ASN1TaggedObject) {
+                extDatas = ExtensionDatas.getInstance(((ASN1TaggedObject) obj).getObject());
+            }
         }
     }
 

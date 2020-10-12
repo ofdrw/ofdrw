@@ -41,7 +41,10 @@ class TBS_SignTest {
         toSign.setExtDatas(eds);
 
         byte[] encoded = toSign.toASN1Primitive().getEncoded();
-
         System.out.println(Base64.toBase64String(encoded));
+
+        // 反序列化
+        TBS_Sign copy = TBS_Sign.getInstance(encoded);
+        assertNotNull(copy.getExtDatas());
     }
 }
