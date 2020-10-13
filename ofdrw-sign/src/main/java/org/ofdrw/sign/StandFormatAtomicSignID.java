@@ -17,7 +17,7 @@ public class StandFormatAtomicSignID implements SignIDProvider {
      * <p>
      * 'sNNN',NNN从1起。
      */
-    public static final Pattern IDPattern = Pattern.compile("s(\\d{3})");
+    public static final Pattern IDPattern = Pattern.compile("s(\\d+)");
     /**
      * 签名ID自增提供者
      */
