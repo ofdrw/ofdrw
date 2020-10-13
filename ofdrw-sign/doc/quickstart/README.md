@@ -139,4 +139,4 @@ OFD R&W Sign模块中提供几个用于参考的验证容器实现，这些容�
 ## 签章定位
 
 - [骑缝章](../../src/test/java/org/ofdrw/sign/stamppos/RidingStampPosTest.java)
-- [关键字定位签章](../../src/test/java/org/ofdrw/sign/keyword/KeywordPosSignV1Test.java)
+- [关键字定位签章](../../src/test/java/org/ofdrw/sign/keyword/KeywordPosSignTest.java)
