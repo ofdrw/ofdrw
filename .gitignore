@@ -27,3 +27,11 @@ HELP.md
 
 ### VS Code ###
 .vscode/
+ofdrw-core/target/
+ofdrw-font/target/
+ofdrw-gm/target/
+ofdrw-gv/target/
+ofdrw-layout/target/
+ofdrw-pkg/target/
+ofdrw-reader/target/
+ofdrw-sign/target/

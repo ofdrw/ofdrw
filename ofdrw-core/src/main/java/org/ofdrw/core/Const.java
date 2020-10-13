@@ -42,5 +42,10 @@ public class Const {
      */
     public static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'hh:mm:ss");
 
+    /**
+     * OFD索引文件
+     */
+    public static final String INDEX_FILE = "OFD.xml";
+
 
 }
