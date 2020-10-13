@@ -40,7 +40,7 @@
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.5.5</version>
+  <version>1.5.6</version>
 </dependency>
 ```
 
@@ -66,9 +66,10 @@ public class HelloWorld {
 
 ![示例](./ofdrw-layout/doc/示例.png)
 
-- [生成示例](https://github.com/Trisia/ofdrw/blob/master/ofdrw-layout/src/test/java/org/ofdrw/layout/OFDDocTest.java)
-- [布局示例](https://github.com/Trisia/ofdrw/blob/master/ofdrw-layout/src/test/java/org/ofdrw/layout/LayoutTest.java)
-- [Canvas示例](https://github.com/Trisia/ofdrw/blob/master/ofdrw-layout/src/test/java/org/ofdrw/layout/element/canvas/DrawContextTest.java)
+- [生成示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/OFDDocTest.java)
+- [布局示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/LayoutTest.java)
+- [Canvas示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/element/canvas/DrawContextTest.java)
+- [文字抽取示例](./ofdrw-reader/src/test/java/org/ofdrw/reader/ContentExtractorTest.java)
 
 
 相关文档目录：
@@ -81,7 +82,7 @@ OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwe
 
 ### 推荐的预览解决方案
 
-**ofd.js**
+**DLTech21/ofd.js**
 
 ![ofd.js](https://raw.githubusercontent.com/DLTech21/ofd.js/master/ofd.jpg)
 

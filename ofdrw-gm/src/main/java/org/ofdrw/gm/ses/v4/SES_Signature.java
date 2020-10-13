@@ -62,7 +62,10 @@ public class SES_Signature extends ASN1Object {
         signatureAlgID = ASN1ObjectIdentifier.getInstance(e.nextElement());
         signature = DERBitString.getInstance(e.nextElement());
         if (e.hasMoreElements()) {
-            timeStamp = DERBitString.getInstance(e.nextElement());
+            Object obj = e.nextElement();
+            if (obj instanceof ASN1TaggedObject) {
+                timeStamp = DERBitString.getInstance(((ASN1TaggedObject) obj).getObject());
+            }
         }
     }
 
@@ -137,7 +140,7 @@ public class SES_Signature extends ASN1Object {
         v.add(signatureAlgID);
         v.add(signature);
         if (timeStamp != null) {
-            v.add(timeStamp);
+            v.add(new DERTaggedObject(true, 0, timeStamp));
         }
         return new DERSequence(v);
     }
