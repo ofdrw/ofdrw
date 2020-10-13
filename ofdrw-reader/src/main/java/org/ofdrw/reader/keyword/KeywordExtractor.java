@@ -1,4 +1,4 @@
-package org.ofdrw.sign.keyword;
+package org.ofdrw.reader.keyword;
 
 import org.dom4j.DocumentException;
 import org.ofdrw.core.Const;
@@ -31,8 +31,8 @@ import java.util.Map;
  * 关键字抽取
  *
  * @author minghu-zhang
- * @date 16:25 2020/9/26
- **/
+ * @since 16:25 2020/9/26
+ */
 @SuppressWarnings("unchecked")
 public class KeywordExtractor {
 
@@ -608,7 +608,7 @@ public class KeywordExtractor {
             List<String> array = delta.getArray();
             for (int i = 0, len = array.size(); i < len; i++) {
                 if ("g".equals(array.get(i))) {
-                    for (int j = 0, len2 = Integer.valueOf(array.get(i + 1)); j < len2; j++) {
+                    for (int j = 0, len2 = Integer.parseInt(array.get(i + 1)); j < len2; j++) {
                         list.add(Float.valueOf(array.get(i + 2)));
                     }
                     i += 2;
