@@ -1,4 +1,4 @@
-package org.ofdrw.sign.keyword;
+package org.ofdrw.reader.keyword;
 
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.core.text.text.CT_Text;
@@ -7,8 +7,8 @@ import org.ofdrw.core.text.text.CT_Text;
  * 文本资源
  *
  * @author minghu-zhang
- * @date 16:25 2020/9/25
- **/
+ * @since 16:25 2020/9/25
+ */
 public class KeywordResource {
 
     /**

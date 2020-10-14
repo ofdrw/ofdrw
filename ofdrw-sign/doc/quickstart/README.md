@@ -11,7 +11,7 @@
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-sign</artifactId>
-    <version>1.5.6</version>
+    <version>1.6.0</version>
 </dependency>
 ```
 
@@ -135,3 +135,8 @@ OFD R&W Sign模块中提供几个用于参考的验证容器实现，这些容�
     - [测试用例](../../src/test/java/org/ofdrw/sign/verify/container/SESV1ValidateContainerTest.java)
 - [GB/T 38540-2020 电子签章验证实现 SESV4Container](../../src/main/java/org/ofdrw/sign/verify/container/SESV4ValidateContainer.java)
     - [测试用例](../../src/test/java/org/ofdrw/sign/verify/container/SESV4ValidateContainerTest.java)
+
+## 签章定位
+
+- [骑缝章](../../src/test/java/org/ofdrw/sign/stamppos/RidingStampPosTest.java)
+- [关键字定位签章](../../src/test/java/org/ofdrw/sign/keyword/KeywordPosSignTest.java)

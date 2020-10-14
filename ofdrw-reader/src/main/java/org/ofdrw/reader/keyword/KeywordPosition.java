@@ -1,4 +1,4 @@
-package org.ofdrw.sign.keyword;
+package org.ofdrw.reader.keyword;
 
 import org.ofdrw.core.basicType.ST_Box;
 
@@ -6,8 +6,8 @@ import org.ofdrw.core.basicType.ST_Box;
  * 关键字位置
  *
  * @author minghu-zhang
- * @date 16:25 2020/9/26
- **/
+ * @since 16:25 2020/9/26
+ */
 public class KeywordPosition {
     /**
      * 关键字所在页码
