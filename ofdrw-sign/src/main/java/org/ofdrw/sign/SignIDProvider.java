@@ -1,5 +1,7 @@
 package org.ofdrw.sign;
 
+import java.util.regex.Pattern;
+
 /**
  * 签名ID提供者
  * <p>
@@ -9,6 +11,14 @@ package org.ofdrw.sign;
  * @since 2020-08-24 20:12:35
  */
 public interface SignIDProvider {
+
+
+    /**
+     * 根据标准推荐ID样式为
+     * <p>
+     * 'sNNN',NNN从1起。
+     */
+    Pattern IDPattern = Pattern.compile("s(\\d+)");
 
     /**
      * 设置当前最大签名ID值

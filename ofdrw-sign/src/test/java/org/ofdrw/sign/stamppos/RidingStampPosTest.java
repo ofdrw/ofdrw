@@ -25,9 +25,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author 权观宇
  * @since 2020-04-25 12:31:43
  */
-
-
 class RidingStampPosTest {
+
     @Test
     public void rideRight() throws GeneralSecurityException, IOException {
         Path userP12Path = Paths.get("src/test/resources", "USER.p12");
