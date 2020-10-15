@@ -52,7 +52,7 @@ public class OFDSigner implements Closeable {
     public static final DateTimeFormatter DF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     /**
-     * OFDRW 签名提供者
+     * @return OFDRW 签名提供者
      */
     public static Provider OFDRW_Provider() {
         return new Provider()
@@ -124,6 +124,7 @@ public class OFDSigner implements Closeable {
      * @param out        电子签名后文件保存位置
      * @param idProvider 签名文件ID提供器
      * @since 2020-08-24 20:35:45
+     * @throws SignatureTerminateException 签名终止异常
      */
     public OFDSigner(OFDReader reader, Path out, SignIDProvider idProvider) throws SignatureTerminateException {
         if (reader == null) {
@@ -158,6 +159,7 @@ public class OFDSigner implements Closeable {
      *
      * @param reader OFD解析器
      * @param out    电子签名后文件保存位置
+     * @throws SignatureTerminateException 签名终止异常
      */
     public OFDSigner(OFDReader reader, Path out) throws SignatureTerminateException {
         this(reader, out, new StandFormatAtomicSignID());

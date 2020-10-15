@@ -20,6 +20,7 @@ import org.ofdrw.layout.edit.AnnotationRender;
 import org.ofdrw.layout.edit.Attachment;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.engine.*;
+import org.ofdrw.layout.engine.render.RenderException;
 import org.ofdrw.layout.exception.DocReadException;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
@@ -301,6 +302,8 @@ public class OFDDoc implements Closeable {
      * @param pageNum    页码
      * @param annotation 注释对象
      * @return this
+     * @throws IOException 文件操作异常
+     * @throws RenderException 渲染异常
      */
     public OFDDoc addAnnotation(int pageNum, Annotation annotation) throws IOException {
         if (annotation == null) {
