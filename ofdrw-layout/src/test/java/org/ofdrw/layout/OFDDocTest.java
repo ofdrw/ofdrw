@@ -39,6 +39,22 @@ import static org.junit.jupiter.api.Assertions.*;
 class OFDDocTest {
 
     /**
+     * 字体宽度溢出可用最大宽度测试
+     */
+    @Test
+    void fontSizeOverflow() throws IOException {
+        Path outP = Paths.get("target/FontSizeOverflow.ofd");
+
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            Paragraph p = new Paragraph(10d, 20d).setFontSize(15d);
+            p.add("l我l");
+            ofdDoc.add(p);
+            // Expect: 只显示 "l"
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    /**
      * 向文件中加入附件文件
      *
      * @throws IOException
@@ -635,10 +651,10 @@ class OFDDocTest {
         Path path = Paths.get("target/virtualPagePositioning.ofd").toAbsolutePath();
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
 
-            VirtualPage vPage = new VirtualPage( ofdDoc.getPageLayout());
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
 
             Canvas canvas = new Canvas(200d, 200d);
-            canvas .setPosition(Position.Absolute)
+            canvas.setPosition(Position.Absolute)
                     .setX(0d)
                     .setY(0d)
                     .setBorder(1d);
