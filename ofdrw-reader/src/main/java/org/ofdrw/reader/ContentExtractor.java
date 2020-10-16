@@ -3,6 +3,7 @@ package org.ofdrw.reader;
 import org.ofdrw.core.basicStructure.pageObj.Content;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.text.TextCode;
 
@@ -62,21 +63,32 @@ public class ContentExtractor {
         // 如果页面含有多个层那么分层遍历
         for (CT_Layer layer : layers) {
             // 遍历所有页块
-            List<PageBlockType> pageBlocks = layer.getPageBlocks();
-            for (PageBlockType block : pageBlocks) {
-                // 找出所有的文字对象
-                if (block instanceof TextObject) {
-                    TextObject text = (TextObject) block;
-                    List<TextCode> textCodes = text.getTextCodes();
-                    for (TextCode code : textCodes) {
-                        txtContentList.add(code.getContent());
-                    }
-                }
-            }
+            pageBlockHandle(txtContentList, layer.getPageBlocks());
         }
         return txtContentList;
     }
 
+    /**
+     * 页块处理
+     *
+     * @param txtContentList 文本列表
+     * @param pageBlocks     页块列表
+     */
+    private void pageBlockHandle(List<String> txtContentList, List<PageBlockType> pageBlocks) {
+        for (PageBlockType block : pageBlocks) {
+            // 找出所有的文字对象
+            if (block instanceof TextObject) {
+                TextObject text = (TextObject) block;
+                List<TextCode> textCodes = text.getTextCodes();
+                for (TextCode code : textCodes) {
+                    txtContentList.add(code.getContent());
+                }
+            } else if (block instanceof CT_PageBlock) {
+                CT_PageBlock ctPageBlock = (CT_PageBlock) block;
+                pageBlockHandle(txtContentList, ctPageBlock.getPageBlocks());
+            }
+        }
+    }
 
     /**
      * 获取OFD内的所有文本内容
