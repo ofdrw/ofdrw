@@ -2,6 +2,17 @@
 
 ## 进展
 
+## Version 1.6.1 2020-10-15 20:51:04
+
+新增：
+
+- [命名空间修改](ofdrw-reader/src/test/java/org/ofdrw/reader/tools/NameSpaceModifierTest.java)和[清理](ofdrw-reader/src/test/java/org/ofdrw/reader/tools/NameSpaceCleanerTest.java)的功能用于迁移部分老本版OFD命名空间问题。
+
+修复:
+
+- 修复了getInstance中错误的QName导致无法获取对应元素的BUG。
+- 修复了由于字体大小大于可用最大宽度在分析阶段导致的死循环。
+
 ## Version 1.6.0 2020-10-13 20:22:28
 
 新功能：

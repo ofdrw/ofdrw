@@ -28,10 +28,10 @@ public interface ClipAble extends Element {
         String qName = e.getQualifiedName();
         ClipAble res = null;
         switch (qName) {
-            case "Path":
+            case "ofd:Path":
                 res = new CT_Path(e);
                 break;
-            case "Text":
+            case "ofd:Text":
                 res = new CT_Text(e);
                 break;
             default:

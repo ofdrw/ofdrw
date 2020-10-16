@@ -42,6 +42,20 @@ public class ParagraphTest {
         }
     }
 
+    /**
+     * 字体大小溢出测试
+     */
+    @Test
+    public void doPrepare2() {
+        Paragraph p = new Paragraph(10d, 20d).setFontSize(15d);
+        p.add("1说");
+        p.doPrepare(10d);
+
+        Paragraph p2 = new Paragraph(10d, 20d).setFontSize(15d);
+        p2.add("好的");
+        p2.doPrepare(10d);
+    }
+
     @Test
     public void split() {
         Paragraph p = new Paragraph().setFontSize(10d).add("岂不美哉");
