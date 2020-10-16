@@ -8,6 +8,7 @@ import org.ofdrw.core.basicStructure.pageObj.CT_TemplatePage;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicStructure.res.Res;
 import org.ofdrw.core.basicStructure.res.resources.Fonts;
@@ -545,24 +546,39 @@ public class KeywordExtractor {
 
         //创建字型映射关系
         for (CT_Layer layer : layers) {
-            List<PageBlockType> pageBlocks = layer.getPageBlocks();
-            for (PageBlockType block : pageBlocks) {
-                if (block instanceof TextObject) {
-                    TextObject text = (TextObject) block;
-                    CT_Font font = fontMapping.get(text.getFont().getRefId());
-                    KeywordResource kr;
+            pageBlockHandle(textCodeList, boundaryMapping, fontMapping, pageNumber, layer.getPageBlocks());
+        }
+    }
 
-                    //此处需要mergeTextCode
-                    for (TextCode code : text.getTextCodes()) {
-                        kr = new KeywordResource();
-                        kr.setPage(pageNumber);
-                        kr.setFont(font);
-                        kr.setText(text);
+    /**
+     * 页面块处理
+     *
+     * @param textCodeList    文本列表
+     * @param boundaryMapping 边框映射对象
+     * @param fontMapping     字体映射对象
+     * @param pageNumber      页码
+     * @param pageBlocks      页块列表
+     */
+    private static void pageBlockHandle(List<TextCode> textCodeList, Map<TextCode, KeywordResource> boundaryMapping, Map<ST_ID, CT_Font> fontMapping,
+                                        int pageNumber, List<PageBlockType> pageBlocks) {
+        for (PageBlockType block : pageBlocks) {
+            if (block instanceof TextObject) {
+                TextObject text = (TextObject) block;
+                CT_Font font = fontMapping.get(text.getFont().getRefId());
+                KeywordResource kr;
 
-                        textCodeList.add(code);
-                        boundaryMapping.put(code, kr);
-                    }
+                for (TextCode code : text.getTextCodes()) {
+                    kr = new KeywordResource();
+                    kr.setPage(pageNumber);
+                    kr.setFont(font);
+                    kr.setText(text);
+
+                    textCodeList.add(code);
+                    boundaryMapping.put(code, kr);
                 }
+            } else if (block instanceof CT_PageBlock) {
+                CT_PageBlock ctPageBlock = (CT_PageBlock) block;
+                pageBlockHandle(textCodeList, boundaryMapping, fontMapping, pageNumber, ctPageBlock.getPageBlocks());
             }
         }
     }
