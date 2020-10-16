@@ -572,7 +572,7 @@ public class DrawContext implements Closeable {
     /**
      * 在OFD上绘制图像
      *
-     * @param img    要使用的图像
+     * @param img    要使用的图像，请避免资源和文档中已经存在的资源重复
      * @param x      在画布上放置图像的 x 坐标位置
      * @param y      在画布上放置图像的 y 坐标位置
      * @param width  要使用的图像的宽度（伸展或缩小图像）
