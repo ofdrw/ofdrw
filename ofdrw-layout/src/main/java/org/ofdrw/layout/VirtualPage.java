@@ -60,6 +60,9 @@ public class VirtualPage {
         if (d.getPosition() != Position.Absolute) {
             throw new IllegalArgumentException("加入虚拟页面的对象应该采用绝对定位（Position: Absolute）");
         }
+        if (d.getWidth() == null) {
+            throw new IllegalArgumentException("绝对定位元素至少需要指定元素宽度（Width）");
+        }
         this.content.add(d);
         return this;
     }

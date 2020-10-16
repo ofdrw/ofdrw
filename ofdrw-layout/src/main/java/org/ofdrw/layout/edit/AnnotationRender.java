@@ -96,6 +96,7 @@ public class AnnotationRender {
      * @param pageInfo 需要渲染注释的页面信息
      * @param build    注释对象构造器
      * @throws RenderException 渲染发生错误
+     * @throws IOException 文件操作异常
      */
     public void render(PageInfo pageInfo, Annotation build) throws RenderException, IOException {
         Drawer drawer = build.getDrawer();

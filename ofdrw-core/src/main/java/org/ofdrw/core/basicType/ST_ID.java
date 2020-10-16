@@ -1,5 +1,7 @@
 package org.ofdrw.core.basicType;
 
+import java.util.Objects;
+
 /**
  * 标识，无符号整数，应在文档内唯一。0标识无效标识符
  * <p>
@@ -64,5 +66,22 @@ public class ST_ID extends STBase {
     @Override
     public String toString() {
         return id.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ST_ID)) {
+            return false;
+        }
+        ST_ID stId = (ST_ID) o;
+        return Objects.equals(getId(), stId.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId());
     }
 }

@@ -9,6 +9,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 2020-08-24 20:40:54
  */
 class NumberFormatAtomicSignIDTest {
+    @Test
+    void constructNumberFormatAtomicSignID() {
+        NumberFormatAtomicSignID nfas = new NumberFormatAtomicSignID("s001");
+        String s = nfas.incrementAndGet();
+        assertEquals("002", s);
+    }
 
     @Test
     void setCurrentMaxSignId() {

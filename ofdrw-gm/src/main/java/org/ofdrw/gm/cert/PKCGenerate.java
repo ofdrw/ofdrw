@@ -79,7 +79,7 @@ public class PKCGenerate {
      * @param kp      SM2密钥对
      * @param subject 证书使用者
      * @return 证书请求
-     * @throws OperatorCreationException
+     * @throws OperatorCreationException  操作异常
      */
     public static PKCS10CertificationRequest CertRequest(KeyPair kp, X500Name subject) throws OperatorCreationException {
         // 构造请求信息，主要是由“实体”的DN和公钥构成
@@ -98,6 +98,7 @@ public class PKCGenerate {
      * 生成测试SM2密钥对
      *
      * @return 密钥对
+     * @throws GeneralSecurityException 安全操作异常
      */
     public static KeyPair GenerateKeyPair() throws GeneralSecurityException {
         // 获取SM2椭圆曲线的参数
@@ -121,6 +122,9 @@ public class PKCGenerate {
      * @param root       CA根证书
      * @param privateKey CA私钥
      * @return X509证书对象
+     * @throws GeneralSecurityException 安全操作异常
+     * @throws IOException 文件读写异常
+     * @throws OperatorCreationException 操作异常
      */
     public static X509Certificate GenCert(PKCS10CertificationRequest p10Obj,
                                           Certificate root,
@@ -190,6 +194,8 @@ public class PKCGenerate {
      * @param certs 证书链
      * @param pwd   P12密码
      * @param outP  保存位置
+     * @throws GeneralSecurityException 安全异常
+     * @throws IOException IO异常
      */
     public static void SaveToPKCS12(KeyPair pk,
                                     Certificate[] certs,

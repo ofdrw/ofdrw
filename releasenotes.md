@@ -2,6 +2,32 @@
 
 ## 进展
 
+## Version 1.6.1 2020-10-15 20:51:04
+
+新增：
+
+- [命名空间修改](ofdrw-reader/src/test/java/org/ofdrw/reader/tools/NameSpaceModifierTest.java)和[清理](ofdrw-reader/src/test/java/org/ofdrw/reader/tools/NameSpaceCleanerTest.java)的功能用于迁移部分老本版OFD命名空间问题。
+
+修复:
+
+- 修复了getInstance中错误的QName导致无法获取对应元素的BUG。
+- 修复了由于字体大小大于可用最大宽度在分析阶段导致的死循环。
+
+## Version 1.6.0 2020-10-13 20:22:28
+
+新功能：
+
+- [关键定位功能](ofdrw-reader/src/test/java/org/ofdrw/reader/keyword/KeywordExtractorTest.java)
+- [骑缝章的自由定位](ofdrw-sign/src/test/java/org/ofdrw/sign/stamppos/RidingStampPosTest.java)
+- [不同版本电子签章兼容解析](ofdrw-gm/src/test/java/org/ofdrw/gm/ses/parse/VersionParserTest.java)
+
+修复:
+
+- 修复了 CustomDatas 在解析CustomData 序列时候错误的关键字使用。
+- 修复了V4版本电子签章可选参数tag0的错误。
+- 兼容非标准推荐的签名ID，如"sN"、"N"类型的解析。
+- 支持了坐标偏移中厂商定义的`g`参数偏移量。
+
 ## Version 1.5.6 2020-9-21 23:14:58
 
 - 修复了无法解析OFD内含有中文目录的文件错误。

@@ -137,6 +137,11 @@ public class Paragraph extends Div {
 
     public Paragraph setFontSize(Double defaultFontSize) {
         this.defaultFontSize = defaultFontSize;
+//        if (this.getWidth() != null) {
+//            if (this.getWidth() < defaultFontSize) {
+//                throw new IllegalArgumentException("容器大小(width:" + this.getWidth() + ")过小该尺寸(size:" + defaultFontSize + ")无法容纳字体");
+//            }
+//        }
         return this;
     }
 
@@ -292,6 +297,11 @@ public class Paragraph extends Div {
             double blockWidth = s.blockSize().getWidth();
             if (blockWidth > width && s.isIntegrity()) {
                 // TODO 警告 不可分割元素如果大于行宽度则忽略
+                continue;
+            }
+            // 特殊的如果第一个文字的大小就已经超过可用最大空间限制
+            // 那么丢弃系列文字
+            if (width < s.glyphList().get(0).getW()) {
                 continue;
             }
 

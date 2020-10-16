@@ -28,7 +28,7 @@ public class NumberFormatAtomicSignID implements SignIDProvider {
      * @param maxSignID 最大签名ID字符串
      */
     public NumberFormatAtomicSignID(String maxSignID) {
-        int maxSignIDNum = Integer.parseInt(maxSignID);
+        int maxSignIDNum = this.parse(maxSignID);
         provider = new AtomicInteger(maxSignIDNum);
     }
 
@@ -42,7 +42,7 @@ public class NumberFormatAtomicSignID implements SignIDProvider {
      */
     @Override
     public void setCurrentMaxSignId(String maxSignId) {
-        int maxSignIDNum = Integer.parseInt(maxSignId);
+        int maxSignIDNum = this.parse(maxSignId);
         provider.set(maxSignIDNum);
     }
 
@@ -76,7 +76,7 @@ public class NumberFormatAtomicSignID implements SignIDProvider {
      */
     @Override
     public int parse(String id) {
-        return Integer.parseInt(id);
+        return SignIdParser.parseIndex(id);
     }
 
 }
