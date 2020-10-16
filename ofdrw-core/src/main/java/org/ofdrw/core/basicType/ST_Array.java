@@ -44,6 +44,7 @@ public class ST_Array extends STBase implements Cloneable{
     /**
      * 矩阵相乘
      *
+     * @param array 矩阵数组
      * @return 相乘后的结果矩阵
      */
     public ST_Array mtxMul(ST_Array array) {

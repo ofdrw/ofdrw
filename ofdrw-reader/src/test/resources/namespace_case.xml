@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ofd:Page xmlns:ofd="http://www.ofdspec.org">
+    <ofd:Area>
+        <ofd:PhysicalBox>0 0 210 297</ofd:PhysicalBox>
+    </ofd:Area>
+    <ofd:Content>
+        <ofd:Layer ID="3" Type="Body">
+            <ofd:ImageObject ID="6490" CTM="211.41891 0 0 298.10141 0 13.84044"
+                             Boundary="-0.70707 -14.12604 211.4189 325.78223" ResourceID="6489"/>
+        </ofd:Layer>
+    </ofd:Content>
+</ofd:Page>

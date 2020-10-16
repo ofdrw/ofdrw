@@ -141,6 +141,7 @@ public class Span implements TextFontInfo {
         this.font = font;
         return this;
     }
+
     @Override
     public Double getFontSize() {
         return fontSize;
@@ -203,10 +204,16 @@ public class Span implements TextFontInfo {
 
     /**
      * 元素是否可以拆分
+     * <p>
+     * 特殊的：
+     * 如果没有或只有一个文字，那么无论如何设置integrity都为不可拆分
      *
      * @return true 可以拆分；false 不能拆分
      */
     public Boolean isIntegrity() {
+        if (text == null || text.length() <= 1) {
+            integrity = true;
+        }
         return integrity;
     }
 

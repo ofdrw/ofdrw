@@ -149,6 +149,7 @@ public class DocDir extends VirtualContainer {
     /**
      * 设置注释列表对象
      *
+     * @param annotations 注释列表对象
      * @return 注释列表对象
      */
     public DocDir setAnnotations(Annotations annotations) {

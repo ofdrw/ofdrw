@@ -9,6 +9,9 @@ import java.util.zip.ZipFile;
 public class ZipUtil {
     /**
      * 解压到指定目录
+     * @param zipPath 需要解压的文件路径
+     * @param descDir  解压到目录
+     * @throws IOException 文件操作IO异常
      */
     public static void unZipFiles(String zipPath, String descDir) throws IOException {
         unZipFiles(new File(zipPath), descDir);
@@ -16,6 +19,9 @@ public class ZipUtil {
 
     /**
      * 解压文件到指定目录
+     * @param zipFile 需要解压的文件
+     * @param descDir  解压到目录
+     * @throws IOException 文件操作IO异常
      */
     @SuppressWarnings("rawtypes")
     public static void unZipFiles(File zipFile, String descDir) throws IOException {
