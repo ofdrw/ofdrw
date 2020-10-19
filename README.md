@@ -40,7 +40,7 @@
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.6.1</version>
+  <version>1.6.2</version>
 </dependency>
 ```
 
