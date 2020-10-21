@@ -45,6 +45,25 @@ class ContentExtractorTest {
         }
     }
 
+    /**
+     * 含有PageBlock包裹的对象的文字提取测试
+     *
+     * @throws IOException
+     */
+    @Test
+    void extractAllPageBlock() throws IOException {
+        Path src = Paths.get("src/test/resources/helloworld_with_pageblock.ofd");
+        try (OFDReader reader = new OFDReader(src)) {
+            ContentExtractor extractor = new ContentExtractor(reader);
+
+            List<String> pageContent = extractor.extractAll();
+            System.out.println(pageContent);
+            assertEquals(pageContent.size(), 1);
+            assertEquals("你好呀，OFD Reader&Writer！", pageContent.get(0));
+        }
+    }
+
+
     @Test
     void traverse() throws IOException {
         try (OFDReader reader = new OFDReader(src)) {

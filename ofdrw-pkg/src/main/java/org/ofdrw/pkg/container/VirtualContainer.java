@@ -10,9 +10,12 @@ import org.ofdrw.pkg.tool.ElemCup;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -142,9 +145,23 @@ public class VirtualContainer implements Closeable {
         String fileName = file.getFileName().toString();
         Path target = Paths.get(fullPath, fileName);
         // 如果文件已经在目录中那么不做任何事情
-        if (target.toAbsolutePath().toString()
+        if (Files.exists(target) || target.toAbsolutePath().toString()
                 .equals(file.toAbsolutePath().toString())) {
-            return this;
+            if (FileUtils.contentEquals(target.toFile(), file.toFile())) {
+                // 两个文件一致，那么不做任何改变
+                return this;
+            } else {
+                throw new FileAlreadyExistsException("文档中已经存在同名文件资源(" + fileName + ")，请重命名文件");
+//                // 修改更名文件名称，添加时间后缀
+//                String suffix = new SimpleDateFormat("_yyyyMMddHHmmss").format(new Date());
+//                int i = fileName.lastIndexOf('.');
+//                if (i != -1) {
+//                    fileName = fileName.substring(0, i) + suffix + fileName.substring(i);
+//                } else {
+//                    fileName += suffix;
+//                }
+//                target = Paths.get(fullPath, fileName);
+            }
         }
         // 复制文件到指定目录
         Files.copy(file, target);

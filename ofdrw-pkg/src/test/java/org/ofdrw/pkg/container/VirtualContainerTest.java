@@ -10,6 +10,7 @@ import org.ofdrw.core.OFDElement;
 import org.ofdrw.pkg.tool.ElemCup;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,6 +45,18 @@ class VirtualContainerTest {
         Path path = Paths.get("src/test/resources", fileName);
         vc.putFile(path);
         Assertions.assertTrue(Files.exists(Paths.get(target, fileName)));
+
+        // 重复放置相同文件
+        vc.flush();
+        Path fileCopy = Paths.get("target", fileName);
+        Files.delete(fileCopy);
+        Files.copy(path, fileCopy);
+        vc.putFile(fileCopy);
+
+        // 同名不同内容文件
+        Files.delete(fileCopy);
+        Files.copy(Paths.get("src/test/resources/StampImg.png"), fileCopy);
+        Assertions.assertThrows(FileAlreadyExistsException.class, () -> vc.putFile(fileCopy));
     }
 
     @Test
