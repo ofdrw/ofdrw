@@ -48,6 +48,15 @@ public class RidingStampPos implements StampAppearance {
     private Double offset = null;
 
     /**
+     * 图章在边上的margin
+     * <p>
+     * 单位毫米mm
+     * <p>
+     * 默认为0
+     */
+    private double margin = 0;
+
+    /**
      * 右侧边居中骑缝章
      *
      * @param width  章宽度，单位毫米mm
@@ -87,6 +96,23 @@ public class RidingStampPos implements StampAppearance {
         this.offset = offset;
     }
 
+    /**
+     * 指定图章在边上的相对位置
+     *
+     * @param side   指定图章所处的边
+     * @param offset 相对于原点最近的边的顶点位置，null则默认居中
+     * @param width  章宽度，单位毫米mm
+     * @param height 章高度，单位毫米mm
+     * @param margin 页边距，单位毫米mm
+     */
+    public RidingStampPos(Side side, Double offset, double width, double height, double margin) {
+        this.side = side;
+        this.width = width;
+        this.height = height;
+        this.offset = offset;
+        this.margin = margin;
+    }
+
 
     public Side getSide() {
         return side;
@@ -124,6 +150,15 @@ public class RidingStampPos implements StampAppearance {
         return this;
     }
 
+    public double getMargin() {
+        return margin;
+    }
+
+    public RidingStampPos setMargin(double margin) {
+        this.margin = margin;
+        return this;
+    }
+
     @Override
     public List<StampAnnot> getAppearance(OFDReader ctx, SignIDProvider idProvider) {
 
@@ -141,10 +176,10 @@ public class RidingStampPos implements StampAppearance {
                 double x;
                 ST_Box clip = null;
                 if (side == Side.Right) {
-                    x = pageSize.getWidth() - itemWith * (i + 1);
+                    x = pageSize.getWidth() - itemWith * (i + 1) - margin;
                     clip = new ST_Box(i * itemWith, 0, itemWith, this.height);
                 } else {
-                    x = 0 - itemWith * (numPage - 1 - i);
+                    x = 0 - itemWith * (numPage - 1 - i) + margin;
                     clip = new ST_Box((numPage - 1 - i) * itemWith, 0, itemWith, this.height);
                 }
 
@@ -182,10 +217,10 @@ public class RidingStampPos implements StampAppearance {
                 double y;
                 ST_Box clip = null;
                 if (side == Side.Bottom) {
-                    y = pageSize.getHeight() - itemHeight * (i + 1);
+                    y = pageSize.getHeight() - itemHeight * (i + 1) - margin;
                     clip = new ST_Box(0, itemHeight * i, this.width, itemHeight);
                 } else {
-                    y = 0 - itemHeight * (numPage - 1 - i);
+                    y = 0 - itemHeight * (numPage - 1 - i) + margin;
                     clip = new ST_Box(0, (numPage - 1 - i) * itemHeight, this.width, itemHeight);
                 }
 

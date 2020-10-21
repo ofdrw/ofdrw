@@ -47,7 +47,7 @@ class RidingStampPosTest {
             // 3. 设置签名使用的扩展签名容器
             signer.setSignContainer(signContainer);
             // 4. 设置显示位置
-            signer.addApPos(new RidingStampPos(Side.Right, 40, 40));
+            signer.addApPos(new RidingStampPos(Side.Right, 40.0, 40, 40, 10));
             // 5. 执行签名
             signer.exeSign();
             // 6. 关闭签名引擎，生成文档。
@@ -75,7 +75,7 @@ class RidingStampPosTest {
             // 3. 设置签名使用的扩展签名容器
             signer.setSignContainer(signContainer);
             // 4. 设置显示位置
-            signer.addApPos(new RidingStampPos(Side.Left, 40, 40));
+            signer.addApPos(new RidingStampPos(Side.Left, 40.0, 40, 40, 10));
             // 5. 执行签名
             signer.exeSign();
             // 6. 关闭签名引擎，生成文档。
@@ -103,7 +103,7 @@ class RidingStampPosTest {
             // 3. 设置签名使用的扩展签名容器
             signer.setSignContainer(signContainer);
             // 4. 设置显示位置
-            signer.addApPos(new RidingStampPos(Side.Bottom, 40, 40));
+            signer.addApPos(new RidingStampPos(Side.Bottom, 40.0, 40, 40, 10));
             // 5. 执行签名
             signer.exeSign();
             // 6. 关闭签名引擎，生成文档。
@@ -131,7 +131,7 @@ class RidingStampPosTest {
             // 3. 设置签名使用的扩展签名容器
             signer.setSignContainer(signContainer);
             // 4. 设置显示位置
-            signer.addApPos(new RidingStampPos(Side.Top, 40, 40));
+            signer.addApPos(new RidingStampPos(Side.Top, 40.0, 40, 40, 10));
             // 5. 执行签名
             signer.exeSign();
             // 6. 关闭签名引擎，生成文档。
