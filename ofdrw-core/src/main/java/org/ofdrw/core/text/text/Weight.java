@@ -65,6 +65,15 @@ public enum Weight {
         }
     }
 
+    /**
+     * 获取字体粗细值
+     *
+     * @return 粗细值
+     */
+    public Integer getWeight() {
+        return weight;
+    }
+
     @Override
     public String toString() {
         return Integer.toString(weight);

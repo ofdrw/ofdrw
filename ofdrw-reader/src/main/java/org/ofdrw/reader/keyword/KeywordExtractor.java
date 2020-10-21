@@ -210,7 +210,7 @@ public class KeywordExtractor {
      */
     private static KeywordPosition getCtmKeywordPosition(TextCode textCode, int textIndex, int page, CT_Text ctText, FontMetrics fontMetrics,
                                                          ST_Array ctm, List<Float> deltaX, List<Float> deltaY, int keywordLength) {
-        double height = fontMetrics.getAscent() / POINT_PER_MM;
+        double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
 
         double[] matrix = getMatrix(ctm);
         double x = textCode.getX();
@@ -312,7 +312,6 @@ public class KeywordExtractor {
                                              Map<TextCode, KeywordResource> boundaryMapping) {
         List<ST_Box> boxList = new ArrayList<>();
         FontMetrics fontMetrics = null;
-        double wordHeight = 0;
         int page = 0, totalLength = 0, keywordLength = keyword.length();
         for (TextCode textCode : textCodeList) {
             int textLength = textCode.getContent().length();
@@ -332,21 +331,36 @@ public class KeywordExtractor {
                     List<Float> deltaX = getDelta(textCode.getDeltaX(), textCode.getContent().length());
                     List<Float> deltaY = getDelta(textCode.getDeltaY(), textCode.getContent().length());
 
-                    if (fontMetrics == null) {
-                        fontMetrics = FontDesignMetrics.getMetrics(getFont(ctText, kr.getFont()));
-                        wordHeight = fontMetrics.getHeight() / POINT_PER_MM;
-                    }
-
                     double width = getStringWidth(0, textLength, deltaX);
-
                     if (width == 0) {
                         width = kr.getText().getSize();
                     }
 
-                    ST_Pos basePoint = getLeftBottomPos(ctText.getBoundary(), textCode, deltaX, deltaY, 0);
-                    ST_Box box = new ST_Box(basePoint.getX(), basePoint.getY() - wordHeight, width, wordHeight);
+                    if (fontMetrics == null) {
+                        fontMetrics = FontDesignMetrics.getMetrics(getFont(ctText, kr.getFont()));
+                    }
+                    double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
+                    ST_Pos basePoint;
+                    ST_Array ctm = ctText.getCTM();
+                    if (ctm != null) {
+                        double[] matrix = getMatrix(ctm);
+                        double x = textCode.getX() == null ? 0 : textCode.getX();
+                        double y = textCode.getY() == null ? 0 : textCode.getY();
 
-                    boxList.add(box);
+                        ST_Pos leftBottom = transform(matrix, x, y);
+                        ST_Pos rightTop = transform(matrix, x + width, y - height);
+
+                        ST_Pos position = ctText.getBoundary().getTopLeftPos();
+
+                        ST_Box box = mergePos(leftBottom, rightTop);
+                        box.setTopLeftX(position.getX() + box.getTopLeftX());
+                        box.setTopLeftY(position.getY() + box.getTopLeftY());
+
+                        boxList.add(box);
+                    } else {
+                        basePoint = getLeftBottomPos(ctText.getBoundary(), textCode, deltaX, deltaY, 0);
+                        boxList.add(new ST_Box(basePoint.getX(), basePoint.getY() - height, width, height));
+                    }
                 }
             }
         }
@@ -426,7 +440,7 @@ public class KeywordExtractor {
     private static KeywordPosition getKeywordPosition(TextCode textCode, int textIndex, int page, CT_Text ctText, FontMetrics fontMetrics,
                                                       List<Float> deltaX, List<Float> deltaY, int keywordLength) {
         double width = getStringWidth(textIndex, keywordLength, deltaX);
-        double height = fontMetrics.getAscent() / POINT_PER_MM;
+        double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
 
         ST_Pos basePoint = getLeftBottomPos(ctText.getBoundary(), textCode, deltaX, deltaY, textIndex);
         ST_Box box = new ST_Box(basePoint.getX(), basePoint.getY() - height, width, height);
@@ -476,7 +490,7 @@ public class KeywordExtractor {
         }
 
         if (ctText.getWeight() != null) {
-            attributes.put(TextAttribute.WEIGHT, ctText.getWeight().ordinal() / 100);
+            attributes.put(TextAttribute.WEIGHT, ctText.getWeight().getWeight() / 100);
         }
 
         return Font.getFont(attributes);
