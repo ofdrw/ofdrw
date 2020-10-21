@@ -179,7 +179,7 @@ public class ResManager {
      * <p>
      * 如果图片已经存在那么不会重复加入
      *
-     * @param imgPath 图片路径
+     * @param imgPath 图片路径，请避免资源和文档中已经存在的资源重复
      * @return 资源ID
      * @throws IOException 文件复制异常
      */
