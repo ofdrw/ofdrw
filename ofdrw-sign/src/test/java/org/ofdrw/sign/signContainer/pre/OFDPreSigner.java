@@ -1,7 +1,6 @@
-package org.ofdrw.sign.signContainer;
+package org.ofdrw.sign.signContainer.pre;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.dom4j.DocumentException;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.signatures.SigType;
@@ -41,7 +40,6 @@ import java.util.List;
  * <p>
  * 签章和验证操作均针对于OFD文档中的第一个文档
  *
- * @author 权观宇
  * @since 2020-04-17 02:11:56
  */
 public class OFDPreSigner implements Closeable {

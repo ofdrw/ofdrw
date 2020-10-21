@@ -40,10 +40,10 @@ class KeywordExtractorTest {
             assertEquals(keywordPos.getPage(), 1);
             ST_Box box = keywordPos.getBox();
             // 误差保持在0.1
-            assertEquals(String.format("%.1f", box.getTopLeftX()), "131.1");
-            assertEquals(String.format("%.1f", box.getTopLeftY()), "87.1");
-            assertEquals(String.format("%.1f", box.getWidth()), "23.0");
-            assertEquals(String.format("%.1f", box.getHeight()), "23.0");
+            assertEquals("131.9", String.format("%.1f", box.getTopLeftX()));
+            assertEquals("87.9", String.format("%.1f", box.getTopLeftY()));
+            assertEquals("22.3", String.format("%.1f", box.getWidth()));
+            assertEquals("22.3", String.format("%.1f", box.getHeight()));
         }
     }
 }

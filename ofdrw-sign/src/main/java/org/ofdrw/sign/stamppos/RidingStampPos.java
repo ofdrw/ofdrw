@@ -57,7 +57,9 @@ public class RidingStampPos implements StampAppearance {
     private double margin = 0;
 
     /**
-     * 图章指定切割等份显示
+     * 图章指定切割等份数量
+     * <p>
+     * 如果页面数量大于切割数量，印章将会重复。
      * <p>
      * 单位份
      * <p>

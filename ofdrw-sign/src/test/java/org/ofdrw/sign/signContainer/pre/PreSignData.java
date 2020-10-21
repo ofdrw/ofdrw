@@ -1,4 +1,4 @@
-package org.ofdrw.sign.signContainer;
+package org.ofdrw.sign.signContainer.pre;
 
 public class PreSignData {
     private byte[] xmlBytes;
