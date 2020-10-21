@@ -61,9 +61,9 @@ public class RidingStampPos implements StampAppearance {
      * <p>
      * 单位份
      * <p>
-     * 默认以页数，为null
+     * 默认以页数，为0
      */
-    private Integer clipNumber = null;
+    private int clipNumber = 0;
 
     /**
      * 右侧边居中骑缝章
@@ -187,11 +187,11 @@ public class RidingStampPos implements StampAppearance {
         return this;
     }
 
-    public Integer getClipNumber() {
+    public int getClipNumber() {
         return clipNumber;
     }
 
-    public RidingStampPos setClipNumber(Integer clipNumber) {
+    public RidingStampPos setClipNumber(int clipNumber) {
         this.clipNumber = clipNumber;
         return this;
     }
