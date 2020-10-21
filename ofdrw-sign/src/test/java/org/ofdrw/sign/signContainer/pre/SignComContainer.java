@@ -1,4 +1,4 @@
-package org.ofdrw.sign.signContainer;
+package org.ofdrw.sign.signContainer.pre;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.ofdrw.core.signatures.SigType;

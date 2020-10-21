@@ -1,6 +1,5 @@
-package org.ofdrw.sign.signContainer;
+package org.ofdrw.sign.signContainer.pre;
 
-import org.apache.commons.io.FileUtils;
 import org.bouncycastle.asn1.ASN1GeneralizedTime;
 import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
