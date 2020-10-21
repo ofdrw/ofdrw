@@ -203,15 +203,19 @@ public class RidingStampPos implements StampAppearance {
         int numPage = ctx.getNumberOfPages();
         List<StampAnnot> res = new ArrayList<>(numPage);
         boolean isClipNumber = this.clipNumber > 0 && this.clipNumber < numPage;
-
+        int leftClipNumber = 0;
         if (side == Side.Right || side == Side.Left) {
             // 按页码平分印章图片
             double itemWith = this.width / numPage;
             if (isClipNumber) {
                 itemWith = this.width / clipNumber;
+                leftClipNumber = numPage % this.clipNumber;
             }
             for (int i = 0; i < numPage; i++) {
-
+                if (numPage - i < leftClipNumber) {
+                    clipNumber = leftClipNumber;
+                    itemWith = this.width / clipNumber;
+                }
                 Page page = ctx.getPage(i + 1);
                 ST_Box pageSize = ctx.getPageSize(page);
                 double x;
@@ -252,9 +256,13 @@ public class RidingStampPos implements StampAppearance {
             double itemHeight = this.height / numPage;
             if (isClipNumber) {
                 itemHeight = this.height / clipNumber;
+                leftClipNumber = numPage % this.clipNumber;
             }
             for (int i = 0; i < numPage; i++) {
-
+                if (numPage - i < leftClipNumber) {
+                    clipNumber = leftClipNumber;
+                    itemHeight = this.width / clipNumber;
+                }
                 Page page = ctx.getPage(i + 1);
                 ST_Box pageSize = ctx.getPageSize(page);
 
