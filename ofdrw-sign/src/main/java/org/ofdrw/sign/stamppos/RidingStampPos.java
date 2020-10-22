@@ -205,15 +205,20 @@ public class RidingStampPos implements StampAppearance {
         int numPage = ctx.getNumberOfPages();
         List<StampAnnot> res = new ArrayList<>(numPage);
         boolean isClipNumber = this.clipNumber > 0 && this.clipNumber < numPage;
-
+        int leftClipNumber = 0;
         if (side == Side.Right || side == Side.Left) {
             // 按页码平分印章图片
             double itemWith = this.width / numPage;
             if (isClipNumber) {
                 itemWith = this.width / clipNumber;
+                leftClipNumber = numPage % this.clipNumber;
             }
             for (int i = 0; i < numPage; i++) {
-
+                int index = leftClipNumber == 0 ? i : (leftClipNumber + i - numPage);
+                if (numPage - i <= leftClipNumber) {
+                    clipNumber = leftClipNumber;
+                    itemWith = this.width / clipNumber;
+                }
                 Page page = ctx.getPage(i + 1);
                 ST_Box pageSize = ctx.getPageSize(page);
                 double x;
@@ -222,15 +227,15 @@ public class RidingStampPos implements StampAppearance {
                     x = pageSize.getWidth() - itemWith * (i + 1) - margin;
                     clip = new ST_Box(i * itemWith, 0, itemWith, this.height);
                     if (isClipNumber) {
-                        x = pageSize.getWidth() - (Math.floorMod(i, clipNumber) + 1) * itemWith - margin;
-                        clip = new ST_Box((Math.floorMod(i, clipNumber)) * itemWith, 0, itemWith, this.height);
+                        x = pageSize.getWidth() - (Math.floorMod(index, clipNumber) + 1) * itemWith - margin;
+                        clip = new ST_Box(Math.floorMod(index, clipNumber) * itemWith, 0, itemWith, this.height);
                     }
                 } else {
                     x = 0 - itemWith * (numPage - 1 - i) + margin;
                     clip = new ST_Box((numPage - 1 - i) * itemWith, 0, itemWith, this.height);
                     if (isClipNumber) {
-                        x = 0 - itemWith * (Math.floorMod(i, clipNumber)) + margin;
-                        clip = new ST_Box(Math.floorMod(i, clipNumber) * itemWith, 0, itemWith, this.height);
+                        x = 0 - itemWith * (Math.floorMod(index, clipNumber)) + margin;
+                        clip = new ST_Box(Math.floorMod(index, clipNumber) * itemWith, 0, itemWith, this.height);
                     }
                 }
 
@@ -254,9 +259,14 @@ public class RidingStampPos implements StampAppearance {
             double itemHeight = this.height / numPage;
             if (isClipNumber) {
                 itemHeight = this.height / clipNumber;
+                leftClipNumber = numPage % this.clipNumber;
             }
             for (int i = 0; i < numPage; i++) {
-
+                int index = leftClipNumber == 0 ? i : (leftClipNumber + i - numPage);
+                if (numPage - i <= leftClipNumber) {
+                    clipNumber = leftClipNumber;
+                    itemHeight = this.width / clipNumber;
+                }
                 Page page = ctx.getPage(i + 1);
                 ST_Box pageSize = ctx.getPageSize(page);
 
@@ -274,16 +284,16 @@ public class RidingStampPos implements StampAppearance {
                     y = pageSize.getHeight() - itemHeight * (i + 1) - margin;
                     clip = new ST_Box(0, itemHeight * i, this.width, itemHeight);
                     if (isClipNumber) {
-                        y = pageSize.getHeight() - (Math.floorMod(i, clipNumber) + 1) * itemHeight - margin;
-                        clip = new ST_Box(0, itemHeight * Math.floorMod(i, clipNumber), this.width, itemHeight);
+                        y = pageSize.getHeight() - (Math.floorMod(index, clipNumber) + 1) * itemHeight - margin;
+                        clip = new ST_Box(0, itemHeight * Math.floorMod(index, clipNumber), this.width, itemHeight);
                     }
 
                 } else {
                     y = 0 - itemHeight * (numPage - 1 - i) + margin;
                     clip = new ST_Box(0, (numPage - 1 - i) * itemHeight, this.width, itemHeight);
                     if (isClipNumber) {
-                        y = 0 - itemHeight * Math.floorMod(i, clipNumber) + margin;
-                        clip = new ST_Box(0, Math.floorMod(i, clipNumber) * itemHeight, this.width, itemHeight);
+                        y = 0 - itemHeight * Math.floorMod(index, clipNumber) + margin;
+                        clip = new ST_Box(0, Math.floorMod(index, clipNumber) * itemHeight, this.width, itemHeight);
                     }
                 }
                 ST_RefID ref = ctx.getPageObjectId(i + 1).ref();
