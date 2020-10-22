@@ -153,7 +153,7 @@ public class KeywordExtractor {
                     if (keyword.startsWith(mergeTextString)) {
                         mergeTextCodeList.add(next);
                     } else {
-                        mergeText = new StringBuilder(textCode.getContent());
+                        break;
                     }
                 }
             }
