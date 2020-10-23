@@ -328,7 +328,7 @@ public class OFDSigner implements Closeable {
         /*
          * 1. 获取签名列表文件对象
          *
-         * 根据需要可能需要根性OFD.xml
+         * 根据需要可能需要更新OFD.xml
          */
         Signatures signListObj = null;
         if (signaturesLoc == null) {

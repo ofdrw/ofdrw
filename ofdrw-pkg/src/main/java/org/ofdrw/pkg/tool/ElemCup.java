@@ -4,9 +4,7 @@ import org.dom4j.*;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -69,5 +67,19 @@ public class ElemCup {
             writeToFile.write(doc);
             writeToFile.close();
         }
+    }
+
+    public static byte[] dump(Element e) throws IOException {
+        Document doc = DocumentHelper.createDocument();
+        if (e.getDocument() != null) {
+            // 如果元素所属文档不为空，说明是从文件中加载得到，此时需要Clone这个对象以放入新的Document中
+            e = (Element) e.clone();
+        }
+        doc.add(e);
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        XMLWriter writeToFile = new XMLWriter(bout);
+        writeToFile.write(doc);
+        writeToFile.close();
+        return bout.toByteArray();
     }
 }
