@@ -3,7 +3,9 @@ package org.ofdrw.pkg.container;
 import net.lingala.zip4j.ZipFile;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
+import org.ofdrw.core.basicType.ST_Loc;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -144,6 +146,7 @@ public class OFDDir extends VirtualContainer {
         String name = DocDir.DocContainerPrefix + index;
         return this.getContainer(name, DocDir::new);
     }
+
     public DocDir getDocDir(String name) throws FileNotFoundException {
         return this.getContainer(name, DocDir::new);
     }
@@ -154,6 +157,22 @@ public class OFDDir extends VirtualContainer {
      * @return 第一个文档容器
      */
     public DocDir obtainDocDefault() {
+        if (exit(OFDFileName)) {
+            // 检查OFDFileName是否已经存在，如果存在那么大可能性是读取操作
+            // 在读模式下，通过OFD.xml 第一个DocBody节点中的DocRoot作为默认文档
+            // 如果获取失败那么，尝试获取Doc_0
+            OFD ofd;
+            try {
+                ofd = getOfd();
+                DocBody docBody = ofd.getDocBody();
+                if (docBody != null) {
+                    ST_Loc docRoot = docBody.getDocRoot();
+                    return this.obtainContainer(docRoot.parent(), DocDir::new);
+                }
+            } catch (FileNotFoundException | DocumentException e) {
+                throw new RuntimeException("OFD.xml 文件解析失败");
+            }
+        }
         return obtainDoc(0);
     }
 

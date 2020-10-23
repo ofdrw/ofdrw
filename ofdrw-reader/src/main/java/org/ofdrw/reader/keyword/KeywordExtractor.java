@@ -153,7 +153,7 @@ public class KeywordExtractor {
                     if (keyword.startsWith(mergeTextString)) {
                         mergeTextCodeList.add(next);
                     } else {
-                        mergeText = new StringBuilder(textCode.getContent());
+                        break;
                     }
                 }
             }
@@ -225,7 +225,7 @@ public class KeywordExtractor {
             }
         }
 
-        double stringWidth = getStringWidth(textIndex, keywordLength, deltaX);
+        double stringWidth = getStringWidth(textIndex, keywordLength, deltaX, ctText.getSize());
 
         ST_Pos leftTop = transform(matrix, x, y - height);
         ST_Pos leftBottom = transform(matrix, x, y);
@@ -331,7 +331,7 @@ public class KeywordExtractor {
                     List<Float> deltaX = getDelta(textCode.getDeltaX(), textCode.getContent().length());
                     List<Float> deltaY = getDelta(textCode.getDeltaY(), textCode.getContent().length());
 
-                    double width = getStringWidth(0, textLength, deltaX);
+                    double width = getStringWidth(0, textLength, deltaX, ctText.getSize());
                     if (width == 0) {
                         width = kr.getText().getSize();
                     }
@@ -439,7 +439,7 @@ public class KeywordExtractor {
      */
     private static KeywordPosition getKeywordPosition(TextCode textCode, int textIndex, int page, CT_Text ctText, FontMetrics fontMetrics,
                                                       List<Float> deltaX, List<Float> deltaY, int keywordLength) {
-        double width = getStringWidth(textIndex, keywordLength, deltaX);
+        double width = getStringWidth(textIndex, keywordLength, deltaX, ctText.getSize());
         double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
 
         ST_Pos basePoint = getLeftBottomPos(ctText.getBoundary(), textCode, deltaX, deltaY, textIndex);
@@ -454,11 +454,12 @@ public class KeywordExtractor {
      * @param textIndex     文字索引
      * @param keywordLength 文本长度
      * @param deltaX        X偏移量
+     * @param fontSize      文字字号
      * @return 文本宽度
      */
-    private static double getStringWidth(int textIndex, int keywordLength, List<Float> deltaX) {
-        double width = 0;
-        for (int i = textIndex; i < textIndex + keywordLength && i < deltaX.size(); i++) {
+    private static double getStringWidth(int textIndex, int keywordLength, List<Float> deltaX, Double fontSize) {
+        double width = fontSize;
+        for (int i = textIndex; i < textIndex + keywordLength - 1 && i < deltaX.size(); i++) {
             width += deltaX.get(i);
         }
         return width;

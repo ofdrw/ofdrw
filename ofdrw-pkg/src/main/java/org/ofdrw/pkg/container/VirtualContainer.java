@@ -1,6 +1,7 @@
 package org.ofdrw.pkg.container;
 
 import org.apache.commons.io.FileUtils;
+import org.bouncycastle.jcajce.provider.digest.SM3;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.ofdrw.core.DefaultElementProxy;
@@ -14,7 +15,9 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,11 +51,20 @@ public class VirtualContainer implements Closeable {
      */
     private Map<String, Element> fileCache;
 
+    /**
+     * 用于保存读取到的文件的Hash
+     * 因为读取操作导致文档加载到缓存，
+     * 但是文件在flush时候，反序列丢失格式字符等
+     * 导致文件改动。
+     */
+    private Map<String, byte[]> fileSrcHash;
+    private MessageDigest digest;
 
     /**
      * 目录中的虚拟容器缓存
      */
     private Map<String, VirtualContainer> dirCache;
+
 
     /**
      * 获取虚拟容器的名称
@@ -66,6 +78,8 @@ public class VirtualContainer implements Closeable {
     private VirtualContainer() {
         fileCache = new HashMap<>(7);
         dirCache = new HashMap<>(5);
+        fileSrcHash = new HashMap<>(7);
+        digest = null;
         this.parent = this;
     }
 
@@ -208,10 +222,56 @@ public class VirtualContainer implements Closeable {
             Path file = getFile(fileName);
             // 反序列化文件为对象
             element = ElemCup.inject(file);
+            // 计算并存储刚读取到对象序列化后的Hash
+            fileSrcHash.put(fileName, objectHash(element));
             // 从文件加载元素，那么缓存该元素对象
             fileCache.put(fileName, element);
         }
         return element;
+    }
+
+    /**
+     * 计算获取的对象的序列化Hash值
+     *
+     * @param element 文档对象
+     * @return Hash
+     * @throws DocumentException 文档读取和计算过程中异常
+     */
+    private byte[] objectHash(Element element) throws DocumentException {
+        try {
+            if (digest == null) {
+                digest = new SM3.Digest();
+            }
+            byte[] bin = ElemCup.dump(element);
+            digest.reset();
+            digest.update(bin);
+            return digest.digest();
+        } catch (IOException e) {
+            throw new DocumentException("文档计算摘要过程中异常", e);
+        }
+    }
+
+    /**
+     * 判断文件是否改动
+     *
+     * @param filename 文件名
+     * @param element  文件对象
+     * @return true - 已经被改动;false - 未改动
+     */
+    private boolean fileChanged(String filename, Element element) {
+        if (digest == null) {
+            return true;
+        }
+        byte[] srcHash = fileSrcHash.get(filename);
+        if (srcHash == null) {
+            return true;
+        }
+        try {
+            byte[] nowHash = objectHash(element);
+            return !Arrays.equals(srcHash, nowHash);
+        } catch (DocumentException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -377,9 +437,14 @@ public class VirtualContainer implements Closeable {
     public void flush() throws IOException {
         // 刷新元素对象到指定目录
         for (Map.Entry<String, Element> kv : fileCache.entrySet()) {
-            Path filePath = Paths.get(fullPath, kv.getKey());
+            String filename = kv.getKey();
+            Path filePath = Paths.get(fullPath, filename);
+            Element element = kv.getValue();
             // 序列化为文件
-            ElemCup.dump(kv.getValue(), filePath);
+            // 检查文件是否被修改，只有被修改的文件才能够非flush
+            if (fileChanged(filename, element)) {
+                ElemCup.dump(element, filePath);
+            }
         }
         // 递归的刷新容器中包含的其他容器
         for (VirtualContainer container : dirCache.values()) {
@@ -421,7 +486,10 @@ public class VirtualContainer implements Closeable {
         Element element = fileCache.get(name);
         if (element != null) {
             Path filePath = Paths.get(fullPath, name);
-            ElemCup.dump(element, filePath);
+            // 检查文件是否被修改，只有被修改的文件才能够非flush
+            if (fileChanged(name, element)) {
+                ElemCup.dump(element, filePath);
+            }
         }
         return this;
     }
