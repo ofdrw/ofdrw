@@ -212,6 +212,9 @@ public class RidingStampPos implements StampAppearance {
             if (isClipNumber) {
                 itemWith = this.width / clipNumber;
                 leftClipNumber = numPage % this.clipNumber;
+                if (leftClipNumber == 1) {
+                    leftClipNumber = this.clipNumber + 1;
+                }
             }
             for (int i = 0; i < numPage; i++) {
                 int index = leftClipNumber == 0 ? i : (leftClipNumber + i - numPage);
@@ -260,6 +263,9 @@ public class RidingStampPos implements StampAppearance {
             if (isClipNumber) {
                 itemHeight = this.height / clipNumber;
                 leftClipNumber = numPage % this.clipNumber;
+                if (leftClipNumber == 1) {
+                    leftClipNumber = this.clipNumber + 1;
+                }
             }
             for (int i = 0; i < numPage; i++) {
                 int index = leftClipNumber == 0 ? i : (leftClipNumber + i - numPage);
