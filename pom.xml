@@ -9,7 +9,7 @@
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw</artifactId>
     <packaging>pom</packaging>
-    <version>1.6.3</version>
+    <version>1.6.4</version>
 
     <url>https://github.com/Trisia/ofdrw</url>
     <description>Open Fixed layout Document Reader And Writer Libary(OFD-RW) provider developers to generate ofd
