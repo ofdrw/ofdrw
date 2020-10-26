@@ -26,7 +26,7 @@ try (OFDDoc ofdDoc = new OFDDoc(path)) {
 
 更多调用示例请参考 [DrawContextTest](../../src/test/java/org/ofdrw/layout/element/canvas/DrawContextTest.java)
 
-## 快速开发
+## HTML Canvas模拟开发
 
 由于OFDRW中的Canvas实现了与HTML Canvas基本一致的API接口，因此可以使用HTML的Canvas来实现OFD固定布局模式快速可视化开发。
 
