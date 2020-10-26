@@ -255,7 +255,7 @@ public class OFDSigner implements Closeable {
                 ST_Loc baseLoc = sig.getBaseLoc();
                 Signature sigObj = rl.get(baseLoc, Signature::new);
                 References refList = sigObj.getSignedInfo().getReferences();
-                if (refList.hasFile(signaturesLoc.getFileName())) {
+                if (refList.hasFile(signaturesLoc.getLoc())) {
                     throw new SignatureTerminateException("签名列表文件（Signatures.xml）已经被保护，文档不允许继续追加签名");
                 }
             }
@@ -328,7 +328,7 @@ public class OFDSigner implements Closeable {
         /*
          * 1. 获取签名列表文件对象
          *
-         * 根据需要可能需要根性OFD.xml
+         * 根据需要可能需要更新OFD.xml
          */
         Signatures signListObj = null;
         if (signaturesLoc == null) {
