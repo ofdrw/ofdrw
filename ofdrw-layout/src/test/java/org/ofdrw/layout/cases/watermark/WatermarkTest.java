@@ -45,8 +45,8 @@ public class WatermarkTest {
                 for (int i = 0; i <= 8; i++) {
                     for (int j = 0; j <= 8; j++) {
                         ctx.save();
-                        ctx.rotate(45);
                         ctx.translate(22.4 * i, j * 50);
+                        ctx.rotate(45);
                         ctx.fillText("保密资料", 10, 10);
                         ctx.restore();
                     }

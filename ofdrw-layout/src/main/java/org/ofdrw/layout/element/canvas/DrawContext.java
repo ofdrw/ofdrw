@@ -466,7 +466,7 @@ public class DrawContext implements Closeable {
             this.state.ctm = ST_Array.unitCTM();
         }
         ST_Array scale = new ST_Array(scalewidth, 0, 0, scaleheight, 0, 0);
-        this.state.ctm = this.state.ctm.mtxMul(scale);
+        this.state.ctm = scale.mtxMul(this.state.ctm);
         if (this.workPathObj != null) {
             this.workPathObj.setCTM(state.ctm);
         }
@@ -488,7 +488,7 @@ public class DrawContext implements Closeable {
                 Math.cos(alpha), Math.sin(alpha),
                 -Math.sin(alpha), Math.cos(alpha),
                 0, 0);
-        this.state.ctm = this.state.ctm.mtxMul(r);
+        this.state.ctm = r.mtxMul(this.state.ctm);
         if (this.workPathObj != null) {
             this.workPathObj.setCTM(state.ctm);
         }
@@ -510,7 +510,7 @@ public class DrawContext implements Closeable {
                 1, 0,
                 0, 1,
                 x, y);
-        this.state.ctm = this.state.ctm.mtxMul(r);
+        this.state.ctm = r.mtxMul(this.state.ctm);
         if (this.workPathObj != null) {
             this.workPathObj.setCTM(state.ctm);
         }
@@ -538,7 +538,7 @@ public class DrawContext implements Closeable {
                 a, b,
                 c, d,
                 e, f);
-        this.state.ctm = this.state.ctm.mtxMul(r);
+        this.state.ctm = r.mtxMul(this.state.ctm);
         if (this.workPathObj != null) {
             this.workPathObj.setCTM(state.ctm);
         }
