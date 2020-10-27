@@ -54,7 +54,7 @@ public class CT_Dest extends OFDElement implements OFDGotoTarget {
      * @return this
      */
     public CT_Dest setPageID(ST_RefID pageId) {
-        this.setOFDEntity("PageID", pageId.toString());
+        this.addAttribute("PageID", pageId.toString());
         return this;
     }
 
@@ -65,7 +65,7 @@ public class CT_Dest extends OFDElement implements OFDGotoTarget {
      * @return 引用跳转目标页面的标识
      */
     public ST_RefID getPageID() {
-        return ST_RefID.getInstance(this.getOFDElementText("PageID"));
+        return ST_RefID.getInstance(this.attributeValue("PageID"));
     }
 
     /**
