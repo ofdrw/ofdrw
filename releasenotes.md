@@ -8,7 +8,7 @@ Alias: KimetsuNoYaiba
 
 新增:
 
-- 对侧对开骑缝章。
+- [对侧对开骑缝章](ofdrw-sign/src/test/java/org/ofdrw/sign/stamppos/RidingStampPosTest.java)。
 
 修复:
 
