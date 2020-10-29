@@ -42,10 +42,10 @@ public class Signatures extends OFDElement {
      * @return this
      */
     public Signatures setMaxSignId(String maxSignId) {
-        if (maxSignId == null) {
-            this.removeOFDElemByNames("MaxSignId");
+        this.removeOFDElemByNames("MaxSignId");
+        if (maxSignId != null) {
+            this.addOFDEntity("MaxSignId", maxSignId);
         }
-        this.addOFDEntity("MaxSignId", maxSignId);
         return this;
     }
 
