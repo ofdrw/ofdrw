@@ -20,6 +20,7 @@ import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * 《GB/T 38540-2020 信息安全技术 安全电子签章密码技术规范》 电子签章数据生成扩展容器
@@ -102,7 +103,7 @@ public class SESV4Container implements ExtendSignatureContainer {
         TBS_Sign toSign = new TBS_Sign()
                 .setVersion(SES_Header.V4)
                 .setEseal(seal)
-                .setTimeInfo(new ASN1GeneralizedTime(new Date()))
+                .setTimeInfo(new ASN1GeneralizedTime(new Date(), Locale.CHINA))
                 .setDataHash(dataHash)
                 .setPropertyInfo(propertyInfo);
 
