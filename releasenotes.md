@@ -2,6 +2,20 @@
 
 ## 进展
 
+## Version 1.6.6 2020-10-29 20:35:01
+
+Alias: KimetsuNoYaiba
+
+新增:
+
+- 对侧对开骑缝章。
+
+修复:
+
+- CT_Dest 错误的PageId属性设置。
+- Signature.xml中MaxSignId重复设置导致多个MaxSignId出现。
+- V4的签名容器增加了签名时间的时区指定。
+
 ## Version 1.6.5 2020-10-26 21:55:01
 
 Alias: GrandBlue
