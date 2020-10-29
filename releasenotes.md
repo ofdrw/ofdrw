@@ -2,6 +2,18 @@
 
 ## 进展
 
+## Version 1.6.5 2020-10-26 21:55:01
+
+Alias: GrandBlue
+
+修复:
+
+- Canvas API 叠加矩阵变换错误的问题。
+
+新增
+
+- Canvas文档增加了使用HTML Canvas调试的[示例](ofdrw-layout/doc/canvas/README.md)。
+
 ## Version 1.6.4 2020-10-23 23:33:38
 
 Alias: BlackLagoon

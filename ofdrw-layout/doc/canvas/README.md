@@ -26,6 +26,95 @@ try (OFDDoc ofdDoc = new OFDDoc(path)) {
 
 更多调用示例请参考 [DrawContextTest](../../src/test/java/org/ofdrw/layout/element/canvas/DrawContextTest.java)
 
+## HTML Canvas模拟开发
+
+由于OFDRW中的Canvas实现了与HTML Canvas基本一致的API接口，因此可以使用HTML的Canvas来实现OFD固定布局模式快速可视化开发。
+
+[在线调试入口](https://www.w3school.com.cn/tiy/t.asp?f=html5_canvas_transform)
+
+以下以水印为例，希望开发一个覆盖整页面的谁赢，进行首先在HTML Canvas中实现水印效果。
+
+[1] 调整HTML Canvas的大小为A4纸页面大小（210x297），也就是设置Canvas元素的width和height，如果觉得比较小可以适当的等比例放大如：420x594。
+```html
+<canvas id="myCanvas" width="210" height="297">
+```
+
+[2] 获取Canvas上下，调用API进行绘制
+```js
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+
+// 下面使用 ctx 调用HTML Canvas API进行绘制
+```
+
+```js
+<!DOCTYPE html>
+<html>
+<body>
+
+<canvas id="myCanvas" width="210" height="297" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.
+</canvas>
+
+<script>
+
+var c=document.getElementById("myCanvas");
+var ctx=c.getContext("2d");
+
+ctx.fillStyle = "rgb(255, 0, 0)";
+ctx.globalAlpha=0.8;
+ctx.font="8px SimSun"
+
+for (var i = 0; i <= 8; i++) {
+    for (var j = 0; j <= 8; j++) {
+        ctx.save();
+        ctx.translate(22.4 * i, j * 50);
+        ctx.rotate(45*Math.PI/180);
+        ctx.fillText( "保密资料", 10, 10);
+        ctx.restore();
+    }
+}
+</script>
+
+</body>
+</html>
+```
+
+[3] 调整代码适应Java代码，注意：上面的字体配置和`rotate`的角度参数与js略有不同，调整后代码如下：
+```java
+public void main() throws IOException {
+    Path out = Paths.get("target/ComplexTransformCase.ofd");
+    try (OFDDoc ofdDoc = new OFDDoc(out)) {
+        VirtualPage vPage = new VirtualPage(300d, 150d);
+        PageLayout style = vPage.getStyle();
+        Canvas canvas = new Canvas(style.getWidth(), style.getHeight());
+        canvas.setPosition(Position.Absolute)
+                .setX(0d).setY(0d)
+                .setBorder(0d);
+
+        canvas.setDrawer(ctx -> {
+            FontSetting setting = new FontSetting(8, FontName.SimSun.font());
+
+            ctx.setFillColor(255, 0, 0)
+                    .setFont(setting)
+                    .setGlobalAlpha(0.8);
+            for (int i = 0; i <= 8; i++) {
+                for (int j = 0; j <= 8; j++) {
+                    ctx.save();
+                    ctx.translate(22.4 * i, j * 50);
+                    ctx.rotate(45);
+                    ctx.fillText("保密资料", 10, 10);
+                    ctx.restore();
+                }
+            }
+        });
+        vPage.add(canvas);
+        ofdDoc.addVPage(vPage);
+    }
+    System.out.println("生成文档位置：" + out.toAbsolutePath().toString());
+}
+```
+
 ## API列表
 
 **路径相关**

@@ -1,6 +1,5 @@
-package org.ofdrw.layout.watermark;
+package org.ofdrw.layout.cases.watermark;
 
-import org.junit.Test;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.core.annotation.pageannot.AnnotType;
 import org.ofdrw.core.basicType.ST_Box;
@@ -18,7 +17,7 @@ import java.nio.file.Paths;
  * 水印测试用例
  *
  * @author minghu.zhang
- * @date 11:36 2020/10/16
+ * @since 11:36 2020/10/16
  **/
 public class WatermarkTest {
 
@@ -35,6 +34,7 @@ public class WatermarkTest {
 
             Double width = ofdDoc.getPageLayout().getWidth();
             Double height = ofdDoc.getPageLayout().getHeight();
+
             Annotation annotation = new Annotation(new ST_Box(0d, 0d, width, height), AnnotType.Watermark, ctx -> {
                 FontSetting setting = new FontSetting(8, FontName.SimSun.font());
 
@@ -45,8 +45,8 @@ public class WatermarkTest {
                 for (int i = 0; i <= 8; i++) {
                     for (int j = 0; j <= 8; j++) {
                         ctx.save();
-                        ctx.rotate(45);
                         ctx.translate(22.4 * i, j * 50);
+                        ctx.rotate(45);
                         ctx.fillText("保密资料", 10, 10);
                         ctx.restore();
                     }

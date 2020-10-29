@@ -40,7 +40,7 @@
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.6.4</version>
+  <version>1.6.5</version>
 </dependency>
 ```
 
@@ -69,7 +69,7 @@ public class HelloWorld {
 - [布局示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/LayoutTest.java)
 - [Canvas示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/element/canvas/DrawContextTest.java)
 - [文字抽取示例](./ofdrw-reader/src/test/java/org/ofdrw/reader/ContentExtractorTest.java)
-
+- [水印示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/cases/watermark/WatermarkTest.java)
 
 相关文档目录：
 
