@@ -143,8 +143,7 @@ public class SESV4Container implements ExtendSignatureContainer {
                 .setSignature(sigVal);
 
         if (timeStampHook != null) {
-            AlgorithmIdentifier identifier = new AlgorithmIdentifier(GMObjectIdentifiers.sm2sign_with_sm3);
-            ASN1BitString timeStamp = timeStampHook.apply(identifier, sigVal);
+            ASN1BitString timeStamp = timeStampHook.apply(sigVal);
             if (timeStamp != null) {
                 signature.setTimeStamp(timeStamp);
             }
