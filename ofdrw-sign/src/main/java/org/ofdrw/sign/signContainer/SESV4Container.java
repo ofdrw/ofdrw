@@ -1,7 +1,10 @@
 package org.ofdrw.sign.signContainer;
 
 import org.apache.commons.io.IOUtils;
-import org.bouncycastle.asn1.*;
+import org.bouncycastle.asn1.ASN1BitString;
+import org.bouncycastle.asn1.ASN1GeneralizedTime;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
 import org.bouncycastle.jcajce.provider.digest.SM3;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -11,6 +14,7 @@ import org.ofdrw.gm.ses.v4.SES_Signature;
 import org.ofdrw.gm.ses.v4.SESeal;
 import org.ofdrw.gm.ses.v4.TBS_Sign;
 import org.ofdrw.sign.ExtendSignatureContainer;
+import org.ofdrw.sign.timestamp.TimeStampHook;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +24,7 @@ import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * 《GB/T 38540-2020 信息安全技术 安全电子签章密码技术规范》 电子签章数据生成扩展容器
@@ -45,17 +50,37 @@ public class SESV4Container implements ExtendSignatureContainer {
      */
     private final Certificate certificate;
 
+    /**
+     * 时间戳hook对象
+     */
+    private TimeStampHook timeStampHook;
 
     /**
      * V1版本的电子签章容器构造
+     *
      * @param privateKey 签名使用的私钥
-     * @param seal 电子印章
-     * @param signCert 签章用户证书
+     * @param seal       电子印章
+     * @param signCert   签章用户证书
      */
     public SESV4Container(PrivateKey privateKey, SESeal seal, Certificate signCert) {
         this.privateKey = privateKey;
         this.seal = seal;
         this.certificate = signCert;
+    }
+
+    /**
+     * V1版本的电子签章容器构造
+     *
+     * @param privateKey    签名使用的私钥
+     * @param seal          电子印章
+     * @param signCert      签章用户证书
+     * @param timeStampHook 时间戳Hook
+     */
+    public SESV4Container(PrivateKey privateKey, SESeal seal, Certificate signCert, TimeStampHook timeStampHook) {
+        this.privateKey = privateKey;
+        this.seal = seal;
+        this.certificate = signCert;
+        this.timeStampHook = timeStampHook;
     }
 
     /**
@@ -76,6 +101,15 @@ public class SESV4Container implements ExtendSignatureContainer {
     @Override
     public ASN1ObjectIdentifier getSignAlgOID() {
         return GMObjectIdentifiers.sm2sign_with_sm3;
+    }
+
+    /**
+     * 设置TimeStampHook
+     *
+     * @param timeStampHook hook对象
+     */
+    public void setTimeStampHook(TimeStampHook timeStampHook) {
+        this.timeStampHook = timeStampHook;
     }
 
     /**
@@ -102,7 +136,7 @@ public class SESV4Container implements ExtendSignatureContainer {
         TBS_Sign toSign = new TBS_Sign()
                 .setVersion(SES_Header.V4)
                 .setEseal(seal)
-                .setTimeInfo(new ASN1GeneralizedTime(new Date()))
+                .setTimeInfo(new ASN1GeneralizedTime(new Date(), Locale.CHINA))
                 .setDataHash(dataHash)
                 .setPropertyInfo(propertyInfo);
 
@@ -116,7 +150,23 @@ public class SESV4Container implements ExtendSignatureContainer {
                 .setSignatureAlgID(GMObjectIdentifiers.sm2sign_with_sm3)
                 .setSignature(sigVal);
 
+        if (timeStampHook != null) {
+            byte[] timeStamp = timeStampHook.apply(sigVal);
+            if (timeStamp != null) {
+                signature.setTimeStamp(new DERBitString(timeStamp));
+            }
+        }
+
         return signature.getEncoded("DER");
+    }
+
+    /**
+     * 设置时间戳hook
+     *
+     * @param timeStampHook 传入得时间戳hook
+     */
+    public void setTimestampHook(TimeStampHook timeStampHook) {
+        this.timeStampHook = timeStampHook;
     }
 
     /**
