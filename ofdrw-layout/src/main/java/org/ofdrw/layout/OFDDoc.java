@@ -146,6 +146,7 @@ public class OFDDoc implements Closeable {
      *
      * @param reader  OFD解析器
      * @param outPath 修改后文档生成位置
+     * @throws DocReadException 文档读取异常
      */
     public OFDDoc(OFDReader reader, Path outPath) throws DocReadException {
         if (reader == null) {

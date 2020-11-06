@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * @author dltech21
- * @time 2020/8/11
+ * @since 2020/8/11
  */
 public class StampAnnotVo {
 

@@ -79,6 +79,20 @@ public class Page extends OFDElement {
      * @param template 页面使用的模板页
      * @return this
      */
+    public Page addTemplate(Template template) {
+        if (template == null) {
+            return this;
+        }
+        this.add(template);
+        return this;
+    }
+
+    /**
+     * @param template 模板
+     * @return this
+     * @deprecated {@link #addTemplate(Template)}
+     */
+    @Deprecated
     public Page setTemplate(Template template) {
         this.set(template);
         return this;
@@ -97,10 +111,20 @@ public class Page extends OFDElement {
      *
      * @return 页面使用的模板页
      */
+    public List<Template> getTemplates() {
+        return this.getOFDElements("Template", Template::new);
+    }
+
+    /**
+     * @return 页面使用的模板页(第一个)
+     * @deprecated {@link #getTemplates()}
+     */
+    @Deprecated
     public Template getTemplate() {
         Element e = this.getOFDElement("Template");
         return e == null ? null : new Template(e);
     }
+
 
     /**
      * 【可选】

@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * 印章ofd的解析器
  * @author dltech21
- * @time 2020/8/11
+ * @since 2020/8/11
  */
 public class SealOFDReader extends OFDReader {
 
