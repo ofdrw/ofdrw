@@ -37,6 +37,11 @@
             <artifactId>ofdrw-core</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-gm</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>net.lingala.zip4j</groupId>-->
 <!--            <artifactId>zip4j</artifactId>-->
