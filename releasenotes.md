@@ -2,6 +2,19 @@
 
 ## 进展
 
+## Version 1.6.7 2020-11-6 19:20:12
+
+Alias: OriginalGod
+
+新增:
+
+- 签章容器增加了时间戳的设置方法
+- 增加了新的Reader对象用于转换时的元素解析。
+
+修复:
+
+- Page对象中Template应该可以有0到多个
+
 ## Version 1.6.6 2020-10-29 20:35:01
 
 Alias: KimetsuNoYaiba
