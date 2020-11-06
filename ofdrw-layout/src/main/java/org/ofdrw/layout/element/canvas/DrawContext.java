@@ -636,6 +636,7 @@ public class DrawContext implements Closeable {
      * @param x    阅读方向上的左下角 x坐标
      * @param y    阅读方向上的左下角 y坐标
      * @return this
+     * @throws IOException 字体获取异常
      */
     public DrawContext fillText(String text, double x, double y) throws IOException {
         if (text == null || text.trim().isEmpty()) {
