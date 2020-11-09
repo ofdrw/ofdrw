@@ -77,7 +77,7 @@ public class Span implements TextFontInfo {
      */
     private Boolean integrity = false;
 
-    private LinkedList<TxtGlyph> txtGlyphsCache = null;
+    LinkedList<TxtGlyph> txtGlyphsCache = null;
 
     protected Span() {
         this.setFont(Font.getDefault());
