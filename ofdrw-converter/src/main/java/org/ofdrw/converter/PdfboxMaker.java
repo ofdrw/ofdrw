@@ -136,7 +136,7 @@ public class PdfboxMaker {
                             writeLayer(pdf, contentStream, layerList, pageBox, sealBox);
                         }
                     } else if (stampAnnotVo.getType().equals("png")) {
-                        writeSealImage(pdf, contentStream, pageBox, stampAnnotVo.getImgByte(), sealBox, clipBox);
+                        writeSealImage(contentStream, pageBox, stampAnnotVo.getImgByte(), sealBox, clipBox);
                     }
                 }
             }
@@ -312,36 +312,31 @@ public class PdfboxMaker {
         if (imageMap.get(imageObject.getResourceID().toString()) == null) {
             return;
         }
-
+        contentStream.saveGraphicsState();
         PDImageXObject pdfImageObject = PDImageXObject.createFromByteArray(pdf, imageMap.get(imageObject.getResourceID().toString()), "");
         org.apache.pdfbox.util.Matrix matrix = CommonUtil.toPFMatrix(CommonUtil.getImageMatrixFromOfd(imageObject, box));
         contentStream.drawImage(pdfImageObject, matrix);
+        contentStream.restoreGraphicsState();
     }
 
-    private void writeSealImage(PDDocument pdfDocument, PDPageContentStream contentStream, ST_Box box, byte[] image, ST_Box sealBox, ST_Box clipBox) {
-//        image = CommonUtil.convert(image);
-//        if (image == null) {
-//            return;
-//        }
-//        float x = sealBox.getTopLeftX().floatValue();
-//        float y = box.getHeight().floatValue() - (sealBox.getTopLeftY().floatValue() + sealBox.getHeight().floatValue());
-//        float width = sealBox.getWidth().floatValue();
-//        float height = sealBox.getHeight().floatValue();
-//        Rectangle rect = new Rectangle((float) converterDpi(x), (float) converterDpi(y), (float) converterDpi(width), (float) converterDpi(height));
-//
-//        ImageData img = ImageDataFactory.create(image);
-//        PdfFormXObject xObject = new PdfFormXObject(new Rectangle(rect.getWidth(), rect.getHeight()));
-//        PdfCanvas xObjectCanvas = new PdfCanvas(xObject, pdfDocument);
-//        if (clipBox != null) {
-//            xObjectCanvas.rectangle(converterDpi(clipBox.getTopLeftX()), rect.getHeight() - (converterDpi(clipBox.getTopLeftY()) + converterDpi(clipBox.getHeight())), converterDpi(clipBox.getWidth()), converterDpi(clipBox.getHeight()));
-//            xObjectCanvas.clip();
-//            xObjectCanvas.endPath();
-//        }
-//        xObjectCanvas.addImage(img, rect.getWidth(), 0, 0, rect.getHeight(), 0, 0);
-//        com.itextpdf.layout.element.Image clipped = new com.itextpdf.layout.element.Image(xObject);
-//        Canvas canvas = new Canvas(pdfCanvas, pdfDocument, rect);
-//        canvas.add(clipped);
-//        canvas.close();
+    private void writeSealImage(PDPageContentStream contentStream, ST_Box box, byte[] image, ST_Box sealBox, ST_Box clipBox) throws IOException {
+        if (image == null) {
+            return;
+        }
+        contentStream.saveGraphicsState();
+        PDImageXObject pdfImageObject = PDImageXObject.createFromByteArray(pdf, image, "");
+        float x = sealBox.getTopLeftX().floatValue();
+        float y = box.getHeight().floatValue() - (sealBox.getTopLeftY().floatValue() + sealBox.getHeight().floatValue());
+        float width = sealBox.getWidth().floatValue();
+        float height = sealBox.getHeight().floatValue();
+        if (clipBox != null) {
+            contentStream.addRect( (float) converterDpi(x)+(float) converterDpi(clipBox.getTopLeftX()), (float) converterDpi(y) + (float) (converterDpi(height) - (converterDpi(clipBox.getTopLeftY()) + converterDpi(clipBox.getHeight()))), (float) converterDpi(clipBox.getWidth()), (float) converterDpi(clipBox.getHeight()));
+            contentStream.closePath();
+            contentStream.clip();
+            contentStream.stroke();
+        }
+        contentStream.drawImage(pdfImageObject, (float) converterDpi(x), (float) converterDpi(y), (float) converterDpi(width), (float) converterDpi(height));
+        contentStream.restoreGraphicsState();
     }
 
     private void writeText(PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, TextObject textObject, PDColor fillColor, int alpha) throws IOException {
