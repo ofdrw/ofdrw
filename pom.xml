@@ -26,6 +26,7 @@
         <module>ofdrw-sign</module>
         <module>ofdrw-gv</module>
         <module>ofdrw-gm</module>
+        <module>ofdrw-converter</module>
     </modules>
 
     <developers>
@@ -95,6 +96,30 @@
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>2.6</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.pdfbox</groupId>
+                <artifactId>fontbox</artifactId>
+                <version>2.0.20</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.pdfbox</groupId>
+                <artifactId>pdfbox</artifactId>
+                <version>2.0.20</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.pdfbox</groupId>
+                <artifactId>jbig2-imageio</artifactId>
+                <version>3.0.2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.ujmp</groupId>
+                <artifactId>ujmp-core</artifactId>
+                <version>0.3.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
