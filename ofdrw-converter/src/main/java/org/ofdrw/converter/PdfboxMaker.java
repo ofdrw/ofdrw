@@ -379,10 +379,6 @@ public class PdfboxMaker {
             contentStream.newLineAtOffset((float) (textCodePoint.getX()), (float) (textCodePoint.getY()));
             if (textObject.getCTM() != null) {
                 Double[] ctm = textObject.getCTM().toDouble();
-                contentStream.setTextRotation(-ctm[1].doubleValue(), textCodePoint.getX(), textCodePoint.getY());
-            }
-            if (textObject.getCTM() != null) {
-                Double[] ctm = textObject.getCTM().toDouble();
                 double a = ctm[0];
                 double b = ctm[1];
                 double c = ctm[2];
