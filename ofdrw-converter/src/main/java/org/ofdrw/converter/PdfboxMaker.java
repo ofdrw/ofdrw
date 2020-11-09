@@ -274,7 +274,11 @@ public class PdfboxMaker {
         if (pathObject.getFill()) {
             contentStream.saveGraphicsState();
             FillColor fillColor = (FillColor) pathObject.getFillColor();
-            contentStream.setNonStrokingColor(convertPDColor(fillColor.getValue()));
+            if (fillColor != null) {
+                contentStream.setNonStrokingColor(convertPDColor(fillColor.getValue()));
+            } else {
+                contentStream.setNonStrokingColor(defaultFillColor);
+            }
             path(contentStream, box, sealBox, pathObject);
             contentStream.fill();
             contentStream.restoreGraphicsState();
@@ -310,29 +314,8 @@ public class PdfboxMaker {
         }
 
         PDImageXObject pdfImageObject = PDImageXObject.createFromByteArray(pdf, imageMap.get(imageObject.getResourceID().toString()), "");
-
-        float x = imageObject.getBoundary().getTopLeftX().floatValue();
-        float y = imageObject.getBoundary().getTopLeftY().floatValue();
-        float width = imageObject.getBoundary().getWidth().floatValue();
-        float height = imageObject.getBoundary().getHeight().floatValue();
-
-        if (imageObject.getCTM() != null) {
-            Double[] ctm = imageObject.getCTM().toDouble();
-            float a = ctm[0].floatValue();
-            float b = ctm[1].floatValue();
-            float c = ctm[2].floatValue();
-            float d = ctm[3].floatValue();
-            float e = ctm[4].floatValue();
-            float f = ctm[5].floatValue();
-            AffineTransform transform = new AffineTransform(converterDpi(width),
-                    -b,
-                    -c, converterDpi(height), converterDpi(x),
-                    converterDpi(box.getHeight().floatValue() - y - height));
-            Matrix matrix = new Matrix(transform);
-            contentStream.drawImage(pdfImageObject, matrix);
-        } else {
-            contentStream.drawImage(pdfImageObject, (float) converterDpi(x), (float) converterDpi(y), (float) converterDpi(width), (float) converterDpi(height));
-        }
+        org.apache.pdfbox.util.Matrix matrix = CommonUtil.toPFMatrix(CommonUtil.getImageMatrixFromOfd(imageObject, box));
+        contentStream.drawImage(pdfImageObject, matrix);
     }
 
     private void writeSealImage(PDDocument pdfDocument, PDPageContentStream contentStream, ST_Box box, byte[] image, ST_Box sealBox, ST_Box clipBox) {
@@ -372,6 +355,17 @@ public class PdfboxMaker {
                     textObject.getBoundary().getWidth(),
                     textObject.getBoundary().getHeight());
         }
+        if (textObject.getCTM() != null) {
+            Double[] ctm = textObject.getCTM().toDouble();
+            double a = ctm[0];
+            double b = ctm[1];
+            double c = ctm[2];
+            double d = ctm[3];
+            double sx = Math.signum(a) * Math.sqrt(a * a + c * c);
+            double sy = Math.signum(d) * Math.sqrt(b * b + d * d);
+            fontSize = (float) (fontSize * sx);
+
+        }
         PDFont font = this.pdfFontMap.get(textObject.getFont().toString() + fontAno);
         if (Objects.isNull(font)) font = PdfBoxFontHolder.getInstance(pdf).getFont("楷体");
 
@@ -394,12 +388,10 @@ public class PdfboxMaker {
             }
             if (textObject.getCTM() != null) {
                 Double[] ctm = textObject.getCTM().toDouble();
-                double a = ctm[0].doubleValue();
-                double b = ctm[1].doubleValue();
-                double c = ctm[2].doubleValue();
-                double d = ctm[3].doubleValue();
-                double e = ctm[4].doubleValue();
-                double f = ctm[5].doubleValue();
+                double a = ctm[0];
+                double b = ctm[1];
+                double c = ctm[2];
+                double d = ctm[3];
                 double angel = Math.atan2(-b, d);
                 contentStream.setTextRotation(angel, rx, ry);
             }
