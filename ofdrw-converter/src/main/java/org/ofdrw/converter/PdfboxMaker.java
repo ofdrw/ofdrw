@@ -11,7 +11,6 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.util.Matrix;
 import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
@@ -383,8 +382,10 @@ public class PdfboxMaker {
                 double b = ctm[1];
                 double c = ctm[2];
                 double d = ctm[3];
+                AffineTransform transform = new AffineTransform();
                 double angel = Math.atan2(-b, d);
-                contentStream.setTextRotation(angel, rx, ry);
+                transform.rotate(angel, rx, ry);
+                contentStream.concatenate2CTM(transform);
             }
             contentStream.setFont(font, (float) converterDpi(fontSize));
             contentStream.showText(textCodePoint.getText());

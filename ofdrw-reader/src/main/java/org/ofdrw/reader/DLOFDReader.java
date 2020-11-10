@@ -12,12 +12,10 @@ import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicStructure.res.OFDResource;
 import org.ofdrw.core.basicStructure.res.Res;
-import org.ofdrw.core.basicStructure.res.resources.ColorSpaces;
-import org.ofdrw.core.basicStructure.res.resources.DrawParams;
-import org.ofdrw.core.basicStructure.res.resources.Fonts;
-import org.ofdrw.core.basicStructure.res.resources.MultiMedias;
+import org.ofdrw.core.basicStructure.res.resources.*;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.core.compositeObj.CT_VectorG;
 import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.signatures.Signature;
@@ -38,10 +36,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * ofd解析器
@@ -63,7 +58,7 @@ public class DLOFDReader extends OFDReader {
             docRoot = docBody.getDocRoot();
             document = this.getResourceLocator().get(docRoot, Document::new);
             getPageBox();
-            ofdDocumentVo = new OFDDocumentVo(docRoot.parent(), documentBox.getWidth(), documentBox.getHeight(), getOFDPageVO(), getPublicResFonts(), getPublicResColorSpaces(), getDocumentRes(), getStampAnnot(), getPublicResDrawParam(), getAnnotaions());
+            ofdDocumentVo = new OFDDocumentVo(docRoot.parent(), documentBox.getWidth(), documentBox.getHeight(), getOFDPageVO(), getPublicResFonts(), getPublicResColorSpaces(), (List<CT_MultiMedia>) getDocumentRes().get("media"), (List<CT_VectorG>) getDocumentRes().get("vector"), getStampAnnot(), getPublicResDrawParam(), getAnnotaions());
         } catch (DocumentException | FileNotFoundException var15) {
             throw new RuntimeException("OFD解析失败，原因:" + var15.getMessage(), var15);
         } finally {
@@ -233,8 +228,10 @@ public class DLOFDReader extends OFDReader {
         return ctDrawParamList;
     }
 
-    private List<CT_MultiMedia> getDocumentRes() {
+    private Map<String, Object> getDocumentRes() {
+        Map<String, Object> resMap = new HashMap<>();
         List<CT_MultiMedia> ctMultiMediaList = new ArrayList<>();
+        List<CT_VectorG> ctVectorGList = new ArrayList<>();
         try {
             this.getResourceLocator().save();
             this.getResourceLocator().cd(docRoot.parent());
@@ -242,16 +239,23 @@ public class DLOFDReader extends OFDReader {
             if (!Objects.isNull(documentResLoc)) {
                 Res publicRes = this.getResourceLocator().get(documentResLoc, Res::new);
                 List<MultiMedias> multiMediasList = new ArrayList();
+                List<CompositeGraphicUnits> compositeGraphicUnitsList = new ArrayList();
                 Iterator var2 = publicRes.getResources().iterator();
                 while (var2.hasNext()) {
                     OFDResource item = (OFDResource) var2.next();
                     if (item instanceof MultiMedias) {
                         multiMediasList.add((MultiMedias) item);
+                    } else if (item instanceof CompositeGraphicUnits) {
+                        compositeGraphicUnitsList.add((CompositeGraphicUnits) item);
                     }
                 }
                 for (int i = 0; i < multiMediasList.size(); i++) {
                     MultiMedias multiMedias = multiMediasList.get(i);
                     ctMultiMediaList.addAll(multiMedias.getMultiMedias());
+                }
+                for (int i = 0; i < compositeGraphicUnitsList.size(); i++) {
+                    CompositeGraphicUnits compositeGraphicUnits = compositeGraphicUnitsList.get(i);
+                    ctVectorGList.addAll(compositeGraphicUnits.getCompositeGraphicUnits());
                 }
             }
         } catch (Exception e) {
@@ -259,7 +263,9 @@ public class DLOFDReader extends OFDReader {
         } finally {
             this.getResourceLocator().restore();
         }
-        return ctMultiMediaList;
+        resMap.put("media", ctMultiMediaList);
+        resMap.put("vector", ctVectorGList);
+        return resMap;
     }
 
     private List<StampAnnotVo> getStampAnnot() {
@@ -336,7 +342,7 @@ public class DLOFDReader extends OFDReader {
                 annotionVo.setPageId(page.getPageID().toString());
                 ST_Loc antLoc = page.getFileLoc();
                 if (antLoc.toString().contains(docRoot.parent())) {
-                    antLoc = ST_Loc.getInstance(antLoc.toString().replace(docRoot.parent()+"/", "").replaceFirst("/",""));
+                    antLoc = ST_Loc.getInstance(antLoc.toString().replace(docRoot.parent() + "/", "").replaceFirst("/", ""));
                 }
                 try {
                     PageAnnot pageAnnot = this.getResourceLocator().get(antLoc, PageAnnot::new);
