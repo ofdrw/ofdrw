@@ -22,8 +22,8 @@ public class OFD2PDFTest {
 
     @Test
     public void convertPdfbox() {
-        String ofdFilePath = basePath + "发票监制章-数科.ofd";
-        String pdfOutPath = basePath + "发票监制章-from-ofd.pdf";
+        String ofdFilePath = basePath + "intro-数科.ofd";
+        String pdfOutPath = basePath + "intro -from-ofd.pdf";
 
         try {
             byte[] ofdBytes = FileUtils.readFileToByteArray(new File(ofdFilePath));
