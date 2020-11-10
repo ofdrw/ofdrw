@@ -355,8 +355,7 @@ public class PdfboxMaker {
             double b = ctm[1];
             double c = ctm[2];
             double d = ctm[3];
-            double sx = Math.signum(a) * Math.sqrt(a * a + c * c);
-            double sy = Math.signum(d) * Math.sqrt(b * b + d * d);
+            double sx = a > 0 ? Math.signum(a) * Math.sqrt(a * a + c * c) : Math.sqrt(a * a + c * c);            double sy = Math.signum(d) * Math.sqrt(b * b + d * d);
             fontSize = (float) (fontSize * sx);
 
         }
