@@ -360,7 +360,7 @@ public class PdfboxMaker {
 
         }
         PDFont font = this.pdfFontMap.get(textObject.getFont().toString() + fontAno);
-        if (Objects.isNull(font)) font = PdfBoxFontHolder.getInstance(pdf).getFont("楷体");
+        if (Objects.isNull(font)) font = PdfBoxFontHolder.getInstance(pdf).getFont("宋体");
 
         List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCTM() != null, textObject.getCTM(), true);
         double rx = 0, ry = 0;
