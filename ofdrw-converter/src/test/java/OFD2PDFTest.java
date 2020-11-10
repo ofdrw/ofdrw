@@ -22,8 +22,8 @@ public class OFD2PDFTest {
 
     @Test
     public void convertPdfbox() {
-        String ofdFilePath = basePath + "zsbk.ofd";
-        String pdfOutPath = basePath + "zsbk-from-ofd.pdf";
+        String ofdFilePath = basePath + "发票监制章-数科.ofd";
+        String pdfOutPath = basePath + "发票监制章-from-ofd.pdf";
 
         try {
             byte[] ofdBytes = FileUtils.readFileToByteArray(new File(ofdFilePath));
@@ -58,7 +58,7 @@ public class OFD2PDFTest {
             PdfboxMaker pdfMaker = new PdfboxMaker(reader, pdfDocument);
             for (OfdPageVo ofdPageVo : ofdPageVoList) {
                 start = System.currentTimeMillis();
-                PDPage pdPage = pdfMaker.makePage(ofdPageVo);
+                pdfMaker.makePage(ofdPageVo);
                 end = System.currentTimeMillis();
                 logger.info(String.format("page %d speed time %d", pageNum++, end - start));
             }

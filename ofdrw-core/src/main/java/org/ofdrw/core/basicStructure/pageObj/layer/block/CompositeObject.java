@@ -3,10 +3,12 @@ package org.ofdrw.core.basicStructure.pageObj.layer.block;
 import org.dom4j.Element;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.graph.pathObj.CT_Path;
+import org.ofdrw.core.image.CT_Image;
 
 /**
- * 符合对象
+ * 复合对象
  * <p>
  * 见 第 13 章
  * <p>
@@ -54,5 +56,30 @@ public class CompositeObject extends CT_Path implements PageBlockType {
      */
     public ST_ID getID() {
         return this.getObjID();
+    }
+
+    /**
+     * 【必选 属性】
+     * 设置 引用资源文件中定义的矢量图像标识
+     *
+     * @param resourceId 引用资源文件中定义的矢量图像标识
+     * @return this
+     */
+    public CompositeObject setResourceID(ST_RefID resourceId) {
+        if (resourceId == null) {
+            throw new IllegalArgumentException("资源文件的标识（ResourceID）不能为空");
+        }
+        this.addAttribute("ResourceID", resourceId.toString());
+        return this;
+    }
+
+    /**
+     * 【必选 属性】
+     * 设置 引用资源文件中定义的矢量图像标识
+     *
+     * @return 引用资源文件中定义的矢量图像标识
+     */
+    public ST_RefID getResourceID() {
+        return ST_RefID.getInstance(this.attributeValue("ResourceID"));
     }
 }

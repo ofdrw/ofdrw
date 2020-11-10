@@ -96,4 +96,8 @@ public class OFDDocumentVo {
     public List<AnnotionVo> getAnnotaions() {
         return annotaions;
     }
+
+    public List<CT_VectorG> getCtVectorGList() {
+        return ctVectorGList;
+    }
 }

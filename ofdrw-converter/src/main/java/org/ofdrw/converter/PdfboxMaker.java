@@ -15,12 +15,14 @@ import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.CompositeObject;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_RefID;
+import org.ofdrw.core.compositeObj.CT_VectorG;
 import org.ofdrw.core.graph.pathObj.FillColor;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
@@ -153,18 +155,20 @@ public class PdfboxMaker {
     private void writeLayer(PDDocument pdf, PDPageContentStream contentStream, List<CT_Layer> layerList, ST_Box box, ST_Box sealBox) throws IOException {
         for (CT_Layer layer : layerList) {
             List<PageBlockType> pageBlockTypeList = layer.getPageBlocks();
-            writePageBlock(pdf, contentStream, box, sealBox, pageBlockTypeList, layer.getDrawParam());
+            writePageBlock(pdf, contentStream, box, sealBox, pageBlockTypeList, layer.getDrawParam(), null);
         }
     }
 
     private void writeAnnoAppearance(PDDocument pdf, PDPageContentStream contentStream, List<Annot> annotList, ST_Box box) throws IOException {
         for (Annot annot : annotList) {
             List<PageBlockType> pageBlockTypeList = annot.getAppearance().getPageBlocks();
-            writePageBlock(pdf, contentStream, box, null, pageBlockTypeList, null);
+            //注释的boundary
+            ST_Box annotBox = annot.getAppearance().getBoundary();
+            writePageBlock(pdf, contentStream, box, null, pageBlockTypeList, null, annotBox);
         }
     }
 
-    private void writePageBlock(PDDocument pdf, PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, List<PageBlockType> pageBlockTypeList, ST_RefID drawparam) throws IOException {
+    private void writePageBlock(PDDocument pdf, PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, List<PageBlockType> pageBlockTypeList, ST_RefID drawparam, ST_Box annotBox) throws IOException {
         PDColor defaultFillColor = new PDColor(new float[]{0.0f, 0.0f, 0.0f}, PDDeviceRGB.INSTANCE);
         PDColor defaultStrokeColor = new PDColor(new float[]{0.0f, 0.0f, 0.0f}, PDDeviceRGB.INSTANCE);
         float defaultLineWidth = 0.353f;
@@ -202,6 +206,7 @@ public class PdfboxMaker {
             TextObject textObject;
             ImageObject imageObject;
             PathObject pathObject;
+            CompositeObject compositeObject;
 
             if (block instanceof TextObject) {
                 // text
@@ -216,12 +221,20 @@ public class PdfboxMaker {
             } else if (block instanceof ImageObject) {
                 // image
                 imageObject = (ImageObject) block;
-                writeImage(contentStream, box, imageObject);
+                writeImage(contentStream, box, imageObject, annotBox);
 
             } else if (block instanceof PathObject) {
                 // path
                 pathObject = (PathObject) block;
                 writePath(contentStream, box, sealBox, pathObject, defaultFillColor, defaultStrokeColor, defaultLineWidth);
+            } else if (block instanceof CompositeObject) {
+                compositeObject = (CompositeObject) block;
+                for (CT_VectorG vectorG: ofdReader.getOFDDocumentVo().getCtVectorGList()) {
+                    if (vectorG.getID().toString().equals(compositeObject.getResourceID().toString())) {
+                        writePageBlock(pdf, contentStream, box, sealBox, vectorG.getContent().getPageBlocks(), drawparam, annotBox);
+                        break;
+                    }
+                }
             }
         }
     }
@@ -307,14 +320,22 @@ public class PdfboxMaker {
         }
     }
 
-    private void writeImage(PDPageContentStream contentStream, ST_Box box, ImageObject imageObject) throws IOException {
+    private void writeImage(PDPageContentStream contentStream, ST_Box box, ImageObject imageObject, ST_Box annotBox) throws IOException {
         if (imageMap.get(imageObject.getResourceID().toString()) == null) {
             return;
         }
         contentStream.saveGraphicsState();
         PDImageXObject pdfImageObject = PDImageXObject.createFromByteArray(pdf, imageMap.get(imageObject.getResourceID().toString()), "");
-        org.apache.pdfbox.util.Matrix matrix = CommonUtil.toPFMatrix(CommonUtil.getImageMatrixFromOfd(imageObject, box));
-        contentStream.drawImage(pdfImageObject, matrix);
+        if (annotBox != null) {
+            float x = annotBox.getTopLeftX().floatValue();
+            float y = box.getHeight().floatValue() - (annotBox.getTopLeftY().floatValue() + annotBox.getHeight().floatValue());
+            float width = annotBox.getWidth().floatValue();
+            float height = annotBox.getHeight().floatValue();
+            contentStream.drawImage(pdfImageObject, (float) converterDpi(x), (float) converterDpi(y), (float) converterDpi(width), (float) converterDpi(height));
+        } else {
+            org.apache.pdfbox.util.Matrix matrix = CommonUtil.toPFMatrix(CommonUtil.getImageMatrixFromOfd(imageObject, box));
+            contentStream.drawImage(pdfImageObject, matrix);
+        }
         contentStream.restoreGraphicsState();
     }
 

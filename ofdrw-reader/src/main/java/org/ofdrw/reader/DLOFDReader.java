@@ -349,9 +349,11 @@ public class DLOFDReader extends OFDReader {
                     annotionVo.setAnnots(pageAnnot.getAnnots());
                     annotaionList.add(annotionVo);
                 } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
 //            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
         } finally {
             this.getResourceLocator().restore();
