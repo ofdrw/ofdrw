@@ -29,6 +29,7 @@ public class PdfBoxFontHolder {
         try {
             fontMap.put("宋体", PDType0Font.load(pdDocument, PdfBoxFontHolder.class.getClassLoader().getResourceAsStream("fonts/simsun.ttf")));
             fontMap.put("楷体", PDType0Font.load(pdDocument, PdfBoxFontHolder.class.getClassLoader().getResourceAsStream("fonts/simkai.ttf")));
+            fontMap.put("KaiTi_GB2312", PDType0Font.load(pdDocument, PdfBoxFontHolder.class.getClassLoader().getResourceAsStream("fonts/simkai.ttf")));
             fontMap.put("黑体", PDType0Font.load(pdDocument, PdfBoxFontHolder.class.getClassLoader().getResourceAsStream("fonts/simhei.ttf")));
             fontMap.put("Courier New", PDType0Font.load(pdDocument, PdfBoxFontHolder.class.getClassLoader().getResourceAsStream("fonts/cour.ttf")));
         } catch (IOException e) {

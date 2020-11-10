@@ -333,6 +333,9 @@ public class DLOFDReader extends OFDReader {
         List<AnnotionVo> annotaionList = new ArrayList<>();
         try {
             Annotations annotations = this.getAnnotations();
+            if (annotations == null) {
+                return annotaionList;
+            }
             List<AnnPage> annPages = annotations.getPages();
             AnnotionVo annotionVo;
             this.getResourceLocator().save();

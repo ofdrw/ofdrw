@@ -214,7 +214,9 @@ public class PdfboxMaker {
                 textObject = (TextObject) block;
                 int alpha = 255;
                 if (textObject.getFillColor() != null) {
-                    fillColor = convertPDColor(textObject.getFillColor().getValue());
+                    if (textObject.getFillColor().getValue() != null) {
+                        fillColor = convertPDColor(textObject.getFillColor().getValue());
+                    }
                     alpha = textObject.getFillColor().getAlpha();
                 }
                 writeText(contentStream, box, sealBox, textObject, fillColor, alpha);
@@ -229,7 +231,7 @@ public class PdfboxMaker {
                 writePath(contentStream, box, sealBox, pathObject, defaultFillColor, defaultStrokeColor, defaultLineWidth);
             } else if (block instanceof CompositeObject) {
                 compositeObject = (CompositeObject) block;
-                for (CT_VectorG vectorG: ofdReader.getOFDDocumentVo().getCtVectorGList()) {
+                for (CT_VectorG vectorG : ofdReader.getOFDDocumentVo().getCtVectorGList()) {
                     if (vectorG.getID().toString().equals(compositeObject.getResourceID().toString())) {
                         writePageBlock(pdf, contentStream, box, sealBox, vectorG.getContent().getPageBlocks(), drawparam, annotBox);
                         break;
@@ -243,7 +245,9 @@ public class PdfboxMaker {
         contentStream.saveGraphicsState();
         if (pathObject.getStrokeColor() != null) {
             StrokeColor fillColor = pathObject.getStrokeColor();
-            contentStream.setStrokingColor(convertPDColor(fillColor.getValue()));
+            if(fillColor.getValue() != null) {
+                contentStream.setStrokingColor(convertPDColor(fillColor.getValue()));
+            }
         } else {
             contentStream.setStrokingColor(defaultStrokeColor);
         }
@@ -287,7 +291,9 @@ public class PdfboxMaker {
             contentStream.saveGraphicsState();
             FillColor fillColor = (FillColor) pathObject.getFillColor();
             if (fillColor != null) {
-                contentStream.setNonStrokingColor(convertPDColor(fillColor.getValue()));
+                if (fillColor.getValue() !=null) {
+                    contentStream.setNonStrokingColor(convertPDColor(fillColor.getValue()));
+                }
             } else {
                 contentStream.setNonStrokingColor(defaultFillColor);
             }
@@ -304,6 +310,9 @@ public class PdfboxMaker {
                     pathObject.getBoundary().getWidth(),
                     pathObject.getBoundary().getHeight());
         }
+        if (pathObject.getBoundary() == null) {
+            return;
+        }
         List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), true);
         for (int i = 0; i < listPoint.size(); i++) {
             if (listPoint.get(i).type.equals("M") || listPoint.get(i).type.equals("S")) {
@@ -314,6 +323,9 @@ public class PdfboxMaker {
                 contentStream.curveTo(listPoint.get(i).x1, listPoint.get(i).y1,
                         listPoint.get(i).x2, listPoint.get(i).y2,
                         listPoint.get(i).x3, listPoint.get(i).y3);
+            } else if (listPoint.get(i).type.equals("Q")) {
+                contentStream.curveTo1(listPoint.get(i).x1, listPoint.get(i).y1,
+                        listPoint.get(i).x2, listPoint.get(i).y2);
             } else if (listPoint.get(i).type.equals("C")) {
                 contentStream.closePath();
             }
@@ -350,7 +362,7 @@ public class PdfboxMaker {
         float width = sealBox.getWidth().floatValue();
         float height = sealBox.getHeight().floatValue();
         if (clipBox != null) {
-            contentStream.addRect( (float) converterDpi(x)+(float) converterDpi(clipBox.getTopLeftX()), (float) converterDpi(y) + (float) (converterDpi(height) - (converterDpi(clipBox.getTopLeftY()) + converterDpi(clipBox.getHeight()))), (float) converterDpi(clipBox.getWidth()), (float) converterDpi(clipBox.getHeight()));
+            contentStream.addRect((float) converterDpi(x) + (float) converterDpi(clipBox.getTopLeftX()), (float) converterDpi(y) + (float) (converterDpi(height) - (converterDpi(clipBox.getTopLeftY()) + converterDpi(clipBox.getHeight()))), (float) converterDpi(clipBox.getWidth()), (float) converterDpi(clipBox.getHeight()));
             contentStream.closePath();
             contentStream.clip();
             contentStream.stroke();
@@ -376,7 +388,8 @@ public class PdfboxMaker {
             double b = ctm[1];
             double c = ctm[2];
             double d = ctm[3];
-            double sx = a > 0 ? Math.signum(a) * Math.sqrt(a * a + c * c) : Math.sqrt(a * a + c * c);            double sy = Math.signum(d) * Math.sqrt(b * b + d * d);
+            double sx = a > 0 ? Math.signum(a) * Math.sqrt(a * a + c * c) : Math.sqrt(a * a + c * c);
+            double sy = Math.signum(d) * Math.sqrt(b * b + d * d);
             fontSize = (float) (fontSize * sx);
 
         }
@@ -408,7 +421,11 @@ public class PdfboxMaker {
                 contentStream.concatenate2CTM(transform);
             }
             contentStream.setFont(font, (float) converterDpi(fontSize));
-            contentStream.showText(textCodePoint.getText());
+            try {
+                contentStream.showText(textCodePoint.getText());
+            } catch (Exception e) {
+
+            }
             contentStream.endText();
             contentStream.restoreGraphicsState();
         }
