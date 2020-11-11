@@ -12,6 +12,10 @@ import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.ofdrw.converter.point.PathPoint;
+import org.ofdrw.converter.point.TextCodePoint;
+import org.ofdrw.converter.utils.CommonUtil;
+import org.ofdrw.converter.utils.PointUtil;
 import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
@@ -43,7 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.ofdrw.converter.CommonUtil.*;
+import static org.ofdrw.converter.utils.CommonUtil.*;
 
 
 public class PdfboxMaker {
@@ -220,6 +224,7 @@ public class PdfboxMaker {
                         fillColor = convertPDColor(textObject.getFillColor().getValue());
                     } else {
                         // todo
+
                     }
                     alpha = textObject.getFillColor().getAlpha();
                 }

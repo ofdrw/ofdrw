@@ -1,7 +1,9 @@
-package org.ofdrw.converter;
+package org.ofdrw.converter.utils;
 
 import org.apache.pdfbox.jbig2.util.log.Logger;
 import org.apache.pdfbox.jbig2.util.log.LoggerFactory;
+import org.ofdrw.converter.point.PathPoint;
+import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.text.TextCode;
@@ -10,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static org.ofdrw.converter.CommonUtil.converterDpi;
+import static org.ofdrw.converter.utils.CommonUtil.converterDpi;
 
 
 /**
@@ -151,7 +153,7 @@ public class PointUtil {
                     if (compositeObjectCTM != null) {
                         realPos = ctmCalPoint(realPos[0], realPos[1], compositeObjectCTM.toDouble());
                     }
-                    realPos = adjustPos(width, height, x, y, compositeObjectBoundary);
+                    realPos = adjustPos(width, height, realPos[0], realPos[1], compositeObjectBoundary);
                     point.x1 = (float) converterDpi(realPos[0]);
                     point.y1 = (float) converterDpi(fixOriginToPdf ? (height - realPos[1]) : realPos[1]);
                 }

@@ -1,4 +1,4 @@
-package org.ofdrw.converter;
+package org.ofdrw.converter.point;
 
 public class Tuple2<X,Y> {
     private X first;

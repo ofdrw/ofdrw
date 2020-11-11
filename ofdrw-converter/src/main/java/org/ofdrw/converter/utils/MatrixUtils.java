@@ -1,5 +1,6 @@
-package org.ofdrw.converter;
+package org.ofdrw.converter.utils;
 
+import org.ofdrw.converter.point.Tuple2;
 import org.ujmp.core.DenseMatrix;
 import org.ujmp.core.Matrix;
 
