@@ -11,6 +11,7 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
@@ -20,6 +21,7 @@ import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
+import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.compositeObj.CT_VectorG;
@@ -155,7 +157,7 @@ public class PdfboxMaker {
     private void writeLayer(PDDocument pdf, PDPageContentStream contentStream, List<CT_Layer> layerList, ST_Box box, ST_Box sealBox) throws IOException {
         for (CT_Layer layer : layerList) {
             List<PageBlockType> pageBlockTypeList = layer.getPageBlocks();
-            writePageBlock(pdf, contentStream, box, sealBox, pageBlockTypeList, layer.getDrawParam(), null);
+            writePageBlock(pdf, contentStream, box, sealBox, pageBlockTypeList, layer.getDrawParam(), null, null, null, null);
         }
     }
 
@@ -164,11 +166,11 @@ public class PdfboxMaker {
             List<PageBlockType> pageBlockTypeList = annot.getAppearance().getPageBlocks();
             //注释的boundary
             ST_Box annotBox = annot.getAppearance().getBoundary();
-            writePageBlock(pdf, contentStream, box, null, pageBlockTypeList, null, annotBox);
+            writePageBlock(pdf, contentStream, box, null, pageBlockTypeList, null, annotBox, null, null, null);
         }
     }
 
-    private void writePageBlock(PDDocument pdf, PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, List<PageBlockType> pageBlockTypeList, ST_RefID drawparam, ST_Box annotBox) throws IOException {
+    private void writePageBlock(PDDocument pdf, PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, List<PageBlockType> pageBlockTypeList, ST_RefID drawparam, ST_Box annotBox, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
         PDColor defaultFillColor = new PDColor(new float[]{0.0f, 0.0f, 0.0f}, PDDeviceRGB.INSTANCE);
         PDColor defaultStrokeColor = new PDColor(new float[]{0.0f, 0.0f, 0.0f}, PDDeviceRGB.INSTANCE);
         float defaultLineWidth = 0.353f;
@@ -216,6 +218,8 @@ public class PdfboxMaker {
                 if (textObject.getFillColor() != null) {
                     if (textObject.getFillColor().getValue() != null) {
                         fillColor = convertPDColor(textObject.getFillColor().getValue());
+                    } else {
+                        // todo
                     }
                     alpha = textObject.getFillColor().getAlpha();
                 }
@@ -228,12 +232,15 @@ public class PdfboxMaker {
             } else if (block instanceof PathObject) {
                 // path
                 pathObject = (PathObject) block;
-                writePath(contentStream, box, sealBox, pathObject, defaultFillColor, defaultStrokeColor, defaultLineWidth);
+                writePath(contentStream, box, sealBox, pathObject, defaultFillColor, defaultStrokeColor, defaultLineWidth, compositeObjectAlpha, compositeObjectBoundary, compositeObjectCTM);
             } else if (block instanceof CompositeObject) {
                 compositeObject = (CompositeObject) block;
                 for (CT_VectorG vectorG : ofdReader.getOFDDocumentVo().getCtVectorGList()) {
                     if (vectorG.getID().toString().equals(compositeObject.getResourceID().toString())) {
-                        writePageBlock(pdf, contentStream, box, sealBox, vectorG.getContent().getPageBlocks(), drawparam, annotBox);
+                        Integer currentCompositeObjectAlpha = compositeObject.getAlpha();
+                        ST_Box currentCompositeObjectBoundary = compositeObject.getBoundary();
+                        ST_Array currentCompositeObjectCTM = compositeObject.getCTM();
+                        writePageBlock(pdf, contentStream, box, sealBox, vectorG.getContent().getPageBlocks(), drawparam, annotBox, currentCompositeObjectAlpha, currentCompositeObjectBoundary, currentCompositeObjectCTM);
                         break;
                     }
                 }
@@ -241,12 +248,15 @@ public class PdfboxMaker {
         }
     }
 
-    private void writePath(PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, PathObject pathObject, PDColor defaultFillColor, PDColor defaultStrokeColor, float defaultLineWidth) throws IOException {
+    private void writePath(PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, PathObject pathObject, PDColor defaultFillColor, PDColor defaultStrokeColor, float defaultLineWidth, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
         contentStream.saveGraphicsState();
         if (pathObject.getStrokeColor() != null) {
-            StrokeColor fillColor = pathObject.getStrokeColor();
-            if(fillColor.getValue() != null) {
-                contentStream.setStrokingColor(convertPDColor(fillColor.getValue()));
+            StrokeColor strokeColor = pathObject.getStrokeColor();
+            if (strokeColor.getValue() != null) {
+                contentStream.setStrokingColor(convertPDColor(strokeColor.getValue()));
+            } else {
+                // todo
+//                contentStream.shadingFill();
             }
         } else {
             contentStream.setStrokingColor(defaultStrokeColor);
@@ -273,6 +283,11 @@ public class PdfboxMaker {
             lineWidth = (float) (lineWidth * sx);
         }
         if (pathObject.getStroke()) {
+            if (compositeObjectAlpha != null) {
+                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                graphicsState.setNonStrokingAlphaConstant(compositeObjectAlpha * 1.0f / 255);
+                contentStream.setGraphicsStateParameters(graphicsState);
+            }
             if (pathObject.getDashPattern() != null) {
                 float unitsOn = (float) converterDpi(pathObject.getDashPattern().toDouble()[0].floatValue());
                 float unitsOff = (float) converterDpi(pathObject.getDashPattern().toDouble()[1].floatValue());
@@ -282,28 +297,35 @@ public class PdfboxMaker {
             contentStream.setLineJoinStyle(pathObject.getJoin().ordinal());
             contentStream.setLineCapStyle(pathObject.getCap().ordinal());
             contentStream.setMiterLimit(pathObject.getMiterLimit().floatValue());
-            path(contentStream, box, sealBox, pathObject);
+            path(contentStream, box, sealBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
             contentStream.setLineWidth((float) converterDpi(lineWidth));
             contentStream.stroke();
             contentStream.restoreGraphicsState();
         }
         if (pathObject.getFill()) {
             contentStream.saveGraphicsState();
+            if (compositeObjectAlpha != null) {
+                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                graphicsState.setNonStrokingAlphaConstant(compositeObjectAlpha * 1.0f / 255);
+                contentStream.setGraphicsStateParameters(graphicsState);
+            }
             FillColor fillColor = (FillColor) pathObject.getFillColor();
             if (fillColor != null) {
-                if (fillColor.getValue() !=null) {
+                if (fillColor.getValue() != null) {
                     contentStream.setNonStrokingColor(convertPDColor(fillColor.getValue()));
+                } else {
+                    // todo
                 }
             } else {
                 contentStream.setNonStrokingColor(defaultFillColor);
             }
-            path(contentStream, box, sealBox, pathObject);
+            path(contentStream, box, sealBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
             contentStream.fill();
             contentStream.restoreGraphicsState();
         }
     }
 
-    private void path(PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, PathObject pathObject) throws IOException {
+    private void path(PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, PathObject pathObject, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
         if (sealBox != null) {
             pathObject.setBoundary(pathObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
                     pathObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
@@ -313,7 +335,7 @@ public class PdfboxMaker {
         if (pathObject.getBoundary() == null) {
             return;
         }
-        List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), true);
+        List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), compositeObjectBoundary, compositeObjectCTM, true);
         for (int i = 0; i < listPoint.size(); i++) {
             if (listPoint.get(i).type.equals("M") || listPoint.get(i).type.equals("S")) {
                 contentStream.moveTo(listPoint.get(i).x1, listPoint.get(i).y1);

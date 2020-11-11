@@ -131,7 +131,7 @@ public class PointUtil {
         return new double[]{ctmX, ctmY};
     }
 
-    public static List<PathPoint> calPdfPathPoint(double width, double height, ST_Box boundary, List<PathPoint> abbreviatedPoint, boolean hasCtm, ST_Array ctm, boolean fixOriginToPdf) {
+    public static List<PathPoint> calPdfPathPoint(double width, double height, ST_Box boundary, List<PathPoint> abbreviatedPoint, boolean hasCtm, ST_Array ctm, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM, boolean fixOriginToPdf) {
         List<PathPoint> pointList = new ArrayList<>();
         for (PathPoint point : abbreviatedPoint) {
             if (point.type.equals("M") || point.type.equals("L") || point.type.equals("C") || point.type.equals("S")) {
@@ -147,6 +147,14 @@ public class PointUtil {
                 double[] realPos = adjustPos(width, height, x, y, boundary);
                 point.x1 = (float) converterDpi(realPos[0]);
                 point.y1 = (float) converterDpi(fixOriginToPdf ? (height - realPos[1]) : realPos[1]);
+                if (compositeObjectBoundary != null) {
+                    if (compositeObjectCTM != null) {
+                        realPos = ctmCalPoint(realPos[0], realPos[1], compositeObjectCTM.toDouble());
+                    }
+                    realPos = adjustPos(width, height, x, y, compositeObjectBoundary);
+                    point.x1 = (float) converterDpi(realPos[0]);
+                    point.y1 = (float) converterDpi(fixOriginToPdf ? (height - realPos[1]) : realPos[1]);
+                }
                 pointList.add(point);
             } else if (point.type.equals("B")) {
                 double x1 = point.x1, y1 = point.y1;
