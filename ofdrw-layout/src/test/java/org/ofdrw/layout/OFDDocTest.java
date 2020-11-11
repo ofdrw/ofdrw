@@ -237,6 +237,9 @@ class OFDDocTest {
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
 
+    /**
+     * 文档内容追加 内置换行测试
+     */
     @Test
     void appendTest() throws IOException {
         Path srcP = Paths.get("src/test/resources", "helloworld.ofd");

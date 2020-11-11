@@ -2,6 +2,32 @@
 
 ## 进展
 
+## Version 1.6.8 2020-11-9 21:49:46
+
+Alias: FlyMeToTheMoon
+
+新增:
+
+- 支持了[指定宽度的首行缩进配置](ofdrw-layout/src/test/java/org/ofdrw/layout/cases/content/ParagraphCase.java)
+
+修复:
+
+- 首行缩进可能出现的被分割的情况。
+- 调整了占位span的实现方式，采用构造矩形的方式替换的原有的字形分析。
+
+## Version 1.6.7 2020-11-6 19:20:12
+
+Alias: OriginalGod
+
+新增:
+
+- 签章容器增加了时间戳的设置方法
+- 增加了新的Reader对象用于转换时的元素解析。
+
+修复:
+
+- Page对象中Template应该可以有0到多个
+
 ## Version 1.6.6 2020-10-29 20:35:01
 
 Alias: KimetsuNoYaiba

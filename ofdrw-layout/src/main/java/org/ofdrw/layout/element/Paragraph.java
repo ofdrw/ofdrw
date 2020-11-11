@@ -22,6 +22,12 @@ public class Paragraph extends Div {
     private Integer firstLineIndent = null;
 
     /**
+     * 首行缩进数值
+     * 单位：mm
+     */
+    private Double firstLineIndentWidth = null;
+
+    /**
      * 行间距
      */
     private Double lineSpace = 2d;
@@ -137,11 +143,6 @@ public class Paragraph extends Div {
 
     public Paragraph setFontSize(Double defaultFontSize) {
         this.defaultFontSize = defaultFontSize;
-//        if (this.getWidth() != null) {
-//            if (this.getWidth() < defaultFontSize) {
-//                throw new IllegalArgumentException("容器大小(width:" + this.getWidth() + ")过小该尺寸(size:" + defaultFontSize + ")无法容纳字体");
-//            }
-//        }
         return this;
     }
 
@@ -192,6 +193,28 @@ public class Paragraph extends Div {
     }
 
     /**
+     * 获取首行缩进数值
+     * <p>
+     * 该方法仅在已经设置了首行缩进数值的情况下才会返还正确的数值，否则返还null
+     *
+     * @return 首行缩进数值或null
+     */
+    public Double getFirstLineIndentWidth() {
+        return firstLineIndentWidth;
+    }
+
+    /**
+     * 设置段落首行缩进数值
+     *
+     * @param firstLineIndentWidth 首行缩进数值（单位：mm）
+     * @return this
+     */
+    public Paragraph setFirstLineIndentWidth(double firstLineIndentWidth) {
+        this.firstLineIndentWidth = firstLineIndentWidth;
+        return this;
+    }
+
+    /**
      * 清除缩进格式
      *
      * @return this
@@ -230,25 +253,35 @@ public class Paragraph extends Div {
         if (seq == null || seq.isEmpty()) {
             return;
         }
-        Span firstSpan = seq.peek();
+        // 不需要加入占位符
+        if ((firstLineIndent == null || firstLineIndent == 0)
+                && (firstLineIndentWidth == null || firstLineIndentWidth == 0)) {
+            return;
+        }
 
+        Span firstSpan = seq.peek();
         if (firstSpan instanceof PlaceholderSpan) {
+            PlaceholderSpan h = (PlaceholderSpan) firstSpan;
             // 已经存在段落缩进并且设置的段落缩进为0，那么删除该占位符
-            if (firstLineIndent == null || firstLineIndent == 0) {
+            if (h.getHoldWidth() == 0 && h.getHoldNum() == 0) {
                 seq.pop();
+            }
+            if (firstLineIndentWidth != null && firstLineIndentWidth > 0) {
+                h.setHoldWidth(firstLineIndentWidth);
             } else {
                 // 重设占位符的宽度
-                ((PlaceholderSpan) firstSpan).setHoldChars(firstLineIndent);
+                h.setHoldChars(firstLineIndent);
             }
             return;
         }
-        // 不需要加入占位符
-        if (firstLineIndent == null || firstLineIndent == 0) {
-            return;
-        }
-        // 如果第一个不是占位符，并且占位符数目大于0 那么创建新的占位符,并且加入渲染队列
-        seq.push(new PlaceholderSpan(firstLineIndent, firstSpan.getFontSize()));
 
+        if (firstLineIndentWidth != null) {
+            // 使用指定宽度和高度的占位符
+            seq.push(new PlaceholderSpan(firstLineIndentWidth, firstSpan.getFontSize()));
+        } else {
+            // 如果第一个不是占位符，并且占位符数目大于0 那么创建新的占位符,并且加入渲染队列
+            seq.push(new PlaceholderSpan(firstLineIndent, firstSpan));
+        }
     }
 
     /**
@@ -299,9 +332,10 @@ public class Paragraph extends Div {
                 // TODO 警告 不可分割元素如果大于行宽度则忽略
                 continue;
             }
-            // 特殊的如果第一个文字的大小就已经超过可用最大空间限制
+            // 特殊的如果文字可以被分割，但是第一个
+            // 文字的大小就已经超过可用最大空间限制
             // 那么丢弃系列文字
-            if (width < s.glyphList().get(0).getW()) {
+            if (!s.isIntegrity() && width < s.glyphList().get(0).getW()) {
                 continue;
             }
 

@@ -5,7 +5,7 @@
     <parent>
         <artifactId>ofdrw</artifactId>
         <groupId>org.ofdrw</groupId>
-        <version>1.6.6</version>
+        <version>1.6.8</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -35,6 +35,11 @@
         <dependency>
             <groupId>org.ofdrw</groupId>
             <artifactId>ofdrw-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-gm</artifactId>
             <version>${project.version}</version>
         </dependency>
 <!--        <dependency>-->
