@@ -17,7 +17,7 @@ import static org.ofdrw.converter.utils.CommonUtil.converterDpi;
 
 /**
  * @author dltech21
- * @time 2020/8/11
+ * @since 2020/8/11
  */
 public class PointUtil {
     private final static Logger logger = LoggerFactory.getLogger(PointUtil.class);

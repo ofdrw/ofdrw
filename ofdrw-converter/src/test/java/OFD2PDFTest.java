@@ -2,10 +2,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.jbig2.util.log.Logger;
 import org.apache.pdfbox.jbig2.util.log.LoggerFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.Test;
-import org.ofdrw.converter.CommonUtil;
+
 import org.ofdrw.converter.PdfboxMaker;
+import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.reader.DLOFDReader;
 import org.ofdrw.reader.model.OfdPageVo;
 

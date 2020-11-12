@@ -26,7 +26,7 @@ import java.util.UUID;
 
 /**
  * @author dltech21
- * @time 2020/8/11
+ * @since 2020/8/11
  */
 public class CommonUtil {
     public static double millimetersToPixel(double mm, double dpi) {
