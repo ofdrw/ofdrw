@@ -2,6 +2,20 @@
 
 ## 进展
 
+## Version 1.6.9 2020-11-12 19:22:21
+
+Alias: 	MobuSaikoHyaku
+
+新增
+
+- ofdrw-converter 模块用于转换OFD到PDF [开发中暂不可用]
+- 文字提取增加了指定页码的方法参数
+
+修复:
+
+- 错误CT_CGTransform名称
+- 提升了文字提取的精度
+
 ## Version 1.6.8 2020-11-9 21:49:46
 
 Alias: FlyMeToTheMoon
