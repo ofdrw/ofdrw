@@ -40,9 +40,9 @@ public class KeywordExtractor {
 
     /**
      * 每毫米的point单位
-     * 1 point / 2.835f ≈ 0.353mm
+     * 1 point / 2.83464567 ≈ 0.35277778 mm
      */
-    private static float POINT_PER_MM = 2.835f;
+    private static final float POINT_PER_MM = 72 / 25.4f;
 
     /**
      * 获取关键字坐标列表(坐标单位毫米mm)
