@@ -15,13 +15,13 @@ import org.ofdrw.core.basicType.ST_Array;
  * @author 权观宇
  * @since 2019-10-19 07:01:53
  */
-public class CT_CGTransfrom extends OFDElement {
-    public CT_CGTransfrom(Element proxy) {
+public class CT_CGTransform extends OFDElement {
+    public CT_CGTransform(Element proxy) {
         super(proxy);
     }
 
-    public CT_CGTransfrom() {
-        super("CGTransfrom");
+    public CT_CGTransform() {
+        super("CGTransform");
     }
 
     /**
@@ -33,7 +33,7 @@ public class CT_CGTransfrom extends OFDElement {
      * @param codePosition TextCode 中字符编码的起始位置
      * @return this
      */
-    public CT_CGTransfrom setCodePosition(Integer codePosition) {
+    public CT_CGTransform setCodePosition(Integer codePosition) {
         if (codePosition == null) {
             throw new IllegalArgumentException("字符编码的起始位置不能为空");
         }
@@ -68,7 +68,7 @@ public class CT_CGTransfrom extends OFDElement {
      * @param codeCount 变换关系中字符的数量，数值应大于等于 1，否则属于错误描述
      * @return this
      */
-    public CT_CGTransfrom setCodeCount(Integer codeCount) {
+    public CT_CGTransform setCodeCount(Integer codeCount) {
         if (codeCount == null) {
             codeCount = 1;
         }
@@ -108,7 +108,7 @@ public class CT_CGTransfrom extends OFDElement {
      * @param glyphCount 变换关系中字形索引的个数
      * @return this
      */
-    public CT_CGTransfrom setGlyphCount(Integer glyphCount) {
+    public CT_CGTransform setGlyphCount(Integer glyphCount) {
         if (glyphCount == null) {
             glyphCount = 1;
         }
@@ -145,7 +145,7 @@ public class CT_CGTransfrom extends OFDElement {
      * @param glyphs 变换后的字形索引列表
      * @return this
      */
-    public CT_CGTransfrom setGlyphs(ST_Array glyphs) {
+    public CT_CGTransform setGlyphs(ST_Array glyphs) {
         this.setOFDEntity("Glyphs", glyphs.toString());
         return this;
     }
