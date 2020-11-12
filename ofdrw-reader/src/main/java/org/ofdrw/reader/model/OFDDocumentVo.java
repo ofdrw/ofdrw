@@ -1,6 +1,7 @@
 package org.ofdrw.reader.model;
 
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
+import org.ofdrw.core.compositeObj.CT_VectorG;
 import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.text.font.CT_Font;
@@ -20,6 +21,8 @@ public class OFDDocumentVo {
 
     private List<CT_MultiMedia> ctMultiMediaList;
 
+    private List<CT_VectorG> ctVectorGList;
+
     private List<StampAnnotVo> stampAnnotVos;
 
     private List<CT_DrawParam> ctDrawParamList;
@@ -32,7 +35,7 @@ public class OFDDocumentVo {
 
     private List<AnnotionVo> annotaions;
 
-    public OFDDocumentVo(String docPath, double pageWidth, double pageHeight, List<OfdPageVo> ofdPageVoList, List<CT_Font> ctFontList, List<CT_ColorSpace> ctColorSpaceList, List<CT_MultiMedia> ctMultiMediaList, List<StampAnnotVo> stampAnnotVoList, List<CT_DrawParam> ctDrawParamList, List<AnnotionVo> annotaions) {
+    public OFDDocumentVo(String docPath, double pageWidth, double pageHeight, List<OfdPageVo> ofdPageVoList, List<CT_Font> ctFontList, List<CT_ColorSpace> ctColorSpaceList, List<CT_MultiMedia> ctMultiMediaList, List<CT_VectorG> ctVectorGList, List<StampAnnotVo> stampAnnotVoList, List<CT_DrawParam> ctDrawParamList, List<AnnotionVo> annotaions) {
         this.docPath = docPath;
         this.pageWidth = pageWidth;
         this.pageHeight = pageHeight;
@@ -40,6 +43,7 @@ public class OFDDocumentVo {
         this.ctFontList = ctFontList;
         this.ctColorSpaceList = ctColorSpaceList;
         this.ctMultiMediaList = ctMultiMediaList;
+        this.ctVectorGList = ctVectorGList;
         this.stampAnnotVos = stampAnnotVoList;
         this.ctDrawParamList = ctDrawParamList;
         this.annotaions = annotaions;
@@ -91,5 +95,9 @@ public class OFDDocumentVo {
 
     public List<AnnotionVo> getAnnotaions() {
         return annotaions;
+    }
+
+    public List<CT_VectorG> getCtVectorGList() {
+        return ctVectorGList;
     }
 }
