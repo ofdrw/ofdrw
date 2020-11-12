@@ -40,9 +40,9 @@ public class KeywordExtractor {
 
     /**
      * 每毫米的point单位
-     * 1 point / 2.835f ≈ 0.353mm
+     * 1 point / 2.83464567 ≈ 0.35277778 mm
      */
-    private static float POINT_PER_MM = 2.835f;
+    private static final float POINT_PER_MM = 72 / 25.4f;
 
     /**
      * 获取关键字坐标列表(坐标单位毫米mm)
@@ -54,6 +54,20 @@ public class KeywordExtractor {
      * @throws DocumentException     文档解析异常
      */
     public static List<KeywordPosition> getKeyWordPositionList(OFDReader reader, String keyword) throws FileNotFoundException, DocumentException {
+        return getKeyWordPositionList(reader, keyword, null);
+    }
+
+    /**
+     * 获取关键字坐标列表(坐标单位毫米mm)
+     *
+     * @param reader  OFD解析器
+     * @param keyword 关键字
+     * @param pages   要检索的页码，从1开始，不超过最大页码
+     * @return 关键字坐标列表
+     * @throws FileNotFoundException 文件不存在异常
+     * @throws DocumentException     文档解析异常
+     */
+    public static List<KeywordPosition> getKeyWordPositionList(OFDReader reader, String keyword, int[] pages) throws FileNotFoundException, DocumentException {
         Map<TextCode, KeywordResource> boundaryMapping = new HashMap<>(8);
 
         ResourceLocator locator = reader.getResourceLocator();
@@ -73,8 +87,26 @@ public class KeywordExtractor {
         //创建文字定位列表
         List<TextCode> textCodeList = new ArrayList<>();
         int numberOfPages = reader.getNumberOfPages();
-        for (int pageNumber = 1; pageNumber <= numberOfPages; pageNumber++) {
-            preparedContextData(reader, textCodeList, boundaryMapping, fontMapping, templatePage, pageNumber);
+
+        boolean hasPageLimit = pages != null && pages.length > 0;
+        if (hasPageLimit) {
+            for (int page : pages) {
+                if (page < 1 || page > numberOfPages) {
+                    throw new IllegalArgumentException(String.format("页码不正确，支持范围[%d-%d]", 1, numberOfPages));
+                }
+            }
+        }
+        for (int page = 1; page <= numberOfPages; page++) {
+            if (hasPageLimit) {
+                for (int i : pages) {
+                    if (i == page) {
+                        preparedContextData(reader, textCodeList, boundaryMapping, fontMapping, templatePage, page);
+                        break;
+                    }
+                }
+            } else {
+                preparedContextData(reader, textCodeList, boundaryMapping, fontMapping, templatePage, page);
+            }
         }
 
         List<KeywordPosition> positionList = new ArrayList<>();
@@ -307,7 +339,7 @@ public class KeywordExtractor {
      * @param keyword         关键字
      * @param positionList    检索到的关键字列表
      * @param textCodeList    合并列表
-     * @param boundaryMapping 边框映射对象
+     * @param boundaryMapping 外接矩形映射
      */
     private static void mergeKeywordPosition(String keyword, List<KeywordPosition> positionList, List<TextCode> textCodeList,
                                              Map<TextCode, KeywordResource> boundaryMapping) {
@@ -534,7 +566,7 @@ public class KeywordExtractor {
      *
      * @param reader          OFD解析器
      * @param textCodeList    文本列表
-     * @param boundaryMapping 边框映射对象
+     * @param boundaryMapping 外接矩形映射
      * @param fontMapping     字体映射对象
      * @param templatePageMap 模板数据
      * @param pageNumber      页码
@@ -545,7 +577,7 @@ public class KeywordExtractor {
         // 获取模板页正文层
         List<CT_Layer> layers = page.getContent().getLayers();
 
-        for(Template tpl: page.getTemplates()){
+        for (Template tpl : page.getTemplates()) {
             //获取模板页
             Page templatePage = null;
             if (tpl != null) {
@@ -570,7 +602,7 @@ public class KeywordExtractor {
      * 页面块处理
      *
      * @param textCodeList    文本列表
-     * @param boundaryMapping 边框映射对象
+     * @param boundaryMapping 外接矩形映射
      * @param fontMapping     字体映射对象
      * @param pageNumber      页码
      * @param pageBlocks      页块列表
