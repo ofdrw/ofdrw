@@ -23,6 +23,25 @@ public class PKCS12Tools {
      * 从P12中获取私钥
      *
      * @param userP12 PKCS12文件路径
+     * @param pwd     解密密钥
+     * @return 私钥
+     * @throws GeneralSecurityException 加解密异常
+     * @throws IOException              文件读取异常
+     */
+    public static PrivateKey ReadPrvKey(Path userP12, String pwd)
+            throws GeneralSecurityException, IOException {
+        KeyStore ks = KeyStore.getInstance("PKCS12", new BouncyCastleProvider());
+        try (InputStream rootKsIn = Files.newInputStream(userP12)) {
+            ks.load(rootKsIn, pwd.toCharArray());
+            String alias = ks.aliases().nextElement();
+            return (PrivateKey) ks.getKey(alias, pwd.toCharArray());
+        }
+    }
+
+    /**
+     * 从P12中获取私钥
+     *
+     * @param userP12 PKCS12文件路径
      * @param alias   密钥存储别名
      * @param pwd     解密密钥
      * @return 私钥
@@ -35,6 +54,25 @@ public class PKCS12Tools {
         try (InputStream rootKsIn = Files.newInputStream(userP12)) {
             ks.load(rootKsIn, pwd.toCharArray());
             return (PrivateKey) ks.getKey(alias, pwd.toCharArray());
+        }
+    }
+
+    /**
+     * 从P12中获取证书链
+     *
+     * @param userP12 PKCS12文件路径
+     * @param pwd     解密密钥
+     * @return 证书链，第一张证书为用户证书
+     * @throws GeneralSecurityException 加解密异常
+     * @throws IOException              文件读取异常
+     */
+    public static Certificate[] ReadCertChain(Path userP12, String pwd)
+            throws GeneralSecurityException, IOException {
+        KeyStore ks = KeyStore.getInstance("PKCS12", new BouncyCastleProvider());
+        try (InputStream rootKsIn = Files.newInputStream(userP12)) {
+            ks.load(rootKsIn, pwd.toCharArray());
+            String alias = ks.aliases().nextElement();
+            return ks.getCertificateChain(alias);
         }
     }
 
@@ -61,6 +99,20 @@ public class PKCS12Tools {
      * 从P12中获取用户证书
      *
      * @param userP12 PKCS12文件路径
+     * @param pwd     解密密钥
+     * @return 用户证书
+     * @throws GeneralSecurityException 加解密异常
+     * @throws IOException              文件读取异常
+     */
+    public static Certificate ReadUserCert(Path userP12, String pwd)
+            throws GeneralSecurityException, IOException {
+        return ReadCertChain(userP12, pwd)[0];
+    }
+    
+    /**
+     * 从P12中获取用户证书
+     *
+     * @param userP12 PKCS12文件路径
      * @param alias   密钥存储别名
      * @param pwd     解密密钥
      * @return 用户证书
@@ -71,4 +123,5 @@ public class PKCS12Tools {
             throws GeneralSecurityException, IOException {
         return ReadCertChain(userP12, alias, pwd)[0];
     }
+
 }
