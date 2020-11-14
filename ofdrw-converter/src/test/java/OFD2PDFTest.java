@@ -12,8 +12,8 @@ public class OFD2PDFTest {
 
     @Test
     public void convertPdf() {
-        String ofdFilePath = basePath + "intro-数科.ofd";
-        String pdfOutPath = basePath + "intro-from-ofd.pdf";
+        String ofdFilePath = basePath + "a.ofd";
+        String pdfOutPath = basePath + "a-from-ofd.pdf";
 
         try {
             ConvertHelper.toPdf(new FileInputStream(ofdFilePath), pdfOutPath);
