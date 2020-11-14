@@ -1,6 +1,9 @@
 package org.ofdrw.converter;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.pdfbox.jbig2.JBIG2ImageReader;
+import org.apache.pdfbox.jbig2.JBIG2ImageReaderSpi;
+import org.apache.pdfbox.jbig2.io.DefaultInputStreamFactory;
 import org.apache.pdfbox.jbig2.util.log.Logger;
 import org.apache.pdfbox.jbig2.util.log.LoggerFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -10,8 +13,10 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.ofdrw.converter.image.ImageMedia;
 import org.ofdrw.converter.point.PathPoint;
 import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.converter.utils.CommonUtil;
@@ -39,9 +44,14 @@ import org.ofdrw.reader.model.AnnotionVo;
 import org.ofdrw.reader.model.OfdPageVo;
 import org.ofdrw.reader.model.StampAnnotVo;
 
+import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageInputStream;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +65,7 @@ public class PdfboxMaker {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final Map<String, PDFont> pdfFontMap;
-    private final Map<String, byte[]> imageMap;
+    private final Map<String, ImageMedia> imageMap;
     private final Map<String, CT_DrawParam> ctDrawParamMap;
 
     private final DLOFDReader ofdReader;
@@ -75,13 +85,19 @@ public class PdfboxMaker {
         for (CT_MultiMedia multiMedia : ofdReader.getOFDDocumentVo().getCtMultiMediaList()) {
             srcPath = ofdReader.getOFDDir().getSysAbsPath() + "/" + ofdReader.getOFDDocumentVo().getDocPath() + "/" + multiMedia.getMediaFile().toString();
             File imgFile = new File(srcPath);
+
+            ImageMedia image = new ImageMedia();
+            image.setFromat(multiMedia.getFormat());
+
             if (imgFile.exists()) {
-                this.imageMap.put(multiMedia.getID().toString(), FileUtils.readFileToByteArray(imgFile));
+                image.setData(FileUtils.readFileToByteArray(imgFile));
+                this.imageMap.put(multiMedia.getID().toString(), image);
             } else {
                 srcPath = ofdReader.getOFDDir().getSysAbsPath() + "/" + ofdReader.getOFDDocumentVo().getDocPath() + "/Res/" + multiMedia.getMediaFile().toString();
                 imgFile = new File(srcPath);
                 if (imgFile.exists()) {
-                    this.imageMap.put(multiMedia.getID().toString(), FileUtils.readFileToByteArray(imgFile));
+                    image.setData(FileUtils.readFileToByteArray(imgFile));
+                    this.imageMap.put(multiMedia.getID().toString(), image);
                 }
             }
 
@@ -364,7 +380,12 @@ public class PdfboxMaker {
             return;
         }
         contentStream.saveGraphicsState();
-        PDImageXObject pdfImageObject = PDImageXObject.createFromByteArray(pdf, imageMap.get(imageObject.getResourceID().toString()), "");
+
+        ImageMedia image = imageMap.get(imageObject.getResourceID().toString());
+        boolean isJb2 = "GBIG2".equals(image.getFromat()) || "JB2".equals(image.getFromat());
+        PDImageXObject pdfImageObject = LosslessFactory.createFromImage(pdf,
+                readImageFile(isJb2, new ByteArrayInputStream(image.getData())));
+
         if (annotBox != null) {
             float x = annotBox.getTopLeftX().floatValue();
             float y = box.getHeight().floatValue() - (annotBox.getTopLeftY().floatValue() + annotBox.getHeight().floatValue());
@@ -376,6 +397,21 @@ public class PdfboxMaker {
             contentStream.drawImage(pdfImageObject, matrix);
         }
         contentStream.restoreGraphicsState();
+    }
+
+    /**
+     * 读取图片文件
+     */
+    public static BufferedImage readImageFile(boolean isJb2, InputStream image) throws IOException {
+        if (isJb2) {
+            DefaultInputStreamFactory defaultInputStreamFactory = new DefaultInputStreamFactory();
+            ImageInputStream imageInputStream = defaultInputStreamFactory.getInputStream(image);
+            JBIG2ImageReader imageReader = new JBIG2ImageReader(new JBIG2ImageReaderSpi());
+            imageReader.setInput(imageInputStream);
+            return imageReader.read(0, imageReader.getDefaultReadParam());
+        } else {
+            return ImageIO.read(image);
+        }
     }
 
     private void writeSealImage(PDPageContentStream contentStream, ST_Box box, byte[] image, ST_Box sealBox, ST_Box clipBox) throws IOException {
