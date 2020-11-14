@@ -7,6 +7,7 @@ import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.text.TextCode;
+import org.ofdrw.reader.DeltaTool;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -223,14 +224,14 @@ public class PointUtil {
                 x = newPoint[0];
                 y = newPoint[1];
             }
-            List<String> deltaXList = null;
-            List<String> deltaYList = null;
+            List<Float> deltaXList = null;
+            List<Float> deltaYList = null;
             String textStr = textCode.getText();
             if (textCode.getDeltaX() != null && textCode.getDeltaX().getArray().size() > 0) {
-                deltaXList = textCode.getDeltaX().getArray();
+                deltaXList = DeltaTool.getDelta(textCode.getDeltaX(), textStr.length());
             }
             if (textCode.getDeltaY() != null && textCode.getDeltaY().getArray().size() > 0) {
-                deltaYList = textCode.getDeltaY().getArray();
+                deltaYList = DeltaTool.getDelta(textCode.getDeltaY(), textStr.length());
             }
 
             textStr = textStr.replaceAll("&lt;", "<");
@@ -258,13 +259,13 @@ public class PointUtil {
                         double f = ctms[5].doubleValue();
                         double angel = Math.atan2(-b, d);
                         if (angel == 0) {
-                            double[] newPoint = ctmCalPoint(Double.parseDouble(deltaXList.get(i - 1)), 0, ctm.toDouble());
+                            double[] newPoint = ctmCalPoint(deltaXList.get(i - 1), 0, ctm.toDouble());
                             x += newPoint[0];
                         } else {
-                            x += Double.parseDouble(deltaXList.get(i - 1));
+                            x += deltaXList.get(i - 1);
                         }
                     } else {
-                        x += Double.parseDouble(deltaXList.get(i - 1));
+                        x += deltaXList.get(i - 1);
                     }
                 }
                 if (i > 0 && Objects.nonNull(deltaYList)) {
@@ -278,13 +279,13 @@ public class PointUtil {
                         double f = ctms[5].doubleValue();
                         double angel = Math.atan2(-b, d);
                         if (angel == 0) {
-                            double[] newPoint = ctmCalPoint(0, Double.parseDouble(deltaYList.get(i - 1)), ctm.toDouble());
+                            double[] newPoint = ctmCalPoint(0, deltaYList.get(i - 1), ctm.toDouble());
                             y += newPoint[1];
                         } else {
-                            y += Double.parseDouble(deltaYList.get(i - 1));
+                            y += deltaYList.get(i - 1);
                         }
                     } else {
-                        y += Double.parseDouble(deltaYList.get(i - 1));
+                        y += deltaYList.get(i - 1);
                     }
                 }
                 double[] realPos = adjustPos(width, height, x, y, boundary);
