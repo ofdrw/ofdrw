@@ -31,12 +31,13 @@ public class ConvertHelper {
      */
     public static void toPdf(Path input, Object output) {
         DLOFDReader reader = null;
-
+        PDDocument pdfDocument = null;
         try {
             reader = new DLOFDReader(input);
+            pdfDocument = new PDDocument();
+
             List<OfdPageVo> ofdPageVoList = reader.getOFDDocumentVo().getOfdPageVoList();
 
-            PDDocument pdfDocument = new PDDocument();
             long start;
             long end;
             int pageNum = 1;
@@ -58,8 +59,6 @@ public class ConvertHelper {
             } else {
                 throw new IllegalArgumentException("pdf save failed, output don't support");
             }
-
-            pdfDocument.close();
         } catch (Exception e) {
             logger.error("convert to pdf failed", e);
             throw new RuntimeException(e);
@@ -68,9 +67,13 @@ public class ConvertHelper {
                 if (reader != null) {
                     reader.close();
                 }
+                if (pdfDocument != null) {
+                    pdfDocument.close();
+                }
             } catch (IOException e) {
                 logger.error("close OFDReader failed", e);
             }
+
         }
     }
 

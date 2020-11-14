@@ -70,6 +70,7 @@ public class PdfboxMaker {
 
     private final DLOFDReader ofdReader;
     private final PDDocument pdf;
+    private final PdfBoxFontHolder fontHolder;
 
     public PdfboxMaker(DLOFDReader ofdReader, PDDocument pdf) throws IOException {
         this.ofdReader = ofdReader;
@@ -77,8 +78,9 @@ public class PdfboxMaker {
         imageMap = new HashMap<>();
         pdfFontMap = new HashMap<>();
         ctDrawParamMap = new HashMap<>();
+        fontHolder = new PdfBoxFontHolder(pdf);
         for (CT_Font ctFont : ofdReader.getOFDDocumentVo().getCtFontList()) {
-            pdfFontMap.put(ctFont.getObjID().toString(), PdfBoxFontHolder.getInstance(pdf).getFont(ctFont.getFontName()));
+            pdfFontMap.put(ctFont.getObjID().toString(), fontHolder.getFont(ctFont.getFontName()));
         }
 
         String srcPath;
@@ -114,7 +116,7 @@ public class PdfboxMaker {
                     ctDrawParamMap.put(stampAnnotVo.getCtDrawParamList().get(j).getID().toString() + "s", stampAnnotVo.getCtDrawParamList().get(j));
                 }
                 for (CT_Font ctFont : stampAnnotVo.getCtFontList()) {
-                    pdfFontMap.put(ctFont.getObjID().toString() + "s", PdfBoxFontHolder.getInstance(pdf).getFont(ctFont.getFontName()));
+                    pdfFontMap.put(ctFont.getObjID().toString() + "s", fontHolder.getFont(ctFont.getFontName()));
                 }
             }
         }
@@ -402,7 +404,7 @@ public class PdfboxMaker {
     /**
      * 读取图片文件
      */
-    public static BufferedImage readImageFile(boolean isJb2, InputStream image) throws IOException {
+    public BufferedImage readImageFile(boolean isJb2, InputStream image) throws IOException {
         if (isJb2) {
             DefaultInputStreamFactory defaultInputStreamFactory = new DefaultInputStreamFactory();
             ImageInputStream imageInputStream = defaultInputStreamFactory.getInputStream(image);
@@ -457,7 +459,7 @@ public class PdfboxMaker {
 
         }
         PDFont font = this.pdfFontMap.get(textObject.getFont().toString() + fontAno);
-        if (Objects.isNull(font)) font = PdfBoxFontHolder.getInstance(pdf).getFont("宋体");
+        if (Objects.isNull(font)) font = fontHolder.getFont("宋体");
 
         List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCTM() != null, textObject.getCTM(), true);
         double rx = 0, ry = 0;
