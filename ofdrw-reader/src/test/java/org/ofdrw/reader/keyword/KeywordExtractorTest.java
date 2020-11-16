@@ -1,20 +1,16 @@
 package org.ofdrw.reader.keyword;
 
 import org.dom4j.DocumentException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.reader.OFDReader;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.PrivateKey;
-import java.security.cert.Certificate;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * 关键字抽取 调用示例
@@ -44,6 +40,23 @@ class KeywordExtractorTest {
             assertEquals("87.9", String.format("%.1f", box.getTopLeftY()));
             assertEquals("22.3", String.format("%.1f", box.getWidth()));
             assertEquals("22.3", String.format("%.1f", box.getHeight()));
+        }
+    }
+
+    /**
+     * 获取关键字在文档中坐标
+     */
+    @Test
+    void getMultiKeyWordPositionList() throws IOException, DocumentException {
+        Path src = Paths.get("src/test/resources/keyword.ofd");
+        String[] keywords = {"办理", "不动产权"};
+
+        try (OFDReader reader = new OFDReader(src)) {
+            List<KeywordPosition> positionList = KeywordExtractor.getKeyWordPositionList(reader, keywords);
+            assertEquals(positionList.size(), 2);
+            for (KeywordPosition keywordPosition : positionList) {
+                System.out.println(keywordPosition);
+            }
         }
     }
 }

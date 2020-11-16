@@ -17,6 +17,10 @@ public class KeywordPosition {
      * 矩形区域
      */
     private ST_Box box;
+    /**
+     * 所属关键字
+     */
+    private String keyword;
 
     public KeywordPosition(int page, ST_Box box) {
         this.page = page;
@@ -35,7 +39,24 @@ public class KeywordPosition {
         return box;
     }
 
+    public String getKeyword() {
+        return keyword;
+    }
+
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
+    }
+
     public void setBox(ST_Box box) {
         this.box = box;
+    }
+
+    @Override
+    public String toString() {
+        return "KeywordPosition{" +
+                "page=" + page +
+                ", box=" + box +
+                ", keyword='" + keyword + '\'' +
+                '}';
     }
 }

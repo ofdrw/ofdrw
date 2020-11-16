@@ -25,10 +25,7 @@ import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
-import org.ofdrw.core.basicStructure.pageObj.layer.block.CompositeObject;
-import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
-import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
-import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
@@ -267,6 +264,8 @@ public class PdfboxMaker {
                         break;
                     }
                 }
+            } else if (block instanceof CT_PageBlock) {
+                writePageBlock(pdf, contentStream, box, sealBox, ((CT_PageBlock) block).getPageBlocks(), drawparam, annotBox, compositeObjectAlpha, compositeObjectBoundary, compositeObjectCTM);
             }
         }
     }

@@ -61,6 +61,19 @@ public class KeywordExtractor {
     /**
      * 获取关键字坐标列表(坐标单位毫米mm)
      *
+     * @param reader   OFD解析器
+     * @param keywords 关键字列表
+     * @return 关键字坐标列表
+     * @throws FileNotFoundException 文件不存在异常
+     * @throws DocumentException     文档解析异常
+     */
+    public static List<KeywordPosition> getKeyWordPositionList(OFDReader reader, String[] keywords) throws FileNotFoundException, DocumentException {
+        return getKeyWordPositionList(reader, keywords, null);
+    }
+
+    /**
+     * 获取关键字坐标列表(坐标单位毫米mm)
+     *
      * @param reader  OFD解析器
      * @param keyword 关键字
      * @param pages   要检索的页码，从1开始，不超过最大页码
@@ -69,6 +82,20 @@ public class KeywordExtractor {
      * @throws DocumentException     文档解析异常
      */
     public static List<KeywordPosition> getKeyWordPositionList(OFDReader reader, String keyword, int[] pages) throws FileNotFoundException, DocumentException {
+        return getKeyWordPositionList(reader, new String[]{keyword}, pages);
+    }
+
+    /**
+     * 获取关键字坐标列表(坐标单位毫米mm)
+     *
+     * @param reader   OFD解析器
+     * @param keywords 关键字列表
+     * @param pages    要检索的页码，从1开始，不超过最大页码
+     * @return 关键字坐标列表
+     * @throws FileNotFoundException 文件不存在异常
+     * @throws DocumentException     文档解析异常
+     */
+    public static List<KeywordPosition> getKeyWordPositionList(OFDReader reader, String[] keywords, int[] pages) throws FileNotFoundException, DocumentException {
         Map<TextCode, KeywordResource> boundaryMapping = new HashMap<>(8);
 
         ResourceLocator locator = reader.getResourceLocator();
@@ -117,11 +144,13 @@ public class KeywordExtractor {
             if (textCode != null) {
                 String content = textCode.getContent();
                 if (content != null && !"".equals(content.trim())) {
-                    int textIndex = content.indexOf(keyword);
-                    if (textIndex != -1) {
-                        addNormalKeyword(keyword, boundaryMapping, positionList, textCode, textIndex);
-                    } else if (keyword.indexOf(content) == 0 && i != textCodeList.size() - 1) {
-                        addBreakTextCodeList(keyword, boundaryMapping, textCodeList, positionList, i, textCode);
+                    for (String keyword : keywords) {
+                        int textIndex = content.indexOf(keyword);
+                        if (textIndex != -1) {
+                            addNormalKeyword(keyword, boundaryMapping, positionList, textCode, textIndex);
+                        } else if (keyword.indexOf(content) == 0 && i != textCodeList.size() - 1) {
+                            addBreakTextCodeList(keyword, boundaryMapping, textCodeList, positionList, i, textCode);
+                        }
                     }
                 }
             }
@@ -223,6 +252,7 @@ public class KeywordExtractor {
                     position = getKeywordPosition(textCode, textIndex, kr.getPage(), ctText, fontMetrics, deltaX, deltaY, keywordLength);
                 }
 
+                position.setKeyword(keyword);
                 positionList.add(position);
             }
         }
