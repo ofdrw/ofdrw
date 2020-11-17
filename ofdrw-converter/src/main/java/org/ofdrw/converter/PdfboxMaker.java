@@ -348,6 +348,9 @@ public class PdfboxMaker {
     }
 
     private void path(PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, ST_Box annotBox, PathObject pathObject, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
+        if (pathObject.getBoundary() == null) {
+            return;
+        }
         if (sealBox != null) {
             pathObject.setBoundary(pathObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
                     pathObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
@@ -359,9 +362,6 @@ public class PdfboxMaker {
                     pathObject.getBoundary().getTopLeftY() + annotBox.getTopLeftY(),
                     pathObject.getBoundary().getWidth(),
                     pathObject.getBoundary().getHeight());
-        }
-        if (pathObject.getBoundary() == null) {
-            return;
         }
         List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), compositeObjectBoundary, compositeObjectCTM, true);
         for (int i = 0; i < listPoint.size(); i++) {
