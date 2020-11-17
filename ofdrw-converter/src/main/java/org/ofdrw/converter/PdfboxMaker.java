@@ -1,6 +1,9 @@
 package org.ofdrw.converter;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.pdfbox.jbig2.JBIG2ImageReader;
+import org.apache.pdfbox.jbig2.JBIG2ImageReaderSpi;
+import org.apache.pdfbox.jbig2.io.DefaultInputStreamFactory;
 import org.apache.pdfbox.jbig2.util.log.Logger;
 import org.apache.pdfbox.jbig2.util.log.LoggerFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -10,8 +13,10 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.ofdrw.converter.image.ImageMedia;
 import org.ofdrw.converter.point.PathPoint;
 import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.converter.utils.CommonUtil;
@@ -20,10 +25,7 @@ import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
-import org.ofdrw.core.basicStructure.pageObj.layer.block.CompositeObject;
-import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
-import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
-import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
@@ -39,9 +41,14 @@ import org.ofdrw.reader.model.AnnotionVo;
 import org.ofdrw.reader.model.OfdPageVo;
 import org.ofdrw.reader.model.StampAnnotVo;
 
+import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageInputStream;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,11 +62,12 @@ public class PdfboxMaker {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final Map<String, PDFont> pdfFontMap;
-    private final Map<String, byte[]> imageMap;
+    private final Map<String, ImageMedia> imageMap;
     private final Map<String, CT_DrawParam> ctDrawParamMap;
 
     private final DLOFDReader ofdReader;
     private final PDDocument pdf;
+    private final PdfBoxFontHolder fontHolder;
 
     public PdfboxMaker(DLOFDReader ofdReader, PDDocument pdf) throws IOException {
         this.ofdReader = ofdReader;
@@ -67,21 +75,28 @@ public class PdfboxMaker {
         imageMap = new HashMap<>();
         pdfFontMap = new HashMap<>();
         ctDrawParamMap = new HashMap<>();
+        fontHolder = new PdfBoxFontHolder(pdf);
         for (CT_Font ctFont : ofdReader.getOFDDocumentVo().getCtFontList()) {
-            pdfFontMap.put(ctFont.getObjID().toString(), PdfBoxFontHolder.getInstance(pdf).getFont(ctFont.getFontName()));
+            pdfFontMap.put(ctFont.getObjID().toString(), fontHolder.getFont(ctFont.getFontName()));
         }
 
         String srcPath;
         for (CT_MultiMedia multiMedia : ofdReader.getOFDDocumentVo().getCtMultiMediaList()) {
             srcPath = ofdReader.getOFDDir().getSysAbsPath() + "/" + ofdReader.getOFDDocumentVo().getDocPath() + "/" + multiMedia.getMediaFile().toString();
             File imgFile = new File(srcPath);
+
+            ImageMedia image = new ImageMedia();
+            image.setFromat(multiMedia.getFormat());
+
             if (imgFile.exists()) {
-                this.imageMap.put(multiMedia.getID().toString(), FileUtils.readFileToByteArray(imgFile));
+                image.setData(FileUtils.readFileToByteArray(imgFile));
+                this.imageMap.put(multiMedia.getID().toString(), image);
             } else {
                 srcPath = ofdReader.getOFDDir().getSysAbsPath() + "/" + ofdReader.getOFDDocumentVo().getDocPath() + "/Res/" + multiMedia.getMediaFile().toString();
                 imgFile = new File(srcPath);
                 if (imgFile.exists()) {
-                    this.imageMap.put(multiMedia.getID().toString(), FileUtils.readFileToByteArray(imgFile));
+                    image.setData(FileUtils.readFileToByteArray(imgFile));
+                    this.imageMap.put(multiMedia.getID().toString(), image);
                 }
             }
 
@@ -98,7 +113,7 @@ public class PdfboxMaker {
                     ctDrawParamMap.put(stampAnnotVo.getCtDrawParamList().get(j).getID().toString() + "s", stampAnnotVo.getCtDrawParamList().get(j));
                 }
                 for (CT_Font ctFont : stampAnnotVo.getCtFontList()) {
-                    pdfFontMap.put(ctFont.getObjID().toString() + "s", PdfBoxFontHolder.getInstance(pdf).getFont(ctFont.getFontName()));
+                    pdfFontMap.put(ctFont.getObjID().toString() + "s", fontHolder.getFont(ctFont.getFontName()));
                 }
             }
         }
@@ -249,6 +264,8 @@ public class PdfboxMaker {
                         break;
                     }
                 }
+            } else if (block instanceof CT_PageBlock) {
+                writePageBlock(pdf, contentStream, box, sealBox, ((CT_PageBlock) block).getPageBlocks(), drawparam, annotBox, compositeObjectAlpha, compositeObjectBoundary, compositeObjectCTM);
             }
         }
     }
@@ -364,7 +381,12 @@ public class PdfboxMaker {
             return;
         }
         contentStream.saveGraphicsState();
-        PDImageXObject pdfImageObject = PDImageXObject.createFromByteArray(pdf, imageMap.get(imageObject.getResourceID().toString()), "");
+
+        ImageMedia image = imageMap.get(imageObject.getResourceID().toString());
+        boolean isJb2 = "GBIG2".equals(image.getFromat()) || "JB2".equals(image.getFromat());
+        PDImageXObject pdfImageObject = LosslessFactory.createFromImage(pdf,
+                readImageFile(isJb2, new ByteArrayInputStream(image.getData())));
+
         if (annotBox != null) {
             float x = annotBox.getTopLeftX().floatValue();
             float y = box.getHeight().floatValue() - (annotBox.getTopLeftY().floatValue() + annotBox.getHeight().floatValue());
@@ -376,6 +398,21 @@ public class PdfboxMaker {
             contentStream.drawImage(pdfImageObject, matrix);
         }
         contentStream.restoreGraphicsState();
+    }
+
+    /**
+     * 读取图片文件
+     */
+    public BufferedImage readImageFile(boolean isJb2, InputStream image) throws IOException {
+        if (isJb2) {
+            DefaultInputStreamFactory defaultInputStreamFactory = new DefaultInputStreamFactory();
+            ImageInputStream imageInputStream = defaultInputStreamFactory.getInputStream(image);
+            JBIG2ImageReader imageReader = new JBIG2ImageReader(new JBIG2ImageReaderSpi());
+            imageReader.setInput(imageInputStream);
+            return imageReader.read(0, imageReader.getDefaultReadParam());
+        } else {
+            return ImageIO.read(image);
+        }
     }
 
     private void writeSealImage(PDPageContentStream contentStream, ST_Box box, byte[] image, ST_Box sealBox, ST_Box clipBox) throws IOException {
@@ -421,7 +458,7 @@ public class PdfboxMaker {
 
         }
         PDFont font = this.pdfFontMap.get(textObject.getFont().toString() + fontAno);
-        if (Objects.isNull(font)) font = PdfBoxFontHolder.getInstance(pdf).getFont("宋体");
+        if (Objects.isNull(font)) font = fontHolder.getFont("宋体");
 
         List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCTM() != null, textObject.getCTM(), true);
         double rx = 0, ry = 0;

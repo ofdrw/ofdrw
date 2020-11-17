@@ -9,6 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <packaging>pom</packaging>
     <artifactId>ofdrw-full</artifactId>
 
     <dependencies>
@@ -51,6 +52,11 @@
         <dependency>
             <groupId>org.ofdrw</groupId>
             <artifactId>ofdrw-sign</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-converter</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

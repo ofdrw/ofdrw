@@ -17,6 +17,7 @@ import org.ofdrw.core.basicType.*;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.core.text.text.CT_Text;
+import org.ofdrw.reader.DeltaTool;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.ResourceLocator;
 import sun.font.FontDesignMetrics;
@@ -60,6 +61,19 @@ public class KeywordExtractor {
     /**
      * 获取关键字坐标列表(坐标单位毫米mm)
      *
+     * @param reader   OFD解析器
+     * @param keywords 关键字列表
+     * @return 关键字坐标列表
+     * @throws FileNotFoundException 文件不存在异常
+     * @throws DocumentException     文档解析异常
+     */
+    public static List<KeywordPosition> getKeyWordPositionList(OFDReader reader, String[] keywords) throws FileNotFoundException, DocumentException {
+        return getKeyWordPositionList(reader, keywords, null);
+    }
+
+    /**
+     * 获取关键字坐标列表(坐标单位毫米mm)
+     *
      * @param reader  OFD解析器
      * @param keyword 关键字
      * @param pages   要检索的页码，从1开始，不超过最大页码
@@ -68,6 +82,20 @@ public class KeywordExtractor {
      * @throws DocumentException     文档解析异常
      */
     public static List<KeywordPosition> getKeyWordPositionList(OFDReader reader, String keyword, int[] pages) throws FileNotFoundException, DocumentException {
+        return getKeyWordPositionList(reader, new String[]{keyword}, pages);
+    }
+
+    /**
+     * 获取关键字坐标列表(坐标单位毫米mm)
+     *
+     * @param reader   OFD解析器
+     * @param keywords 关键字列表
+     * @param pages    要检索的页码，从1开始，不超过最大页码
+     * @return 关键字坐标列表
+     * @throws FileNotFoundException 文件不存在异常
+     * @throws DocumentException     文档解析异常
+     */
+    public static List<KeywordPosition> getKeyWordPositionList(OFDReader reader, String[] keywords, int[] pages) throws FileNotFoundException, DocumentException {
         Map<TextCode, KeywordResource> boundaryMapping = new HashMap<>(8);
 
         ResourceLocator locator = reader.getResourceLocator();
@@ -116,11 +144,13 @@ public class KeywordExtractor {
             if (textCode != null) {
                 String content = textCode.getContent();
                 if (content != null && !"".equals(content.trim())) {
-                    int textIndex = content.indexOf(keyword);
-                    if (textIndex != -1) {
-                        addNormalKeyword(keyword, boundaryMapping, positionList, textCode, textIndex);
-                    } else if (keyword.indexOf(content) == 0 && i != textCodeList.size() - 1) {
-                        addBreakTextCodeList(keyword, boundaryMapping, textCodeList, positionList, i, textCode);
+                    for (String keyword : keywords) {
+                        int textIndex = content.indexOf(keyword);
+                        if (textIndex != -1) {
+                            addNormalKeyword(keyword, boundaryMapping, positionList, textCode, textIndex);
+                        } else if (keyword.indexOf(content) == 0 && i != textCodeList.size() - 1) {
+                            addBreakTextCodeList(keyword, boundaryMapping, textCodeList, positionList, i, textCode);
+                        }
                     }
                 }
             }
@@ -210,8 +240,8 @@ public class KeywordExtractor {
             if (ctText.getBoundary() != null) {
                 FontMetrics fontMetrics = FontDesignMetrics.getMetrics(getFont(ctText, kr.getFont()));
 
-                List<Float> deltaX = getDelta(textCode.getDeltaX(), textCode.getContent().length());
-                List<Float> deltaY = getDelta(textCode.getDeltaY(), textCode.getContent().length());
+                List<Float> deltaX = DeltaTool.getDelta(textCode.getDeltaX(), textCode.getContent().length());
+                List<Float> deltaY = DeltaTool.getDelta(textCode.getDeltaY(), textCode.getContent().length());
 
                 KeywordPosition position;
                 ST_Array ctm = ctText.getCTM();
@@ -222,6 +252,7 @@ public class KeywordExtractor {
                     position = getKeywordPosition(textCode, textIndex, kr.getPage(), ctText, fontMetrics, deltaX, deltaY, keywordLength);
                 }
 
+                position.setKeyword(keyword);
                 positionList.add(position);
             }
         }
@@ -361,8 +392,8 @@ public class KeywordExtractor {
                         totalLength += textCode.getContent().length();
                     }
 
-                    List<Float> deltaX = getDelta(textCode.getDeltaX(), textCode.getContent().length());
-                    List<Float> deltaY = getDelta(textCode.getDeltaY(), textCode.getContent().length());
+                    List<Float> deltaX = DeltaTool.getDelta(textCode.getDeltaX(), textCode.getContent().length());
+                    List<Float> deltaY = DeltaTool.getDelta(textCode.getDeltaY(), textCode.getContent().length());
 
                     double width = getStringWidth(0, textLength, deltaX, ctText.getSize());
                     if (width == 0) {
@@ -659,35 +690,4 @@ public class KeywordExtractor {
         return fontMapping;
     }
 
-    /**
-     * 获取Delta数据
-     *
-     * @param delta         OFD数组对象
-     * @param contentLength 文本长度
-     * @return 一组坐标偏移值
-     */
-    private static List<Float> getDelta(ST_Array delta, int contentLength) {
-        List<Float> list = new ArrayList<>();
-        if (delta != null) {
-            List<String> array = delta.getArray();
-            for (int i = 0, len = array.size(); i < len; i++) {
-                if ("g".equals(array.get(i))) {
-                    for (int j = 0, len2 = Integer.parseInt(array.get(i + 1)); j < len2; j++) {
-                        list.add(Float.valueOf(array.get(i + 2)));
-                    }
-                    i += 2;
-                } else {
-                    list.add(Float.valueOf(array.get(i)));
-                }
-            }
-        }
-        int deltaSize = list.size();
-        if (deltaSize < contentLength && deltaSize > 0) {
-            Float lastDelta = list.get(deltaSize - 1);
-            for (int i = 0; i < contentLength - deltaSize; i++) {
-                list.add(lastDelta);
-            }
-        }
-        return list;
-    }
 }
