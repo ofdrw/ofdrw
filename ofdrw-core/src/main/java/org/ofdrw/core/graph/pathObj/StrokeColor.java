@@ -1,6 +1,7 @@
 package org.ofdrw.core.graph.pathObj;
 
 import org.dom4j.Element;
+import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 
 /**
@@ -18,5 +19,10 @@ public class StrokeColor extends CT_Color {
 
     public StrokeColor() {
         super("StrokeColor");
+    }
+
+    public CT_AxialShd getAxialShd() {
+        Element e = this.getOFDElement("AxialShd");
+        return e == null ? null : new CT_AxialShd(e);
     }
 }
