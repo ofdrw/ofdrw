@@ -272,4 +272,25 @@ public class CT_Color extends OFDElement {
         }
         return ColorClusterType.getInstance(elements.get(0));
     }
+
+    /**
+     * 【可选】
+     * 获取 指定类型的颜色
+     *
+     * @param <T> 颜色类型
+     * @return 指定类型色对象， null表示不存指定类型颜色
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends ColorClusterType> T getColorByType() {
+        List<Element> elements = this.elements();
+        if (elements.size() == 0) {
+            return null;
+        }
+        try {
+            return (T) ColorClusterType.getInstance(elements.get(0));
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return null;
+        }
+    }
 }
