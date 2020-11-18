@@ -264,7 +264,7 @@ public class OFDReader implements Closeable {
      */
     public ST_Box getPageSize(Page page) {
         CT_PageArea pageArea = page.getArea();
-        if (pageArea == null) {
+        if (pageArea == null || pageArea.getPhysicalBox() == null) {
             // 如果页面没有定义页面区域，则使用文件 CommonData中的定义
             Document document;
             try {
@@ -275,7 +275,6 @@ public class OFDReader implements Closeable {
             CT_CommonData commonData = document.getCommonData();
             pageArea = commonData.getPageArea();
         }
-
         return pageArea.getPhysicalBox();
     }
 
@@ -405,7 +404,6 @@ public class OFDReader implements Closeable {
         }
         return null;
     }
-
 
 
     /**
