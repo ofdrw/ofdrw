@@ -55,6 +55,12 @@ public class PointUtil {
                 PathPoint point = new PathPoint("Q", (float) Double.parseDouble(array[i + 1]), (float) Double.parseDouble(array[i + 2]), (float) Double.parseDouble(array[i + 3]), (float) Double.parseDouble(array[i + 4]), 0, 0);
                 i = i + 5;
                 pointList.add(point);
+            } else if (array[i].equals("A")) {
+                PathPoint point = new PathPoint("A", (float) Double.parseDouble(array[i + 1]), (float) Double.parseDouble(array[i + 2]),
+                        (float) Double.parseDouble(array[i + 3]), (float) Double.parseDouble(array[i + 4]),
+                        (float) Double.parseDouble(array[i + 5]), (float) Double.parseDouble(array[i + 6]), (float) Double.parseDouble(array[i + 7]));
+                i = i + 8;
+                pointList.add(point);
             } else {
                 i++;
             }
@@ -207,6 +213,22 @@ public class PointUtil {
                 PathPoint realPoint = new PathPoint("Q", (float) converterDpi(x1), (float) converterDpi(fixOriginToPdf ? (height - y1) : y1),
                         (float) converterDpi(x2), (float) converterDpi(fixOriginToPdf ? (height - y2) : y2),
                         0, 0);
+                pointList.add(realPoint);
+            } else if (point.type.equals("A")) {
+                double rx = point.rx, ry = point.ry;
+                float rotation = point.rotation, arc = point.arc, sweep = point.sweep;
+                double x = point.x, y = point.y;
+                if (hasCtm) {
+                    double[] newPoint = ctmCalPoint(x, y, ctm.toDouble());
+                    x = newPoint[0];
+                    y = newPoint[1];
+                }
+                double[] realPos = adjustPos(width, height, x, y, boundary);
+                x = realPos[0];
+                y = realPos[1];
+                PathPoint realPoint = new PathPoint("A", (float) converterDpi(rx), (float) converterDpi(ry),
+                        rotation, arc, sweep,
+                        (float) converterDpi(x), (float) converterDpi(fixOriginToPdf ? (height - y) : y));
                 pointList.add(realPoint);
             }
         }
