@@ -2,7 +2,7 @@
 
 ## 进展
 
-## Version 1.6.11 2020-11-18 11:05:50
+## Version 1.6.10 2020-11-18 11:05:50
 
 Alias: MobileSuitGundamSEED
 
