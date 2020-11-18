@@ -2,6 +2,15 @@
 
 ## 进展
 
+## Version 1.6.11 2020-11-18 11:05:50
+
+Alias: MobileSuitGundamSEED
+
+新增
+
+- 关键字搜索支持通知检索多个关键字。
+- 转换模块支持了PageBlock的嵌套
+
 ## Version 1.6.9 2020-11-12 19:22:21
 
 Alias: 	MobuSaikoHyaku
