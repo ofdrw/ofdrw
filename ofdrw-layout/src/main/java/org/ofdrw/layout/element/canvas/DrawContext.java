@@ -643,17 +643,10 @@ public class DrawContext implements Closeable {
             return this;
         }
 
-        FontSetting fontSetting = null;
-        if (state.font != null) {
-            fontSetting = state.font;
-        } else {
-            fontSetting = new FontSetting(1d, FontName.SimSun.font());
-        }
-
         int readDirection = state.font.getReadDirection();
         int charDirection = state.font.getCharDirection();
 
-        Font font = fontSetting.getFont();
+        Font font = state.font.getFont();
         Double fontSize = state.font.getFontSize();
 
         ST_ID id = resManager.addFont(font);
@@ -693,7 +686,7 @@ public class DrawContext implements Closeable {
             txtObj.setCharDirection(Direction.getInstance(charDirection));
         }
         // 测量字间距
-        MeasureBody measureBody = TextMeasureTool.measureWithWith(text, fontSetting);
+        MeasureBody measureBody = TextMeasureTool.measureWithWith(text, state.font);
 
         // 第一个字母的偏移量计算
         double xx = x + measureBody.firstCharOffsetX;
