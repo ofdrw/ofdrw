@@ -8,8 +8,14 @@ Alias: MobileSuitGundamSEED
 
 新增
 
+- 增加了通过类型获取CT_Color实例的方法。
 - 关键字搜索支持通知检索多个关键字。
-- 转换模块支持了PageBlock的嵌套
+- 转换模块支持了PageBlock的嵌套。
+
+修复
+
+- Canvas上下文中增加了默认字体属性的解决了没有设置字体导致的NPE。
+- 解决了转换部分错误。
 
 ## Version 1.6.9 2020-11-12 19:22:21
 
