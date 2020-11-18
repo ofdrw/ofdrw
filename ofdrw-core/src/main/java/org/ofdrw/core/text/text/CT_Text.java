@@ -4,6 +4,8 @@ import org.dom4j.Element;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_RefID;
+import org.ofdrw.core.graph.pathObj.FillColor;
+import org.ofdrw.core.graph.pathObj.StrokeColor;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.clips.ClipAble;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
@@ -390,9 +392,9 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
      *
      * @return 填充颜色，null表示黑色
      */
-    public CT_Color getFillColor() {
+    public FillColor getFillColor() {
         Element e = this.getOFDElement("FillColor");
-        return e == null ? null : new CT_Color(e);
+        return e == null ? null : new FillColor(e);
     }
 
 
@@ -422,9 +424,9 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
      *
      * @return 勾边颜色，null为透明色
      */
-    public CT_Color getStrokeColor() {
+    public StrokeColor getStrokeColor() {
         Element e = this.getOFDElement("StrokeColor");
-        return e == null ? null : new CT_Color(e);
+        return e == null ? null : new StrokeColor(e);
     }
 
     /**

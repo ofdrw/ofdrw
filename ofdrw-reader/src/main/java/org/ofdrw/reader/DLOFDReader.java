@@ -347,6 +347,9 @@ public class DLOFDReader extends OFDReader {
                 if (antLoc.toString().contains(docRoot.parent())) {
                     antLoc = ST_Loc.getInstance(antLoc.toString().replace(docRoot.parent() + "/", "").replaceFirst("/", ""));
                 }
+                if (!antLoc.toString().contains(document.getAnnotations().parent())) {
+                    antLoc = ST_Loc.getInstance(document.getAnnotations().parent() + "/" + antLoc);
+                }
                 try {
                     PageAnnot pageAnnot = this.getResourceLocator().get(antLoc, PageAnnot::new);
                     annotionVo.setAnnots(pageAnnot.getAnnots());

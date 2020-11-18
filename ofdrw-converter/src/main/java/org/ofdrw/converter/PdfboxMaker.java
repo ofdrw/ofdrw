@@ -252,7 +252,7 @@ public class PdfboxMaker {
             } else if (block instanceof PathObject) {
                 // path
                 pathObject = (PathObject) block;
-                writePath(contentStream, box, sealBox, pathObject, defaultFillColor, defaultStrokeColor, defaultLineWidth, compositeObjectAlpha, compositeObjectBoundary, compositeObjectCTM);
+                writePath(contentStream, box, sealBox, annotBox, pathObject, defaultFillColor, defaultStrokeColor, defaultLineWidth, compositeObjectAlpha, compositeObjectBoundary, compositeObjectCTM);
             } else if (block instanceof CompositeObject) {
                 compositeObject = (CompositeObject) block;
                 for (CT_VectorG vectorG : ofdReader.getOFDDocumentVo().getCtVectorGList()) {
@@ -270,7 +270,7 @@ public class PdfboxMaker {
         }
     }
 
-    private void writePath(PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, PathObject pathObject, PDColor defaultFillColor, PDColor defaultStrokeColor, float defaultLineWidth, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
+    private void writePath(PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, ST_Box annotBox, PathObject pathObject, PDColor defaultFillColor, PDColor defaultStrokeColor, float defaultLineWidth, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
         contentStream.saveGraphicsState();
         if (pathObject.getStrokeColor() != null) {
             StrokeColor strokeColor = pathObject.getStrokeColor();
@@ -319,7 +319,7 @@ public class PdfboxMaker {
             contentStream.setLineJoinStyle(pathObject.getJoin().ordinal());
             contentStream.setLineCapStyle(pathObject.getCap().ordinal());
             contentStream.setMiterLimit(pathObject.getMiterLimit().floatValue());
-            path(contentStream, box, sealBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
+            path(contentStream, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
             contentStream.setLineWidth((float) converterDpi(lineWidth));
             contentStream.stroke();
             contentStream.restoreGraphicsState();
@@ -341,21 +341,27 @@ public class PdfboxMaker {
             } else {
                 contentStream.setNonStrokingColor(defaultFillColor);
             }
-            path(contentStream, box, sealBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
+            path(contentStream, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
             contentStream.fill();
             contentStream.restoreGraphicsState();
         }
     }
 
-    private void path(PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, PathObject pathObject, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
+    private void path(PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, ST_Box annotBox, PathObject pathObject, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
+        if (pathObject.getBoundary() == null) {
+            return;
+        }
         if (sealBox != null) {
             pathObject.setBoundary(pathObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
                     pathObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
                     pathObject.getBoundary().getWidth(),
                     pathObject.getBoundary().getHeight());
         }
-        if (pathObject.getBoundary() == null) {
-            return;
+        if (annotBox != null) {
+            pathObject.setBoundary(pathObject.getBoundary().getTopLeftX() + annotBox.getTopLeftX(),
+                    pathObject.getBoundary().getTopLeftY() + annotBox.getTopLeftY(),
+                    pathObject.getBoundary().getWidth(),
+                    pathObject.getBoundary().getHeight());
         }
         List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), compositeObjectBoundary, compositeObjectCTM, true);
         for (int i = 0; i < listPoint.size(); i++) {
