@@ -21,4 +21,9 @@ public class FillColor extends CT_Color {
     public FillColor() {
         super("FillColor");
     }
+
+    public CT_AxialShd getAxialShd() {
+        Element e = this.getOFDElement("AxialShd");
+        return e == null ? null : new CT_AxialShd(e);
+    }
 }

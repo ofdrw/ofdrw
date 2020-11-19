@@ -275,17 +275,6 @@ public class CT_Color extends OFDElement {
 
     /**
      * 【可选】
-     * 获取轴向渐变对象
-     *
-     * @return 轴向渐变对象
-     */
-    public CT_AxialShd getAxialShd() {
-        Element e = this.getOFDElement("AxialShd");
-        return e == null ? null : new CT_AxialShd(e);
-    }
-
-    /**
-     * 【可选】
      * 获取 指定类型的颜色
      *
      * @param <T> 颜色类型
