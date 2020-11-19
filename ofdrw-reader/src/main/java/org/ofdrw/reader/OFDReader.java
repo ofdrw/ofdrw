@@ -1,6 +1,5 @@
 package org.ofdrw.reader;
 
-import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
 import org.ofdrw.core.annotation.Annotations;
@@ -19,14 +18,10 @@ import org.ofdrw.core.signatures.Signatures;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * OFD解析器
@@ -80,7 +75,21 @@ public class OFDReader implements Closeable {
         workDir = Files.createTempDirectory("ofd-tmp-");
         // 解压文档，到临时的工作目录
         ZipUtil.unZipFiles(ofdFile.toFile(), workDir.toAbsolutePath().toString() + File.separator);
-//        new ZipFile(ofdFile.toFile()).extractAll(workDir.toAbsolutePath().toString());
+        ofdDir = new OFDDir(workDir);
+        // 创建资源定位器
+        rl = new ResourceLocator(ofdDir);
+    }
+
+    /**
+     * 构造一个 OFDReader
+     *
+     * @param src OFD文件输入流
+     * @throws IOException OFD文件操作IO异常
+     */
+    public OFDReader(InputStream src) throws IOException {
+        workDir = Files.createTempDirectory("ofd-tmp-");
+        // 解压文档，到临时的工作目录
+        ZipUtil.unZipFiles(src, workDir.toAbsolutePath().toString() + File.separator);
         ofdDir = new OFDDir(workDir);
         // 创建资源定位器
         rl = new ResourceLocator(ofdDir);

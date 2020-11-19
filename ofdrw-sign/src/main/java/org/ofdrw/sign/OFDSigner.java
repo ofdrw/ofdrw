@@ -21,10 +21,7 @@ import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.ResourceLocator;
 import org.ofdrw.sign.stamppos.StampAppearance;
 
-import java.io.Closeable;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.DigestInputStream;
@@ -106,6 +103,11 @@ public class OFDSigner implements Closeable {
     private Path out;
 
     /**
+     * 电子签名后文件输出流
+     */
+    private OutputStream outStream;
+
+    /**
      * 是否已经执行exeSign
      */
     private boolean hasSign;
@@ -121,10 +123,34 @@ public class OFDSigner implements Closeable {
      * 创建OFD签名对象
      *
      * @param reader     OFD解析器
+     * @param outStream  电子签名后文件保存位置
+     * @param idProvider 签名文件ID提供器
+     * @throws SignatureTerminateException 签名终止异常
+     * @since 2020-08-24 20:35:45
+     */
+    public OFDSigner(OFDReader reader, OutputStream outStream, SignIDProvider idProvider) throws SignatureTerminateException {
+        if (reader == null) {
+            throw new IllegalArgumentException("OFD解析器（reader）为空");
+        }
+        if (outStream == null) {
+            throw new IllegalArgumentException("电子签名后文件输出流（outStream）为空");
+        }
+        if (idProvider == null) {
+            throw new IllegalArgumentException("签名文件ID提供器（idProvider）为空");
+        }
+
+        this.outStream = outStream;
+        setProperty(reader, idProvider);
+    }
+
+    /**
+     * 创建OFD签名对象
+     *
+     * @param reader     OFD解析器
      * @param out        电子签名后文件保存位置
      * @param idProvider 签名文件ID提供器
-     * @since 2020-08-24 20:35:45
      * @throws SignatureTerminateException 签名终止异常
+     * @since 2020-08-24 20:35:45
      */
     public OFDSigner(OFDReader reader, Path out, SignIDProvider idProvider) throws SignatureTerminateException {
         if (reader == null) {
@@ -137,8 +163,15 @@ public class OFDSigner implements Closeable {
             throw new IllegalArgumentException("签名文件ID提供器（idProvider）为空");
         }
 
-        this.reader = reader;
         this.out = out;
+        setProperty(reader, idProvider);
+    }
+
+    /**
+     * 数据初始化
+     */
+    private void setProperty(OFDReader reader, SignIDProvider idProvider) throws SignatureTerminateException {
+        this.reader = reader;
         this.ofdDir = reader.getOFDDir();
         this.hasSign = false;
         // 初始化从0起的最大签名ID，如果源文档中已经存在签名文件的情况
@@ -521,7 +554,13 @@ public class OFDSigner implements Closeable {
             throw new IllegalStateException("请先执行 exeSign在关闭引擎完成数字签名。");
         }
         // 打包电子签名后的OFD文件
-        ofdDir.jar(out);
+        if (out != null) {
+            ofdDir.jar(out);
+        } else if (outStream != null) {
+            ofdDir.jar(outStream);
+        } else {
+            throw new IllegalArgumentException("OFD文档输出目录错误或没有设置输出流");
+        }
         // 关闭OFD解析器
         reader.close();
     }

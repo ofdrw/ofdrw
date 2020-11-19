@@ -1,7 +1,6 @@
 package org.ofdrw.layout;
 
 import org.dom4j.DocumentException;
-import org.dom4j.Element;
 import org.ofdrw.core.attachment.Attachments;
 import org.ofdrw.core.attachment.CT_Attachment;
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
@@ -24,7 +23,6 @@ import org.ofdrw.layout.engine.render.RenderException;
 import org.ofdrw.layout.exception.DocReadException;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
-import org.ofdrw.reader.BadOFDException;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.ResourceLocator;
@@ -32,10 +30,10 @@ import org.ofdrw.reader.ResourceLocator;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -65,8 +63,14 @@ public class OFDDoc implements Closeable {
     private OFDDir ofdDir;
     /**
      * 打包后OFD文档存放路径
+     * outPath/outStream，二选一
      */
     private Path outPath;
+    /**
+     * 打包后OFD文档输出流
+     * outPath/outStream，二选一
+     */
+    private OutputStream outStream;
     /**
      * 当前文档中所有对象使用标识的最大值。
      * 初始值为 0。MaxUnitID主要用于文档编辑，
@@ -142,6 +146,19 @@ public class OFDDoc implements Closeable {
     }
 
     /**
+     * 在指定路径位置上创建一个OFD文件
+     *
+     * @param outStream OFD输出流
+     */
+    public OFDDoc(OutputStream outStream) {
+        this();
+        if (outStream == null) {
+            throw new IllegalArgumentException("OFD文件输出流(outStream)为空");
+        }
+        this.outStream = outStream;
+    }
+
+    /**
      * 修改一个OFD文档
      *
      * @param reader  OFD解析器
@@ -159,6 +176,30 @@ public class OFDDoc implements Closeable {
             throw new IllegalArgumentException("OFD文件存储路径(outPath)不能是目录");
         }
         this.outPath = outPath;
+        this.reader = reader;
+        // 通过OFD解析器初始化文档对象
+        try {
+            containerInit(reader);
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new DocReadException("OFD文件解析异常", e);
+        }
+    }
+
+    /**
+     * 修改一个OFD文档
+     *
+     * @param reader    OFD解析器
+     * @param outStream 修改后文档输出流
+     * @throws DocReadException 文档读取异常
+     */
+    public OFDDoc(OFDReader reader, OutputStream outStream) throws DocReadException {
+        if (reader == null) {
+            throw new IllegalArgumentException("OFD解析器(reader)不能为空");
+        }
+        if (outStream == null) {
+            throw new IllegalArgumentException("OFD文件输出流(outStream)为空");
+        }
+        this.outStream = outStream;
         this.reader = reader;
         // 通过OFD解析器初始化文档对象
         try {
@@ -303,7 +344,7 @@ public class OFDDoc implements Closeable {
      * @param pageNum    页码
      * @param annotation 注释对象
      * @return this
-     * @throws IOException 文件操作异常
+     * @throws IOException     文件操作异常
      * @throws RenderException 渲染异常
      */
     public OFDDoc addAnnotation(int pageNum, Annotation annotation) throws IOException {
@@ -463,7 +504,13 @@ public class OFDDoc implements Closeable {
             // 设置最大对象ID
             cdata.setMaxUnitID(MaxUnitID.get());
             // final. 执行打包程序
-            ofdDir.jar(outPath.toAbsolutePath());
+            if (outPath != null && Files.isDirectory(outPath)) {
+                ofdDir.jar(outPath.toAbsolutePath());
+            } else if (outStream != null) {
+                ofdDir.jar(outStream);
+            } else {
+                throw new IllegalArgumentException("OFD文档输出目录错误或没有设置输出流");
+            }
         } finally {
             if (reader != null) {
                 reader.close();

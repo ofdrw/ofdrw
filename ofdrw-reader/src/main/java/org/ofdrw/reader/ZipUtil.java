@@ -2,15 +2,20 @@ package org.ofdrw.reader;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 public class ZipUtil {
     /**
      * 解压到指定目录
+     *
      * @param zipPath 需要解压的文件路径
-     * @param descDir  解压到目录
+     * @param descDir 解压到目录
      * @throws IOException 文件操作IO异常
      */
     public static void unZipFiles(String zipPath, String descDir) throws IOException {
@@ -19,8 +24,47 @@ public class ZipUtil {
 
     /**
      * 解压文件到指定目录
+     *
+     * @param descDir 解压到目录
+     * @throws IOException 文件操作IO异常
+     */
+    @SuppressWarnings("rawtypes")
+    public static void unZipFiles(InputStream src, String descDir) throws IOException {
+        File pathFile = new File(descDir);
+        if (!pathFile.exists()) {
+            pathFile.mkdirs();
+        }
+        // 解决zip文件中有中文目录或者中文文件
+        ZipInputStream zip = new ZipInputStream(src, Charset.forName("GBK"));
+        ZipEntry entry;
+        while ((entry = zip.getNextEntry()) != null) {
+            String name = entry.getName();
+
+            byte[] buf = new byte[1024];
+            int num;
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            while ((num = zip.read(buf, 0, buf.length)) != -1) {
+                bos.write(buf, 0, num);
+            }
+            Path path = Paths.get(descDir, name);
+            if (entry.isDirectory()) {
+                File dir = new File(path.toString());
+                dir.mkdirs();
+            } else {
+                File dir = new File(path.toString()).getParentFile();
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+                Files.write(path, bos.toByteArray());
+            }
+        }
+    }
+
+    /**
+     * 解压文件到指定目录
+     *
      * @param zipFile 需要解压的文件
-     * @param descDir  解压到目录
+     * @param descDir 解压到目录
      * @throws IOException 文件操作IO异常
      */
     @SuppressWarnings("rawtypes")
