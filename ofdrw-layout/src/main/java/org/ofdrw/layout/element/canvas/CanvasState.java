@@ -1,6 +1,7 @@
 package org.ofdrw.layout.element.canvas;
 
 import org.ofdrw.core.basicType.ST_Array;
+import org.ofdrw.font.FontName;
 
 /**
  * 画布状态
@@ -63,6 +64,7 @@ public class CanvasState implements Cloneable {
 
 
     public CanvasState() {
+        font = new FontSetting(1d, FontName.SimSun.font());
     }
 
     /**

@@ -4,7 +4,7 @@ package org.ofdrw.converter.image;
  * 图像媒体对象
  *
  * @author minghu.zhang
- * @date 12:10 2020/11/14
+ * @since 12:10 2020/11/14
  **/
 public class ImageMedia {
 
