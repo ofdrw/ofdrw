@@ -39,6 +39,7 @@ import org.ofdrw.core.compositeObj.CT_VectorG;
 import org.ofdrw.core.graph.pathObj.FillColor;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
 import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
+import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.signatures.appearance.StampAnnot;
 import org.ofdrw.core.text.font.CT_Font;
@@ -243,9 +244,9 @@ public class PdfboxMaker {
                 if (textObject.getFillColor() != null) {
                     if (textObject.getFillColor().getValue() != null) {
                         fillColor = convertPDColor(textObject.getFillColor().getValue());
-                    } else if (textObject.getFillColor().getAxialShd() != null){
+                    } else if (textObject.getFillColor().getColorByType() != null){
                         // todo
-                        CT_AxialShd ctAxialShd = textObject.getFillColor().getAxialShd();
+                        CT_AxialShd ctAxialShd = textObject.getFillColor().getColorByType();
                         fillColor = convertPDColor(ctAxialShd.getSegments().get(0).getColor().getValue());
                     }
                     alpha = textObject.getFillColor().getAlpha();
@@ -283,49 +284,8 @@ public class PdfboxMaker {
             StrokeColor strokeColor = pathObject.getStrokeColor();
             if (strokeColor.getValue() != null) {
                 contentStream.setStrokingColor(convertPDColor(strokeColor.getValue()));
-            } else if (strokeColor.getColorByType() != null){
-                // todo
-                CT_AxialShd ctAxialShd = strokeColor.getColorByType();
-                ST_Array start = ctAxialShd.getSegments().get(0).getColor().getValue();
-                ST_Array end = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor().getValue();
-                ST_Pos startPos = ctAxialShd.getStartPoint();
-                ST_Pos endPos = ctAxialShd.getEndPoint();
-                contentStream.setStrokingColor(convertPDColor(end));
-//                COSDictionary fdict = new COSDictionary();
-//                fdict.setInt(COSName.FUNCTION_TYPE, 2); // still not understaning that...
-//                COSArray domain = new COSArray();
-//                domain.add(COSInteger.get(0));
-//                domain.add(COSInteger.get(1));
-//                COSArray c0 = new COSArray();
-//                Double[] first = ctAxialShd.getSegments().get(0).getColor().getValue().toDouble();
-//                Double[] end = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor().getValue().toDouble();
-//                c0.add(COSFloat.get(String.format("%.2f", first[0] * 1.0 / 255)));
-//                c0.add(COSFloat.get(String.format("%.2f", first[1] * 1.0 / 255)));
-//                c0.add(COSFloat.get(String.format("%.2f", first[2] * 1.0 / 255)));
-//                COSArray c2 = new COSArray();
-//                c2.add(COSFloat.get(String.format("%.2f", end[0] * 1.0 / 255)));
-//                c2.add(COSFloat.get(String.format("%.2f", end[1] * 1.0 / 255)));
-//                c2.add(COSFloat.get(String.format("%.2f", end[2] * 1.0 / 255)));
-//                fdict.setItem(COSName.DOMAIN, domain);
-//                fdict.setItem(COSName.C0, c0);
-//                fdict.setItem(COSName.C1, c2);
-//                fdict.setInt(COSName.N, 1);
-//
-//                PDFunctionType2 func = new PDFunctionType2(fdict);
-//
-//                PDShadingType2 axialShading = new PDShadingType2(new COSDictionary());
-//                axialShading.setColorSpace(PDDeviceRGB.INSTANCE);
-//                axialShading.setShadingType(PDShading.SHADING_TYPE2);
-//
-//                COSArray coords1 = new COSArray();
-//                coords1.add(COSFloat.get("-0.7056"));
-//                coords1.add(COSFloat.get("2.1165"));
-//                coords1.add(COSFloat.get("600.1773")); // size of my page
-//                coords1.add(COSFloat.get("2.1165"));
-//
-//                axialShading.setCoords(coords1); // so this sets the bounds of my gradient
-//                axialShading.setFunction(func); // and this determines all the curves etc?
-//                contentStream.shadingFill(axialShading);
+            } else {
+                setShadingFill(contentStream, strokeColor, false);
             }
         } else {
             contentStream.setStrokingColor(defaultStrokeColor);
@@ -382,14 +342,33 @@ public class PdfboxMaker {
             if (fillColor != null) {
                 if (fillColor.getValue() != null) {
                     contentStream.setNonStrokingColor(convertPDColor(fillColor.getValue()));
-                } else if (fillColor.getAxialShd() != null){
+                } else {
                     // todo
-                    CT_AxialShd ctAxialShd = fillColor.getColorByType();
-                    ST_Array start = ctAxialShd.getSegments().get(0).getColor().getValue();
-                    ST_Array end = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor().getValue();
-                    ST_Pos startPos = ctAxialShd.getStartPoint();
-                    ST_Pos endPos = ctAxialShd.getEndPoint();
-                    contentStream.setNonStrokingColor(convertPDColor(end));
+                    setShadingFill(contentStream, fillColor, true);
+                }
+            } else {
+                contentStream.setNonStrokingColor(defaultFillColor);
+            }
+            path(contentStream, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
+            contentStream.fill();
+            contentStream.restoreGraphicsState();
+        }
+    }
+
+    private void setShadingFill(PDPageContentStream contentStream, CT_Color ctColor, boolean isFill) throws IOException {
+        CT_AxialShd ctAxialShd = ctColor.getColorByType();
+        if (ctAxialShd == null) {
+            return;
+        }
+        ST_Array start = ctAxialShd.getSegments().get(0).getColor().getValue();
+        ST_Array end = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor().getValue();
+        ST_Pos startPos = ctAxialShd.getStartPoint();
+        ST_Pos endPos = ctAxialShd.getEndPoint();
+        if (isFill) {
+            contentStream.setNonStrokingColor(convertPDColor(end));
+        } else {
+            contentStream.setStrokingColor(convertPDColor(end));
+        }
 //                    COSDictionary fdict = new COSDictionary();
 //                    fdict.setInt(COSName.FUNCTION_TYPE, 2); // still not understaning that...
 //                    COSArray domain = new COSArray();
@@ -423,14 +402,6 @@ public class PdfboxMaker {
 //                    axialShading.setCoords(coords1); // so this sets the bounds of my gradient
 //                    axialShading.setFunction(func); // and this determines all the curves etc?
 //                    contentStream.shadingFill(axialShading);
-                }
-            } else {
-                contentStream.setNonStrokingColor(defaultFillColor);
-            }
-            path(contentStream, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
-            contentStream.fill();
-            contentStream.restoreGraphicsState();
-        }
     }
 
     private void path(PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, ST_Box annotBox, PathObject pathObject, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
