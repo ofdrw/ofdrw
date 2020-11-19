@@ -283,9 +283,9 @@ public class PdfboxMaker {
             StrokeColor strokeColor = pathObject.getStrokeColor();
             if (strokeColor.getValue() != null) {
                 contentStream.setStrokingColor(convertPDColor(strokeColor.getValue()));
-            } else if (strokeColor.getAxialShd() != null){
+            } else if (strokeColor.getColorByType() != null){
                 // todo
-                CT_AxialShd ctAxialShd = strokeColor.getAxialShd();
+                CT_AxialShd ctAxialShd = strokeColor.getColorByType();
                 ST_Array start = ctAxialShd.getSegments().get(0).getColor().getValue();
                 ST_Array end = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor().getValue();
                 ST_Pos startPos = ctAxialShd.getStartPoint();
@@ -384,7 +384,7 @@ public class PdfboxMaker {
                     contentStream.setNonStrokingColor(convertPDColor(fillColor.getValue()));
                 } else if (fillColor.getAxialShd() != null){
                     // todo
-                    CT_AxialShd ctAxialShd = fillColor.getAxialShd();
+                    CT_AxialShd ctAxialShd = fillColor.getColorByType();
                     ST_Array start = ctAxialShd.getSegments().get(0).getColor().getValue();
                     ST_Array end = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor().getValue();
                     ST_Pos startPos = ctAxialShd.getStartPoint();
