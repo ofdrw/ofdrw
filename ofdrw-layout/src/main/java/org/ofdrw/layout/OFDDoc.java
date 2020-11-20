@@ -507,12 +507,12 @@ public class OFDDoc implements Closeable {
             // 设置最大对象ID
             cdata.setMaxUnitID(MaxUnitID.get());
             // final. 执行打包程序
-            if (outPath != null) {
+            if (outPath != null && !Files.isDirectory(outPath)) {
                 ofdDir.jar(outPath.toAbsolutePath());
             } else if (outStream != null) {
                 ofdDir.jar(outStream);
             } else {
-                throw new IllegalArgumentException("OFD文档输出目录错误或没有设置输出流");
+                throw new IllegalArgumentException("OFD文档输出地址错误或没有设置输出流");
             }
         } finally {
             if (reader != null) {

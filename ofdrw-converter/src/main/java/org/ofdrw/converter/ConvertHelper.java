@@ -19,7 +19,7 @@ import java.util.List;
  *
  * @author minghu.zhang
  * @since 12:53 2020/11/14
- */
+ **/
 public class ConvertHelper {
 
     private final static Logger logger = LoggerFactory.getLogger(ConvertHelper.class);
@@ -35,6 +35,14 @@ public class ConvertHelper {
         try (DLOFDReader reader = new DLOFDReader(input);
              PDDocument pdfDocument = new PDDocument()) {
 
+
+            if (input instanceof InputStream) {
+                reader = new DLOFDReader((InputStream) input);
+            } else if (input instanceof Path) {
+                reader = new DLOFDReader((Path) input);
+            } else {
+                throw new IllegalArgumentException("OFD输入参数异常，只支持InputStream和Path类型");
+            }
             List<OfdPageVo> ofdPageVoList = reader.getOFDDocumentVo().getOfdPageVoList();
 
             long start;
@@ -69,17 +77,14 @@ public class ConvertHelper {
     }
 
     /**
-     * OFD转PDF
+     * 转PDF
      *
      * @param input  OFD输入流
      * @param output PDF输出流
      */
     public static void toPdf(InputStream input, OutputStream output) {
         try {
-            String tempFilePath = CommonUtil.generateTempFilePath();
-            IOUtils.copyLarge(input, new FileOutputStream(tempFilePath));
-            Path path = Paths.get(tempFilePath);
-            toPdf(path, output);
+            ofd2pdf(input, output);
         } catch (Exception e) {
             logger.error("convert to pdf failed", e);
         }
@@ -93,10 +98,7 @@ public class ConvertHelper {
      */
     public static void toPdf(InputStream input, File output) {
         try {
-            String tempFilePath = CommonUtil.generateTempFilePath();
-            IOUtils.copyLarge(input, new FileOutputStream(tempFilePath));
-            Path path = Paths.get(tempFilePath);
-            toPdf(path, output);
+            ofd2pdf(input, output);
         } catch (Exception e) {
             logger.error("convert to pdf failed", e);
         }
@@ -110,10 +112,49 @@ public class ConvertHelper {
      */
     public static void toPdf(InputStream input, String output) {
         try {
-            String tempFilePath = CommonUtil.generateTempFilePath();
-            IOUtils.copyLarge(input, new FileOutputStream(tempFilePath));
-            Path path = Paths.get(tempFilePath);
-            toPdf(path, output);
+            ofd2pdf(input, output);
+        } catch (Exception e) {
+            logger.error("convert to pdf failed", e);
+        }
+    }
+
+    /**
+     * 转PDF
+     *
+     * @param input  OFD输入文件
+     * @param output PDF输出流
+     */
+    public static void toPdf(Path input, OutputStream output) {
+        try {
+            ofd2pdf(input, output);
+        } catch (Exception e) {
+            logger.error("convert to pdf failed", e);
+        }
+    }
+
+    /**
+     * 转PDF
+     *
+     * @param input  OFD输入文件
+     * @param output PDF输出文件
+     */
+    public static void toPdf(Path input, File output) {
+        try {
+            ofd2pdf(input, output);
+        } catch (Exception e) {
+            logger.error("convert to pdf failed", e);
+        }
+    }
+
+    /**
+     * 转PDF
+     *
+     * @param input  OFD输入文件
+     * @param output PDF输出文件路径
+     */
+    public static void toPdf(Path input, String output) {
+        try {
+            ofd2pdf(input, output);
         } catch (Exception e) {
             logger.error("convert to pdf failed", e);
         }
