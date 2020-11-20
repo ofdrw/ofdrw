@@ -2,6 +2,20 @@
 
 ## 进展
 
+## Version 1.7.0 2020-11-20 19:48:21
+
+Alias: Fate/Zero
+
+新增
+
+- OFD转换模块`ofdrw-converter`发布，支持[OFD转换PDF](ofdrw-converter/src/test/java/HelloWorld.java)
+- RW中主要API均增加流参数支持，如：OFDReader、OFDDoc、OFDSigner、ConvertHelper。
+
+修复
+
+- OFDDoc使用Path对象生成文档是的IAE。
+- 修改了OFD转换PDF的渐变处理
+
 ## Version 1.6.10 2020-11-18 11:05:50
 
 Alias: MobileSuitGundamSEED

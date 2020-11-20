@@ -12,7 +12,7 @@ pom引入相关模块
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-converter</artifactId>
-    <version>1.6.10</version>
+    <version>1.7.0</version>
 </dependency>
 ```
 
@@ -46,6 +46,8 @@ public class HelloWorld {
 **转换得到PDF效果如图**
 
 ![转换结果截图](src/test/resources/转换结果截图.jpg)
+
+注意：如果OFD中的字体来自于操作系统，可能会导致转换过程中由于缺少字体导致的异常，请在部署环境的操作系统目录中加入相关字体。
 
 ## PDF转换OFD
 
