@@ -9,6 +9,7 @@ import org.ofdrw.reader.DLOFDReader;
 import org.ofdrw.reader.model.OfdPageVo;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -18,23 +19,21 @@ import java.util.List;
  *
  * @author minghu.zhang
  * @since 12:53 2020/11/14
- **/
+ */
 public class ConvertHelper {
 
     private final static Logger logger = LoggerFactory.getLogger(ConvertHelper.class);
 
     /**
-     * 转PDF
+     * OFD转换PDF
      *
-     * @param input  OFD输入路径
-     * @param output PDF输出流
+     * @param input  OFD文件路径
+     * @param output PDF输出流，支持OutputStream、Path、File、String（文件路径）
      */
     public static void toPdf(Path input, Object output) {
-        DLOFDReader reader = null;
-        PDDocument pdfDocument = null;
-        try {
-            reader = new DLOFDReader(input);
-            pdfDocument = new PDDocument();
+
+        try (DLOFDReader reader = new DLOFDReader(input);
+             PDDocument pdfDocument = new PDDocument()) {
 
             List<OfdPageVo> ofdPageVoList = reader.getOFDDocumentVo().getOfdPageVoList();
 
@@ -56,29 +55,21 @@ public class ConvertHelper {
                 pdfDocument.save((File) output);
             } else if (output instanceof String) {
                 pdfDocument.save((String) output);
+            } else if (output instanceof Path) {
+                pdfDocument.save(Files.newOutputStream((Path) output));
             } else {
-                throw new IllegalArgumentException("pdf save failed, output don't support");
+                throw new IllegalArgumentException("不支持的输出格式(output)，仅支持OutputStream、Path、File、String");
             }
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e){
+            throw e;
+        }catch (Exception e) {
             logger.error("convert to pdf failed", e);
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                if (reader != null) {
-                    reader.close();
-                }
-                if (pdfDocument != null) {
-                    pdfDocument.close();
-                }
-            } catch (IOException e) {
-                logger.error("close OFDReader failed", e);
-            }
-
+            throw new GeneralConvertException(e);
         }
     }
 
     /**
-     * 转PDF
+     * OFD转PDF
      *
      * @param input  OFD输入流
      * @param output PDF输出流

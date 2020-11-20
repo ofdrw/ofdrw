@@ -16,7 +16,7 @@ public class HelloWorld {
 
     @Test
     void testPath() throws IOException {
-        Path path = Paths.get("ofdrw-layout/target/helloworld.ofd").toAbsolutePath();
+        Path path = Paths.get("target/helloworld.ofd").toAbsolutePath();
         System.out.println(path.toString());
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             Paragraph p = new Paragraph("你好呀，OFD Reader&Writer！");
