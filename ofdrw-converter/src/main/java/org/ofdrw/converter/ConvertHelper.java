@@ -1,17 +1,14 @@
 package org.ofdrw.converter;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.pdfbox.jbig2.util.log.Logger;
 import org.apache.pdfbox.jbig2.util.log.LoggerFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.reader.DLOFDReader;
 import org.ofdrw.reader.model.OfdPageVo;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -27,22 +24,24 @@ public class ConvertHelper {
     /**
      * OFD转换PDF
      *
-     * @param input  OFD文件路径
+     * @param input  OFD文件路径，支持OutputStream、Path
      * @param output PDF输出流，支持OutputStream、Path、File、String（文件路径）
+     * @throws IllegalArgumentException 参数错误
+     * @throws GeneralConvertException  文档转换过程中异常
      */
-    public static void toPdf(Path input, Object output) {
-
-        try (DLOFDReader reader = new DLOFDReader(input);
-             PDDocument pdfDocument = new PDDocument()) {
-
-
+    private static void ofd2pdf(Object input, Object output) {
+        DLOFDReader reader = null;
+        PDDocument pdfDocument = null;
+        try {
             if (input instanceof InputStream) {
                 reader = new DLOFDReader((InputStream) input);
             } else if (input instanceof Path) {
                 reader = new DLOFDReader((Path) input);
             } else {
-                throw new IllegalArgumentException("OFD输入参数异常，只支持InputStream和Path类型");
+                throw new IllegalArgumentException("不支持的输入格式(input)，仅支持InputStream、Path");
             }
+            pdfDocument = new PDDocument();
+
             List<OfdPageVo> ofdPageVoList = reader.getOFDDocumentVo().getOfdPageVoList();
 
             long start;
@@ -68,11 +67,23 @@ public class ConvertHelper {
             } else {
                 throw new IllegalArgumentException("不支持的输出格式(output)，仅支持OutputStream、Path、File、String");
             }
-        } catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             throw e;
-        }catch (Exception e) {
+        } catch (Exception e) {
             logger.error("convert to pdf failed", e);
             throw new GeneralConvertException(e);
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+                if (pdfDocument != null) {
+                    pdfDocument.close();
+                }
+            } catch (IOException e) {
+                logger.error("close OFDReader failed", e);
+            }
+
         }
     }
 
@@ -81,13 +92,11 @@ public class ConvertHelper {
      *
      * @param input  OFD输入流
      * @param output PDF输出流
+     * @throws IllegalArgumentException 参数错误
+     * @throws GeneralConvertException  文档转换过程中异常
      */
     public static void toPdf(InputStream input, OutputStream output) {
-        try {
-            ofd2pdf(input, output);
-        } catch (Exception e) {
-            logger.error("convert to pdf failed", e);
-        }
+        ofd2pdf(input, output);
     }
 
     /**
@@ -95,13 +104,11 @@ public class ConvertHelper {
      *
      * @param input  OFD输入流
      * @param output PDF输出文件
+     * @throws IllegalArgumentException 参数错误
+     * @throws GeneralConvertException  文档转换过程中异常
      */
     public static void toPdf(InputStream input, File output) {
-        try {
-            ofd2pdf(input, output);
-        } catch (Exception e) {
-            logger.error("convert to pdf failed", e);
-        }
+        ofd2pdf(input, output);
     }
 
     /**
@@ -109,13 +116,11 @@ public class ConvertHelper {
      *
      * @param input  OFD输入流
      * @param output PDF输出文件路径
+     * @throws IllegalArgumentException 参数错误
+     * @throws GeneralConvertException  文档转换过程中异常
      */
     public static void toPdf(InputStream input, String output) {
-        try {
-            ofd2pdf(input, output);
-        } catch (Exception e) {
-            logger.error("convert to pdf failed", e);
-        }
+        ofd2pdf(input, output);
     }
 
     /**
@@ -123,13 +128,11 @@ public class ConvertHelper {
      *
      * @param input  OFD输入文件
      * @param output PDF输出流
+     * @throws IllegalArgumentException 参数错误
+     * @throws GeneralConvertException  文档转换过程中异常
      */
     public static void toPdf(Path input, OutputStream output) {
-        try {
-            ofd2pdf(input, output);
-        } catch (Exception e) {
-            logger.error("convert to pdf failed", e);
-        }
+        ofd2pdf(input, output);
     }
 
     /**
@@ -137,13 +140,11 @@ public class ConvertHelper {
      *
      * @param input  OFD输入文件
      * @param output PDF输出文件
+     * @throws IllegalArgumentException 参数错误
+     * @throws GeneralConvertException  文档转换过程中异常
      */
     public static void toPdf(Path input, File output) {
-        try {
-            ofd2pdf(input, output);
-        } catch (Exception e) {
-            logger.error("convert to pdf failed", e);
-        }
+        ofd2pdf(input, output);
     }
 
     /**
@@ -151,13 +152,11 @@ public class ConvertHelper {
      *
      * @param input  OFD输入文件
      * @param output PDF输出文件路径
+     * @throws IllegalArgumentException 参数错误
+     * @throws GeneralConvertException  文档转换过程中异常
      */
-    public static void toPdf(Path input, String output) {
-        try {
-            ofd2pdf(input, output);
-        } catch (Exception e) {
-            logger.error("convert to pdf failed", e);
-        }
+    public static void toPdf(Path input, Path output) {
+        ofd2pdf(input, output);
     }
 
 }
