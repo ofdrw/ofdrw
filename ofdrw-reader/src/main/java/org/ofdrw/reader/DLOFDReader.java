@@ -34,6 +34,7 @@ import org.ofdrw.reader.model.StampAnnotVo;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -52,6 +53,18 @@ public class DLOFDReader extends OFDReader {
 
     public DLOFDReader(Path ofdFile) throws IOException {
         super(ofdFile);
+        initReader();
+    }
+
+    public DLOFDReader(InputStream stream) throws IOException {
+        super(stream);
+        initReader();
+    }
+
+    /**
+     * 初始化reader
+     */
+    private void initReader() {
         try {
             this.getResourceLocator().save();
             DocBody docBody = this.getOFDDir().getOfd().getDocBody();
