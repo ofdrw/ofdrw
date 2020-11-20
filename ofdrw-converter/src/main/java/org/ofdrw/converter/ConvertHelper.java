@@ -37,7 +37,9 @@ public class ConvertHelper {
                 reader = new DLOFDReader((InputStream) input);
             } else if (input instanceof Path) {
                 reader = new DLOFDReader((Path) input);
-            } else {
+            } else if (input instanceof File){
+                reader = new DLOFDReader(new FileInputStream((File) input));
+            }else {
                 throw new IllegalArgumentException("不支持的输入格式(input)，仅支持InputStream、Path");
             }
             pdfDocument = new PDDocument();

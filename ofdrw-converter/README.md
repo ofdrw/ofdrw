@@ -18,7 +18,7 @@ pom引入相关模块
 
 转换文档你需要做:
 
-1. 提供待转换OFD文档，支持Path、InputStream、File。
+1. 提供待转换OFD文档，支持Path、InputStream。
 2. 提供转换后PDF文档位置。
 3. 调用转换工具执行文档转换。
 
