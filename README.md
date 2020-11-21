@@ -17,14 +17,15 @@
 
 项目结构：
 
-- [**ofdrw-core**](./ofdrw-core) OFD核心API，参考[《GB/T 33190-2016 电子文件存储与交换格式版式文档》](./GBT_33190-2016_电子文件存储与交换格式版式文档.pdf)实现的基础。
-- [**ofdrw-font**](./ofdrw-font) 生成OFD需要的常规字体（OpenType）。
+- [**ofdrw-core**](./ofdrw-core) OFD核心API，参考[《GB/T 33190-2016 电子文件存储与交换格式版式文档》](./GBT_33190-2016_电子文件存储与交换格式版式文档.pdf)实现的基础数据结构。
+- [**ofdrw-font**](./ofdrw-font) 生成OFD字体相关。
 - [**ofdrw-layout**](./ofdrw-layout) OFD布局引擎库，用于文档构建和渲染。
 - [**ofdrw-pkg**](./ofdrw-pkg) OFD文件的容器，用于文档的打包。
 - [**ofdrw-reader**](./ofdrw-reader) OFD文档解析器，用于OFD的反序列化以及签名签章。
 - [**ofdrw-sign**](./ofdrw-sign) OFD文档数字签章。
 - [**ofdrw-gm**](./ofdrw-gm) 用于支持签章模块需要的国密电子签章数据结构。
 - [**ofdrw-gv**](./ofdrw-gv) OFDRW 所有模块所共用的全局变量。
+- [**ofdrw-converter**](./ofdrw-converter) OFD文档转换PDF。***New***
 - [**ofdrw-full**](./ofdrw-full) 上述所有模块整合包，用于简化依赖引入。
 
 ## QuickStart
@@ -40,7 +41,7 @@
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.6.10</version>
+  <version>1.7.0</version>
 </dependency>
 ```
 
@@ -76,7 +77,8 @@ public class HelloWorld {
 
 - [OFD R&W 布局设计](./ofdrw-layout/doc/README.md)
 - [OFD R&W Canvas](./ofdrw-layout/doc/canvas/README.md)
-- [OFD  R&W 签名签章快速入门](./ofdrw-sign/doc/quickstart/README.md)
+- [OFD R&W 签名签章快速入门](./ofdrw-sign/doc/quickstart/README.md)
+- [OFD R&W OFD转换PDF](./ofdrw-converter/README.md)
 
 OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwell.cn/)
 
@@ -107,10 +109,11 @@ mvn install
 
 为了方便大家的交流提供QQ群
 
+> 群号： **577682453**
+
 ![QQ群](./img/QQLink.png)
 
-
-群号： **577682453**
+如果各位对 OFD R&W 有 **问题** 或是 **建议** 可以提交issue和PullRequest，欢迎进群交流。
 
 ## 参与贡献
 
@@ -121,8 +124,6 @@ mvn install
 ### 进展
 
 [>> 项目进展](releasenotes.md)
-
-如果各位对 OFD R&W 有 **问题** 或是 **建议** 欢迎提交issue和PullRequest，这样的大家的问题都可以很好的得到分享，我也很乐意解答各位问题。
 
 ### 项目关注度
 

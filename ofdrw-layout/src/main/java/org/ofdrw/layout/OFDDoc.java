@@ -142,6 +142,9 @@ public class OFDDoc implements Closeable {
         if (Files.isDirectory(outPath)) {
             throw new IllegalArgumentException("OFD文件存储路径(outPath)不能是目录");
         }
+        if (!Files.exists(outPath.getParent())) {
+            throw new IllegalArgumentException("OFD文件存储路径(outPath)上级目录 [" + outPath.getParent().toAbsolutePath() + "] 不存在");
+        }
         this.outPath = outPath;
     }
 
@@ -504,7 +507,7 @@ public class OFDDoc implements Closeable {
             // 设置最大对象ID
             cdata.setMaxUnitID(MaxUnitID.get());
             // final. 执行打包程序
-            if (outPath != null && !Files.isDirectory(outPath)) {
+            if (outPath != null) {
                 ofdDir.jar(outPath.toAbsolutePath());
             } else if (outStream != null) {
                 ofdDir.jar(outStream);

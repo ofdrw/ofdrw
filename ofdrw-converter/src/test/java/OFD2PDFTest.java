@@ -1,24 +1,20 @@
-import org.apache.pdfbox.jbig2.util.log.Logger;
-import org.apache.pdfbox.jbig2.util.log.LoggerFactory;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.ConvertHelper;
+import org.ofdrw.converter.GeneralConvertException;
 
-import java.io.FileInputStream;
-import java.util.Objects;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class OFD2PDFTest {
-    protected static final String basePath = Objects.requireNonNull(OFD2PDFTest.class.getClassLoader().getResource("")).getPath();
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Test
     public void convertPdf() {
-        String ofdFilePath = basePath + "a.ofd";
-        String pdfOutPath = basePath + "a-from-ofd.pdf";
-
+        Path src = Paths.get("src/test/resources/发票示例.ofd");
+        Path dst = Paths.get("target/发票示例.pdf");
         try {
-            ConvertHelper.toPdf(new FileInputStream(ofdFilePath), pdfOutPath);
-        } catch (Exception e) {
-            logger.error("test convert failed", e);
+            ConvertHelper.toPdf(src, dst);
+        } catch (GeneralConvertException e) {
+            e.printStackTrace();
         }
     }
 
