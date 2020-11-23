@@ -42,6 +42,7 @@
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
   <version>1.7.0</version>
+  <type>pom</type>
 </dependency>
 ```
 
