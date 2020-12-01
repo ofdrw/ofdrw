@@ -78,7 +78,7 @@ public class ZipUtil {
 //            charset = Charset.forName("GBK");
 //        }
         // 解决zip文件中有中文目录或者中文文件
-        try (ZipFile zip = new ZipFile(zipFile, Charset.forName("GBK"));) {
+        try (ZipFile zip = new ZipFile(zipFile, Charset.forName("GBK"))) {
             for (Enumeration entries = zip.entries(); entries.hasMoreElements(); ) {
                 ZipEntry entry = (ZipEntry) entries.nextElement();
                 String zipEntryName = entry.getName();

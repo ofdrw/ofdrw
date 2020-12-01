@@ -14,6 +14,7 @@ import org.ofdrw.pkg.container.ResDir;
 import org.ofdrw.pkg.container.VirtualContainer;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -114,6 +115,26 @@ class OFDReaderTest {
             Page page = reader.getPage(1);
             assertEquals(1, page.getContent().getLayers().size());
         }
+    }
+
+
+    @Test
+    public void testReader() throws Exception{
+        Path src = Paths.get("src/test/resources/helloworld.ofd");
+        byte[] ofdSrc = Files.readAllBytes(src);
+        Path fileTemp = Files.createTempDirectory("ofd_tmp");
+
+        String tempDirBuilder = fileTemp.toFile().getAbsolutePath() +
+                File.separator +
+                fileTemp.toFile().getName() +
+                "_src.OFD";
+        Path srcPath = Paths.get(tempDirBuilder);
+        Files.write(srcPath, ofdSrc);
+        OFDReader reader = new OFDReader(srcPath);
+        //reader.close();
+
+        Files.delete(srcPath);
+        Files.delete(fileTemp);
     }
 
 
