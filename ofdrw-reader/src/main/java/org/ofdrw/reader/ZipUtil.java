@@ -73,39 +73,36 @@ public class ZipUtil {
         if (!pathFile.exists()) {
             pathFile.mkdirs();
         }
-//        Charset charset = StandardCharsets.UTF_8;
-//        if(System.getProperties().getProperty("os.name").toUpperCase().contains("WINDOWS")){
-//            charset = Charset.forName("GBK");
-//        }
 
-        // 解决zip文件中有中文目录或者中文文件
-        ZipFile zip = new ZipFile(zipFile, Charset.forName("GBK"));
-        for (Enumeration entries = zip.entries(); entries.hasMoreElements(); ) {
-            ZipEntry entry = (ZipEntry) entries.nextElement();
-            String zipEntryName = entry.getName();
-            try (InputStream in = zip.getInputStream(entry)) {
-                String outPath = (descDir + zipEntryName).replaceAll("\\*", "/");
-                // 判断路径是否存在,不存在则创建文件路径
-                int vIndex = outPath.lastIndexOf('/');
-                File file;
-                if (vIndex == -1) {
-                    file = new File(outPath);
-                } else {
-                    file = new File(outPath.substring(0, vIndex));
-                    if (!file.exists()) {
-                        file.mkdirs();
+        // 解决zip文件中有中文目录或者中文文件，解压完成之后关闭zip
+        try (ZipFile zip = new ZipFile(zipFile, Charset.forName("GBK"))) {
+            for (Enumeration entries = zip.entries(); entries.hasMoreElements(); ) {
+                ZipEntry entry = (ZipEntry) entries.nextElement();
+                String zipEntryName = entry.getName();
+                try (InputStream in = zip.getInputStream(entry)) {
+                    String outPath = (descDir + zipEntryName).replaceAll("\\*", "/");
+                    // 判断路径是否存在,不存在则创建文件路径
+                    int vIndex = outPath.lastIndexOf('/');
+                    File file;
+                    if (vIndex == -1) {
+                        file = new File(outPath);
+                    } else {
+                        file = new File(outPath.substring(0, vIndex));
+                        if (!file.exists()) {
+                            file.mkdirs();
+                        }
                     }
-                }
-                //判断文件全路径是否为文件夹,如果是上面已经上传,不需要解压
-                if (new File(outPath).isDirectory()) {
-                    continue;
-                }
+                    //判断文件全路径是否为文件夹,如果是上面已经上传,不需要解压
+                    if (new File(outPath).isDirectory()) {
+                        continue;
+                    }
 
-                try (OutputStream out = new FileOutputStream(outPath)) {
-                    byte[] buf1 = new byte[1024];
-                    int len;
-                    while ((len = in.read(buf1)) > 0) {
-                        out.write(buf1, 0, len);
+                    try (OutputStream out = new FileOutputStream(outPath)) {
+                        byte[] buf1 = new byte[1024];
+                        int len;
+                        while ((len = in.read(buf1)) > 0) {
+                            out.write(buf1, 0, len);
+                        }
                     }
                 }
             }
