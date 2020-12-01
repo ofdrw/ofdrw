@@ -2,6 +2,15 @@
 
 ## 进展
 
+## Version 1.7.1 2020-12-1 19:16:34
+
+Alias: HYOUKA
+
+修复
+
+- OFDReader中zip没有关闭，导致文件占用的问题。
+- SealOFDReader 向后兼容了Path的构造参数。
+
 ## Version 1.7.0 2020-11-20 19:48:21
 
 Alias: Fate/Zero
