@@ -41,7 +41,8 @@
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.7.0</version>
+  <version>1.7.1</version>
+  <type>pom</type>
 </dependency>
 ```
 
@@ -82,7 +83,9 @@ public class HelloWorld {
 
 OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwell.cn/)
 
-### 推荐的预览解决方案
+### 推荐解决方案
+
+#### HTML预览
 
 **DLTech21/ofd.js**
 
@@ -92,6 +95,13 @@ OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwe
 
 - 将OFD渲染为SVG实现矢量的无失真的OFD预览体验。
 - 完全基于浏览器在前端完成所有渲染工作，不需要服务端支持和插件。
+
+#### 图片转换
+
+推荐开源OFD图片转换解决方案： [QAQtutu/ofdbox . https://github.com/QAQtutu/ofdbox](https://github.com/QAQtutu/ofdbox)
+
+- 支持OFD解析。
+- 基于java.awt解析OFD实现图片绘制。
 
 ## 源码安装
 

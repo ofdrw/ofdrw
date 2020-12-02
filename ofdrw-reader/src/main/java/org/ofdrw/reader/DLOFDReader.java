@@ -31,10 +31,7 @@ import org.ofdrw.reader.model.OFDDocumentVo;
 import org.ofdrw.reader.model.OfdPageVo;
 import org.ofdrw.reader.model.StampAnnotVo;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -319,14 +316,12 @@ public class DLOFDReader extends OFDReader {
                     if (type != null) {
                         stampAnnotVo.setType(type.toLowerCase());
                         if (type.toLowerCase().equals("ofd")) {
-                            String sealFilePath = getOFDDir().getFile(srcPath).getParent().toString() + "/seal.ofd";
-                            FileUtils.writeByteArrayToFile(new File(sealFilePath), sealBytes);
-                            Path src = Paths.get(sealFilePath);
-                            SealOFDReader sealReader = new SealOFDReader(src);
+                            SealOFDReader sealReader = new SealOFDReader(new ByteArrayInputStream(sealBytes));
                             stampAnnotVo.setOfdPageVoList(sealReader.getOFDPageVO());
                             stampAnnotVo.setCtDrawParamList(sealReader.getPublicResDrawParam());
                             stampAnnotVo.setCtFontList(sealReader.getPublicResFonts());
                             stampAnnotVoList.add(stampAnnotVo);
+                            sealReader.close();
                         } else if (type.toLowerCase().equals("png")) {
                             stampAnnotVo.setImgByte(sealBytes);
                             stampAnnotVoList.add(stampAnnotVo);
