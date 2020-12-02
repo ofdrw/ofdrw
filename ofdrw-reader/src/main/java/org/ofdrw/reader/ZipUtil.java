@@ -73,8 +73,11 @@ public class ZipUtil {
         if (!pathFile.exists()) {
             pathFile.mkdirs();
         }
-
-        // 解决zip文件中有中文目录或者中文文件，解压完成之后关闭zip
+//        Charset charset = StandardCharsets.UTF_8;
+//        if(System.getProperties().getProperty("os.name").toUpperCase().contains("WINDOWS")){
+//            charset = Charset.forName("GBK");
+//        }
+        // 解决zip文件中有中文目录或者中文文件
         try (ZipFile zip = new ZipFile(zipFile, Charset.forName("GBK"))) {
             for (Enumeration entries = zip.entries(); entries.hasMoreElements(); ) {
                 ZipEntry entry = (ZipEntry) entries.nextElement();
