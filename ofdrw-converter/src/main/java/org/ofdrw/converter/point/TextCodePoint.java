@@ -7,6 +7,7 @@ public class TextCodePoint {
     public double x;
     public double y;
     private String text;
+    private String glyph;
 
     public TextCodePoint(double x, double y, String text) {
         this.x = x;
@@ -36,5 +37,13 @@ public class TextCodePoint {
 
     public void setText(String text) {
         this.text = text;
+    }
+
+    public String getGlyph() {
+        return glyph;
+    }
+
+    public void setGlyph(String glyph) {
+        this.glyph = glyph;
     }
 }
