@@ -208,7 +208,12 @@ public class KeywordExtractor {
         mergeTextCodeList.add(textCode);
         //匹配下一个字
         searchNextText(keyword, textCodeList, mergeTextCodeList, boundaryMapping, textCodeIndex, textCode.getContent().substring(startIndex), textCode);
-        if (mergeTextCodeList.size() > 1) {
+        //判断是否包含
+        StringBuilder builder = new StringBuilder();
+        for (TextCode code : mergeTextCodeList) {
+            builder.append(code.getContent());
+        }
+        if (builder.indexOf(keyword) != -1) {
             mergeKeywordPosition(keyword, startIndex, positionList, mergeTextCodeList, boundaryMapping);
         }
 
@@ -232,7 +237,12 @@ public class KeywordExtractor {
         mergeTextCodeList.add(textCode);
         //匹配下一个字
         searchNextText(keyword, textCodeList, mergeTextCodeList, boundaryMapping, textCodeIndex, textCode.getContent(), textCode);
-        if (mergeTextCodeList.size() > 1) {
+        //判断是否包含
+        StringBuilder builder = new StringBuilder();
+        for (TextCode code : mergeTextCodeList) {
+            builder.append(code.getContent());
+        }
+        if (builder.indexOf(keyword) != -1) {
             mergeKeywordPosition(keyword, 0, positionList, mergeTextCodeList, boundaryMapping);
         }
     }
