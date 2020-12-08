@@ -258,6 +258,9 @@ public class KeywordExtractor {
             int currentPage = kr.getPage();
             for (int j = textCodeIndex + 1; j < textCodeList.size(); j++) {
                 TextCode next = textCodeList.get(j);
+                if ("".equals(next.getContent().trim())) {
+                    continue;
+                }
                 KeywordResource nextKr = boundaryMapping.get(next);
                 if (nextKr != null) {
                     //不是同一页则不定位
