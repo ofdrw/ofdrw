@@ -147,9 +147,17 @@ public class KeywordExtractor {
                     for (String keyword : keywords) {
                         int textIndex = content.indexOf(keyword);
                         if (textIndex != -1) {
+                            //完整包含关键字
                             addNormalKeyword(keyword, boundaryMapping, positionList, textCode, textIndex);
                         } else if (keyword.indexOf(content) == 0 && i != textCodeList.size() - 1) {
-                            addBreakTextCodeList(keyword, boundaryMapping, textCodeList, positionList, i, textCode);
+                            //前缀匹配关键字
+                            addPrefixBreakTextCodeList(keyword, boundaryMapping, textCodeList, positionList, i, textCode);
+                        } else {
+                            int startIndex = checkPostfixMatch(content, keyword);
+                            //后缀匹配关键字
+                            if (startIndex != -1) {
+                                addPostfixBreakTextCodeList(keyword, boundaryMapping, textCodeList, positionList, i, startIndex, textCode);
+                            }
                         }
                     }
                 }
@@ -159,28 +167,86 @@ public class KeywordExtractor {
         return positionList;
     }
 
+
     /**
-     * 处理段字断行文本定位关键字
+     * 检查后缀匹配
+     *
+     * @param content 待匹配文本
+     * @param keyword 关键字
+     * @return 是/否 匹配
+     */
+    private static int checkPostfixMatch(String content, String keyword) {
+        int startIndex;
+        boolean match = true;
+        if ((startIndex = content.lastIndexOf(keyword.charAt(0))) != -1) {
+            for (int j = startIndex, k = 0; j < content.length(); j++, k++) {
+                if (content.charAt(j) != keyword.charAt(k)) {
+                    match = false;
+                    break;
+                }
+            }
+        }
+        return match ? startIndex : -1;
+    }
+
+    /**
+     * 处理后缀匹配断字断行文本定位关键字
      *
      * @param keyword         关键字字符串
      * @param boundaryMapping 映射对象
      * @param textCodeList    文本定位列表
      * @param positionList    关键字位置列表
-     * @param start           定位起始位置
+     * @param textCodeIndex   TextCode位置
+     * @param startIndex      TextCode文本起始位置
      * @param textCode        第一个文字定位
      */
-    private static void addBreakTextCodeList(String keyword, Map<TextCode, KeywordResource> boundaryMapping, List<TextCode> textCodeList,
-                                             List<KeywordPosition> positionList, int start, TextCode textCode) {
+    private static void addPostfixBreakTextCodeList(String keyword, Map<TextCode, KeywordResource> boundaryMapping, List<TextCode> textCodeList,
+                                                    List<KeywordPosition> positionList, int textCodeIndex, int startIndex, TextCode textCode) {
         //文字定位合并列表
         List<TextCode> mergeTextCodeList = new ArrayList<>();
         //加入合并列表
         mergeTextCodeList.add(textCode);
         //匹配下一个字
-        searchNextText(keyword, textCodeList, mergeTextCodeList, boundaryMapping, start, textCode);
-        if (mergeTextCodeList.size() > 1) {
-            mergeKeywordPosition(keyword, positionList, mergeTextCodeList, boundaryMapping);
+        searchNextText(keyword, textCodeList, mergeTextCodeList, boundaryMapping, textCodeIndex, textCode.getContent().substring(startIndex), textCode);
+        //判断是否包含
+        StringBuilder builder = new StringBuilder();
+        for (TextCode code : mergeTextCodeList) {
+            builder.append(code.getContent());
+        }
+        if (builder.indexOf(keyword) != -1) {
+            mergeKeywordPosition(keyword, startIndex, positionList, mergeTextCodeList, boundaryMapping);
+        }
+
+    }
+
+    /**
+     * 处理前缀匹配断字断行文本定位关键字
+     *
+     * @param keyword         关键字字符串
+     * @param boundaryMapping 映射对象
+     * @param textCodeList    文本定位列表
+     * @param positionList    关键字位置列表
+     * @param textCodeIndex   定位起始位置
+     * @param textCode        第一个文字定位
+     */
+    private static void addPrefixBreakTextCodeList(String keyword, Map<TextCode, KeywordResource> boundaryMapping, List<TextCode> textCodeList,
+                                                   List<KeywordPosition> positionList, int textCodeIndex, TextCode textCode) {
+        //文字定位合并列表
+        List<TextCode> mergeTextCodeList = new ArrayList<>();
+        //加入合并列表
+        mergeTextCodeList.add(textCode);
+        //匹配下一个字
+        searchNextText(keyword, textCodeList, mergeTextCodeList, boundaryMapping, textCodeIndex, textCode.getContent(), textCode);
+        //判断是否包含
+        StringBuilder builder = new StringBuilder();
+        for (TextCode code : mergeTextCodeList) {
+            builder.append(code.getContent());
+        }
+        if (builder.indexOf(keyword) != -1) {
+            mergeKeywordPosition(keyword, 0, positionList, mergeTextCodeList, boundaryMapping);
         }
     }
+
 
     /**
      * 检索下一个文本定位节点
@@ -189,17 +255,22 @@ public class KeywordExtractor {
      * @param textCodeList      文本定位列表
      * @param mergeTextCodeList 合并的TextCode列表
      * @param boundaryMapping   文本资源映射对象
-     * @param start             起始位置
+     * @param textCodeIndex     TextCode位置
+     * @param firstMatchString  最先匹配字符串
      * @param textCode          第一个匹配文字
      */
     private static void searchNextText(String keyword, List<TextCode> textCodeList, List<TextCode> mergeTextCodeList,
-                                       Map<TextCode, KeywordResource> boundaryMapping, int start, TextCode textCode) {
-        StringBuilder mergeText = new StringBuilder(textCode.getContent());
+                                       Map<TextCode, KeywordResource> boundaryMapping, int textCodeIndex, String firstMatchString,
+                                       TextCode textCode) {
+        StringBuilder mergeText = new StringBuilder(firstMatchString);
         KeywordResource kr = boundaryMapping.get(textCode);
         if (kr != null) {
             int currentPage = kr.getPage();
-            for (int j = start + 1; j < textCodeList.size(); j++) {
+            for (int j = textCodeIndex + 1; j < textCodeList.size(); j++) {
                 TextCode next = textCodeList.get(j);
+                if ("".equals(next.getContent().trim())) {
+                    continue;
+                }
                 KeywordResource nextKr = boundaryMapping.get(next);
                 if (nextKr != null) {
                     //不是同一页则不定位
@@ -368,16 +439,19 @@ public class KeywordExtractor {
      * 合并关键字位置对象
      *
      * @param keyword         关键字
+     * @param firstStartIndex 第一个关键字起始匹配位置
      * @param positionList    检索到的关键字列表
      * @param textCodeList    合并列表
      * @param boundaryMapping 外接矩形映射
      */
-    private static void mergeKeywordPosition(String keyword, List<KeywordPosition> positionList, List<TextCode> textCodeList,
+    private static void mergeKeywordPosition(String keyword, int firstStartIndex, List<KeywordPosition> positionList, List<TextCode> textCodeList,
                                              Map<TextCode, KeywordResource> boundaryMapping) {
         List<ST_Box> boxList = new ArrayList<>();
         FontMetrics fontMetrics = null;
-        int page = 0, totalLength = 0, keywordLength = keyword.length();
-        for (TextCode textCode : textCodeList) {
+        int page = 0, totalLength = 0, keywordLength = keyword.length(), fontSize = 0;
+
+        for (int i = 0; i < textCodeList.size(); i++) {
+            TextCode textCode = textCodeList.get(i);
             int textLength = textCode.getContent().length();
             KeywordResource kr = boundaryMapping.get(textCode);
             if (kr != null) {
@@ -386,22 +460,34 @@ public class KeywordExtractor {
                     page = kr.getPage();
                 }
                 if (ctText != null && ctText.getBoundary() != null) {
-                    if ((totalLength + textLength) > keywordLength) {
-                        textLength = keywordLength - totalLength;
+                    if (i == 0 && firstStartIndex > 0) {
+                        textLength = totalLength = textCode.getContent().length() - firstStartIndex;
                     } else {
-                        totalLength += textCode.getContent().length();
+                        if ((totalLength + textLength) > keywordLength) {
+                            textLength = keywordLength - totalLength;
+                        } else {
+                            totalLength += textCode.getContent().length();
+                        }
                     }
 
                     List<Float> deltaX = DeltaTool.getDelta(textCode.getDeltaX(), textCode.getContent().length());
                     List<Float> deltaY = DeltaTool.getDelta(textCode.getDeltaY(), textCode.getContent().length());
 
-                    double width = getStringWidth(0, textLength, deltaX, ctText.getSize());
+                    double width;
+                    if (i == 0 && firstStartIndex > 0) {
+                        width = getStringWidth(firstStartIndex, textLength, deltaX, ctText.getSize());
+                    } else {
+                        width = getStringWidth(0, textLength, deltaX, ctText.getSize());
+                    }
+
                     if (width == 0) {
                         width = kr.getText().getSize();
                     }
 
-                    if (fontMetrics == null) {
+                    int size = ctText.getSize().intValue();
+                    if (fontMetrics == null || fontSize != size) {
                         fontMetrics = FontDesignMetrics.getMetrics(getFont(ctText, kr.getFont()));
+                        fontSize = size;
                     }
                     double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
                     ST_Pos basePoint;
@@ -410,7 +496,16 @@ public class KeywordExtractor {
                         double[] matrix = getMatrix(ctm);
                         double x = textCode.getX() == null ? 0 : textCode.getX();
                         double y = textCode.getY() == null ? 0 : textCode.getY();
-
+                        if (i == 0 && firstStartIndex > 0 && deltaX.size() > 0) {
+                            for (int j = 0; j < firstStartIndex; j++) {
+                                x += deltaX.get(j);
+                            }
+                        }
+                        if (i == 0 && firstStartIndex > 0 && deltaY.size() > 0) {
+                            for (int j = 0; j < firstStartIndex; j++) {
+                                y += deltaY.get(j);
+                            }
+                        }
                         ST_Pos leftBottom = transform(matrix, x, y);
                         ST_Pos rightTop = transform(matrix, x + width, y - height);
 
@@ -423,6 +518,16 @@ public class KeywordExtractor {
                         boxList.add(box);
                     } else {
                         basePoint = getLeftBottomPos(ctText.getBoundary(), textCode, deltaX, deltaY, 0);
+                        if (i == 0 && firstStartIndex > 0 && deltaX.size() > 0) {
+                            for (int j = 0; j < firstStartIndex; j++) {
+                                basePoint.setX(basePoint.getX() + deltaX.get(j));
+                            }
+                        }
+                        if (i == 0 && firstStartIndex > 0 && deltaY.size() > 0) {
+                            for (int j = 0; j < firstStartIndex; j++) {
+                                basePoint.setY(basePoint.getY() + deltaY.get(j));
+                            }
+                        }
                         boxList.add(new ST_Box(basePoint.getX(), basePoint.getY() - height, width, height));
                     }
                 }
@@ -505,6 +610,12 @@ public class KeywordExtractor {
                                                       List<Float> deltaX, List<Float> deltaY, int keywordLength) {
         double width = getStringWidth(textIndex, keywordLength, deltaX, ctText.getSize());
         double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
+
+        if (!deltaY.isEmpty()) {
+            for (int i = 0; i < deltaY.size() && i < keywordLength - 1; i++) {
+                height -= deltaY.get(i);
+            }
+        }
 
         ST_Pos basePoint = getLeftBottomPos(ctText.getBoundary(), textCode, deltaX, deltaY, textIndex);
         ST_Box box = new ST_Box(basePoint.getX(), basePoint.getY() - height, width, height);
