@@ -8,9 +8,7 @@ import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.geom.Rectangle;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfPage;
-import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.*;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -30,7 +28,6 @@ import java.util.Objects;
 
 public class OFD2PDFTest {
 
-    protected static final String basePath = Objects.requireNonNull(OFD2PDFTest.class.getClassLoader().getResource("")).getPath();
 
     @Test
     public void convertPdf() {
@@ -46,9 +43,10 @@ public class OFD2PDFTest {
 
     @Test
     public void itextGlyph() throws IOException {
-        String dst = basePath + "glyph.pdf";
+        String dst =  "target/glyph.pdf";
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        PdfWriter pdfWriter = new PdfWriter(bos);
+        WriterProperties wp = new WriterProperties().setCompressionLevel(CompressionConstants.NO_COMPRESSION);
+        PdfWriter pdfWriter = new PdfWriter(bos,wp);
         PdfDocument pdfDocument = new PdfDocument(pdfWriter);
         PageSize pageSize = new PageSize((float) 240, (float) 297);
         PdfPage pdfPage = pdfDocument.addNewPage(pageSize);
@@ -59,7 +57,7 @@ public class OFD2PDFTest {
                         240, 297
                 )
         );
-        String ttfPath = basePath + "font_32_32.ttf";
+        String ttfPath =  "src/test/resources/font_13132_0_edit.ttf";
         FontProgram fontProgram = FontProgramFactory.createFont(ttfPath);
         PdfFont font =  PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, true);
         pdfCanvas.setFillColor(new DeviceRgb(0 / 255f,0 / 255f, 0 / 255f));
@@ -67,7 +65,7 @@ public class OFD2PDFTest {
         pdfCanvas.moveText(110, 120);
         pdfCanvas.setFontAndSize(font, 16);
         List<Glyph> glyphs = new ArrayList<>();
-        glyphs.add(font.getGlyph(4780));
+        glyphs.add(font.getGlyph(0xE11E));
         pdfCanvas.showText(new GlyphLine(glyphs));
         pdfCanvas.endText();
         pdfDocument.close();
