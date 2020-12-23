@@ -397,7 +397,7 @@ public class OFDDoc implements Closeable {
         ST_Loc loc = docDefault.getRes().getAbsLoc()
                 .cat(file.getFileName().toString());
         // 计算附件所占用的空间，单位KB。
-        double size = Files.size(file);
+        double size = Files.size(file)/1024d;
         CT_Attachment ctAttachment = attachment.getAttachment()
                 .setID(String.valueOf(MaxUnitID.incrementAndGet()))
                 .setCreationDate(LocalDate.now())
