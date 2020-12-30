@@ -177,6 +177,27 @@ public class OFDElement extends DefaultElementProxy {
                 .collect(Collectors.toList());
     }
 
+
+    /**
+     * 获取 指定名称OFD元素集合
+     * <p>
+     * 集合将会保持原有次序
+     * qname匹配的时候不再验证namespace，兼容namespace为空的情况。
+     * author daiwf
+     * @param name   OFD元素名称
+     * @param mapper 转换对象构造器引用
+     * @param <R>    指定元素对象
+     * @return 指定名称OFD元素集合
+     */
+    public <R> List<R> getElements(String name, Function<? super Element, ? extends R> mapper) {
+        List<Element> elements = this.elements(new QName(name));
+        if (elements == null || elements.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return elements.stream()
+                .map(mapper)
+                .collect(Collectors.toList());
+    }
     /**
      * 设置元素
      * <p>
