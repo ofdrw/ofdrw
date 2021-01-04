@@ -5,7 +5,7 @@
     <parent>
         <artifactId>ofdrw</artifactId>
         <groupId>org.ofdrw</groupId>
-        <version>1.7.1</version>
+        <version>1.7.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -56,6 +56,27 @@
         <dependency>
             <groupId>org.ujmp</groupId>
             <artifactId>ujmp-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>kernel</artifactId>
+            <version>7.1.10</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>layout</artifactId>
+            <version>7.1.10</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>font-asian</artifactId>
+            <version>7.1.10</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

@@ -33,16 +33,9 @@
 引入依赖
 ```xml
 <dependency>
-    <groupId>commons-io</groupId>
-    <artifactId>commons-io</artifactId>
-    <version>2.6</version>
-</dependency>
-
-<dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.7.1</version>
-  <type>pom</type>
+  <version>1.7.2</version>
 </dependency>
 ```
 
