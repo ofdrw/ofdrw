@@ -120,7 +120,9 @@ mvn install
 
 ## 参与贡献
 
-参考 [贡献指南](CONTRIBUTING.md)。
+[>> GitHub 第一次参与开源(多语言)](https://github.com/firstcontributions/first-contributions)
+
+> [贡献指南](CONTRIBUTING.md)。
 
 ## 项目情况
 
