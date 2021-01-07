@@ -6,7 +6,11 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.ofdrw.reader.DLOFDReader;
 import org.ofdrw.reader.model.OfdPageVo;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -37,12 +41,12 @@ public class ConvertHelper {
                 reader = new DLOFDReader((InputStream) input);
             } else if (input instanceof Path) {
                 reader = new DLOFDReader((Path) input);
-            } else if (input instanceof File){
+            } else if (input instanceof File) {
                 reader = new DLOFDReader(new FileInputStream((File) input));
-            } else if (input instanceof String){
-                reader = new DLOFDReader((String)input);
-            }else {
-                throw new IllegalArgumentException("不支持的输入格式(input)，仅支持InputStream、Path");
+            } else if (input instanceof String) {
+                reader = new DLOFDReader((String) input);
+            } else {
+                throw new IllegalArgumentException("不支持的输入格式(input)，仅支持InputStream、Path、File、String");
             }
             pdfDocument = new PDDocument();
 
