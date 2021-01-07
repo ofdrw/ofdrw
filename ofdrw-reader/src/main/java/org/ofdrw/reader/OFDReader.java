@@ -21,6 +21,7 @@ import org.ofdrw.pkg.container.OFDDir;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -96,6 +97,21 @@ public class OFDReader implements Closeable {
         ofdDir = new OFDDir(workDir);
         // 创建资源定位器
         rl = new ResourceLocator(ofdDir);
+    }
+
+    /**
+     * 因一些ofd文件无法使用ZipUtil解压缩，可以让用户自己在外面解压缩好后，传入根目录创建
+     * 例如用户可以使用unzip或者unar等命令行方式解压缩
+     * @param unzippedPathRoot
+     * @throws IOException
+     */
+    public OFDReader(String unzippedPathRoot) {
+        workDir = Paths.get(unzippedPathRoot);
+        ofdDir = new OFDDir(workDir);
+        // 创建资源定位器
+        rl = new ResourceLocator(ofdDir);
+        // 这种情况关闭时不删除外部目录，保证谁创建的目录谁负责这个原则
+        closed = true;
     }
 
     /**

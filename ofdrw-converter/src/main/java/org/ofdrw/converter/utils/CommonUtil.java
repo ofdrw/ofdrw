@@ -4,6 +4,7 @@ import org.apache.pdfbox.jbig2.JBIG2ImageReader;
 import org.apache.pdfbox.jbig2.JBIG2ImageReaderSpi;
 import org.apache.pdfbox.jbig2.io.DefaultInputStreamFactory;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
+import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceGray;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.ofdrw.converter.point.Tuple2;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
@@ -101,6 +102,8 @@ public class CommonUtil {
             float[] colors = CommonUtil.doubleArrayToFloatArray(colorArray.toDouble());
             if (colors.length == 3) {
                 color = new PDColor(new float[] {(int)colors[0] / 255f, (int) colors[1] / 255f, (int) colors[2] / 255f}, PDDeviceRGB.INSTANCE);
+            } else if (colors.length == 1) {
+                color = new PDColor(new float[] {(int)colors[0] / 255f }, PDDeviceGray.INSTANCE);
             }
         }
         return color;
@@ -117,6 +120,8 @@ public class CommonUtil {
             float[] colors = CommonUtil.doubleArrayToFloatArray(colorArray.toDouble());
             if (colors.length == 3) {
                 color = String.format("rgb(%d,%d,%d)", (int) colors[0], (int) colors[1], (int) colors[2]);
+            } else if(colors.length == 1) {
+                color = String.format("rgb(%d,%d,%d)", (int) colors[0], (int) colors[0], (int) colors[0]);
             }
         }
         return color;

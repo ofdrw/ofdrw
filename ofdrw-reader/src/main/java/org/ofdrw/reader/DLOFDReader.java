@@ -57,7 +57,16 @@ public class DLOFDReader extends OFDReader {
         super(stream);
         initReader();
     }
-
+    /**
+     * 因一些ofd文件无法使用ZipUtil解压缩，可以让用户自己在外面解压缩好后，传入根目录创建
+     * 例如用户可以使用unzip或者unar等命令行方式解压缩
+     * @param unzippedPathRoot
+     * @throws IOException
+     */
+    public DLOFDReader(String unzippedPathRoot) {
+        super(unzippedPathRoot);
+        initReader();
+    }
     /**
      * 初始化reader
      */
