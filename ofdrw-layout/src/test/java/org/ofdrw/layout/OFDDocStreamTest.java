@@ -79,9 +79,11 @@ class OFDDocStreamTest {
     }
 
     /**
-     * 向文件中加入附件文件
+     * 向文件已经存在附件的文档中加入附件文件
      *
-     * @throws IOException
+     * （附件文件路径使用的是相对路径）
+     *
+     * @throws IOException 文档操作异常
      */
     @Test
     void addAttachment4ExistOFD() throws IOException {
