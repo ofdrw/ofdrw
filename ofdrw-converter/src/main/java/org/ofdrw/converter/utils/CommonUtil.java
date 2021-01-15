@@ -4,6 +4,7 @@ import org.apache.pdfbox.jbig2.JBIG2ImageReader;
 import org.apache.pdfbox.jbig2.JBIG2ImageReaderSpi;
 import org.apache.pdfbox.jbig2.io.DefaultInputStreamFactory;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
+import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceGray;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.ofdrw.converter.point.Tuple2;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
@@ -31,12 +32,12 @@ import java.util.UUID;
 public class CommonUtil {
     public static double millimetersToPixel(double mm, double dpi) {
         //毫米转像素：mm * dpi / 25.4
-        return (double) ((mm * dpi / 25.4f));
+        return (double) (mm * dpi / 25.4f);
     }
 
     public static double pixelToMillimeters(double px, double dpi) {
         //像素转毫米：px * 25.4 / dpi
-        return (double) (((px * 25.4f) / dpi));
+        return (double) ((px * 25.4f) / dpi);
     }
 
     public static float[] doubleArrayToFloatArray(Double[] doubleArray) {
@@ -83,24 +84,25 @@ public class CommonUtil {
         String colorStr = colorArray.toString();
         if (colorStr.indexOf("#") != -1) {
             String[] rgbStr = colorStr.split(" ");
-            String r = rgbStr[0].replaceAll("#", "");
-            String g = rgbStr[1].replaceAll("#", "");
-            String b = rgbStr[2].replaceAll("#", "");
-            if (r.length() == 1) {
-                r += "0";
+            if (rgbStr.length >= 3) {
+                for (int i = 0; i < 3; i++ ) {
+                    rgbStr[i] = rgbStr[i].replaceAll("#", "");
+                    if (rgbStr[i].length() == 1) {
+                        rgbStr[i] += "0";
+                    }
+                }
+                Color jColor = Color.decode(String.format("#%s%s%s", rgbStr[0], rgbStr[1], rgbStr[2]));
+                color = new PDColor(
+                    new float[] {jColor.getRed() / 255f, jColor.getGreen() / 255f, jColor.getBlue() / 255f},
+                    PDDeviceRGB.INSTANCE);
             }
-            if (g.length() == 1) {
-                g += "0";
-            }
-            if (b.length() == 1) {
-                b += "0";
-            }
-            Color jColor = Color.decode(String.format("#%s%s%s", r,g,b));
-            color = new PDColor(new float[] {jColor.getRed() / 255f, jColor.getGreen() / 255f, jColor.getBlue() / 255f}, PDDeviceRGB.INSTANCE);
         } else {
             float[] colors = CommonUtil.doubleArrayToFloatArray(colorArray.toDouble());
             if (colors.length == 3) {
-                color = new PDColor(new float[] {(int)colors[0] / 255f, (int) colors[1] / 255f, (int) colors[2] / 255f}, PDDeviceRGB.INSTANCE);
+                color = new PDColor(new float[] {(int) colors[0] / 255f, (int) colors[1] / 255f, (int) colors[2] / 255f},
+                    PDDeviceRGB.INSTANCE);
+            } else if (colors.length == 1) {
+                color = new PDColor(new float[] {(int) colors[0] / 255f }, PDDeviceGray.INSTANCE);
             }
         }
         return color;
@@ -117,6 +119,8 @@ public class CommonUtil {
             float[] colors = CommonUtil.doubleArrayToFloatArray(colorArray.toDouble());
             if (colors.length == 3) {
                 color = String.format("rgb(%d,%d,%d)", (int) colors[0], (int) colors[1], (int) colors[2]);
+            } else if(colors.length == 1) {
+                color = String.format("rgb(%d,%d,%d)", (int) colors[0], (int) colors[0], (int) colors[0]);
             }
         }
         return color;
