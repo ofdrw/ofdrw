@@ -85,24 +85,31 @@ public class CommonUtil {
         if (colorStr.indexOf("#") != -1) {
             String[] rgbStr = colorStr.split(" ");
             if (rgbStr.length >= 3) {
-                for (int i = 0; i < 3; i++ ) {
-                    rgbStr[i] = rgbStr[i].replaceAll("#", "");
-                    if (rgbStr[i].length() == 1) {
-                        rgbStr[i] += "0";
-                    }
+                String r = rgbStr[0].replaceAll("#", "");
+                String g = rgbStr[1].replaceAll("#", "");
+                String b = rgbStr[2].replaceAll("#", "");
+                if (r.length() == 1) {
+                    r += "0";
                 }
-                Color jColor = Color.decode(String.format("#%s%s%s", rgbStr[0], rgbStr[1], rgbStr[2]));
-                color = new PDColor(
-                    new float[] {jColor.getRed() / 255f, jColor.getGreen() / 255f, jColor.getBlue() / 255f},
-                    PDDeviceRGB.INSTANCE);
+                if (g.length() == 1) {
+                    g += "0";
+                }
+                if (b.length() == 1) {
+                    b += "0";
+                }
+                Color jColor = Color.decode(String.format("#%s%s%s", r, g, b));
+                color = new PDColor(new float[]{
+                        jColor.getRed() / 255f,
+                        jColor.getGreen() / 255f,
+                        jColor.getBlue() / 255f}, PDDeviceRGB.INSTANCE);
             }
         } else {
             float[] colors = CommonUtil.doubleArrayToFloatArray(colorArray.toDouble());
             if (colors.length == 3) {
-                color = new PDColor(new float[] {(int) colors[0] / 255f, (int) colors[1] / 255f, (int) colors[2] / 255f},
-                    PDDeviceRGB.INSTANCE);
+                color = new PDColor(new float[]{(int) colors[0] / 255f, (int) colors[1] / 255f, (int) colors[2] / 255f},
+                        PDDeviceRGB.INSTANCE);
             } else if (colors.length == 1) {
-                color = new PDColor(new float[] {(int) colors[0] / 255f }, PDDeviceGray.INSTANCE);
+                color = new PDColor(new float[]{(int) colors[0] / 255f}, PDDeviceGray.INSTANCE);
             }
         }
         return color;
@@ -119,7 +126,7 @@ public class CommonUtil {
             float[] colors = CommonUtil.doubleArrayToFloatArray(colorArray.toDouble());
             if (colors.length == 3) {
                 color = String.format("rgb(%d,%d,%d)", (int) colors[0], (int) colors[1], (int) colors[2]);
-            } else if(colors.length == 1) {
+            } else if (colors.length == 1) {
                 color = String.format("rgb(%d,%d,%d)", (int) colors[0], (int) colors[0], (int) colors[0]);
             }
         }
@@ -175,7 +182,7 @@ public class CommonUtil {
     }
 
     private static boolean hasFractionalSeconds(String time) {
-        for(int var1 = 0; var1 != time.length(); ++var1) {
+        for (int var1 = 0; var1 != time.length(); ++var1) {
             if (time.charAt(var1) == 46 && var1 == 14) {
                 return true;
             }
@@ -185,11 +192,11 @@ public class CommonUtil {
     }
 
     private static boolean hasSeconds(String time) {
-        return isDigit(time,12) && isDigit(time, 13);
+        return isDigit(time, 12) && isDigit(time, 13);
     }
 
     private static boolean hasMinutes(String time) {
-        return isDigit(time,10) && isDigit(time, 11);
+        return isDigit(time, 10) && isDigit(time, 11);
     }
 
     private static boolean isDigit(String time, int var1) {
