@@ -2,6 +2,21 @@
 
 ## 进展
 
+## Version 1.7.3 2021-1-15 22:37:53
+
+Alias: LogHorizon
+
+新增
+
+- OFD转换PDF方法支持使用已经解压的OFD文档作为输入。
+- OFDReader构造方法支持，文件路径以及解压的OFD文档作为输入。
+
+修复
+
+- 向已经存在附件的文件中添加附件时，重覆盖了原Attachment.xml文件的问题。
+- 修复了错误的附件大小计算。
+- 签章v1容器的签章时间格式改为"yyyy-MM-dd HH:mm:ss" 以适应数科阅读器验证。
+
 ## Version 1.7.2 2020-12-8 20:11:15
 
 Alias: CellsAtWork
