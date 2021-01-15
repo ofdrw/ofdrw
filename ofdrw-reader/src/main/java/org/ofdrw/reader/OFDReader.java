@@ -63,6 +63,7 @@ public class OFDReader implements Closeable {
         return workDir;
     }
 
+
     /**
      * 构造一个 OFDReader
      *
@@ -79,6 +80,16 @@ public class OFDReader implements Closeable {
         ofdDir = new OFDDir(workDir);
         // 创建资源定位器
         rl = new ResourceLocator(ofdDir);
+    }
+
+    /**
+     * 构造一个 OFDReader
+     *
+     * @param ofdFileLoc OFD文件位置，例如：”/home/user/myofd.ofd“
+     * @throws IOException OFD文件操作IO异常
+     */
+    public OFDReader(String ofdFileLoc) throws IOException {
+        this(Paths.get(ofdFileLoc));
     }
 
     /**
@@ -102,16 +113,17 @@ public class OFDReader implements Closeable {
     /**
      * 因一些ofd文件无法使用ZipUtil解压缩，可以让用户自己在外面解压缩好后，传入根目录创建
      * 例如用户可以使用unzip或者unar等命令行方式解压缩
-     * @param unzippedPathRoot
-     * @throws IOException
+     *
+     * @param unzippedPathRoot 已经解压的OFD根目录位置
+     * @param deleteOnClose           退出时是否删除文件
      */
-    public OFDReader(String unzippedPathRoot) {
+    public OFDReader(String unzippedPathRoot, boolean deleteOnClose) {
         workDir = Paths.get(unzippedPathRoot);
         ofdDir = new OFDDir(workDir);
         // 创建资源定位器
         rl = new ResourceLocator(ofdDir);
         // 这种情况关闭时不删除外部目录，保证谁创建的目录谁负责这个原则
-        closed = true;
+        closed = deleteOnClose;
     }
 
     /**
