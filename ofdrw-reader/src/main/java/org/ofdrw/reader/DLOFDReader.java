@@ -53,20 +53,28 @@ public class DLOFDReader extends OFDReader {
         initReader();
     }
 
+    public DLOFDReader(String ofdFileLoc) throws IOException {
+        super(Paths.get(ofdFileLoc));
+        initReader();
+    }
+
     public DLOFDReader(InputStream stream) throws IOException {
         super(stream);
         initReader();
     }
+
     /**
      * 因一些ofd文件无法使用ZipUtil解压缩，可以让用户自己在外面解压缩好后，传入根目录创建
      * 例如用户可以使用unzip或者unar等命令行方式解压缩
-     * @param unzippedPathRoot
-     * @throws IOException
+     *
+     * @param unzippedPathRoot 已经解压的OFD根目录位置，因此通过参数控制是否删除目录。
+     * @param deleteOnClose    退出时是否删除 unzippedPathRoot 文件， true - 退出时删除；false - 不删除
      */
-    public DLOFDReader(String unzippedPathRoot) {
-        super(unzippedPathRoot);
+    public DLOFDReader(String unzippedPathRoot, boolean deleteOnClose) {
+        super(unzippedPathRoot, deleteOnClose);
         initReader();
     }
+
     /**
      * 初始化reader
      */

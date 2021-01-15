@@ -112,18 +112,24 @@ public class OFDReader implements Closeable {
 
     /**
      * 因一些ofd文件无法使用ZipUtil解压缩，可以让用户自己在外面解压缩好后，传入根目录创建
-     * 例如用户可以使用unzip或者unar等命令行方式解压缩
+     * 例如用户可以使用unzip或者unar等命令行方式解压缩，因此通过参数控制是否删除目录。
      *
      * @param unzippedPathRoot 已经解压的OFD根目录位置
-     * @param deleteOnClose           退出时是否删除文件
+     * @param deleteOnClose    退出时是否删除 unzippedPathRoot 文件， true - 退出时删除；false - 不删除
      */
     public OFDReader(String unzippedPathRoot, boolean deleteOnClose) {
         workDir = Paths.get(unzippedPathRoot);
+        if (Files.notExists(workDir) || !Files.isDirectory(workDir)) {
+            throw new IllegalArgumentException("文件位置(unzippedPathRoot)不正确");
+        }
         ofdDir = new OFDDir(workDir);
         // 创建资源定位器
         rl = new ResourceLocator(ofdDir);
-        // 这种情况关闭时不删除外部目录，保证谁创建的目录谁负责这个原则
-        closed = deleteOnClose;
+        // 通过参数来指定是否删除外部文档，保证谁创建的目录谁负责这个原则
+        if (!deleteOnClose) {
+            closed = true;
+        }
+
     }
 
     /**
