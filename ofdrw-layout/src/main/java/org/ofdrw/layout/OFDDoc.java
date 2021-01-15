@@ -397,16 +397,14 @@ public class OFDDoc implements Closeable {
         ST_Loc loc = docDefault.getRes().getAbsLoc()
                 .cat(file.getFileName().toString());
         // 计算附件所占用的空间，单位KB。
-        double size = Files.size(file)/1024d;
+        double size = Files.size(file) / 1024d;
         CT_Attachment ctAttachment = attachment.getAttachment()
                 .setID(String.valueOf(MaxUnitID.incrementAndGet()))
                 .setCreationDate(LocalDate.now())
                 .setSize(size)
                 .setFileLoc(loc);
-
-        ResourceLocator rl = new ResourceLocator(ofdDir);
+        ResourceLocator rl = new ResourceLocator(docDefault);
         //这边应该加个Doc_0目录,不然后面读取document中Attachments如果写的相对路径还是从根目录找就会找不到的。add by daiwf
-        rl.cd("/Doc_0/");
         // 获取附件目录，并切换目录到与附件列表文件同级
         Attachments attachments = obtainAttachments(docDefault, rl);
         // 清理已经存在的同名附件

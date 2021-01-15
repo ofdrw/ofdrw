@@ -77,13 +77,14 @@ class OFDDocStreamTest {
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
+
     /**
      * 向文件中加入附件文件
      *
      * @throws IOException
      */
     @Test
-    void addAttachment4existofd() throws IOException {
+    void addAttachment4ExistOFD() throws IOException {
         Path outP = Paths.get("target/AddAttachment_relativepathversion_out.ofd");
         Path inP = Paths.get("src/test/resources/AddAttachment_relativepathversion.ofd");
         Path file = Paths.get("src/test/resources", "testimg.png");
@@ -98,6 +99,7 @@ class OFDDocStreamTest {
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
+
     /**
      * 替换附件文件
      *
