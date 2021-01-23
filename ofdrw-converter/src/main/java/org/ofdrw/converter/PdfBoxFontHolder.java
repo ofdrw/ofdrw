@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class PdfBoxFontHolder {
 
-    private final static Map<String, PDFont> FONT_MAP = new HashMap<>();
+    private final Map<String, PDFont> FONT_MAP = new HashMap<>();
 
     public PdfBoxFontHolder(PDDocument pdDocument) {
         try {
