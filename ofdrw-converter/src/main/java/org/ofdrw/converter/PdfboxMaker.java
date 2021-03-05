@@ -517,8 +517,10 @@ public class PdfboxMaker {
             double d = ctm[3];
             double sx = a > 0 ? Math.signum(a) * Math.sqrt(a * a + c * c) : Math.sqrt(a * a + c * c);
             double sy = Math.signum(d) * Math.sqrt(b * b + d * d);
-            fontSize = (float) (fontSize * sx);
-
+            double angel = Math.atan2(-b, d);
+            if (!(angel == 0 && a != 0 && d == 1)) {
+                fontSize = (float) (fontSize * sx);
+            }
         }
         PDFont font = this.pdfFontMap.get(textObject.getFont().toString() + fontAno);
         if (Objects.isNull(font)) font = fontHolder.getFont("宋体");
@@ -544,6 +546,14 @@ public class PdfboxMaker {
                 AffineTransform transform = new AffineTransform();
                 double angel = Math.atan2(-b, d);
                 transform.rotate(angel, rx, ry);
+                contentStream.concatenate2CTM(transform);
+                if (angel == 0 && a != 0 && d == 1) {
+                    textObject.setHScale(a);
+                }
+            }
+            if (textObject.getHScale().floatValue() < 1) {
+                AffineTransform transform = new AffineTransform();
+                transform.setTransform(textObject.getHScale().floatValue(), 0, 0, 1, (1 - textObject.getHScale().floatValue()) * textCodePoint.getX(), 0);
                 contentStream.concatenate2CTM(transform);
             }
             contentStream.setFont(font, (float) converterDpi(fontSize));
