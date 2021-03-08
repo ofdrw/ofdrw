@@ -2,6 +2,15 @@
 
 ## 进展
 
+## Version 1.7.4 2021-3-8 19:43:42
+
+Alias: AttackOnTitan
+
+修复：
+
+- OFD转PDF text兼容hScale
+- 修复了多环境下`PdfBoxFontHolder`造成的并发异常。
+
 ## Version 1.7.3 2021-1-15 22:37:53
 
 Alias: LogHorizon
