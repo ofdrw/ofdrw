@@ -172,4 +172,23 @@ class OFDReaderTest {
             assertEquals(docInfo.getAuthor(), "权观宇");
         }
     }
+
+
+    /**
+     * 测试Document.xml中 ofd:Attachments 指向路径和Document.xml不在同一级目录时无法获取附件路径
+     * 具体参见img中电子票据文件夹
+     * @throws Exception
+     */
+    @Test
+    public void testReadAttachments() throws Exception {
+
+        Path path = Paths.get("src/test/resources/invoice.ofd");
+        try (OFDReader ofdReader = new OFDReader(path)) {
+            Path original_invoice = ofdReader.getAttachmentFile("original_invoice");
+            System.out.println(original_invoice);
+            assertNotNull(original_invoice);
+
+        }
+    }
+
 }
