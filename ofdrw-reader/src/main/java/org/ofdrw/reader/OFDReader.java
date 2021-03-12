@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * OFD解析器
@@ -416,37 +417,40 @@ public class OFDReader implements Closeable {
         if (name == null || name.trim().length() == 0) {
             return null;
         }
-        rl.save();
+
+        DocDir docDir = ofdDir.obtainDocDefault();
+        rl.cd(docDir);
+        Document document = null;
+        Attachments attachments = null;
         try {
-            DocDir docDir = ofdDir.obtainDocDefault();
-            rl.cd(docDir);
-            Document document = null;
-            Attachments attachments = null;
-            try {
-                document = docDir.getDocument();
-            } catch (FileNotFoundException | DocumentException e) {
-                throw new BadOFDException(e);
+            document = docDir.getDocument();
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new BadOFDException(e);
+        }
+        ST_Loc attachmentsLoc = document.getAttachments();
+        if (attachmentsLoc == null) {
+            // 文档中没有附件目录文件
+            return null;
+        }
+        try {
+            // 获取附件目录
+            attachments = rl.get(attachmentsLoc, Attachments::new);
+        } catch (FileNotFoundException | DocumentException e) {
+            System.err.println(">> 无法获取或解析Attachments.xml: " + e.getMessage());
+            return null;
+        }
+
+        String parent = attachmentsLoc.parent();
+        if (Objects.nonNull(parent)
+                && !parent.isEmpty()) {
+            rl.cd(parent);
+        }
+
+        for (CT_Attachment attachment : attachments.getAttachments()) {
+            // 寻找匹配名称的附件
+            if (attachment.getAttachmentName().equals(name)) {
+                return attachment;
             }
-            ST_Loc attachmentsLoc = document.getAttachments();
-            if (attachmentsLoc == null) {
-                // 文档中没有附件目录文件
-                return null;
-            }
-            try {
-                // 获取附件目录
-                attachments = rl.get(attachmentsLoc, Attachments::new);
-            } catch (FileNotFoundException | DocumentException e) {
-                System.err.println(">> 无法获取或解析Attachments.xml: " + e.getMessage());
-                return null;
-            }
-            for (CT_Attachment attachment : attachments.getAttachments()) {
-                // 寻找匹配名称的附件
-                if (attachment.getAttachmentName().equals(name)) {
-                    return attachment;
-                }
-            }
-        } finally {
-            rl.restore();
         }
         return null;
     }
