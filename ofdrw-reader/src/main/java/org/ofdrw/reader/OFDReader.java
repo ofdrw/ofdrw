@@ -441,8 +441,7 @@ public class OFDReader implements Closeable {
         }
 
         String parent = attachmentsLoc.parent();
-        if (Objects.nonNull(parent)
-                && !parent.isEmpty()) {
+        if (parent != null) {
             rl.cd(parent);
         }
 
