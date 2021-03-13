@@ -333,6 +333,7 @@ public class DLOFDReader extends OFDReader {
                     if (type != null) {
                         stampAnnotVo.setType(type.toLowerCase());
                         if (type.toLowerCase().equals("ofd")) {
+                            stampAnnotVo.setImgByte(sealBytes);
                             SealOFDReader sealReader = new SealOFDReader(new ByteArrayInputStream(sealBytes));
                             stampAnnotVo.setOfdPageVoList(sealReader.getOFDPageVO());
                             stampAnnotVo.setCtDrawParamList(sealReader.getPublicResDrawParam());
@@ -342,6 +343,8 @@ public class DLOFDReader extends OFDReader {
                         } else if (type.toLowerCase().equals("png")) {
                             stampAnnotVo.setImgByte(sealBytes);
                             stampAnnotVoList.add(stampAnnotVo);
+                        }else{
+                            stampAnnotVo.setImgByte(sealBytes);
                         }
                     }
                 }
