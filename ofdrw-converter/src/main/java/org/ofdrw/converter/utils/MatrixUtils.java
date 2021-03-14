@@ -28,7 +28,7 @@ public class MatrixUtils {
     }
 
     public static Matrix scale(Matrix matrix, double x, double y) {
-        return create(x, 0, 0, y, 0, 0).mtimes(matrix);
+        return matrix.mtimes(create(x, 0, 0, y, 0, 0));
     }
 
     public static Matrix move(Matrix matrix, double x, double y) {
@@ -111,6 +111,16 @@ public class MatrixUtils {
 
         Matrix result = m.mtimes(matrix);
         return new Tuple2<>(result.getAsDouble(0, 0), result.getAsDouble(0, 1));
+    }
+
+    public static Tuple2<Double, Double> pointTransform(Matrix ctm, Double x, Double y) {
+        org.ujmp.core.Matrix m = DenseMatrix.Factory.zeros(1, 3);
+        m.setAsDouble(x, 0, 0);
+        m.setAsDouble(y, 0, 1);
+        m.setAsDouble(1, 0, 2);
+
+        m = m.mtimes(ctm);
+        return new Tuple2<>(m.getAsDouble(0, 0), m.getAsDouble(0, 1));
     }
 
 }

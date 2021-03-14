@@ -82,7 +82,7 @@ public class ST_Array extends STBase implements Cloneable{
         if (arrStr == null || arrStr.trim().length() == 0) {
             return null;
         }
-        return new ST_Array(arrStr.trim().split(" "));
+        return new ST_Array(arrStr.trim().split("\\s+"));
     }
 
     public ST_Array(Serializable... arr) {
