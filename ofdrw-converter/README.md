@@ -14,7 +14,7 @@ OFDR&W文档转换支持
 
 PDF转换概述： 通过对OFD的文档进行解析，使用 Apache Pdfbox生成并转换OFD中的元素为PDF内的元素实现PDF的转换。
 
-图片转换概述： 通过对OFD的文档进行解析，采用JWT绘制图片，支持转换为`PNG`、`JPEG`图片格式。
+图片转换概述： 通过对OFD的文档进行解析，采用`java.awt`绘制图片，支持转换为`PNG`、`JPEG`图片格式。
 
 ## Quick Start
 
