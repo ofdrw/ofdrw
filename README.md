@@ -25,7 +25,7 @@
 - [**ofdrw-sign**](./ofdrw-sign) OFD文档数字签章。
 - [**ofdrw-gm**](./ofdrw-gm) 用于支持签章模块需要的国密电子签章数据结构。
 - [**ofdrw-gv**](./ofdrw-gv) OFDRW 所有模块所共用的全局变量。
-- [**ofdrw-converter**](./ofdrw-converter) OFD文档转换PDF。***New***
+- [**ofdrw-converter**](./ofdrw-converter) OFD文档转换PDF、图片。***New***
 - [**ofdrw-full**](./ofdrw-full) 上述所有模块整合包，用于简化依赖引入。
 
 ## QuickStart
@@ -73,6 +73,7 @@ public class HelloWorld {
 - [OFD R&W Canvas](./ofdrw-layout/doc/canvas/README.md)
 - [OFD R&W 签名签章快速入门](./ofdrw-sign/doc/quickstart/README.md)
 - [OFD R&W OFD转换PDF](./ofdrw-converter/README.md)
+- [OFD R&W OFD转换图片](./ofdrw-converter/README.md)
 
 OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwell.cn/)
 
