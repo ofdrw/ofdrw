@@ -25,7 +25,7 @@ pom引入相关模块
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-converter</artifactId>
-    <version>1.7.4</version>
+    <version>1.8.0</version>
 </dependency>
 ```
 

@@ -2,6 +2,18 @@
 
 ## 进展
 
+## Version 1.8.0 2021-3-15 20:41:01
+
+Alias: MyYouthRomanticComedyIsWrongAsIExpected
+
+新增：
+
+- [支持OFD转换图片](./ofdrw-converter/README.md)
+
+修复：
+
+- 无法获取相对路径附件的问题。
+
 ## Version 1.7.4 2021-3-8 19:43:42
 
 Alias: AttackOnTitan
