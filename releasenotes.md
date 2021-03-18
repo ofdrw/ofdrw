@@ -2,6 +2,18 @@
 
 ## 进展
 
+## Version 1.8.1 2021-3-18 19:24:18
+
+Alias: InitialD
+
+修复:
+
+- 图片转换电子印章缺失。
+- 增加了Span的字体填充属性`fill`。
+- 调整了项目结构优化包引用。
+- 修改了图片转换实例构造的参数名称为`ppm`，像素每毫米
+
+
 ## Version 1.8.0 2021-3-15 20:41:01
 
 Alias: MyYouthRomanticComedyIsWrongAsIExpected
