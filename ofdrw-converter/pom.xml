@@ -11,6 +11,11 @@
 
     <artifactId>ofdrw-converter</artifactId>
 
+    <properties>
+        <pdfbox.version>2.0.21</pdfbox.version>
+        <itext.version>7.1.10</itext.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.ofdrw</groupId>
@@ -41,41 +46,45 @@
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>fontbox</artifactId>
+            <version>${pdfbox.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
+            <version>${pdfbox.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>jbig2-imageio</artifactId>
+            <version>3.0.3</version>
         </dependency>
 
         <dependency>
             <groupId>org.ujmp</groupId>
             <artifactId>ujmp-core</artifactId>
+            <version>0.3.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>kernel</artifactId>
-            <version>7.1.10</version>
+            <version>${itext.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>layout</artifactId>
-            <version>7.1.10</version>
+            <version>${itext.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>font-asian</artifactId>
-            <version>7.1.10</version>
+            <version>${itext.version}</version>
             <scope>provided</scope>
         </dependency>
 
