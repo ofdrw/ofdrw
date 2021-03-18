@@ -60,7 +60,13 @@ public class ImageMaker {
 
     private DLOFDReader ofdReader;
 
-    private int dpi = 8;
+    /**
+     * 每毫米像素数量(Pixels per millimeter)
+     * <p>
+     * 默认为： 8像素/毫米
+     */
+    private int ppm = 8;
+
     public final Config config = new Config();
 
     //是否是印章，用于渲染印章
@@ -70,12 +76,18 @@ public class ImageMaker {
     private List<OfdPageVo> pages = null;
     private final ResourceManage resourceManage;
 
-    public ImageMaker(DLOFDReader ofdReader, int dpi) {
+    /**
+     * 创建图片转换对象实例
+     *
+     * @param ofdReader OFD解析器
+     * @param ppm       每毫米像素数量(Pixels per millimeter)
+     */
+    public ImageMaker(DLOFDReader ofdReader, int ppm) {
         this.ofdReader = ofdReader;
         resourceManage = new ResourceManage(ofdReader);
         this.pages = ofdReader.getOFDDocumentVo().getOfdPageVoList();
-        if (dpi > 0) {
-            this.dpi = dpi;
+        if (this.ppm > 0) {
+            this.ppm = ppm;
         }
     }
 
@@ -91,8 +103,8 @@ public class ImageMaker {
         Page contentPage = pageVo.getContentPage();
         Page templatePage = pageVo.getTemplatePage();
         ST_Box pageBox = getPageBox(contentPage.getArea(), ofdReader.getOFDDocumentVo().getPageWidth(), ofdReader.getOFDDocumentVo().getPageHeight());
-        double pageWidthPixel = dpi * pageBox.getWidth();
-        double pageHeightPixel = dpi * pageBox.getHeight();
+        double pageWidthPixel = ppm * pageBox.getWidth();
+        double pageHeightPixel = ppm * pageBox.getHeight();
 
         BufferedImage image = createImage((int) pageWidthPixel, (int) pageHeightPixel);
         Graphics2D graphics = (Graphics2D) image.getGraphics();
@@ -147,7 +159,7 @@ public class ImageMaker {
         BufferedImage stampImage = null;
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(stampAnnotVo.getImgByte())) {
             if (stampAnnotVo.getType().equals("ofd")) {
-                ImageMaker imageMaker = new ImageMaker(new DLOFDReader(inputStream), dpi);
+                ImageMaker imageMaker = new ImageMaker(new DLOFDReader(inputStream), ppm);
                 imageMaker.isStamp = true;
                 imageMaker.config.setDrawBoundary(config.drawBoundary);
                 if (imageMaker.pageSize() > 0) {
@@ -164,8 +176,8 @@ public class ImageMaker {
 
                 m = MatrixUtils.scale(m, stBox.getWidth() / stampImage.getWidth(), stBox.getHeight() / stampImage.getHeight());
 
-                m = MatrixUtils.move(m, stBox.getTopLeftX() * dpi, stBox.getTopLeftY() * dpi);
-                m = MatrixUtils.scale(m, dpi, dpi);
+                m = MatrixUtils.move(m, stBox.getTopLeftX() * ppm, stBox.getTopLeftY() * ppm);
+                m = MatrixUtils.scale(m, ppm, ppm);
                 graphics.setClip(null);
                 graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, config.stampOpacity));
                 graphics.drawImage(stampImage, MatrixUtils.createAffineTransform(m), null);
@@ -552,7 +564,7 @@ public class ImageMaker {
 
     private Matrix renderBoundaryAndSetClip(Graphics2D graphics, ST_Box boundary, Matrix parentMatrix) {
         graphics.setColor(Color.RED);
-        graphics.setStroke(new BasicStroke(0.1f * dpi));
+        graphics.setStroke(new BasicStroke(0.1f * ppm));
         Matrix m = MatrixUtils.base().mtimes(parentMatrix);
 
 
@@ -567,10 +579,10 @@ public class ImageMaker {
             Tuple2<Double, Double> p10 = MatrixUtils.pointTransform(m, boundary.getTopLeftX(), boundary.getTopLeftY() + boundary.getHeight() + 2);
             Tuple2<Double, Double> p11 = MatrixUtils.pointTransform(m, boundary.getTopLeftX() + boundary.getWidth() + 2, boundary.getTopLeftY() + boundary.getHeight() + 2);
 
-            shape.addPoint(Double.valueOf(p00.getFirst() * dpi).intValue(), Double.valueOf(p00.getSecond() * dpi).intValue());
-            shape.addPoint(Double.valueOf(p01.getFirst() * dpi).intValue(), Double.valueOf(p01.getSecond() * dpi).intValue());
-            shape.addPoint(Double.valueOf(p11.getFirst() * dpi).intValue(), Double.valueOf(p11.getSecond() * dpi).intValue());
-            shape.addPoint(Double.valueOf(p10.getFirst() * dpi).intValue(), Double.valueOf(p10.getSecond() * dpi).intValue());
+            shape.addPoint(Double.valueOf(p00.getFirst() * ppm).intValue(), Double.valueOf(p00.getSecond() * ppm).intValue());
+            shape.addPoint(Double.valueOf(p01.getFirst() * ppm).intValue(), Double.valueOf(p01.getSecond() * ppm).intValue());
+            shape.addPoint(Double.valueOf(p11.getFirst() * ppm).intValue(), Double.valueOf(p11.getSecond() * ppm).intValue());
+            shape.addPoint(Double.valueOf(p10.getFirst() * ppm).intValue(), Double.valueOf(p10.getSecond() * ppm).intValue());
 
             if (config.drawBoundary) {
                 graphics.setClip(null);
@@ -579,7 +591,7 @@ public class ImageMaker {
             graphics.setClip(shape);
         }
 
-        m = MatrixUtils.scale(m, dpi, dpi);
+        m = MatrixUtils.scale(m, ppm, ppm);
         return m;
     }
 
