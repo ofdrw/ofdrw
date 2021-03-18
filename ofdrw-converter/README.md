@@ -87,8 +87,9 @@ public class HelloWorld {
         for (int i = 0; i < imageMaker.pageSize(); i++) {
             // 4. 指定页码转换图片
             BufferedImage image = imageMaker.makePage(i);
+            Path dist = Paths.get("target", i + ".png");
             // 5. 存储为指定格式图片
-            ImageIO.write(image, "PNG", new File(dir, +i + ".png"));
+            ImageIO.write(image, "PNG", dist.toFile());
         }
     }
 }

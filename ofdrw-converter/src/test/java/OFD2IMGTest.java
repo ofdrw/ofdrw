@@ -44,7 +44,7 @@ public class OFD2IMGTest {
         imageMaker.config.setDrawBoundary(false);
         for (int i = 0; i < imageMaker.pageSize(); i++) {
             BufferedImage image = imageMaker.makePage(i);
-            final Path dist = Paths.get(dirPath, i + ".png");
+            Path dist = Paths.get(dirPath, i + ".png");
             ImageIO.write(image, "PNG", dist.toFile());
         }
     }
