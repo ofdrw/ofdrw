@@ -69,7 +69,7 @@ public class HelloWorld {
 
 1. 提供待转换OFD文档。
 2. 配置字体。
-3. 创建转换转换对象，并设置DPI。
+3. 创建转换转换对象，并设置PPM。
 4. 指定页码转换图片。
 5. 存储为指定格式图片。
 
@@ -82,7 +82,7 @@ public class HelloWorld {
         FontUtils.init();
         // 加载指定目录字体
         FontUtils.scanFontDir(new File("src/test/resources/fonts"));
-        // 3. 创建转换转换对象，并设置DPI
+        // 3. 创建转换转换对象，设置 每毫米像素数量(Pixels per millimeter)
         ImageMaker imageMaker = new ImageMaker(new DLOFDReader(src), 15);
         for (int i = 0; i < imageMaker.pageSize(); i++) {
             // 4. 指定页码转换图片

@@ -78,6 +78,8 @@ public class ImageMaker {
 
     /**
      * 创建图片转换对象实例
+     * <p>
+     * OFD内部使用毫米作为基本单位
      *
      * @param ofdReader OFD解析器
      * @param ppm       每毫米像素数量(Pixels per millimeter)
@@ -157,6 +159,7 @@ public class ImageMaker {
 
     private void writeStampAnnot(Graphics2D graphics, StampAnnotVo stampAnnotVo, StampAnnot stampAnnot) {
         BufferedImage stampImage = null;
+        graphics = (Graphics2D) graphics.create();
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(stampAnnotVo.getImgByte())) {
             if (stampAnnotVo.getType().equals("ofd")) {
                 ImageMaker imageMaker = new ImageMaker(new DLOFDReader(inputStream), ppm);
@@ -174,18 +177,24 @@ public class ImageMaker {
                 Matrix m = MatrixUtils.base();
                 graphics.setTransform(MatrixUtils.createAffineTransform(m));
 
-                m = MatrixUtils.scale(m, stBox.getWidth() / stampImage.getWidth(), stBox.getHeight() / stampImage.getHeight());
 
+                // 首先平移到指定位置
                 m = MatrixUtils.move(m, stBox.getTopLeftX() * ppm, stBox.getTopLeftY() * ppm);
+                final double fx = stBox.getWidth() / stampImage.getWidth();
+                final double fy = stBox.getHeight() / stampImage.getHeight();
+                // 调整比例
+                m = MatrixUtils.scale(m, fx, fy);
+                // 缩放适应
                 m = MatrixUtils.scale(m, ppm, ppm);
+
                 graphics.setClip(null);
                 graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, config.stampOpacity));
                 graphics.drawImage(stampImage, MatrixUtils.createAffineTransform(m), null);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("印章绘制异常", e);
+        } finally {
+            graphics.dispose();
         }
     }
 
@@ -198,12 +207,7 @@ public class ImageMaker {
             templateLayers.addAll(templatePage.getContent().getLayers());
         }
 
-        Comparator<CT_Layer> comparator = new Comparator<CT_Layer>() {
-            @Override
-            public int compare(CT_Layer l1, CT_Layer l2) {
-                return l1.getType().compareTo(l2.getType());
-            }
-        };
+        Comparator<CT_Layer> comparator = Comparator.comparing(CT_Layer::getType);
         layers.sort(comparator);
         templateLayers.sort(comparator);
 
@@ -213,41 +217,48 @@ public class ImageMaker {
         for (CT_Layer layer : layers) {
             writeContent(graphics, layer, null, matrix);
         }
+
     }
 
 
     private void writeContent(Graphics2D graphics, CT_PageBlock pageBlock, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
-        if (drawParams == null) drawParams = new ArrayList<>();
-        if (parentMatrix == null) parentMatrix = MatrixUtils.base();
+        graphics = (Graphics2D) graphics.create();
+        try {
+            if (drawParams == null) drawParams = new ArrayList<>();
+            if (parentMatrix == null) parentMatrix = MatrixUtils.base();
 
-        if (pageBlock.attribute("Boundary") != null) {
-            String data = (String) pageBlock.attribute("Boundary").getData();
-            ST_Box stBox = ST_Box.getInstance(data);
-            parentMatrix = MatrixUtils.move(parentMatrix, stBox.getTopLeftX(), stBox.getTopLeftY());
-        }
-
-        for (PageBlockType object : pageBlock.getPageBlocks()) {
-            if (object instanceof TextObject) {
-                TextObject textObject = (TextObject) object;
-                writeText(graphics, textObject, drawParams, parentMatrix);
-            } else if (object instanceof ImageObject) {
-                ImageObject imageObject = (ImageObject) object;
-                writeImage(graphics, imageObject, drawParams, parentMatrix);
-            } else if (object instanceof PathObject) {
-                PathObject pathObject = (PathObject) object;
-                writePath(graphics, pathObject, drawParams, parentMatrix);
-            } else if (object instanceof CompositeObject) {
-                logger.info("暂不支持复合对象");
-            } else if (object instanceof CT_PageBlock) {
-                CT_PageBlock block = (CT_PageBlock) object;
-                writeContent(graphics, block, drawParams, parentMatrix);
-            } else if (object instanceof CT_Layer) {
-                CT_Layer layer = (CT_Layer) object;
-                ST_RefID drawParamRef = layer.getDrawParam();
-                CT_DrawParam ctDrawParam = resourceManage.getDrawParam(drawParamRef.getRefId().toString());
-                drawParams.add(ctDrawParam);
-                writeContent(graphics, layer, drawParams, parentMatrix);
+            if (pageBlock.attribute("Boundary") != null) {
+                String data = (String) pageBlock.attribute("Boundary").getData();
+                ST_Box stBox = ST_Box.getInstance(data);
+                parentMatrix = MatrixUtils.move(parentMatrix, stBox.getTopLeftX(), stBox.getTopLeftY());
             }
+
+            for (PageBlockType object : pageBlock.getPageBlocks()) {
+                if (object instanceof TextObject) {
+                    TextObject textObject = (TextObject) object;
+                    writeText(graphics, textObject, drawParams, parentMatrix);
+                } else if (object instanceof ImageObject) {
+                    ImageObject imageObject = (ImageObject) object;
+                    writeImage(graphics, imageObject, drawParams, parentMatrix);
+                } else if (object instanceof PathObject) {
+                    PathObject pathObject = (PathObject) object;
+                    writePath(graphics, pathObject, drawParams, parentMatrix);
+                } else if (object instanceof CompositeObject) {
+                    logger.info("暂不支持复合对象");
+                } else if (object instanceof CT_PageBlock) {
+                    CT_PageBlock block = (CT_PageBlock) object;
+                    writeContent(graphics, block, drawParams, parentMatrix);
+                } else if (object instanceof CT_Layer) {
+                    CT_Layer layer = (CT_Layer) object;
+                    ST_RefID drawParamRef = layer.getDrawParam();
+                    CT_DrawParam ctDrawParam = resourceManage.getDrawParam(drawParamRef.getRefId().toString());
+                    drawParams.add(ctDrawParam);
+                    writeContent(graphics, layer, drawParams, parentMatrix);
+                }
+
+            }
+        } finally {
+            graphics.dispose();
         }
     }
 

@@ -5,10 +5,10 @@ import org.ofdrw.converter.utils.FontUtils;
 import org.ofdrw.reader.DLOFDReader;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -37,15 +37,15 @@ public class OFD2IMGTest {
     }
 
     private static void toPng(String filename, String dirPath) throws IOException {
-        File dir = new File(dirPath);
-        dir.mkdirs();
-        
+        Files.createDirectories(Paths.get(dirPath));
         Path src = Paths.get(filename);
+
         ImageMaker imageMaker = new ImageMaker(new DLOFDReader(src), 15);
         imageMaker.config.setDrawBoundary(false);
         for (int i = 0; i < imageMaker.pageSize(); i++) {
             BufferedImage image = imageMaker.makePage(i);
-            ImageIO.write(image, "PNG", new File(dir, +i + ".png"));
+            final Path dist = Paths.get(dirPath, i + ".png");
+            ImageIO.write(image, "PNG", dist.toFile());
         }
     }
 
