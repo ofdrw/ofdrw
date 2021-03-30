@@ -679,4 +679,43 @@ class OFDDocTest {
         System.out.println("生成文档位置：" + path.toAbsolutePath());
     }
 
+    /**
+     * zwd-测试05-添加图片+特定位置文本
+     */
+    @Test
+    void test05() throws IOException {
+        // 页面宽高设置
+        Double widthZb = 210d;
+        Double heightZb = 156d;
+
+        Path path = Paths.get("src/test/resources", "test001.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            PageLayout pageLayout = ofdDoc.getPageLayout();
+            // 设置最外层样式
+            VirtualPage vPage = new VirtualPage(pageLayout);
+            PageLayout style = new PageLayout(widthZb, heightZb);
+            vPage.setStyle(style);
+            // 设置图片相关信息
+            Path imgPath = Paths.get("src/test/resources", "1.jpg");
+            // img部分代码有修改，具体使用要注意
+            Img img = new Img(imgPath);
+            img.setPosition(Position.Absolute).setX(0d).setY(0d);
+            img.setBorder(0d);
+            img.setPadding(0d);
+            img.setWidth(210d);
+            img.setHeight(156d);
+            // 添加图片
+            vPage.add(img);
+            // 设置文本相关信息
+            Paragraph p = new Paragraph(100d, 30d).setFontSize(4d);
+            p.add("zwd");
+            p.setPosition(Position.Absolute).setX(62d).setY(70d);
+            // 添加文本
+            vPage.add(p);
+            // 往ofd中添加页面一
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + path.toAbsolutePath().toString());
+    }
+
 }
