@@ -696,7 +696,7 @@ class OFDDocTest {
             PageLayout style = new PageLayout(widthZb, heightZb);
             vPage.setStyle(style);
             // 设置图片相关信息
-            Path imgPath = Paths.get("src/test/resources", "1.jpg");
+            Path imgPath = Paths.get("src/test/resources", "img-CMYK.jpg");
             // img部分代码有修改，具体使用要注意
             Img img = new Img(imgPath);
             img.setPosition(Position.Absolute).setX(0d).setY(0d);
