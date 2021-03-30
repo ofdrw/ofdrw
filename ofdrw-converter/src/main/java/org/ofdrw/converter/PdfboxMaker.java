@@ -244,7 +244,7 @@ public class PdfboxMaker {
                 if (textObject.getFillColor() != null) {
                     if (textObject.getFillColor().getValue() != null) {
                         fillColor = convertPDColor(textObject.getFillColor().getValue());
-                    } else if (textObject.getFillColor().getColorByType() != null){
+                    } else if (textObject.getFillColor().getColorByType() != null) {
                         // todo
                         CT_AxialShd ctAxialShd = textObject.getFillColor().getColorByType();
                         fillColor = convertPDColor(ctAxialShd.getSegments().get(0).getColor().getValue());
@@ -465,6 +465,11 @@ public class PdfboxMaker {
 
     /**
      * 读取图片文件
+     *
+     * @param isJb2 是否Jb2
+     * @param image 图片输入流
+     * @return 图片对象
+     * @throws IOException 读取异常
      */
     public BufferedImage readImageFile(boolean isJb2, InputStream image) throws IOException {
         if (isJb2) {
