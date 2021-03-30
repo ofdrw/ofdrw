@@ -2,9 +2,18 @@
 
 ## 进展
 
+## Version 1.8.2 2021-3-30 18:49:24
+
+> Alias: JujutsuKaisen
+
+修复:
+
+- Img元素无法解析CMYK图片造成的IIOException。
+- `Img(java.nio.file.Path)` 构造器不再推荐使用，添加图片应该手动指定图片大小`Img(double, double, java.nio.file.Path)`
+
 ## Version 1.8.1 2021-3-18 19:24:18
 
-Alias: InitialD
+> Alias: InitialD
 
 修复:
 
@@ -16,7 +25,7 @@ Alias: InitialD
 
 ## Version 1.8.0 2021-3-15 20:41:01
 
-Alias: MyYouthRomanticComedyIsWrongAsIExpected
+> Alias: MyYouthRomanticComedyIsWrongAsIExpected
 
 新增：
 
@@ -28,7 +37,7 @@ Alias: MyYouthRomanticComedyIsWrongAsIExpected
 
 ## Version 1.7.4 2021-3-8 19:43:42
 
-Alias: AttackOnTitan
+> Alias: AttackOnTitan
 
 修复：
 
@@ -37,7 +46,7 @@ Alias: AttackOnTitan
 
 ## Version 1.7.3 2021-1-15 22:37:53
 
-Alias: LogHorizon
+> Alias: LogHorizon
 
 新增
 
@@ -52,7 +61,7 @@ Alias: LogHorizon
 
 ## Version 1.7.2 2020-12-8 20:11:15
 
-Alias: CellsAtWork
+> Alias: CellsAtWork
 
 新增
 
@@ -64,7 +73,7 @@ Alias: CellsAtWork
 
 ## Version 1.7.1 2020-12-1 19:16:34
 
-Alias: HYOUKA
+> Alias: HYOUKA
 
 修复
 
@@ -73,7 +82,7 @@ Alias: HYOUKA
 
 ## Version 1.7.0 2020-11-20 19:48:21
 
-Alias: Fate/Zero
+> Alias: Fate/Zero
 
 新增
 
@@ -87,7 +96,7 @@ Alias: Fate/Zero
 
 ## Version 1.6.10 2020-11-18 11:05:50
 
-Alias: MobileSuitGundamSEED
+> Alias: MobileSuitGundamSEED
 
 新增
 
@@ -102,7 +111,7 @@ Alias: MobileSuitGundamSEED
 
 ## Version 1.6.9 2020-11-12 19:22:21
 
-Alias: 	MobuSaikoHyaku
+> Alias: 	MobuSaikoHyaku
 
 新增
 
@@ -116,7 +125,7 @@ Alias: 	MobuSaikoHyaku
 
 ## Version 1.6.8 2020-11-9 21:49:46
 
-Alias: FlyMeToTheMoon
+> Alias: FlyMeToTheMoon
 
 新增:
 
@@ -129,7 +138,7 @@ Alias: FlyMeToTheMoon
 
 ## Version 1.6.7 2020-11-6 19:20:12
 
-Alias: OriginalGod
+> Alias: OriginalGod
 
 新增:
 
@@ -142,7 +151,7 @@ Alias: OriginalGod
 
 ## Version 1.6.6 2020-10-29 20:35:01
 
-Alias: KimetsuNoYaiba
+> Alias: KimetsuNoYaiba
 
 新增:
 
@@ -156,7 +165,7 @@ Alias: KimetsuNoYaiba
 
 ## Version 1.6.5 2020-10-26 21:55:01
 
-Alias: GrandBlue
+> Alias: GrandBlue
 
 修复:
 
@@ -168,7 +177,7 @@ Alias: GrandBlue
 
 ## Version 1.6.4 2020-10-23 23:33:38
 
-Alias: BlackLagoon
+> Alias: BlackLagoon
 
 修复:
 
@@ -180,7 +189,7 @@ Alias: BlackLagoon
 
 ## Version 1.6.3 2020-10-21 20:08:32
 
-Alias: HimoutoUmaru
+> Alias: HimoutoUmaru
 
 新增:
 
@@ -192,7 +201,7 @@ Alias: HimoutoUmaru
 
 > 为了增加版本趣味性，增加了别名
 
-Alias: overlord
+> Alias: overlord
 
 修复：
 

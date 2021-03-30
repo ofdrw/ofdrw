@@ -680,7 +680,9 @@ class OFDDocTest {
     }
 
     /**
-     * zwd-测试05-添加图片+特定位置文本
+     * 添加图片+特定位置文本
+     *
+     * @author zwd
      */
     @Test
     void test05() throws IOException {
@@ -688,7 +690,7 @@ class OFDDocTest {
         Double widthZb = 210d;
         Double heightZb = 156d;
 
-        Path path = Paths.get("src/test/resources", "test001.ofd");
+        Path path = Paths.get("target", "addCMYKImage.ofd");
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             PageLayout pageLayout = ofdDoc.getPageLayout();
             // 设置最外层样式
