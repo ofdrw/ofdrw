@@ -177,13 +177,12 @@ public class ImageMaker {
                 Matrix m = MatrixUtils.base();
                 graphics.setTransform(MatrixUtils.createAffineTransform(m));
 
-
-                // 首先平移到指定位置
-                m = MatrixUtils.move(m, stBox.getTopLeftX() * ppm, stBox.getTopLeftY() * ppm);
+                // 调整比例
                 final double fx = stBox.getWidth() / stampImage.getWidth();
                 final double fy = stBox.getHeight() / stampImage.getHeight();
-                // 调整比例
                 m = MatrixUtils.scale(m, fx, fy);
+                // 首先平移到指定位置
+                m = MatrixUtils.move(m, stBox.getTopLeftX(), stBox.getTopLeftY());
                 // 缩放适应
                 m = MatrixUtils.scale(m, ppm, ppm);
 
