@@ -147,17 +147,7 @@ public class ImageMaker {
      * @param pageHeightPixel 图像高度
      */
     private BufferedImage createImage(int pageWidthPixel, int pageHeightPixel) {
-        BufferedImage image = new BufferedImage(pageWidthPixel, pageHeightPixel, BufferedImage.TYPE_INT_RGB);
-        Graphics2D graphics = (Graphics2D) image.getGraphics();
-        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, 1.0f));
-        if (isStamp) {
-            graphics.setColor(Color.WHITE);
-            image = graphics.getDeviceConfiguration().createCompatibleImage(image.getWidth(), image.getHeight(), Transparency.TRANSLUCENT);
-        } else {
-            graphics.setColor(Color.WHITE);
-            graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
-        }
-        return image;
+        return ImageUtils.createImage(pageWidthPixel, pageHeightPixel, isStamp);
     }
 
     private void writeStampAnnot(Graphics2D graphics, StampAnnotVo stampAnnotVo, StampAnnot stampAnnot) {
@@ -176,6 +166,11 @@ public class ImageMaker {
                 stampImage = ImageIO.read(inputStream);
             }
             if (stampImage != null) {
+
+                if (config.clearStampBackground) {
+                    stampImage = ImageUtils.clearWhiteBackground(stampImage, config.stampBackgroundGray);
+                }
+
                 ST_Box stBox = stampAnnot.getBoundary();
                 Matrix m = MatrixUtils.base();
                 graphics.setTransform(MatrixUtils.createAffineTransform(m));
@@ -766,11 +761,20 @@ public class ImageMaker {
          * 印章透明度
          * */
         private float stampOpacity = 0.75f;
+        /*
+         * 是否清除印章背景色
+         * */
+        private boolean clearStampBackground = true;
+        /*
+         * 印章背景灰度阈值，高于此值被设置为透明
+         * */
+        private int stampBackgroundGray = 255;
 
         /*
          * 是否绘制元素边框 （调试使用）
          * */
         private boolean drawBoundary;
+
 
         public float getStampOpacity() {
             return stampOpacity;
@@ -788,6 +792,25 @@ public class ImageMaker {
 
         public void setDrawBoundary(boolean drawBoundary) {
             this.drawBoundary = drawBoundary;
+        }
+
+        public boolean isClearStampBackground() {
+            return clearStampBackground;
+        }
+
+        public void setClearStampBackground(boolean clearStampBackground) {
+            this.clearStampBackground = clearStampBackground;
+        }
+
+        public int getStampBackgroundGray() {
+            return stampBackgroundGray;
+        }
+
+        public void setStampBackgroundGray(int stampBackgroundGray) {
+            if (stampBackgroundGray < 0 || stampBackgroundGray > 255) {
+                stampBackgroundGray = 255;
+            }
+            this.stampBackgroundGray = stampBackgroundGray;
         }
     }
 }
