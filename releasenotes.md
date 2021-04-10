@@ -2,6 +2,25 @@
 
 ## 进展
 
+## Version 1.8.3 2021-4-10 14:30:55
+
+> Alias:  ZOMBIELANDSAGA
+
+新增:
+
+- Reader模块下新增资源加载器`ResourceManage`用于简化资源的获取:
+  - 资源涵盖 公共资源序列（`PublicRes.xml`） 和 文档资源序列（`DocumentRes`.xml）中所有资源
+  - 通过资源ID就可以获取到资源对象。
+  - 资源对象中如果存在文件路径，将全部替换为绝对路径。
+  - 获取到的所有资源对象均为只读副本，不允许修改。
+
+修复:
+
+- OFD转图片：
+    - 电子印章位置不正确的问题。
+    - 修复了空白页面没有`ofd:Content`导致的NPE问题。
+- 修复了资源加载器无法获取到`PublicRes.xml`下的图片资源问题。
+
 ## Version 1.8.2 2021-3-30 18:49:24
 
 > Alias: JujutsuKaisen
