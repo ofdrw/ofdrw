@@ -17,6 +17,12 @@ import java.util.Map;
 
 import static java.awt.image.BufferedImage.TYPE_INT_RGB;
 
+/**
+ * 图片处理工具
+ *
+ * @author qaqtutu
+ * @since 2021-04-10 18:31:03
+ */
 public class ImageUtils {
 
     public static byte[] toBytes(BufferedImage bufferedImage, String type) throws IOException {
@@ -26,14 +32,20 @@ public class ImageUtils {
         return bytes;
     }
 
-    public static BufferedImage readJB2(InputStream inputStream) {
+    /**
+     * 读取JB2格式图片
+     *
+     * @param in 图片数据流
+     * @return 图片数据
+     */
+    public static BufferedImage readJB2(InputStream in) {
 
         int imageIndex = 0;
         JBIG2ImageReader imageReader = null;
         try {
 
             DefaultInputStreamFactory disf = new DefaultInputStreamFactory();
-            ImageInputStream imageInputStream = disf.getInputStream(inputStream);
+            ImageInputStream imageInputStream = disf.getInputStream(in);
 
             imageReader = new JBIG2ImageReader(new JBIG2ImageReaderSpi());
             imageReader.setInput(imageInputStream);
@@ -48,17 +60,20 @@ public class ImageUtils {
     }
 
 
-    /*
-     * 蒙版
+    /**
+     * 蒙版抠图
+     * <p>
      * 根据mask中像素的颜色将原图中的像素抠掉
-     * */
+     *
+     * @param image 原始图片
+     * @param mask  蒙板图片
+     * @return 扣去背景的图片对象
+     */
     public static BufferedImage renderMask(BufferedImage image, BufferedImage mask) {
         if ((image.getWidth() != mask.getWidth() || image.getHeight() != mask.getHeight())) {
             return image;
         }
-        return renderMask(image, mask, (r, g, b) -> {
-            return (r + g + b) / 3 > 244;
-        });
+        return renderMask(image, mask, (r, g, b) -> (r + g + b) / 3 > 244);
     }
 
     private interface PixelFilter {
@@ -124,8 +139,6 @@ public class ImageUtils {
      * @deprecated
      */
     public static BufferedImage clearWhiteBackground(BufferedImage in, int gray) {
-        return renderMask(in, in, (r, g, b) -> {
-            return gray(r, g, b) < gray;
-        });
+        return renderMask(in, in, (r, g, b) -> gray(r, g, b) < gray);
     }
 }

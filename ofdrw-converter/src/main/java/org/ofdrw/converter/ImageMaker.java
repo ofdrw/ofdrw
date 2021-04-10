@@ -775,7 +775,6 @@ public class ImageMaker {
          * */
         private boolean drawBoundary;
 
-
         public float getStampOpacity() {
             return stampOpacity;
         }
@@ -806,6 +805,10 @@ public class ImageMaker {
             return stampBackgroundGray;
         }
 
+        /**
+         * 印章背景灰度阈值，高于此值被设置为透明
+         * @param stampBackgroundGray 灰度阈值
+         */
         public void setStampBackgroundGray(int stampBackgroundGray) {
             if (stampBackgroundGray < 0 || stampBackgroundGray > 255) {
                 stampBackgroundGray = 255;
