@@ -30,10 +30,12 @@ public class OFD2IMGTest {
         FontUtils.addAliasMapping("null", "小标宋体", "方正小标宋简体", "方正小标宋简体");
         FontUtils.addAliasMapping("null", "KaiTi_GB2312", "楷体", "楷体");
 
-
         toPng("src/test/resources/zsbk.ofd", "target/zsbk.ofd");
-        toPng("src/test/resources/发票示例.ofd", "target/发票示例.ofd");
         toPng("src/test/resources/文字横向-数科.ofd", "target/文字横向-数科.ofd");
+
+        long start = System.currentTimeMillis();
+        toPng("src/test/resources/发票示例.ofd", "target/发票示例.ofd");
+        System.out.printf(">> 总计花费: %dms\n", System.currentTimeMillis()-start);
     }
 
     private static void toPng(String filename, String dirPath) throws IOException {

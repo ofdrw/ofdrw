@@ -26,6 +26,7 @@ import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.converter.utils.PointUtil;
 import org.ofdrw.core.annotation.pageannot.Annot;
+import org.ofdrw.core.basicStructure.pageObj.Content;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
@@ -56,10 +57,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static org.ofdrw.converter.utils.CommonUtil.*;
 
@@ -139,14 +137,22 @@ public class PdfboxMaker {
         pdf.addPage(pdfPage);
         PDPageContentStream contentStream = new PDPageContentStream(pdf, pdfPage);
         // make tpl content
-        List<CT_Layer> layerList;
-        if (!Objects.isNull(templatePage)) {
-            layerList = templatePage.getContent().getLayers();
-            writeLayer(pdf, contentStream, layerList, pageBox, null);
+        List<CT_Layer> layerList = new ArrayList<>();
+        if (templatePage != null) {
+            final Content content = templatePage.getContent();
+            if (content != null) {
+                layerList.addAll(content.getLayers());
+//                writeLayer(pdf, contentStream, layerList, pageBox, null);
+            }
         }
 
         // make page content
-        layerList = contentPage.getContent().getLayers();
+        final Content content = contentPage.getContent();
+        if (content != null) {
+            layerList.addAll(content.getLayers());
+        }
+
+        // 统一绘制模板层和页面内容层
         writeLayer(pdf, contentStream, layerList, pageBox, null);
 
         // make seal content
