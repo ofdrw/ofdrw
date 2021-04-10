@@ -29,6 +29,7 @@ import org.ofdrw.core.text.CT_CGTransform;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.reader.DLOFDReader;
+import org.ofdrw.reader.ResourceManage;
 import org.ofdrw.reader.model.AnnotionVo;
 import org.ofdrw.reader.model.OfdPageVo;
 import org.ofdrw.reader.model.StampAnnotVo;
@@ -86,7 +87,7 @@ public class ImageMaker {
      */
     public ImageMaker(DLOFDReader ofdReader, int ppm) {
         this.ofdReader = ofdReader;
-        resourceManage = new ResourceManage(ofdReader);
+        this.resourceManage = ofdReader.getResMgt();
         this.pages = ofdReader.getOFDDocumentVo().getOfdPageVoList();
         if (this.ppm > 0) {
             this.ppm = ppm;
@@ -103,7 +104,7 @@ public class ImageMaker {
         }
         OfdPageVo pageVo = pages.get(pageIndex);
         Page contentPage = pageVo.getContentPage();
-        Page templatePage = pageVo.getTemplatePage();
+//        Page templatePage = pageVo.getTemplatePage();
         ST_Box pageBox = getPageBox(contentPage.getArea(), ofdReader.getOFDDocumentVo().getPageWidth(), ofdReader.getOFDDocumentVo().getPageHeight());
         double pageWidthPixel = ppm * pageBox.getWidth();
         double pageHeightPixel = ppm * pageBox.getHeight();
@@ -113,6 +114,7 @@ public class ImageMaker {
 
         writePage(graphics, pageVo, null);
 
+        // 绘制电子印章图片
         for (int i = 0; i < ofdReader.getOFDDocumentVo().getStampAnnotVos().size(); i++) {
             StampAnnotVo stampAnnotVo = ofdReader.getOFDDocumentVo().getStampAnnotVos().get(i);
             List<StampAnnot> stampAnnots = stampAnnotVo.getStampAnnots();
@@ -125,6 +127,7 @@ public class ImageMaker {
 
         }
 
+        // 绘制注解对象
         for (AnnotionVo annotionVo : ofdReader.getOFDDocumentVo().getAnnotaions()) {
             if (pageVo.getContentPage().getObjID().toString().equals(annotionVo.getPageId()) && null != annotionVo.getAnnots()) {
                 for (Annot annot : annotionVo.getAnnots()) {
@@ -304,9 +307,7 @@ public class ImageMaker {
         BufferedImage mask = getImage(imageObject.getImageMask());
         if (mask != null) image = ImageUtils.renderMask(image, mask);
 
-
         Matrix m = MatrixUtils.base();
-
         // 把图片还原成1*1
         m = MatrixUtils.scale(m, Double.valueOf(1.0 / image.getWidth()).floatValue(), Double.valueOf(1.0 / image.getHeight()).floatValue());
 

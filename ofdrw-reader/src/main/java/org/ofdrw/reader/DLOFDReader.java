@@ -47,6 +47,10 @@ public class DLOFDReader extends OFDReader {
     private Document document;
     private ST_Box documentBox;
     private OFDDocumentVo ofdDocumentVo;
+    /**
+     * 资源管理器
+     */
+    private ResourceManage resMgt;
 
     public DLOFDReader(Path ofdFile) throws IOException {
         super(ofdFile);
@@ -80,12 +84,22 @@ public class DLOFDReader extends OFDReader {
      */
     private void initReader() {
         try {
+            resMgt = new ResourceManage(this);
             this.getResourceLocator().save();
             DocBody docBody = this.getOFDDir().getOfd().getDocBody();
             docRoot = docBody.getDocRoot();
             document = this.getResourceLocator().get(docRoot, Document::new);
             getPageBox();
-            ofdDocumentVo = new OFDDocumentVo(docRoot.parent(), documentBox.getWidth(), documentBox.getHeight(), getOFDPageVO(), getPublicResFonts(), getPublicResColorSpaces(), (List<CT_MultiMedia>) getDocumentRes().get("media"), (List<CT_VectorG>) getDocumentRes().get("vector"), getStampAnnot(), getPublicResDrawParam(), getAnnotaions());
+            ofdDocumentVo = new OFDDocumentVo(docRoot.parent(),
+                    documentBox.getWidth(), documentBox.getHeight(),
+                    getOFDPageVO(),
+                    resMgt.getFonts(),
+                    resMgt.getColorSpaces(),
+                    resMgt.getMultiMedias(),
+                    resMgt.getCompositeGraphicUnits(),
+                    resMgt.getDrawParams(),
+                    getStampAnnot(),
+                    getAnnotaions());
         } catch (DocumentException | FileNotFoundException var15) {
             throw new RuntimeException("OFD解析失败，原因:" + var15.getMessage(), var15);
         } finally {
@@ -169,132 +183,6 @@ public class DLOFDReader extends OFDReader {
         return pageVoList;
     }
 
-    private List<CT_Font> getPublicResFonts() {
-        List<CT_Font> ctFontList = new ArrayList<>();
-        try {
-            this.getResourceLocator().save();
-            this.getResourceLocator().cd(docRoot.parent());
-            ST_Loc publicResLoc = document.getCommonData().getPublicRes();
-            Res publicRes;
-            if (!Objects.isNull(publicResLoc)) {
-                publicRes = this.getResourceLocator().get(publicResLoc, Res::new);
-            } else {
-                publicResLoc = document.getCommonData().getDocumentRes();
-                publicRes = this.getResourceLocator().get(publicResLoc, Res::new);
-            }
-            for (int i = 0; i < publicRes.getFonts().size(); i++) {
-                Fonts fonts = publicRes.getFonts().get(i);
-                ctFontList.addAll(fonts.getFonts());
-            }
-
-        } catch (Exception e) {
-//            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
-        } finally {
-            this.getResourceLocator().restore();
-        }
-        return ctFontList;
-    }
-
-    private List<CT_ColorSpace> getPublicResColorSpaces() {
-        List<CT_ColorSpace> ctColorSpaceList = new ArrayList<>();
-        try {
-            this.getResourceLocator().save();
-            this.getResourceLocator().cd(docRoot.parent());
-            ST_Loc publicResLoc = document.getCommonData().getPublicRes();
-            Res publicRes;
-            if (!Objects.isNull(publicResLoc)) {
-                publicRes = this.getResourceLocator().get(publicResLoc, Res::new);
-            } else {
-                publicResLoc = document.getCommonData().getDocumentRes();
-                publicRes = this.getResourceLocator().get(publicResLoc, Res::new);
-            }
-            List<ColorSpaces> colorSpacesList = new ArrayList();
-            Iterator var2 = publicRes.getResources().iterator();
-            while (var2.hasNext()) {
-                OFDResource item = (OFDResource) var2.next();
-                if (item instanceof ColorSpaces) {
-                    colorSpacesList.add((ColorSpaces) item);
-                }
-            }
-            for (int i = 0; i < colorSpacesList.size(); i++) {
-                ColorSpaces colorSpaces = colorSpacesList.get(i);
-                ctColorSpaceList.addAll(colorSpaces.getColorSpaces());
-            }
-
-        } catch (Exception e) {
-//            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
-        } finally {
-            this.getResourceLocator().restore();
-        }
-        return ctColorSpaceList;
-    }
-
-    private List<CT_DrawParam> getPublicResDrawParam() {
-        List<CT_DrawParam> ctDrawParamList = new ArrayList<>();
-        try {
-            this.getResourceLocator().save();
-            this.getResourceLocator().cd(docRoot.parent());
-            ST_Loc publicResLoc = document.getCommonData().getPublicRes();
-            Res publicRes = this.getResourceLocator().get(publicResLoc, Res::new);
-            List<DrawParams> drawParamsList = new ArrayList();
-            Iterator var2 = publicRes.getResources().iterator();
-            while (var2.hasNext()) {
-                OFDResource item = (OFDResource) var2.next();
-                if (item instanceof DrawParams) {
-                    drawParamsList.add((DrawParams) item);
-                }
-            }
-            for (int i = 0; i < drawParamsList.size(); i++) {
-                DrawParams drawParams = drawParamsList.get(i);
-                ctDrawParamList.addAll(drawParams.getDrawParams());
-            }
-        } catch (Exception e) {
-        } finally {
-            this.getResourceLocator().restore();
-        }
-        return ctDrawParamList;
-    }
-
-    private Map<String, Object> getDocumentRes() {
-        Map<String, Object> resMap = new HashMap<>();
-        List<CT_MultiMedia> ctMultiMediaList = new ArrayList<>();
-        List<CT_VectorG> ctVectorGList = new ArrayList<>();
-        try {
-            this.getResourceLocator().save();
-            this.getResourceLocator().cd(docRoot.parent());
-            ST_Loc documentResLoc = document.getCommonData().getDocumentRes();
-            if (!Objects.isNull(documentResLoc)) {
-                Res publicRes = this.getResourceLocator().get(documentResLoc, Res::new);
-                List<MultiMedias> multiMediasList = new ArrayList();
-                List<CompositeGraphicUnits> compositeGraphicUnitsList = new ArrayList();
-                Iterator var2 = publicRes.getResources().iterator();
-                while (var2.hasNext()) {
-                    OFDResource item = (OFDResource) var2.next();
-                    if (item instanceof MultiMedias) {
-                        multiMediasList.add((MultiMedias) item);
-                    } else if (item instanceof CompositeGraphicUnits) {
-                        compositeGraphicUnitsList.add((CompositeGraphicUnits) item);
-                    }
-                }
-                for (int i = 0; i < multiMediasList.size(); i++) {
-                    MultiMedias multiMedias = multiMediasList.get(i);
-                    ctMultiMediaList.addAll(multiMedias.getMultiMedias());
-                }
-                for (int i = 0; i < compositeGraphicUnitsList.size(); i++) {
-                    CompositeGraphicUnits compositeGraphicUnits = compositeGraphicUnitsList.get(i);
-                    ctVectorGList.addAll(compositeGraphicUnits.getCompositeGraphicUnits());
-                }
-            }
-        } catch (Exception e) {
-//            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
-        } finally {
-            this.getResourceLocator().restore();
-        }
-        resMap.put("media", ctMultiMediaList);
-        resMap.put("vector", ctVectorGList);
-        return resMap;
-    }
-
     private List<StampAnnotVo> getStampAnnot() {
         List<StampAnnotVo> stampAnnotVoList = new ArrayList<>();
         try {
@@ -343,7 +231,7 @@ public class DLOFDReader extends OFDReader {
                         } else if (type.toLowerCase().equals("png")) {
                             stampAnnotVo.setImgByte(sealBytes);
                             stampAnnotVoList.add(stampAnnotVo);
-                        }else{
+                        } else {
                             stampAnnotVo.setImgByte(sealBytes);
                         }
                     }
@@ -393,5 +281,16 @@ public class DLOFDReader extends OFDReader {
             this.getResourceLocator().restore();
         }
         return annotaionList;
+    }
+
+    /**
+     * 获取资源管理器
+     * <p>
+     * 资源管理器获取到的对象均为只读对象
+     *
+     * @return 资源管理器
+     */
+    public ResourceManage getResMgt() {
+        return resMgt;
     }
 }

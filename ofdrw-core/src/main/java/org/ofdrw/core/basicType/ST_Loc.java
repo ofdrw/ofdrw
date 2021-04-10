@@ -125,6 +125,7 @@ public class ST_Loc extends STBase {
         }
         return new ST_Loc(part1 + "/" + p2);
     }
+
     /**
      * 路径拼接
      *
@@ -140,6 +141,7 @@ public class ST_Loc extends STBase {
 
     /**
      * 是否以指定字符结尾
+     *
      * @param suffix 指定字符
      * @return true 指定字符结尾；false 不以指定字符结尾
      */

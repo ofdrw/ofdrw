@@ -35,7 +35,16 @@ public class OFDDocumentVo {
 
     private List<AnnotionVo> annotaions;
 
-    public OFDDocumentVo(String docPath, double pageWidth, double pageHeight, List<OfdPageVo> ofdPageVoList, List<CT_Font> ctFontList, List<CT_ColorSpace> ctColorSpaceList, List<CT_MultiMedia> ctMultiMediaList, List<CT_VectorG> ctVectorGList, List<StampAnnotVo> stampAnnotVoList, List<CT_DrawParam> ctDrawParamList, List<AnnotionVo> annotaions) {
+    public OFDDocumentVo(String docPath,
+                         double pageWidth, double pageHeight,
+                         List<OfdPageVo> ofdPageVoList,
+                         List<CT_Font> ctFontList,
+                         List<CT_ColorSpace> ctColorSpaceList,
+                         List<CT_MultiMedia> ctMultiMediaList,
+                         List<CT_VectorG> ctVectorGList,
+                         List<CT_DrawParam> ctDrawParamList,
+                         List<StampAnnotVo> stampAnnotVoList,
+                         List<AnnotionVo> annotaions) {
         this.docPath = docPath;
         this.pageWidth = pageWidth;
         this.pageHeight = pageHeight;

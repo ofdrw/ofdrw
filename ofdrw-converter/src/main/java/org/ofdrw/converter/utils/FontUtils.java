@@ -217,7 +217,7 @@ public class FontUtils {
             fontNames.forEach(fontName -> {
                 nameMapping.put(familyName + Separator + fontName, finalName);
                 nameMapping.put("null$$$$" + fontName, finalName);
-                log.info(String.format("注册字体 %s,%s,%s", familyName, fontName, path));
+                log.debug(String.format("注册字体 %s,%s,%s", familyName, fontName, path));
                 addSystemFontMapping(familyName, fontName, path);
                 addSystemFontMapping("null", fontName, path);
             });
