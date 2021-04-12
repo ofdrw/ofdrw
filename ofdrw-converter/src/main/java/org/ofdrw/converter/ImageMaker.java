@@ -224,6 +224,16 @@ public class ImageMaker {
             if (drawParams == null) drawParams = new ArrayList<>();
             if (parentMatrix == null) parentMatrix = MatrixUtils.base();
 
+            if (pageBlock instanceof CT_Layer) {
+                ST_RefID drawParamRef = ((CT_Layer) pageBlock).getDrawParam();
+                if(drawParamRef!=null){
+                    CT_DrawParam ctDrawParam = resourceManage.getDrawParam(drawParamRef.getRefId().toString());
+                    if(ctDrawParam!=null){
+                        drawParams.add(ctDrawParam);
+                    }
+                }
+            }
+
             if (pageBlock.attribute("Boundary") != null) {
                 String data = (String) pageBlock.attribute("Boundary").getData();
                 ST_Box stBox = ST_Box.getInstance(data);
@@ -356,7 +366,7 @@ public class ImageMaker {
         logger.debug("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━TextObject━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓");
 
         Color strokeColor = getStrokeColor(textObject.getStrokeColor(), null, drawParams);
-        Color fillColor = getStrokeColor(textObject.getFillColor(), null, drawParams);
+        Color fillColor = getFillColor(textObject.getFillColor(), null, drawParams);
         if (fillColor == null) fillColor = Color.black;
 
         ST_Box boundary = textObject.getBoundary();
@@ -807,6 +817,7 @@ public class ImageMaker {
 
         /**
          * 印章背景灰度阈值，高于此值被设置为透明
+         *
          * @param stampBackgroundGray 灰度阈值
          */
         public void setStampBackgroundGray(int stampBackgroundGray) {
