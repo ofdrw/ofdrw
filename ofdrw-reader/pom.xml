@@ -42,10 +42,12 @@
             <artifactId>ofdrw-gm</artifactId>
             <version>${project.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>net.lingala.zip4j</groupId>-->
-<!--            <artifactId>zip4j</artifactId>-->
-<!--            <version>2.3.0</version>-->
-<!--        </dependency>-->
+
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>jbig2-imageio</artifactId>
+            <version>3.0.3</version>
+        </dependency>
+
     </dependencies>
 </project>

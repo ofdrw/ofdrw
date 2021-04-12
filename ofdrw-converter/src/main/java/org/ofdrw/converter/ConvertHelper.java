@@ -60,7 +60,7 @@ public class ConvertHelper {
                 start = System.currentTimeMillis();
                 pdfMaker.makePage(ofdPageVo);
                 end = System.currentTimeMillis();
-                logger.info(String.format("page %d speed time %d", pageNum++, end - start));
+                logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
             }
 
             if (output instanceof OutputStream) {

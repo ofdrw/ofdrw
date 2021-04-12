@@ -1,4 +1,4 @@
-package org.ofdrw.converter.utils;
+package org.ofdrw.reader.tools;
 
 import org.apache.pdfbox.jbig2.JBIG2ImageReader;
 import org.apache.pdfbox.jbig2.JBIG2ImageReaderSpi;
@@ -37,26 +37,18 @@ public class ImageUtils {
      *
      * @param in 图片数据流
      * @return 图片数据
+     * @throws IOException 图片操作异常
      */
-    public static BufferedImage readJB2(InputStream in) {
-
+    public static BufferedImage readJB2(InputStream in) throws IOException {
         int imageIndex = 0;
         JBIG2ImageReader imageReader = null;
-        try {
+        DefaultInputStreamFactory disf = new DefaultInputStreamFactory();
+        ImageInputStream imageInputStream = disf.getInputStream(in);
 
-            DefaultInputStreamFactory disf = new DefaultInputStreamFactory();
-            ImageInputStream imageInputStream = disf.getInputStream(in);
+        imageReader = new JBIG2ImageReader(new JBIG2ImageReaderSpi());
+        imageReader.setInput(imageInputStream);
+        return imageReader.read(imageIndex, imageReader.getDefaultReadParam());
 
-            imageReader = new JBIG2ImageReader(new JBIG2ImageReaderSpi());
-            imageReader.setInput(imageInputStream);
-            BufferedImage bufferedImage = imageReader.read(imageIndex, imageReader.getDefaultReadParam());
-
-            return bufferedImage;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
     }
 
 

@@ -30,8 +30,10 @@ public class OFD2PDFTest {
 
     @Test
     public void convertPdf() {
-        Path src = Paths.get("src/test/resources/发票示例.ofd");
-        Path dst = Paths.get("target/发票示例.pdf");
+//        Path src = Paths.get("src/test/resources/发票示例.ofd");
+//        Path dst = Paths.get("target/发票示例.pdf");
+        Path src = Paths.get("src/test/resources/不规范资源路径.ofd");
+        Path dst = Paths.get("target/不规范资源路径.pdf");
         try {
             ConvertHelper.toPdf(src, dst);
         } catch (GeneralConvertException e) {

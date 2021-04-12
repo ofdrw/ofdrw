@@ -6,7 +6,9 @@ import org.ofdrw.core.basicStructure.doc.CT_CommonData;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
+import org.ofdrw.core.basicStructure.res.MediaType;
 import org.ofdrw.core.basicStructure.res.OFDResource;
 import org.ofdrw.core.basicStructure.res.Res;
 import org.ofdrw.core.basicStructure.res.resources.*;
@@ -16,8 +18,14 @@ import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.pkg.container.OFDDir;
+import org.ofdrw.reader.tools.ImageUtils;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -114,6 +122,56 @@ public class ResourceManage {
      */
     public CT_MultiMedia getMultiMedia(String id) {
         return multiMediaMap.get(id);
+    }
+
+    /**
+     * 获取图片资源的图片对象
+     *
+     * @param refID 引用ID
+     * @return 图片对象
+     * @throws IOException IO异常
+     */
+    public BufferedImage getImage(String refID) throws IOException {
+        CT_MultiMedia multiMedia = getMultiMedia(refID);
+        if (multiMedia == null) return null;
+        if (MediaType.Image != multiMedia.getType()) return null;
+
+        // 该路径在解析是已经被映射成绝对路径
+        ST_Loc loc = multiMedia.getMediaFile();
+        if (loc == null) return null;
+        final ResourceLocator rl = ofdReader.getResourceLocator();
+        rl.save();
+        try {
+            final Path imgPath = rl.getFile(loc);
+            try (InputStream in = Files.newInputStream(imgPath)) {
+                if (loc.toString().endsWith("jb2")) {
+                    return ImageUtils.readJB2(in);
+                } else {
+                    return ImageIO.read(in);
+                }
+            }
+        } finally {
+            rl.restore();
+        }
+    }
+
+    /**
+     * 获取图片对象的图像
+     * <p>
+     * 如果图片存在蒙板，那么返回蒙板后的图像
+     *
+     * @param imageObject 图片对象
+     * @return 图片对象（蒙板后的图像）
+     * @throws IOException 图片操作IO异常
+     */
+    public BufferedImage getImage(ImageObject imageObject) throws IOException {
+        BufferedImage image = getImage(imageObject.getResourceID().toString());
+        if (image == null) return null;
+        if (imageObject.getImageMask() != null) {
+            BufferedImage mask = getImage(imageObject.getImageMask().toString());
+            if (mask != null) image = ImageUtils.renderMask(image, mask);
+        }
+        return image;
     }
 
     /**

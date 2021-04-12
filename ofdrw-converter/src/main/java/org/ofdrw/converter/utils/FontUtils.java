@@ -217,7 +217,7 @@ public class FontUtils {
             fontNames.forEach(fontName -> {
                 nameMapping.put(familyName + Separator + fontName, finalName);
                 nameMapping.put("null$$$$" + fontName, finalName);
-                log.debug(String.format("注册字体 %s,%s,%s", familyName, fontName, path));
+//                log.debug(String.format("注册字体 %s,%s,%s", familyName, fontName, path));
                 addSystemFontMapping(familyName, fontName, path);
                 addSystemFontMapping("null", fontName, path);
             });
@@ -225,12 +225,6 @@ public class FontUtils {
 //        System.out.println(String.format("%s %s %s %s", family, name, cnFamily, cnName));
     }
 
-    public static void main(String[] args) throws IOException {
-        FontUtils.scanFontDir(new File("C:/Windows/Fonts"));
-        System.out.println(FontUtils.loadSystemFont("Microsoft YaHei", "MicrosoftYaHei"));
-        System.out.println(FontUtils.loadSystemFont("Microsoft YaHei", "微软雅黑"));
-        System.out.println(FontUtils.loadSystemFont("微软雅黑", "MicrosoftYaHei"));
-        System.out.println(FontUtils.loadSystemFont("微软雅黑", "微软雅黑"));
-    }
+
 
 }
