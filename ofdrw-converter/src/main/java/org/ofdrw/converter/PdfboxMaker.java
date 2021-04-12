@@ -237,15 +237,10 @@ public class PdfboxMaker {
             }
         }
         for (PageBlockType block : pageBlockTypeList) {
-            TextObject textObject;
-            ImageObject imageObject;
-            PathObject pathObject;
-            CompositeObject compositeObject;
-
             if (block instanceof TextObject) {
                 // text
                 PDColor fillColor = defaultFillColor;
-                textObject = (TextObject) block;
+                TextObject textObject = (TextObject) block;
                 int alpha = 255;
                 if (textObject.getFillColor() != null) {
                     if (textObject.getFillColor().getValue() != null) {
@@ -260,15 +255,15 @@ public class PdfboxMaker {
                 writeText(contentStream, box, sealBox, textObject, fillColor, alpha);
             } else if (block instanceof ImageObject) {
                 // image
-                imageObject = (ImageObject) block;
+                ImageObject imageObject = (ImageObject) block;
                 writeImage(contentStream, box, imageObject, annotBox);
 
             } else if (block instanceof PathObject) {
                 // path
-                pathObject = (PathObject) block;
+                PathObject pathObject = (PathObject) block;
                 writePath(contentStream, box, sealBox, annotBox, pathObject, defaultFillColor, defaultStrokeColor, defaultLineWidth, compositeObjectAlpha, compositeObjectBoundary, compositeObjectCTM);
             } else if (block instanceof CompositeObject) {
-                compositeObject = (CompositeObject) block;
+                CompositeObject compositeObject = (CompositeObject) block;
                 for (CT_VectorG vectorG : ofdReader.getOFDDocumentVo().getCtVectorGList()) {
                     if (vectorG.getID().toString().equals(compositeObject.getResourceID().toString())) {
                         Integer currentCompositeObjectAlpha = compositeObject.getAlpha();
