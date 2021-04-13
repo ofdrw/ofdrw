@@ -1,39 +1,69 @@
-package org.ofdrw.converter.utils;
+package org.ofdrw.converter;
 
 
 import org.apache.fontbox.ttf.*;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.ofdrw.converter.utils.OSinfo;
+import org.ofdrw.converter.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * 字体加载器
+ *
+ * @author qaqtutu
+ * @since 2021-04-13 19:00:39
+ */
+public class FontLoader {
+    private static final Logger log = LoggerFactory.getLogger(FontLoader.class);
 
-public class FontUtils {
-    private static final Logger log = LoggerFactory.getLogger(FontUtils.class);
+    private final Map<String, String> pathMapping = new ConcurrentHashMap<>();
+    private final Map<String, String> nameMapping = new ConcurrentHashMap<>();
+    private final Map<String, String> aliasMapping = new ConcurrentHashMap<>();
 
-    private static Map<String, String> pathMapping = new HashMap<>();
-    private static Map<String, String> nameMapping = new HashMap<>();
-    private static Map<String, String> aliasMapping = new HashMap<>();
     public static final String Separator = "$$$$";
-
-
     private static final String DEFAULT_FONT_DIR_MAC = "/System/Library/Fonts";
     private static final String DEFAULT_FONT_DIR_WINDOWS = "C:/Windows/Fonts";
     private static final String DEFAULT_FONT_DIR_LINUX = "/usr/share/fonts";
     private static TrueTypeFont defaultFont;
 
+    private static FontLoader instance = null;
+
+    private FontLoader() {
+    }
+
+    private static synchronized void syncInit() {
+        if (instance == null) {
+            instance = new FontLoader();
+            // 初始化加载字体信息
+            instance.init();
+        }
+    }
+
+    public static FontLoader getInstance() {
+        if (instance == null) {
+            syncInit();
+        }
+        return instance;
+    }
+
     /*
      * 加载默认字体
      * 加载系统字体
      * */
-    public static void init() {
-        try (InputStream in = FontUtils.class.getResourceAsStream("/fonts/simhei.ttf")) {
+    public void init() {
+        try (InputStream in = FontLoader.class.getResourceAsStream("/fonts/simhei.ttf")) {
             OTFParser parser = new OTFParser(false);
             defaultFont = parser.parse(in);
         } catch (IOException e) {
@@ -50,17 +80,26 @@ public class FontUtils {
         }
     }
 
-    public static void addAliasMapping(String familyName, String fontName, String aliasFamilyName, String aliasFontName) {
+    /**
+     * 追加字体映射
+     * @param familyName 字族名
+     * @param fontName 字体名
+     * @param aliasFamilyName 字族别名
+     * @param aliasFontName 字体别名
+     * @return this
+     */
+    public FontLoader addAliasMapping(String familyName, String fontName, String aliasFamilyName, String aliasFontName) {
         String key1 = familyName + Separator + fontName;
         String key2 = aliasFamilyName + Separator + aliasFontName;
         if (nameMapping.get(key2) == null || pathMapping.get(key2) == null) {
             log.error("要设置别名的字体不存在");
-            return;
+            return this;
         }
         aliasMapping.put(key1, key2);
+        return this;
     }
 
-    public static void addSystemFontMapping(String familyName, String fontName, String fontFilePath) {
+    public void addSystemFontMapping(String familyName, String fontName, String fontFilePath) {
         if (StringUtils.isBlank(familyName) || StringUtils.isBlank(fontName) || StringUtils.isBlank(fontFilePath)) {
             log.error(String.format("添加系统字体映射失败，FamilyName:%s FontName:%s 路径：%s", familyName, fontName, fontFilePath));
         }
@@ -79,7 +118,7 @@ public class FontUtils {
         }
     }
 
-    public static String getSystemFontPath(String familyName, String fontName) {
+    public String getSystemFontPath(String familyName, String fontName) {
         if (familyName == null) {
             familyName = "null";
         }
@@ -96,7 +135,14 @@ public class FontUtils {
         return fontFilePath;
     }
 
-    public static TrueTypeFont loadSystemFont(String familyName, String fontName) {
+    /**
+     * 尝试从系统字体目录中加载字体
+     *
+     * @param familyName 字族名
+     * @param fontName   字体名
+     * @return TTF或null
+     */
+    public TrueTypeFont loadSystemFont(String familyName, String fontName) {
         if (familyName == null) {
             familyName = "null";
         }
@@ -125,19 +171,60 @@ public class FontUtils {
                 OpenTypeFont openTypeFont = parser.parse(file);
                 return openTypeFont;
             }
-
         } catch (IOException e) {
-            e.printStackTrace();
+            log.warn("字体全名加载异常，尝试仅记载字体名" + e);
+            return loadSystemFont(null, fontName);
         }
-        return loadSystemFont(null, fontName);
+
+    }
+
+    /**
+     * 尝试从操作系统中读取PDF文字
+     *
+     * @param document   PDF文档对象
+     * @param familyName 字体族名
+     * @param fontName   字体名称
+     * @return PDF文字
+     * @throws IOException 字体文件读写异常
+     */
+    public PDFont loadSysPDFont(PDDocument document, String familyName, String fontName) throws IOException {
+        final TrueTypeFont typeFont = loadSystemFont(familyName, fontName);
+        return PDType0Font.load(document, typeFont, true);
+    }
+
+    /**
+     * 加载外部字体
+     *
+     * @param absPath 绝对路径
+     * @return null或外部字体
+     */
+    public TrueTypeFont loadExternalFont(String absPath) {
+        log.debug("加载内嵌字体：" + absPath);
+        if (absPath.toUpperCase().endsWith(".TTF")) {
+            try (InputStream in = new FileInputStream(absPath)) {
+                return new TTFParser().parse(in);
+            } catch (IOException e) {
+                log.error("加载TTF字体出错：" + e.getMessage(),e);
+            }
+        } else if (absPath.toUpperCase().endsWith(".OTF")) {
+            try (InputStream in = new FileInputStream(absPath)) {
+                OTFParser parser = new OTFParser(true);
+                return parser.parse(in);
+            } catch (IOException e) {
+                log.error("加载OTF字体出错：" + e.getMessage(),e);
+            }
+        } else {
+            log.warn("不支持的字体格式：" + absPath);
+        }
+        return null;
     }
 
 
-    private static TrueTypeFont loadDefaultFont() {
+    public TrueTypeFont loadDefaultFont() {
         return defaultFont;
     }
 
-    public static void scanFontDir(File dir) {
+    public void scanFontDir(File dir) {
         if (dir == null || !dir.exists() || !dir.isDirectory())
             return;
         for (File file : dir.listFiles()) {
@@ -149,20 +236,16 @@ public class FontUtils {
         }
     }
 
-    public static void loadFont(File file) {
+    public void loadFont(File file) {
         if (file.getName().toLowerCase().endsWith("ttc")) {
             try {
                 TrueTypeCollection trueTypeCollection = new TrueTypeCollection(file);
-                trueTypeCollection.processAllFonts(new TrueTypeCollection.TrueTypeFontProcessor() {
-                    @Override
-                    public void process(TrueTypeFont trueTypeFont) throws IOException {
-                        NamingTable namingTable = trueTypeFont.getNaming();
-                        addSystemFontMapping(namingTable, file.getPath());
-                    }
+                trueTypeCollection.processAllFonts(trueTypeFont -> {
+                    NamingTable namingTable = trueTypeFont.getNaming();
+                    addSystemFontMapping(namingTable, file.getPath());
                 });
             } catch (IOException e) {
-                e.printStackTrace();
-                log.warn("加载字体失败：" + file.getAbsolutePath());
+                log.warn("加载字体失败：" + file.getAbsolutePath(), e);
             }
         }
         if (!file.getName().toLowerCase().endsWith("otf") && !file.getName().toLowerCase().endsWith("ttf")) {
@@ -175,11 +258,11 @@ public class FontUtils {
             addSystemFontMapping(namingTable, file.getPath());
         } catch (Exception e) {
             e.printStackTrace();
-            log.warn("加载字体失败：" + file.getAbsolutePath());
+            log.warn("加载字体失败：" + file.getAbsolutePath(), e);
         }
     }
 
-    private static void addSystemFontMapping(NamingTable namingTable, String path) {
+    private void addSystemFontMapping(NamingTable namingTable, String path) {
 //        String family = null;
         String name = null;
 //        String cnFamily = null;
@@ -224,7 +307,6 @@ public class FontUtils {
         });
 //        System.out.println(String.format("%s %s %s %s", family, name, cnFamily, cnName));
     }
-
 
 
 }

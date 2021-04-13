@@ -1,10 +1,8 @@
 package org.ofdrw.converter;
 
 import org.apache.fontbox.ttf.GlyphData;
-import org.apache.fontbox.ttf.OTFParser;
 import org.apache.fontbox.ttf.TrueTypeFont;
 import org.ofdrw.converter.point.Tuple2;
-import org.ofdrw.converter.utils.FontUtils;
 import org.ofdrw.reader.tools.ImageUtils;
 import org.ofdrw.converter.utils.MatrixUtils;
 import org.ofdrw.core.annotation.pageannot.Annot;
@@ -13,11 +11,8 @@ import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
-import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
-import org.ofdrw.core.basicStructure.res.MediaType;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
-import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
@@ -78,6 +73,14 @@ public class ImageMaker {
 
     private List<OfdPageVo> pages = null;
     private final ResourceManage resourceManage;
+    /**
+     * 加载后的字体缓存
+     * <p>
+     * 防止重复加载文件读写和解析带来耗时
+     * <p>
+     * KEY: 字族名_字体名_字体路径
+     */
+    private final Map<String, TrueTypeFont> fontCache = new HashMap<>();
 
     /**
      * 创建图片转换对象实例
@@ -167,7 +170,6 @@ public class ImageMaker {
                 stampImage = ImageIO.read(inputStream);
             }
             if (stampImage != null) {
-
                 if (config.clearStampBackground) {
                     stampImage = ImageUtils.clearWhiteBackground(stampImage, config.stampBackgroundGray);
                 }
@@ -265,7 +267,7 @@ public class ImageMaker {
                         writeContent(graphics, layer, drawParams, parentMatrix);
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.warn("PageBlock无法渲染:", e);
                 }
             }
         } finally {
@@ -354,21 +356,21 @@ public class ImageMaker {
         ST_Box boundary = textObject.getBoundary();
         Matrix baseMatrix = renderBoundaryAndSetClip(graphics, boundary, parentMatrix);
 
+        // 读取字体
         TrueTypeFont typeFont = getFont(textObject);
         List<Number> fontMatrix = null;
 
         if (typeFont == null) {
             logger.error("加载字体失败：" + textObject.getFont());
+//            typeFont = FontLoader.getInstance().loadDefaultFont();
             return;
         } else {
             try {
                 logger.debug("字体名：" + typeFont.getName());
-                logger.debug("字体表：" + typeFont.getTables().stream().map(ttfTable -> {
-                    return ttfTable.getTag() + " ";
-                }).collect(Collectors.joining()));
+                logger.debug("字体表：" + typeFont.getTables().stream().map(ttfTable -> ttfTable.getTag() + " ").collect(Collectors.joining()));
                 fontMatrix = typeFont.getFontMatrix();
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.warn("解析加载异常", e);
             }
         }
 
@@ -421,9 +423,8 @@ public class ImageMaker {
                             Matrix matrix = chatMatrix(textObject, x, y, textObject.getSize(), fontMatrix, baseMatrix);
                             renderChar(graphics, shape, matrix, strokeColor, fillColor);
                         }
-
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        logger.warn("文字渲染异常：", e);
                     }
                     globalPoint++;
                     deltaOffset++;
@@ -536,6 +537,12 @@ public class ImageMaker {
         return null;
     }
 
+    /**
+     * 解析字体对象获取字体
+     *
+     * @param textObject 字体对象
+     * @return 字体
+     */
     private TrueTypeFont getFont(TextObject textObject) {
         ST_RefID stRefID = textObject.getFont();
         if (stRefID == null) return null;
@@ -544,20 +551,25 @@ public class ImageMaker {
         if (ctFont == null) {
             return null;
         }
+
+        String key = String.format("%s_%s_%s", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile());
+        if (fontCache.containsKey(key)) {
+            // 命中缓存，直接返还已经缓存的字体对象
+            return fontCache.get(key);
+        }
+
+        TrueTypeFont trueTypeFont = null;
         if (ctFont.getFontFile() != null) {
-            String getFilePath = getResFilePath(ctFont.getFontFile().toString());
-            logger.debug("加载内嵌字体：" + getFilePath);
-            OTFParser parser = new OTFParser(true);
-            try (InputStream inputStream = new FileInputStream(getFilePath)) {
-                return parser.parse(inputStream);
-            } catch (IOException e) {
-                logger.error("加载字体出错：" + e.getMessage());
-            }
+            String absFontPath = getResFilePath(ctFont.getFontFile().toString());
+            logger.debug("加载内嵌字体：" + absFontPath);
+            trueTypeFont = FontLoader.getInstance().loadExternalFont(absFontPath);
         } else {
             logger.debug("加载系统字体：" + ctFont.getFamilyName() + " " + ctFont.getFontName());
-            return FontUtils.loadSystemFont(ctFont.getFamilyName(), ctFont.getFontName());
+            trueTypeFont = FontLoader.getInstance().loadSystemFont(ctFont.getFamilyName(), ctFont.getFontName());
         }
-        return null;
+        // 更新缓存 即便 trueTypeFont 也设置，不存在字体时(null)重复加载问题。
+        fontCache.put(key, trueTypeFont);
+        return trueTypeFont;
     }
 
     private Matrix renderBoundaryAndSetClip(Graphics2D graphics, ST_Box boundary, Matrix parentMatrix) {

@@ -11,11 +11,9 @@ import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.*;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import org.apache.commons.io.FileUtils;
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.ConvertHelper;
 import org.ofdrw.converter.GeneralConvertException;
-import org.ofdrw.converter.PdfBoxFontHolder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

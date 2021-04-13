@@ -1,9 +1,14 @@
-package org.ofdrw.converter;
+package org.ofdrw.converter.utils;
 
+import org.apache.fontbox.ttf.NamingTable;
+import org.apache.fontbox.ttf.OTFParser;
+import org.apache.fontbox.ttf.OpenTypeFont;
+import org.apache.fontbox.ttf.TrueTypeCollection;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;

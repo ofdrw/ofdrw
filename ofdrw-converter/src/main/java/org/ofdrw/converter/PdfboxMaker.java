@@ -24,6 +24,7 @@ import org.ofdrw.converter.image.ImageMedia;
 import org.ofdrw.converter.point.PathPoint;
 import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.converter.utils.CommonUtil;
+import org.ofdrw.converter.utils.PdfBoxFontHolder;
 import org.ofdrw.converter.utils.PointUtil;
 import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.basicStructure.pageObj.Content;
