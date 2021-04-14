@@ -171,7 +171,7 @@ public class PdfboxMaker {
                             layerList = sealPageVo.getContentPage().getContent().getLayers();
                             writeLayer(pdf, contentStream, layerList, pageBox, sealBox);
                         }
-                    } else if (stampAnnotVo.getType().equals("png")) {
+                    } else {
                         writeSealImage(contentStream, pageBox, stampAnnotVo.getImgByte(), sealBox, clipBox);
                     }
                 }
