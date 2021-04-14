@@ -1,9 +1,14 @@
 package org.ofdrw.converter.utils;
 
+import org.apache.fontbox.ttf.TTFParser;
+import org.apache.fontbox.ttf.TrueTypeFont;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.FontLoader;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * @author 权观宇
@@ -18,5 +23,12 @@ class FontLoaderTest {
         System.out.println(FontLoader.getInstance().loadSystemFont("Microsoft YaHei", "微软雅黑"));
         System.out.println(FontLoader.getInstance().loadSystemFont("微软雅黑", "MicrosoftYaHei"));
         System.out.println(FontLoader.getInstance().loadSystemFont("微软雅黑", "微软雅黑"));
+    }
+
+    @Test
+    public void testFontLoad() throws IOException {
+        final Path path = Paths.get("src/test/resources/font_10.ttf");
+        final TrueTypeFont parse = new TTFParser(true).parse(path.toFile());
+
     }
 }

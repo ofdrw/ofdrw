@@ -202,7 +202,7 @@ public class FontLoader {
         log.debug("加载内嵌字体：" + absPath);
         if (absPath.toUpperCase().endsWith(".TTF")) {
             try (InputStream in = new FileInputStream(absPath)) {
-                return new TTFParser().parse(in);
+                return new TTFParser(true).parse(in);
             } catch (IOException e) {
                 log.error("加载TTF字体出错：" + e.getMessage(),e);
             }

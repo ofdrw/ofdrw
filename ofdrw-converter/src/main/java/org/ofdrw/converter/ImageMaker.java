@@ -366,8 +366,8 @@ public class ImageMaker {
             return;
         } else {
             try {
-                logger.debug("字体名：" + typeFont.getName());
-                logger.debug("字体表：" + typeFont.getTables().stream().map(ttfTable -> ttfTable.getTag() + " ").collect(Collectors.joining()));
+//                logger.debug("字体名：" + typeFont.getName());
+//                logger.debug("字体表：" + typeFont.getTables().stream().map(ttfTable -> ttfTable.getTag() + " ").collect(Collectors.joining()));
                 fontMatrix = typeFont.getFontMatrix();
             } catch (Exception e) {
                 logger.warn("解析加载异常", e);
@@ -403,8 +403,7 @@ public class ImageMaker {
             if (y == null) y = 0.0;
 
             for (int j = 0; j < textCode.getContent().length(); j++) {
-                if (transPoint == -1 || globalPoint < transforms.get(transPoint)
-                        .getCodePosition()) {
+                if (transPoint == -1 || globalPoint < transforms.get(transPoint).getCodePosition()) {
                     if (deltaOffset != -1) {
                         x += (deltaX == null || deltaX.size() < 0) ? 0.0 : (deltaOffset < deltaX.size() ? deltaX.get(deltaOffset) : deltaX.get(deltaX.size() - 1));
                         y += (deltaY == null || deltaY.size() < 0) ? 0.0 : (deltaOffset < deltaY.size() ? deltaY.get(deltaOffset) : deltaY.get(deltaY.size() - 1));
@@ -440,19 +439,15 @@ public class ImageMaker {
                         }
                         logger.debug(String.format("字形索引 <%s> DeltaX:%s DeltaY:%s", glyph, x, y));
                         try {
-                            typeFont.getGlyph().getGlyphs();
+//                            typeFont.getGlyph().getGlyphs();
                             GlyphData glyphData = typeFont.getGlyph().getGlyph(glyph);
                             if (glyphData != null) {
                                 Shape shape = glyphData.getPath();
-//                                        renderChar(graphics, shape, ctText, ctText.getCtm(),
-//                                                ctText.getBoundary(), x, y, ctText.getSize(), dpi,
-//                                                fontMatrix);
                                 Matrix matrix = chatMatrix(textObject, x, y, textObject.getSize(), fontMatrix, baseMatrix);
                                 renderChar(graphics, shape, matrix, strokeColor, fillColor);
                             }
-
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            logger.warn("文字渲染异常：", e);
                         }
                         deltaOffset++;
                     }
@@ -461,10 +456,8 @@ public class ImageMaker {
                     } else {
                         transPoint++;
                     }
-                    globalPoint += (transform.getCodeCount() != null ? transform.getCodeCount()
-                            : glyphs.size());
-                    j += (transform.getCodeCount() != null ? transform.getCodeCount()
-                            : glyphs.size());
+                    globalPoint += (transform.getCodeCount() != null ? transform.getCodeCount() : glyphs.size());
+                    j += (transform.getCodeCount() != null ? transform.getCodeCount() : glyphs.size());
                 }
 
             }
