@@ -13,7 +13,9 @@ import org.ofdrw.core.basicStructure.res.OFDResource;
 import org.ofdrw.core.basicStructure.res.Res;
 import org.ofdrw.core.basicStructure.res.resources.*;
 import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.compositeObj.CT_VectorG;
+import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.text.font.CT_Font;
@@ -113,6 +115,128 @@ public class ResourceManage {
     }
 
     /**
+     * 递归的解析绘制参数并覆盖配置参数内容
+     *
+     * @param id 资源ID
+     * @return 绘制参数，不存在返回null
+     */
+    public CT_DrawParam getDrawParamFinal(String id) {
+        if (id == null) {
+            return null;
+        }
+        CT_DrawParam current = drawParamMap.get(id);
+        // 使用继承属性填充本机
+        return superDrawParam(current);
+    }
+
+    /**
+     * 寻找继承属性用于覆盖当前为空的属性
+     *
+     * @param current 当前需要子节点
+     * @return 补全后的子节点副本
+     */
+    public CT_DrawParam superDrawParam(CT_DrawParam current) {
+        if (current == null) {
+            return null;
+        }
+        // 复制为副本防止造成污染
+        current = (CT_DrawParam) current.clone();
+        ST_RefID relative = current.getRelative();
+        if (relative == null) {
+            return current;
+        }
+        // 递归的寻找上一级继承的参数的最终参数
+        CT_DrawParam parent = getDrawParamFinal(relative.toString());
+        if (parent == null) {
+            return current;
+        }
+        // 本次绘制属性将覆盖其引用的绘制参数中的同名属性。
+        if (current.attributeValue("LineWidth") == null
+                && parent.attributeValue("LineWidth") != null) {
+            current.addAttribute("LineWidth", parent.attributeValue("LineWidth"));
+        }
+        if (current.attributeValue("Join") == null
+                && parent.attributeValue("Join") != null) {
+            current.addAttribute("Join", parent.attributeValue("Join"));
+        }
+        if (current.attributeValue("Cap") == null
+                && parent.attributeValue("Cap") != null) {
+            current.addAttribute("Cap", parent.attributeValue("Cap"));
+        }
+        if (current.attributeValue("DashOffset") == null
+                && parent.attributeValue("DashOffset") != null) {
+            current.addAttribute("DashOffset", parent.attributeValue("DashOffset"));
+        }
+        if (current.attributeValue("DashPattern") == null
+                && parent.attributeValue("DashPattern") != null) {
+            current.addAttribute("DashPattern", parent.attributeValue("DashPattern"));
+        }
+        if (current.attributeValue("MiterLimit") == null
+                && parent.attributeValue("MiterLimit") != null) {
+            current.addAttribute("MiterLimit", parent.attributeValue("MiterLimit"));
+        }
+        if (current.getFillColor() == null
+                && parent.getFillColor() != null) {
+            current.setFillColor(parent.getFillColor());
+        }
+        if (current.getStrokeColor() == null
+                && parent.getStrokeColor() != null) {
+            current.setStrokeColor(parent.getStrokeColor());
+        }
+        return current;
+    }
+
+    /**
+     * 补充 图元信息 通过引用的配置参数
+     * <p>
+     * 尝试将图元中描述的绘制信息和引用的绘制参数进行合并
+     *
+     * @param current 当前图元对象
+     * @return 继承到的绘制参数
+     */
+    public CT_DrawParam superDrawParam(CT_GraphicUnit current) {
+        if (current == null) {
+            return null;
+        }
+        ST_RefID drawParam = current.getDrawParam();
+        if (drawParam == null) {
+            return null;
+        }
+        CT_DrawParam parent = getDrawParamFinal(drawParam.toString());
+        if (parent == null) {
+            return null;
+        }
+        // 本次绘制属性将覆盖其引用的绘制参数中的同名属性。
+        if (current.attributeValue("LineWidth") == null
+                && parent.attributeValue("LineWidth") != null) {
+            current.addAttribute("LineWidth", parent.attributeValue("LineWidth"));
+        }
+        if (current.attributeValue("Join") == null
+                && parent.attributeValue("Join") != null) {
+            current.addAttribute("Join", parent.attributeValue("Join"));
+        }
+        if (current.attributeValue("Cap") == null
+                && parent.attributeValue("Cap") != null) {
+            current.addAttribute("Cap", parent.attributeValue("Cap"));
+        }
+        if (current.attributeValue("DashOffset") == null
+                && parent.attributeValue("DashOffset") != null) {
+            current.addAttribute("DashOffset", parent.attributeValue("DashOffset"));
+        }
+        if (current.attributeValue("DashPattern") == null
+                && parent.attributeValue("DashPattern") != null) {
+            current.addAttribute("DashPattern", parent.attributeValue("DashPattern"));
+        }
+        if (current.attributeValue("MiterLimit") == null
+                && parent.attributeValue("MiterLimit") != null) {
+            current.addAttribute("MiterLimit", parent.attributeValue("MiterLimit"));
+        }
+        return parent;
+
+
+    }
+
+    /**
      * 获取多媒体对象
      * <p>
      * 注意：资源管理器提供的资源对象均为只读对象（副本），不允许对资源进行修改。
@@ -144,7 +268,8 @@ public class ResourceManage {
         try {
             final Path imgPath = rl.getFile(loc);
             try (InputStream in = Files.newInputStream(imgPath)) {
-                if (loc.toString().endsWith("jb2")) {
+                final String fileName = loc.getFileName().toLowerCase();
+                if (fileName.endsWith(".jb2") || fileName.endsWith(".gbig2")) {
                     return ImageUtils.readJB2(in);
                 } else {
                     return ImageIO.read(in);

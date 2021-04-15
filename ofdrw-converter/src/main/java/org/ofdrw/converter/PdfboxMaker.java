@@ -1,7 +1,6 @@
 package org.ofdrw.converter;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.pdfbox.cos.*;
+import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.jbig2.JBIG2ImageReader;
 import org.apache.pdfbox.jbig2.JBIG2ImageReaderSpi;
 import org.apache.pdfbox.jbig2.io.DefaultInputStreamFactory;
@@ -11,28 +10,23 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.common.function.PDFunctionType2;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
-import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType2;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.ofdrw.converter.image.ImageMedia;
 import org.ofdrw.converter.point.PathPoint;
 import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.converter.utils.CommonUtil;
-import org.ofdrw.converter.utils.PdfBoxFontHolder;
 import org.ofdrw.converter.utils.PointUtil;
 import org.ofdrw.core.annotation.pageannot.Annot;
-import org.ofdrw.core.basicStructure.pageObj.Content;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
-import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_Pos;
@@ -46,6 +40,7 @@ import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.signatures.appearance.StampAnnot;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.reader.DLOFDReader;
+import org.ofdrw.reader.ResourceManage;
 import org.ofdrw.reader.model.AnnotionVo;
 import org.ofdrw.reader.model.OfdPageVo;
 import org.ofdrw.reader.model.StampAnnotVo;
@@ -55,7 +50,6 @@ import javax.imageio.stream.ImageInputStream;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -65,178 +59,174 @@ import static org.ofdrw.converter.utils.CommonUtil.*;
 
 public class PdfboxMaker {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    private final Map<String, PDFont> pdfFontMap;
-    private final Map<String, ImageMedia> imageMap;
-    private final Map<String, CT_DrawParam> ctDrawParamMap;
+    private final Logger logger = LoggerFactory.getLogger(PdfboxMaker.class);
 
     private final DLOFDReader ofdReader;
     private final PDDocument pdf;
-    private final PdfBoxFontHolder fontHolder;
+    private final ResourceManage resMgt;
+    private final PDType0Font DEF_FONT;
+
 
     public PdfboxMaker(DLOFDReader ofdReader, PDDocument pdf) throws IOException {
         this.ofdReader = ofdReader;
         this.pdf = pdf;
-        imageMap = new HashMap<>();
-        pdfFontMap = new HashMap<>();
-        ctDrawParamMap = new HashMap<>();
-        fontHolder = new PdfBoxFontHolder(pdf);
-        for (CT_Font ctFont : ofdReader.getOFDDocumentVo().getCtFontList()) {
-            pdfFontMap.put(ctFont.getObjID().toString(), fontHolder.getFont(ctFont.getFontName()));
-        }
-
-        String srcPath;
-        for (CT_MultiMedia multiMedia : ofdReader.getOFDDocumentVo().getCtMultiMediaList()) {
-            srcPath = ofdReader.getOFDDir().getSysAbsPath() + "/" + ofdReader.getOFDDocumentVo().getDocPath() + "/" + multiMedia.getMediaFile().toString();
-            File imgFile = new File(srcPath);
-
-            ImageMedia image = new ImageMedia();
-            image.setFromat(multiMedia.getFormat());
-
-            if (imgFile.exists()) {
-                image.setData(FileUtils.readFileToByteArray(imgFile));
-                this.imageMap.put(multiMedia.getID().toString(), image);
-            } else {
-                srcPath = ofdReader.getOFDDir().getSysAbsPath() + "/" + ofdReader.getOFDDocumentVo().getDocPath() + "/Res/" + multiMedia.getMediaFile().toString();
-                imgFile = new File(srcPath);
-                if (imgFile.exists()) {
-                    image.setData(FileUtils.readFileToByteArray(imgFile));
-                    this.imageMap.put(multiMedia.getID().toString(), image);
-                }
-            }
-
-        }
-
-        for (int j = 0; j < ofdReader.getOFDDocumentVo().getCtDrawParamList().size(); j++) {
-            ctDrawParamMap.put(ofdReader.getOFDDocumentVo().getCtDrawParamList().get(j).getID().toString(), ofdReader.getOFDDocumentVo().getCtDrawParamList().get(j));
-        }
-
-        for (int i = 0; i < ofdReader.getOFDDocumentVo().getStampAnnotVos().size(); i++) {
-            StampAnnotVo stampAnnotVo = ofdReader.getOFDDocumentVo().getStampAnnotVos().get(i);
-            if (stampAnnotVo.getType().equals("ofd")) {
-                for (int j = 0; j < stampAnnotVo.getCtDrawParamList().size(); j++) {
-                    ctDrawParamMap.put(stampAnnotVo.getCtDrawParamList().get(j).getID().toString() + "s", stampAnnotVo.getCtDrawParamList().get(j));
-                }
-                for (CT_Font ctFont : stampAnnotVo.getCtFontList()) {
-                    pdfFontMap.put(ctFont.getObjID().toString() + "s", fontHolder.getFont(ctFont.getFontName()));
-                }
-            }
-        }
-
-
+        this.resMgt = ofdReader.getResMgt();
+        this.DEF_FONT = PDType0Font.load(pdf, this.getClass().getClassLoader().getResourceAsStream("fonts/simsun.ttf"));
     }
 
     public PDPage makePage(OfdPageVo pageVo) throws IOException {
         Page contentPage = pageVo.getContentPage();
-        Page templatePage = pageVo.getTemplatePage();
-        ST_Box pageBox = getPageBox(contentPage.getArea(), ofdReader.getOFDDocumentVo().getPageWidth(), ofdReader.getOFDDocumentVo().getPageHeight());
+        ST_Box pageBox = getPageBox(contentPage.getArea(),
+                ofdReader.getOFDDocumentVo().getPageWidth(),
+                ofdReader.getOFDDocumentVo().getPageHeight());
         double pageWidthPixel = converterDpi(pageBox.getWidth());
         double pageHeightPixel = converterDpi(pageBox.getHeight());
+
         PDRectangle pageSize = new PDRectangle((float) pageWidthPixel, (float) pageHeightPixel);
         PDPage pdfPage = new PDPage(pageSize);
         pdf.addPage(pdfPage);
-        PDPageContentStream contentStream = new PDPageContentStream(pdf, pdfPage);
-        // make tpl content
-        List<CT_Layer> layerList = new ArrayList<>();
-        if (templatePage != null) {
-            final Content content = templatePage.getContent();
-            if (content != null) {
-                layerList.addAll(content.getLayers());
-//                writeLayer(pdf, contentStream, layerList, pageBox, null);
+
+        try (PDPageContentStream contentStream = new PDPageContentStream(pdf, pdfPage);) {
+            List<CT_Layer> layerList = new ArrayList<>();
+            if (pageVo.getTemplatePage() != null
+                    && pageVo.getTemplatePage().getContent() != null) {
+                layerList.addAll(pageVo.getTemplatePage().getContent().getLayers());
             }
-        }
+            if (pageVo.getContentPage() != null
+                    && pageVo.getContentPage().getContent() != null) {
+                layerList.addAll(pageVo.getContentPage().getContent().getLayers());
+            }
+            // 绘制 模板层 和 页面内容层
+            writeLayer(resMgt, contentStream, layerList, pageBox, null);
 
-        // make page content
-        final Content content = contentPage.getContent();
-        if (content != null) {
-            layerList.addAll(content.getLayers());
-        }
-
-        // 统一绘制模板层和页面内容层
-        writeLayer(pdf, contentStream, layerList, pageBox, null);
-
-        // make seal content
-        for (int i = 0; i < ofdReader.getOFDDocumentVo().getStampAnnotVos().size(); i++) {
-            StampAnnotVo stampAnnotVo = ofdReader.getOFDDocumentVo().getStampAnnotVos().get(i);
-            List<StampAnnot> stampAnnots = stampAnnotVo.getStampAnnots();
-            for (int j = 0; j < stampAnnots.size(); j++) {
-                StampAnnot stampAnnot = stampAnnots.get(j);
-                if (stampAnnot.getPageRef().toString().equals(contentPage.getObjID().toString())) {
+            // 页面的对象ID
+            final String pageID = contentPage.getObjID().toString();
+            // make seal content
+            for (StampAnnotVo stampAnnotVo : ofdReader.getOFDDocumentVo().getStampAnnotVos()) {
+                List<StampAnnot> stampAnnots = stampAnnotVo.getStampAnnots();
+                for (StampAnnot stampAnnot : stampAnnots) {
+                    if (!stampAnnot.getPageRef().toString().equals(pageID)) {
+                        // 不是同一个页面忽略
+                        continue;
+                    }
                     ST_Box sealBox = stampAnnot.getBoundary();
                     ST_Box clipBox = stampAnnot.getClip();
-                    if (stampAnnotVo.getType().equals("ofd")) {
-                        for (int k = 0; k < stampAnnotVo.getOfdPageVoList().size(); k++) {
-                            OfdPageVo sealPageVo = stampAnnotVo.getOfdPageVoList().get(k);
-                            layerList = sealPageVo.getContentPage().getContent().getLayers();
-                            writeLayer(pdf, contentStream, layerList, pageBox, sealBox);
+                    if (stampAnnotVo.getType().equalsIgnoreCase("ofd")) {
+                        try (DLOFDReader sealOfdReader = new DLOFDReader(new ByteArrayInputStream(stampAnnotVo.getImgByte()));) {
+                            ResourceManage sealResMgt = sealOfdReader.getResMgt();
+                            for (OfdPageVo ofdPageVo : sealOfdReader.getOFDPageVO()) {
+                                ArrayList<CT_Layer> sealLayer = new ArrayList<>();
+                                // 模板页
+                                if (ofdPageVo.getTemplatePage() != null
+                                        && ofdPageVo.getTemplatePage().getContent() != null) {
+                                    sealLayer.addAll(ofdPageVo.getTemplatePage().getContent().getLayers());
+                                }
+                                if (ofdPageVo.getContentPage() != null
+                                        && ofdPageVo.getContentPage().getContent() != null) {
+                                    sealLayer.addAll(ofdPageVo.getContentPage().getContent().getLayers());
+                                }
+                                // 绘制页面内容
+                                writeLayer(sealResMgt, contentStream, sealLayer, pageBox, sealBox);
+                                // 绘制注释
+                                writeAnnoAppearance(sealResMgt,
+                                        ofdPageVo,
+                                        sealOfdReader.getOFDDocumentVo().getAnnotaions(),
+                                        contentStream, pageBox);
+                            }
                         }
                     } else {
+                        // 绘制图片印章内容
                         writeSealImage(contentStream, pageBox, stampAnnotVo.getImgByte(), sealBox, clipBox);
                     }
                 }
             }
+            // 绘制注解
+            writeAnnoAppearance(this.resMgt, pageVo, ofdReader.getOFDDocumentVo().getAnnotaions(), contentStream, pageBox);
         }
-
-        for (AnnotionVo amap : ofdReader.getOFDDocumentVo().getAnnotaions()) {
-            if (pageVo.getContentPage().getObjID().toString().equals(amap.getPageId()) && null != amap.getAnnots()) {
-                writeAnnoAppearance(pdf, contentStream, amap.getAnnots(), pageBox);
-            }
-        }
-        contentStream.close();
         return pdfPage;
     }
 
-    private void writeLayer(PDDocument pdf, PDPageContentStream contentStream, List<CT_Layer> layerList, ST_Box box, ST_Box sealBox) throws IOException {
+
+    private void writeLayer(ResourceManage resMgt,
+                            PDPageContentStream contentStream,
+                            List<CT_Layer> layerList,
+                            ST_Box box,
+                            ST_Box sealBox) throws IOException {
         for (CT_Layer layer : layerList) {
             List<PageBlockType> pageBlockTypeList = layer.getPageBlocks();
-            writePageBlock(pdf, contentStream, box, sealBox, pageBlockTypeList, layer.getDrawParam(), null, null, null, null);
+            writePageBlock(resMgt,
+                    contentStream,
+                    box,
+                    sealBox,
+                    pageBlockTypeList,
+                    layer.getDrawParam(),
+                    null, null, null, null);
         }
     }
 
-    private void writeAnnoAppearance(PDDocument pdf, PDPageContentStream contentStream, List<Annot> annotList, ST_Box box) throws IOException {
-        for (Annot annot : annotList) {
-            List<PageBlockType> pageBlockTypeList = annot.getAppearance().getPageBlocks();
-            //注释的boundary
-            ST_Box annotBox = annot.getAppearance().getBoundary();
-            writePageBlock(pdf, contentStream, box, null, pageBlockTypeList, null, annotBox, null, null, null);
+    /**
+     * 绘制注释到页面
+     *
+     * @param resMgt        资源管理器
+     * @param pageVo        页面对象
+     * @param annotionVos   注解列表
+     * @param contentStream PDF Content Stream
+     * @param box           绘制区域
+     * @throws IOException 绘制过程中IO操作异常
+     */
+    private void writeAnnoAppearance(ResourceManage resMgt,
+                                     OfdPageVo pageVo,
+                                     List<AnnotionVo> annotionVos,
+                                     PDPageContentStream contentStream,
+                                     ST_Box box) throws IOException {
+        String pageId = pageVo.getContentPage().getObjID().toString();
+        for (AnnotionVo annotionVo : annotionVos) {
+            List<Annot> annotList = annotionVo.getAnnots();
+            if (annotList == null) {
+                continue;
+            }
+            if (!pageId.equalsIgnoreCase(annotionVo.getPageId())) {
+                continue;
+            }
+            for (Annot annot : annotList) {
+                List<PageBlockType> pageBlockTypeList = annot.getAppearance().getPageBlocks();
+                //注释的boundary
+                ST_Box annotBox = annot.getAppearance().getBoundary();
+                writePageBlock(resMgt, contentStream, box, null, pageBlockTypeList, null, annotBox, null, null, null);
+            }
         }
     }
 
-    private void writePageBlock(PDDocument pdf, PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, List<PageBlockType> pageBlockTypeList, ST_RefID drawparam, ST_Box annotBox, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
+    private void writePageBlock(ResourceManage resMgt,
+                                PDPageContentStream contentStream,
+                                ST_Box box, ST_Box sealBox,
+                                List<PageBlockType> pageBlockTypeList,
+                                ST_RefID drawparam,
+                                ST_Box annotBox,
+                                Integer compositeObjectAlpha,
+                                ST_Box compositeObjectBoundary,
+                                ST_Array compositeObjectCTM) throws IOException {
+        // 初始化绘制属性
         PDColor defaultFillColor = new PDColor(new float[]{0.0f, 0.0f, 0.0f}, PDDeviceRGB.INSTANCE);
         PDColor defaultStrokeColor = new PDColor(new float[]{0.0f, 0.0f, 0.0f}, PDDeviceRGB.INSTANCE);
         float defaultLineWidth = 0.353f;
+        // 递归的获取绘制参数
+        CT_DrawParam ctDrawParam = null;
         if (drawparam != null) {
-            CT_DrawParam ctDrawParam = ctDrawParamMap.get(drawparam.getRefId().toString() + (sealBox == null ? "" : "s"));
-            if (ctDrawParam != null) {
-                if (ctDrawParam.getRelative() != null) {
-                    CT_DrawParam re = ctDrawParamMap.get(ctDrawParam.getRelative().getRefId().toString() + (sealBox == null ? "" : "s"));
-                    if (re == null) {
-                        return;
-                    }
-                    if (re.getStrokeColor() != null) {
-                        defaultStrokeColor = convertPDColor(re.getStrokeColor().getValue());
-                    }
-                    if (re.getFillColor() != null) {
-                        defaultFillColor = convertPDColor(re.getFillColor().getValue());
-                    }
-                    if (re.getLineWidth() != null) {
-                        defaultLineWidth = re.getLineWidth().floatValue();
-                    }
-                }
-
-                if (ctDrawParam.getStrokeColor() != null) {
-                    defaultStrokeColor = convertPDColor(ctDrawParam.getStrokeColor().getValue());
-                }
-                if (ctDrawParam.getFillColor() != null) {
-                    defaultFillColor = convertPDColor(ctDrawParam.getFillColor().getValue());
-                }
-                if (ctDrawParam.getLineWidth() != null) {
-                    defaultLineWidth = ctDrawParam.getLineWidth().floatValue();
-                }
+            ctDrawParam = resMgt.getDrawParamFinal(drawparam.toString());
+        }
+        if (ctDrawParam != null) {
+            if (ctDrawParam.getLineWidth() != null) {
+                defaultLineWidth = ctDrawParam.getLineWidth().floatValue();
+            }
+            if (ctDrawParam.getStrokeColor() != null) {
+                defaultStrokeColor = convertPDColor(ctDrawParam.getStrokeColor().getValue());
+            }
+            if (ctDrawParam.getFillColor() != null) {
+                defaultFillColor = convertPDColor(ctDrawParam.getFillColor().getValue());
             }
         }
+
         for (PageBlockType block : pageBlockTypeList) {
             if (block instanceof TextObject) {
                 // text
@@ -257,33 +247,58 @@ public class PdfboxMaker {
             } else if (block instanceof ImageObject) {
                 // image
                 ImageObject imageObject = (ImageObject) block;
-                writeImage(contentStream, box, imageObject, annotBox);
-
+                resMgt.superDrawParam(imageObject); // 补充图元参数
+                writeImage(resMgt, contentStream, box, imageObject, annotBox);
             } else if (block instanceof PathObject) {
                 // path
                 PathObject pathObject = (PathObject) block;
-                writePath(contentStream, box, sealBox, annotBox, pathObject, defaultFillColor, defaultStrokeColor, defaultLineWidth, compositeObjectAlpha, compositeObjectBoundary, compositeObjectCTM);
+                resMgt.superDrawParam(pathObject); // 补充图元参数
+                writePath(resMgt, contentStream, box, sealBox, annotBox, pathObject, defaultFillColor, defaultStrokeColor, defaultLineWidth, compositeObjectAlpha, compositeObjectBoundary, compositeObjectCTM);
             } else if (block instanceof CompositeObject) {
                 CompositeObject compositeObject = (CompositeObject) block;
-                for (CT_VectorG vectorG : ofdReader.getOFDDocumentVo().getCtVectorGList()) {
-                    if (vectorG.getID().toString().equals(compositeObject.getResourceID().toString())) {
-                        Integer currentCompositeObjectAlpha = compositeObject.getAlpha();
-                        ST_Box currentCompositeObjectBoundary = compositeObject.getBoundary();
-                        ST_Array currentCompositeObjectCTM = compositeObject.getCTM();
-                        writePageBlock(pdf, contentStream, box, sealBox, vectorG.getContent().getPageBlocks(), drawparam, annotBox, currentCompositeObjectAlpha, currentCompositeObjectBoundary, currentCompositeObjectCTM);
-                        break;
-                    }
-                }
+                // 获取引用的矢量资源
+                CT_VectorG vectorG = resMgt.getCompositeGraphicUnit(compositeObject.getResourceID().toString());
+                Integer currentCompositeObjectAlpha = compositeObject.getAlpha();
+                ST_Box currentCompositeObjectBoundary = compositeObject.getBoundary();
+                ST_Array currentCompositeObjectCTM = compositeObject.getCTM();
+                writePageBlock(resMgt, contentStream, box, sealBox, vectorG.getContent().getPageBlocks(), drawparam, annotBox, currentCompositeObjectAlpha, currentCompositeObjectBoundary, currentCompositeObjectCTM);
+                break;
             } else if (block instanceof CT_PageBlock) {
-                writePageBlock(pdf, contentStream, box, sealBox, ((CT_PageBlock) block).getPageBlocks(), drawparam, annotBox, compositeObjectAlpha, compositeObjectBoundary, compositeObjectCTM);
+                writePageBlock(resMgt, contentStream, box, sealBox, ((CT_PageBlock) block).getPageBlocks(), drawparam, annotBox, compositeObjectAlpha, compositeObjectBoundary, compositeObjectCTM);
             }
         }
     }
 
-    private void writePath(PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, ST_Box annotBox, PathObject pathObject, PDColor defaultFillColor, PDColor defaultStrokeColor, float defaultLineWidth, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
+    private void writePath(ResourceManage resMgt,
+                           PDPageContentStream contentStream,
+                           ST_Box box,
+                           ST_Box sealBox,
+                           ST_Box annotBox,
+                           PathObject pathObject,
+                           PDColor defaultFillColor,
+                           PDColor defaultStrokeColor,
+                           float defaultLineWidth,
+                           Integer compositeObjectAlpha,
+                           ST_Box compositeObjectBoundary,
+                           ST_Array compositeObjectCTM) throws IOException {
         contentStream.saveGraphicsState();
-        if (pathObject.getStrokeColor() != null) {
-            StrokeColor strokeColor = pathObject.getStrokeColor();
+        // 获取引用的绘制参数可能会null
+        CT_DrawParam ctDrawParam = resMgt.superDrawParam(pathObject);
+        if (ctDrawParam != null) {
+            // 使用绘制参数补充缺省的颜色
+            if (pathObject.getStrokeColor() == null
+                    && ctDrawParam.getStrokeColor() != null) {
+                pathObject.setStrokeColor(ctDrawParam.getStrokeColor());
+            }
+            if (pathObject.getFillColor() == null
+                    && ctDrawParam.getFillColor() != null) {
+                pathObject.setFillColor(ctDrawParam.getFillColor());
+            }
+        }
+
+        // 设置描边颜色
+        final StrokeColor strokeColor = pathObject.getStrokeColor();
+        if (strokeColor != null) {
             if (strokeColor.getValue() != null) {
                 contentStream.setStrokingColor(convertPDColor(strokeColor.getValue()));
             } else {
@@ -293,14 +308,6 @@ public class PdfboxMaker {
             contentStream.setStrokingColor(defaultStrokeColor);
         }
         float lineWidth = pathObject.getLineWidth() != null ? pathObject.getLineWidth().floatValue() : defaultLineWidth;
-        if (pathObject.getDrawParam() != null) {
-            CT_DrawParam ctDrawParam = ctDrawParamMap.get(pathObject.getDrawParam().getRefId().toString());
-            if (ctDrawParam != null) {
-                if (ctDrawParam.getLineWidth() != null) {
-                    lineWidth = ctDrawParam.getLineWidth().floatValue();
-                }
-            }
-        }
         if (pathObject.getCTM() != null && pathObject.getLineWidth() != null) {
             Double[] ctm = pathObject.getCTM().toDouble();
             double a = ctm[0].doubleValue();
@@ -441,16 +448,14 @@ public class PdfboxMaker {
         }
     }
 
-    private void writeImage(PDPageContentStream contentStream, ST_Box box, ImageObject imageObject, ST_Box annotBox) throws IOException {
-        if (imageMap.get(imageObject.getResourceID().toString()) == null) {
+    private void writeImage(ResourceManage resMgt, PDPageContentStream contentStream, ST_Box box, ImageObject imageObject, ST_Box annotBox) throws IOException {
+        // 读取图片
+        BufferedImage bufferedImage = resMgt.getImage(imageObject.getResourceID().toString());
+        if (bufferedImage == null) {
             return;
         }
         contentStream.saveGraphicsState();
-
-        ImageMedia image = imageMap.get(imageObject.getResourceID().toString());
-        boolean isJb2 = "GBIG2".equals(image.getFromat()) || "JB2".equals(image.getFromat());
-        PDImageXObject pdfImageObject = LosslessFactory.createFromImage(pdf,
-                readImageFile(isJb2, new ByteArrayInputStream(image.getData())));
+        PDImageXObject pdfImageObject = LosslessFactory.createFromImage(pdf, bufferedImage);
 
         if (annotBox != null) {
             float x = annotBox.getTopLeftX().floatValue();
@@ -529,8 +534,16 @@ public class PdfboxMaker {
                 fontSize = (float) (fontSize * sx);
             }
         }
-        PDFont font = this.pdfFontMap.get(textObject.getFont().toString() + fontAno);
-        if (Objects.isNull(font)) font = fontHolder.getFont("宋体");
+
+        // 加载字体
+        CT_Font ctFont = resMgt.getFont(textObject.getFont().toString());
+        TrueTypeFont typeFont = FontLoader.getInstance().loadFont(ctFont);
+        PDFont font;
+        if (typeFont != null) {
+            font = PDType0Font.load(pdf, typeFont, true);
+        } else {
+            font = DEF_FONT;
+        }
 
         List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCTM() != null, textObject.getCTM(), true);
         double rx = 0, ry = 0;
@@ -574,5 +587,4 @@ public class PdfboxMaker {
         }
 
     }
-
 }

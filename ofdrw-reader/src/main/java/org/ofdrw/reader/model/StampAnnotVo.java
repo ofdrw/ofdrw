@@ -14,12 +14,6 @@ public class StampAnnotVo {
 
     private List<StampAnnot> stampAnnots;
 
-    private List<OfdPageVo> ofdPageVoList;
-
-    private List<CT_Font> ctFontList;
-
-    private List<CT_DrawParam> ctDrawParamList;
-
     private byte[] imgByte;
 
     private String type;
@@ -30,30 +24,6 @@ public class StampAnnotVo {
 
     public void setStampAnnots(List<StampAnnot> stampAnnots) {
         this.stampAnnots = stampAnnots;
-    }
-
-    public List<OfdPageVo> getOfdPageVoList() {
-        return ofdPageVoList;
-    }
-
-    public void setOfdPageVoList(List<OfdPageVo> ofdPageVoList) {
-        this.ofdPageVoList = ofdPageVoList;
-    }
-
-    public List<CT_Font> getCtFontList() {
-        return ctFontList;
-    }
-
-    public void setCtFontList(List<CT_Font> ctFontList) {
-        this.ctFontList = ctFontList;
-    }
-
-    public List<CT_DrawParam> getCtDrawParamList() {
-        return ctDrawParamList;
-    }
-
-    public void setCtDrawParamList(List<CT_DrawParam> ctDrawParamList) {
-        this.ctDrawParamList = ctDrawParamList;
     }
 
     public byte[] getImgByte() {

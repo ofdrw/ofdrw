@@ -23,10 +23,12 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
+ * @deprecated {@link DLOFDReader}
  * 印章ofd的解析器
  * @author dltech21
  * @since 2020/8/11
  */
+@Deprecated
 public class SealOFDReader extends OFDReader {
 
     private ST_Loc docRoot;

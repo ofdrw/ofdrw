@@ -68,7 +68,7 @@ public class HelloWorld {
 转换文档你需要做:
 
 1. 提供待转换OFD文档。
-2. 配置字体。
+2. 配置字体(非必须，自定义字体目录时使用)。
 3. 创建转换转换对象，并设置PPM。
 4. 指定页码转换图片。
 5. 存储为指定格式图片。
@@ -78,10 +78,8 @@ public class HelloWorld {
     public static void main(String[] args) {
         // 1. 文件输入路径
         Path src = Paths.get("发票示例.ofd");
-        // 2. 配置字体，加载系统字体和默认字体
-        FontUtils.init();
-        // 加载指定目录字体
-        FontUtils.scanFontDir(new File("src/test/resources/fonts"));
+        // 2. 加载指定目录字体(非必须)
+        // FontLoader.getInstance().scanFontDir(new File("src/test/resources/fonts"));
         // 3. 创建转换转换对象，设置 每毫米像素数量(Pixels per millimeter)
         ImageMaker imageMaker = new ImageMaker(new DLOFDReader(src), 15);
         for (int i = 0; i < imageMaker.pageSize(); i++) {

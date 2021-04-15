@@ -7,6 +7,8 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.ofdrw.converter.utils.OSinfo;
 import org.ofdrw.converter.utils.StringUtils;
+import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.core.text.font.CT_Font;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +65,7 @@ public class FontLoader {
      * 加载系统字体
      * */
     public void init() {
-        try (InputStream in = FontLoader.class.getResourceAsStream("/fonts/simhei.ttf")) {
+        try (InputStream in = FontLoader.class.getResourceAsStream("/fonts/simsun.ttf")) {
             OTFParser parser = new OTFParser(false);
             defaultFont = parser.parse(in);
         } catch (IOException e) {
@@ -82,10 +84,11 @@ public class FontLoader {
 
     /**
      * 追加字体映射
-     * @param familyName 字族名
-     * @param fontName 字体名
+     *
+     * @param familyName      字族名
+     * @param fontName        字体名
      * @param aliasFamilyName 字族别名
-     * @param aliasFontName 字体别名
+     * @param aliasFontName   字体别名
      * @return this
      */
     public FontLoader addAliasMapping(String familyName, String fontName, String aliasFamilyName, String aliasFontName) {
@@ -167,7 +170,7 @@ public class FontLoader {
                 TrueTypeFont trueTypeFont = trueTypeCollection.getFontByName(fontName);
                 return trueTypeFont;
             } else {
-                OTFParser parser = new OTFParser(false);
+                OTFParser parser = new OTFParser(true);
                 OpenTypeFont openTypeFont = parser.parse(file);
                 return openTypeFont;
             }
@@ -179,20 +182,6 @@ public class FontLoader {
     }
 
     /**
-     * 尝试从操作系统中读取PDF文字
-     *
-     * @param document   PDF文档对象
-     * @param familyName 字体族名
-     * @param fontName   字体名称
-     * @return PDF文字
-     * @throws IOException 字体文件读写异常
-     */
-    public PDFont loadSysPDFont(PDDocument document, String familyName, String fontName) throws IOException {
-        final TrueTypeFont typeFont = loadSystemFont(familyName, fontName);
-        return PDType0Font.load(document, typeFont, true);
-    }
-
-    /**
      * 加载外部字体
      *
      * @param absPath 绝对路径
@@ -200,25 +189,47 @@ public class FontLoader {
      */
     public TrueTypeFont loadExternalFont(String absPath) {
         log.debug("加载内嵌字体：" + absPath);
-        if (absPath.toUpperCase().endsWith(".TTF")) {
-            try (InputStream in = new FileInputStream(absPath)) {
+        try (InputStream in = new FileInputStream(absPath)) {
+            if (absPath.toUpperCase().endsWith(".TTF")) {
                 return new TTFParser(true).parse(in);
-            } catch (IOException e) {
-                log.error("加载TTF字体出错：" + e.getMessage(),e);
-            }
-        } else if (absPath.toUpperCase().endsWith(".OTF")) {
-            try (InputStream in = new FileInputStream(absPath)) {
+            } else if (absPath.toUpperCase().endsWith(".OTF")) {
                 OTFParser parser = new OTFParser(true);
                 return parser.parse(in);
-            } catch (IOException e) {
-                log.error("加载OTF字体出错：" + e.getMessage(),e);
             }
-        } else {
-            log.warn("不支持的字体格式：" + absPath);
+//            else if (absPath.toUpperCase().endsWith(".CFF")) {
+//                CFFParser parser = new CFFParser();
+//                return parser.parse(in);
+//            }
+            else {
+                log.warn("不支持的字体格式：" + absPath);
+            }
+        } catch (IOException e) {
+            log.error("加载OTF字体出错：" + e.getMessage(), e);
         }
         return null;
     }
 
+    /**
+     * 加载字体
+     *
+     * @param ctFont 字体对象
+     * @return 字体或null
+     */
+    public TrueTypeFont loadFont(CT_Font ctFont) {
+        if (ctFont == null) {
+            return null;
+        }
+        ST_Loc fontFileLoc = ctFont.getFontFile();
+        TrueTypeFont trueTypeFont = null;
+        if (fontFileLoc != null) {
+            trueTypeFont = loadExternalFont(fontFileLoc.toString());
+        }
+        if (trueTypeFont == null) {
+            trueTypeFont = loadSystemFont(ctFont.getFamilyName(), ctFont.getFontName());
+        }
+
+        return trueTypeFont;
+    }
 
     public TrueTypeFont loadDefaultFont() {
         return defaultFont;

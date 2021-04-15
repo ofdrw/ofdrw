@@ -128,7 +128,6 @@ public class ImageMaker {
                     writeStampAnnot(graphics, stampAnnotVo, stampAnnot);
                 }
             }
-
         }
 
         // 绘制注解对象

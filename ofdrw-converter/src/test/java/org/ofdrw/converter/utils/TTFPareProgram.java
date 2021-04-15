@@ -1,5 +1,8 @@
 package org.ofdrw.converter.utils;
 
+import com.itextpdf.io.font.TrueTypeFont;
+import org.apache.fontbox.cff.CFFFont;
+import org.apache.fontbox.cff.CFFParser;
 import org.junit.jupiter.api.Test;
 
 import javax.annotation.processing.Filer;
@@ -13,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -82,8 +86,14 @@ public class TTFPareProgram {
                 System.out.printf("[%d]%d, %s", i, fontOffsetArr[i], i % 4 == 0 ? "\n" : "");
 
             }
-
-
         }
+    }
+    @Test
+    public void testCFF() throws IOException {
+        final Path path = Paths.get("src/test/resources/font_83_83.cff");
+        CFFParser parser = new CFFParser();
+        final List<CFFFont> fontList = parser.parse(Files.readAllBytes(path));
+
+        System.out.println(fontList);
     }
 }

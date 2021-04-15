@@ -52,6 +52,14 @@ public class DLOFDReader extends OFDReader {
      */
     private ResourceManage resMgt;
 
+//    private  double pageWidth;
+//    private  double pageHeight;
+//
+//    private List<OfdPageVo> ofdPageVoList;
+//    private  List<StampAnnotVo> stampAnnotVos;
+//    private  List<AnnotionVo> annotaions;
+
+
     public DLOFDReader(Path ofdFile) throws IOException {
         super(ofdFile);
         initReader();
@@ -93,11 +101,6 @@ public class DLOFDReader extends OFDReader {
             ofdDocumentVo = new OFDDocumentVo(docRoot.parent(),
                     documentBox.getWidth(), documentBox.getHeight(),
                     getOFDPageVO(),
-                    resMgt.getFonts(),
-                    resMgt.getColorSpaces(),
-                    resMgt.getMultiMedias(),
-                    resMgt.getCompositeGraphicUnits(),
-                    resMgt.getDrawParams(),
                     getStampAnnot(),
                     getAnnotaions());
         } catch (DocumentException | FileNotFoundException var15) {
@@ -157,7 +160,7 @@ public class DLOFDReader extends OFDReader {
 
     }
 
-    private List<OfdPageVo> getOFDPageVO() {
+    public List<OfdPageVo> getOFDPageVO() {
         List<OfdPageVo> pageVoList = new ArrayList<>();
         try {
             int pageSize = document.getPages().getSize();
@@ -219,22 +222,28 @@ public class DLOFDReader extends OFDReader {
 //                throw new OFDVerifyException("未知的电子签章数据版本，无法解析");
                     }
                     if (type != null) {
-                        stampAnnotVo.setType(type.toLowerCase());
-                        if (type.toLowerCase().equals("ofd")) {
-                            stampAnnotVo.setImgByte(sealBytes);
-                            SealOFDReader sealReader = new SealOFDReader(new ByteArrayInputStream(sealBytes));
-                            stampAnnotVo.setOfdPageVoList(sealReader.getOFDPageVO());
-                            stampAnnotVo.setCtDrawParamList(sealReader.getPublicResDrawParam());
-                            stampAnnotVo.setCtFontList(sealReader.getPublicResFonts());
-                            stampAnnotVoList.add(stampAnnotVo);
-                            sealReader.close();
-                        } else if (type.toLowerCase().equals("png")) {
-                            stampAnnotVo.setImgByte(sealBytes);
-                            stampAnnotVoList.add(stampAnnotVo);
-                        } else {
-                            stampAnnotVo.setImgByte(sealBytes);
-                        }
+                        stampAnnotVo.setType(type);
+                        stampAnnotVo.setImgByte(sealBytes);
+                        stampAnnotVoList.add(stampAnnotVo);
                     }
+//                    if (type != null) {
+//                        stampAnnotVo.setType(type.toLowerCase());
+//                        if (type.toLowerCase().equals("ofd")) {
+//                            stampAnnotVo.setImgByte(sealBytes);
+//                            SealOFDReader sealReader = new SealOFDReader(new ByteArrayInputStream(sealBytes));
+//                            stampAnnotVo.setOfdPageVoList(sealReader.getOFDPageVO());
+//                            stampAnnotVo.setCtDrawParamList(sealReader.getPublicResDrawParam());
+//                            stampAnnotVo.setCtFontList(sealReader.getPublicResFonts());
+//                            stampAnnotVoList.add(stampAnnotVo);
+//                            sealReader.close();
+//                        } else if (type.toLowerCase().equals("png")) {
+//                            stampAnnotVo.setImgByte(sealBytes);
+//                            stampAnnotVoList.add(stampAnnotVo);
+//                        } else {
+//                            stampAnnotVo.setImgByte(sealBytes);
+//                            stampAnnotVoList.add(stampAnnotVo);
+//                        }
+//                    }
                 }
             }
         } catch (Exception e) {
