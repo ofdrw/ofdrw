@@ -127,7 +127,7 @@ public class ST_Array extends STBase implements Cloneable{
      */
     public Double[] toDouble() {
         return this.array.stream()
-                .map(Double::parseDouble)
+                .map(STBase::toDouble)
                 .toArray(Double[]::new);
     }
 
@@ -138,7 +138,7 @@ public class ST_Array extends STBase implements Cloneable{
      */
     public Integer[] toInt() {
         return this.array.stream()
-                .map(Integer::parseInt)
+                .map(STBase::toInt)
                 .toArray(Integer[]::new);
     }
 

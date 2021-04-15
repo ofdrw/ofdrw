@@ -3,6 +3,7 @@ package org.ofdrw.core.basicType;
 import org.ofdrw.core.OFDSimpleTypeElement;
 
 import java.io.Serializable;
+import java.util.function.Function;
 
 /**
  * 简单类型基类，用于提供便捷的方法实例化元素
@@ -25,6 +26,7 @@ public abstract class STBase implements Serializable {
 
     /**
      * 如果浮点数为整数，则省略小数
+     *
      * @param d 浮点数
      * @return 没有小数点的整数字符串
      */
@@ -34,5 +36,59 @@ public abstract class STBase implements Serializable {
         } else {
             return String.format("%s", d);
         }
+    }
+
+    /**
+     * 字符串转换Double
+     *
+     * @param str 字符串
+     * @return Double 或 0
+     */
+    public static Double toDouble(String str) {
+        Double res = num(str, Double::parseDouble);
+        return res == null ? 0 : res;
+    }
+
+    /**
+     * 字符串转换 Integer
+     *
+     * @param str 字符串
+     * @return Double 或 0
+     */
+    public static Integer toInt(String str) {
+        Integer res = num(str, Integer::parseInt);
+        return res == null ? 0 : res;
+    }
+
+    /**
+     * 字符串转换函数
+     *
+     * @param str    字符串
+     * @param mapper 转换函数
+     * @param <R>    转换返回值类型
+     * @return 数字
+     */
+    private static <R extends Number> R num(String str, Function<String, R> mapper) {
+        R res = null;
+        try {
+            res = mapper.apply(str);
+        } catch (Exception e) {
+            // 尽最大可能解析
+            StringBuilder sb = new StringBuilder();
+            for (char c : str.toCharArray()) {
+                if (c == '-' || c == '+' || c == '.') {
+                    sb.append(c);
+                    continue;
+                }
+                if ('0' <= c && c <= '9') {
+                    sb.append(c);
+                }
+            }
+            try {
+                res = mapper.apply(sb.toString());
+            } catch (Exception ignored) {
+            }
+        }
+        return res;
     }
 }
