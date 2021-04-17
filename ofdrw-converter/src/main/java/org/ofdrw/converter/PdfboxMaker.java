@@ -518,9 +518,7 @@ public class PdfboxMaker {
     private void writeText(ResourceManage resMgt ,PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, TextObject textObject, PDColor fillColor, int alpha) throws IOException {
         float fontSize = textObject.getSize().floatValue();
 
-        String fontAno = "";
         if (sealBox != null && textObject.getBoundary() != null) {
-            fontAno = "s";
             textObject.setBoundary(textObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
                     textObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
                     textObject.getBoundary().getWidth(),
