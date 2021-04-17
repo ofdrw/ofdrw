@@ -3,8 +3,8 @@ package org.ofdrw.converter;
 import org.apache.pdfbox.jbig2.util.log.Logger;
 import org.apache.pdfbox.jbig2.util.log.LoggerFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.ofdrw.reader.DLOFDReader;
-import org.ofdrw.reader.model.OfdPageVo;
+import org.ofdrw.reader.OFDReader;
+import org.ofdrw.reader.PageInfo;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,38 +27,36 @@ public class ConvertHelper {
 
     /**
      * OFD转换PDF
-     * @param input OFD文件路径，支持OutputStream、Path、String（文件路径）
+     *
+     * @param input  OFD文件路径，支持OutputStream、Path、String（文件路径）
      * @param output PDF输出流，支持OutputStream、Path、File、String（文件路径）
      * @throws IllegalArgumentException 参数错误
      * @throws GeneralConvertException  文档转换过程中异常
      */
     public static void ofd2pdf(Object input, Object output) {
-        DLOFDReader reader = null;
+        OFDReader reader = null;
         PDDocument pdfDocument = null;
         try {
             if (input instanceof InputStream) {
-                reader = new DLOFDReader((InputStream) input);
+                reader = new OFDReader((InputStream) input);
             } else if (input instanceof Path) {
-                reader = new DLOFDReader((Path) input);
+                reader = new OFDReader((Path) input);
             } else if (input instanceof File) {
-                reader = new DLOFDReader(new FileInputStream((File) input));
+                reader = new OFDReader(new FileInputStream((File) input));
             } else if (input instanceof String) {
-                reader = new DLOFDReader((String) input);
+                reader = new OFDReader((String) input);
             } else {
                 throw new IllegalArgumentException("不支持的输入格式(input)，仅支持InputStream、Path、File、String");
             }
             pdfDocument = new PDDocument();
 
-            List<OfdPageVo> ofdPageVoList = reader.getOFDDocumentVo().getOfdPageVoList();
-
-            long start;
-            long end;
-            int pageNum = 1;
 
             PdfboxMaker pdfMaker = new PdfboxMaker(reader, pdfDocument);
-            for (OfdPageVo ofdPageVo : ofdPageVoList) {
+            List<PageInfo> ofdPageVoList = reader.getPageList();
+            long start = 0, end = 0, pageNum = 1;
+            for (PageInfo pageInfo : ofdPageVoList) {
                 start = System.currentTimeMillis();
-                pdfMaker.makePage(ofdPageVo);
+                pdfMaker.makePage(pageInfo);
                 end = System.currentTimeMillis();
                 logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
             }
@@ -175,27 +173,21 @@ public class ConvertHelper {
      * @param deleteOnClose    退出时是否删除 unzippedPathRoot 文件，true - 退出时删除；false - 不删除
      */
     public static void toPdf(String unzippedPathRoot, String output, boolean deleteOnClose) {
-        DLOFDReader reader = null;
+        OFDReader reader = null;
         PDDocument pdfDocument = null;
         try {
-            reader = new DLOFDReader(unzippedPathRoot, deleteOnClose);
+            reader = new OFDReader(unzippedPathRoot, deleteOnClose);
             pdfDocument = new PDDocument();
 
-            List<OfdPageVo> ofdPageVoList = reader.getOFDDocumentVo().getOfdPageVoList();
-
-            long start;
-            long end;
-            int pageNum = 1;
-
             PdfboxMaker pdfMaker = new PdfboxMaker(reader, pdfDocument);
-            for (OfdPageVo ofdPageVo : ofdPageVoList) {
+            List<PageInfo> ofdPageVoList = reader.getPageList();
+            long start = 0, end = 0, pageNum = 1;
+            for (PageInfo pageInfo : ofdPageVoList) {
                 start = System.currentTimeMillis();
-                pdfMaker.makePage(ofdPageVo);
+                pdfMaker.makePage(pageInfo);
                 end = System.currentTimeMillis();
-                logger.info(String.format("page %d speed time %d", pageNum++, end - start));
+                logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
             }
-
-
             pdfDocument.save(output);
 
         } catch (IllegalArgumentException e) {

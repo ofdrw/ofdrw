@@ -4,8 +4,7 @@ import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.jbig2.JBIG2ImageReader;
 import org.apache.pdfbox.jbig2.JBIG2ImageReaderSpi;
 import org.apache.pdfbox.jbig2.io.DefaultInputStreamFactory;
-import org.apache.pdfbox.jbig2.util.log.Logger;
-import org.apache.pdfbox.jbig2.util.log.LoggerFactory;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -17,13 +16,11 @@ import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
-import org.ofdrw.converter.image.ImageMedia;
 import org.ofdrw.converter.point.PathPoint;
 import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.converter.utils.PointUtil;
 import org.ofdrw.core.annotation.pageannot.Annot;
-import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
@@ -39,11 +36,13 @@ import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.signatures.appearance.StampAnnot;
 import org.ofdrw.core.text.font.CT_Font;
-import org.ofdrw.reader.DLOFDReader;
+import org.ofdrw.reader.OFDReader;
+import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.ResourceManage;
-import org.ofdrw.reader.model.AnnotionVo;
-import org.ofdrw.reader.model.OfdPageVo;
-import org.ofdrw.reader.model.StampAnnotVo;
+import org.ofdrw.reader.model.AnnotionEntity;
+import org.ofdrw.reader.model.StampAnnotEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageInputStream;
@@ -59,93 +58,99 @@ import static org.ofdrw.converter.utils.CommonUtil.*;
 
 public class PdfboxMaker {
 
-    private final Logger logger = LoggerFactory.getLogger(PdfboxMaker.class);
+    private static final Logger logger = LoggerFactory.getLogger(PdfboxMaker.class);
 
-    private final DLOFDReader ofdReader;
+    private final OFDReader reader;
     private final PDDocument pdf;
     private final ResourceManage resMgt;
-    private final PDType0Font DEF_FONT;
+    private final PDType0Font DEFAULT_FONT;
+
+    private Map<String, PDFont> fontCache = new HashMap<>();
 
 
-    public PdfboxMaker(DLOFDReader ofdReader, PDDocument pdf) throws IOException {
-        this.ofdReader = ofdReader;
+    public PdfboxMaker(OFDReader reader, PDDocument pdf) throws IOException {
+        this.reader = reader;
         this.pdf = pdf;
-        this.resMgt = ofdReader.getResMgt();
-        this.DEF_FONT = PDType0Font.load(pdf, this.getClass().getClassLoader().getResourceAsStream("fonts/simsun.ttf"));
+        this.resMgt = reader.getResMgt();
+        this.DEFAULT_FONT = PDType0Font.load(pdf, this.getClass().getClassLoader().getResourceAsStream("fonts/simsun.ttf"));
     }
 
-    public PDPage makePage(OfdPageVo pageVo) throws IOException {
-        Page contentPage = pageVo.getContentPage();
-        ST_Box pageBox = getPageBox(contentPage.getArea(),
-                ofdReader.getOFDDocumentVo().getPageWidth(),
-                ofdReader.getOFDDocumentVo().getPageHeight());
+    /**
+     * 转换OFD页面为PDF页面
+     *
+     * @param pageInfo 页面信息
+     * @return PDF页面
+     * @throws IOException 操作异常
+     */
+    public PDPage makePage(PageInfo pageInfo) throws IOException {
+        ST_Box pageBox = pageInfo.getSize();
         double pageWidthPixel = converterDpi(pageBox.getWidth());
         double pageHeightPixel = converterDpi(pageBox.getHeight());
 
         PDRectangle pageSize = new PDRectangle((float) pageWidthPixel, (float) pageHeightPixel);
         PDPage pdfPage = new PDPage(pageSize);
         pdf.addPage(pdfPage);
-
+        final List<AnnotionEntity> annotationEntities = reader.getAnnotationEntities();
+        final List<StampAnnotEntity> stampAnnots = reader.getStampAnnots();
         try (PDPageContentStream contentStream = new PDPageContentStream(pdf, pdfPage);) {
-            List<CT_Layer> layerList = new ArrayList<>();
-            if (pageVo.getTemplatePage() != null
-                    && pageVo.getTemplatePage().getContent() != null) {
-                layerList.addAll(pageVo.getTemplatePage().getContent().getLayers());
-            }
-            if (pageVo.getContentPage() != null
-                    && pageVo.getContentPage().getContent() != null) {
-                layerList.addAll(pageVo.getContentPage().getContent().getLayers());
-            }
+            // 获取页面内容出现的所有图层，包含模板页（所有页面均按照定义ZOrder排列）
+            List<CT_Layer> layerList = pageInfo.getAllLayer();
             // 绘制 模板层 和 页面内容层
             writeLayer(resMgt, contentStream, layerList, pageBox, null);
-
-            // 页面的对象ID
-            final String pageID = contentPage.getObjID().toString();
-            // make seal content
-            for (StampAnnotVo stampAnnotVo : ofdReader.getOFDDocumentVo().getStampAnnotVos()) {
-                List<StampAnnot> stampAnnots = stampAnnotVo.getStampAnnots();
-                for (StampAnnot stampAnnot : stampAnnots) {
-                    if (!stampAnnot.getPageRef().toString().equals(pageID)) {
-                        // 不是同一个页面忽略
-                        continue;
-                    }
-                    ST_Box sealBox = stampAnnot.getBoundary();
-                    ST_Box clipBox = stampAnnot.getClip();
-                    if (stampAnnotVo.getType().equalsIgnoreCase("ofd")) {
-                        try (DLOFDReader sealOfdReader = new DLOFDReader(new ByteArrayInputStream(stampAnnotVo.getImgByte()));) {
-                            ResourceManage sealResMgt = sealOfdReader.getResMgt();
-                            for (OfdPageVo ofdPageVo : sealOfdReader.getOFDPageVO()) {
-                                ArrayList<CT_Layer> sealLayer = new ArrayList<>();
-                                // 模板页
-                                if (ofdPageVo.getTemplatePage() != null
-                                        && ofdPageVo.getTemplatePage().getContent() != null) {
-                                    sealLayer.addAll(ofdPageVo.getTemplatePage().getContent().getLayers());
-                                }
-                                if (ofdPageVo.getContentPage() != null
-                                        && ofdPageVo.getContentPage().getContent() != null) {
-                                    sealLayer.addAll(ofdPageVo.getContentPage().getContent().getLayers());
-                                }
-                                // 绘制页面内容
-                                writeLayer(sealResMgt, contentStream, sealLayer, pageBox, sealBox);
-                                // 绘制注释
-                                writeAnnoAppearance(sealResMgt,
-                                        ofdPageVo,
-                                        sealOfdReader.getOFDDocumentVo().getAnnotaions(),
-                                        contentStream, pageBox);
-                            }
-                        }
-                    } else {
-                        // 绘制图片印章内容
-                        writeSealImage(contentStream, pageBox, stampAnnotVo.getImgByte(), sealBox, clipBox);
-                    }
-                }
-            }
-            // 绘制注解
-            writeAnnoAppearance(this.resMgt, pageVo, ofdReader.getOFDDocumentVo().getAnnotaions(), contentStream, pageBox);
+            // 绘制电子印章
+            writeStamp(contentStream, pageInfo, stampAnnots);
+            // 绘制注释
+            writeAnnoAppearance(this.resMgt, pageInfo, annotationEntities, contentStream, pageBox);
         }
         return pdfPage;
     }
 
+    /**
+     * 绘制印章
+     *
+     * @param contentStream        PDF内容流
+     * @param parent               OFD页面信息
+     * @param stampAnnotEntityList 印章列表
+     * @throws IOException 文件读写异常
+     */
+    private void writeStamp(PDPageContentStream contentStream,
+                            PageInfo parent,
+                            List<StampAnnotEntity> stampAnnotEntityList) throws IOException {
+        String pageID = parent.getId().toString();
+        for (StampAnnotEntity stampAnnotVo : stampAnnotEntityList) {
+            List<StampAnnot> stampAnnots = stampAnnotVo.getStampAnnots();
+            for (StampAnnot stampAnnot : stampAnnots) {
+                if (!stampAnnot.getPageRef().toString().equals(pageID)) {
+                    // 不是同一个页面忽略
+                    continue;
+                }
+                ST_Box pageBox = parent.getSize();
+                ST_Box sealBox = stampAnnot.getBoundary();
+                ST_Box clipBox = stampAnnot.getClip();
+
+                if (stampAnnotVo.getImgType().equalsIgnoreCase("ofd")) {
+                    // 尝试读取并解析OFD印章图像
+                    try (OFDReader sealOfdReader = new OFDReader(new ByteArrayInputStream(stampAnnotVo.getImageByte()));) {
+                        ResourceManage sealResMgt = sealOfdReader.getResMgt();
+                        for (PageInfo ofdPageVo : sealOfdReader.getPageList()) {
+                            // 获取页面内容出现的所有图层，包含模板页（所有页面均按照定义ZOrder排列）
+                            List<CT_Layer> layerList = ofdPageVo.getAllLayer();
+                            // 绘制页面内容
+                            writeLayer(sealResMgt, contentStream, layerList, pageBox, sealBox);
+                            // 绘制注释
+                            writeAnnoAppearance(sealResMgt,
+                                    ofdPageVo,
+                                    sealOfdReader.getAnnotationEntities(),
+                                    contentStream, pageBox);
+                        }
+                    }
+                } else {
+                    // 绘制图片印章内容
+                    writeSealImage(contentStream, pageBox, stampAnnotVo.getImageByte(), sealBox, clipBox);
+                }
+            }
+        }
+    }
 
     private void writeLayer(ResourceManage resMgt,
                             PDPageContentStream contentStream,
@@ -167,25 +172,25 @@ public class PdfboxMaker {
     /**
      * 绘制注释到页面
      *
-     * @param resMgt        资源管理器
-     * @param pageVo        页面对象
-     * @param annotionVos   注解列表
-     * @param contentStream PDF Content Stream
-     * @param box           绘制区域
+     * @param resMgt           资源管理器
+     * @param pageInfo         OFD页面信息
+     * @param annotionEntities 注解列表
+     * @param contentStream    PDF Content Stream
+     * @param box              绘制区域
      * @throws IOException 绘制过程中IO操作异常
      */
     private void writeAnnoAppearance(ResourceManage resMgt,
-                                     OfdPageVo pageVo,
-                                     List<AnnotionVo> annotionVos,
+                                     PageInfo pageInfo,
+                                     List<AnnotionEntity> annotionEntities,
                                      PDPageContentStream contentStream,
                                      ST_Box box) throws IOException {
-        String pageId = pageVo.getContentPage().getObjID().toString();
-        for (AnnotionVo annotionVo : annotionVos) {
-            List<Annot> annotList = annotionVo.getAnnots();
+        String pageId = pageInfo.getId().toString();
+        for (AnnotionEntity annotionEntity : annotionEntities) {
+            List<Annot> annotList = annotionEntity.getAnnots();
             if (annotList == null) {
                 continue;
             }
-            if (!pageId.equalsIgnoreCase(annotionVo.getPageId())) {
+            if (!pageId.equalsIgnoreCase(annotionEntity.getPageId())) {
                 continue;
             }
             for (Annot annot : annotList) {
@@ -243,7 +248,7 @@ public class PdfboxMaker {
                     }
                     alpha = textObject.getFillColor().getAlpha();
                 }
-                writeText(contentStream, box, sealBox, textObject, fillColor, alpha);
+                writeText(resMgt, contentStream, box, sealBox, textObject, fillColor, alpha);
             } else if (block instanceof ImageObject) {
                 // image
                 ImageObject imageObject = (ImageObject) block;
@@ -510,7 +515,7 @@ public class PdfboxMaker {
         contentStream.restoreGraphicsState();
     }
 
-    private void writeText(PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, TextObject textObject, PDColor fillColor, int alpha) throws IOException {
+    private void writeText(ResourceManage resMgt ,PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, TextObject textObject, PDColor fillColor, int alpha) throws IOException {
         float fontSize = textObject.getSize().floatValue();
 
         String fontAno = "";
@@ -537,13 +542,7 @@ public class PdfboxMaker {
 
         // 加载字体
         CT_Font ctFont = resMgt.getFont(textObject.getFont().toString());
-        TrueTypeFont typeFont = FontLoader.getInstance().loadFont(ctFont);
-        PDFont font;
-        if (typeFont != null) {
-            font = PDType0Font.load(pdf, typeFont, true);
-        } else {
-            font = DEF_FONT;
-        }
+        PDFont font = getFont(ctFont);
 
         List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCTM() != null, textObject.getCTM(), true);
         double rx = 0, ry = 0;
@@ -586,5 +585,33 @@ public class PdfboxMaker {
             contentStream.restoreGraphicsState();
         }
 
+    }
+
+    /**
+     * 加载字体
+     *
+     * @param ctFont 字体对象
+     * @return 字体
+     */
+    private PDFont getFont(CT_Font ctFont) {
+        String key = String.format("%s_%s_%s", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile());
+        if (fontCache.containsKey(key)) {
+            return fontCache.get(key);
+        }
+        PDFont font;
+        try {
+            // 加载字体
+            TrueTypeFont typeFont = FontLoader.getInstance().loadFont(reader.getResourceLocator(), ctFont);
+            if (typeFont != null) {
+                font = PDType0Font.load(pdf, typeFont, true);
+            } else {
+                font = DEFAULT_FONT;
+            }
+        } catch (Exception e) {
+            logger.info("无法使用字体: {} {} {}", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile().toString());
+            font = DEFAULT_FONT;
+        }
+        fontCache.put(key, font);
+        return font;
     }
 }

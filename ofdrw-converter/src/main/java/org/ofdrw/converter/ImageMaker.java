@@ -3,11 +3,12 @@ package org.ofdrw.converter;
 import org.apache.fontbox.ttf.GlyphData;
 import org.apache.fontbox.ttf.TrueTypeFont;
 import org.ofdrw.converter.point.Tuple2;
+import org.ofdrw.reader.OFDReader;
+import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.tools.ImageUtils;
 import org.ofdrw.converter.utils.MatrixUtils;
 import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.annotation.pageannot.Appearance;
-import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
@@ -23,11 +24,9 @@ import org.ofdrw.core.signatures.appearance.StampAnnot;
 import org.ofdrw.core.text.CT_CGTransform;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.core.text.font.CT_Font;
-import org.ofdrw.reader.DLOFDReader;
 import org.ofdrw.reader.ResourceManage;
-import org.ofdrw.reader.model.AnnotionVo;
-import org.ofdrw.reader.model.OfdPageVo;
-import org.ofdrw.reader.model.StampAnnotVo;
+import org.ofdrw.reader.model.AnnotionEntity;
+import org.ofdrw.reader.model.StampAnnotEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ujmp.core.Matrix;
@@ -39,9 +38,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.List;
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.ofdrw.converter.utils.CommonUtil.getPageBox;
 
 /**
  * 图片转换类
@@ -54,7 +50,7 @@ public class ImageMaker {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 
-    private DLOFDReader ofdReader;
+    private OFDReader reader;
 
     /**
      * 每毫米像素数量(Pixels per millimeter)
@@ -71,7 +67,8 @@ public class ImageMaker {
     private boolean isStamp = false;
 
 
-    private List<OfdPageVo> pages = null;
+    private List<PageInfo> pages = null;
+
     private final ResourceManage resourceManage;
     /**
      * 加载后的字体缓存
@@ -87,13 +84,13 @@ public class ImageMaker {
      * <p>
      * OFD内部使用毫米作为基本单位
      *
-     * @param ofdReader OFD解析器
-     * @param ppm       每毫米像素数量(Pixels per millimeter)
+     * @param reader OFD解析器
+     * @param ppm    每毫米像素数量(Pixels per millimeter)
      */
-    public ImageMaker(DLOFDReader ofdReader, int ppm) {
-        this.ofdReader = ofdReader;
-        this.resourceManage = ofdReader.getResMgt();
-        this.pages = ofdReader.getOFDDocumentVo().getOfdPageVoList();
+    public ImageMaker(OFDReader reader, int ppm) {
+        this.reader = reader;
+        this.resourceManage = reader.getResMgt();
+        this.pages = reader.getPageList();
         if (this.ppm > 0) {
             this.ppm = ppm;
         }
@@ -103,37 +100,41 @@ public class ImageMaker {
         return pages.size();
     }
 
+    /**
+     * 渲染OFD页面为图片
+     *
+     * @param pageIndex 页码，从0起
+     * @return 渲染完成的图片
+     */
     public BufferedImage makePage(int pageIndex) {
         if (pageIndex < 0 || pageIndex >= pages.size()) {
             throw new GeneralConvertException(String.format("%s 不是有效索引", pageIndex));
         }
-        OfdPageVo pageVo = pages.get(pageIndex);
-        Page contentPage = pageVo.getContentPage();
-//        Page templatePage = pageVo.getTemplatePage();
-        ST_Box pageBox = getPageBox(contentPage.getArea(), ofdReader.getOFDDocumentVo().getPageWidth(), ofdReader.getOFDDocumentVo().getPageHeight());
+        PageInfo pageInfo = pages.get(pageIndex);
+        ST_Box pageBox = pageInfo.getSize();
         double pageWidthPixel = ppm * pageBox.getWidth();
         double pageHeightPixel = ppm * pageBox.getHeight();
 
         BufferedImage image = createImage((int) pageWidthPixel, (int) pageHeightPixel);
         Graphics2D graphics = (Graphics2D) image.getGraphics();
 
-        writePage(graphics, pageVo, null);
+        writePage(graphics, pageInfo, null);
 
+        final String pageId = pageInfo.getId().toString();
         // 绘制电子印章图片
-        for (int i = 0; i < ofdReader.getOFDDocumentVo().getStampAnnotVos().size(); i++) {
-            StampAnnotVo stampAnnotVo = ofdReader.getOFDDocumentVo().getStampAnnotVos().get(i);
-            List<StampAnnot> stampAnnots = stampAnnotVo.getStampAnnots();
+        for (StampAnnotEntity stampAnnotEntity : reader.getStampAnnots()) {
+            List<StampAnnot> stampAnnots = stampAnnotEntity.getStampAnnots();
             for (StampAnnot stampAnnot : stampAnnots) {
-                if (stampAnnot.getPageRef().toString().equals(contentPage.getObjID().toString())) {
-                    writeStampAnnot(graphics, stampAnnotVo, stampAnnot);
+                if (stampAnnot.getPageRef().toString().equals(pageId)) {
+                    writeStampAnnot(graphics, stampAnnotEntity, stampAnnot);
                 }
             }
         }
 
         // 绘制注解对象
-        for (AnnotionVo annotionVo : ofdReader.getOFDDocumentVo().getAnnotaions()) {
-            if (pageVo.getContentPage().getObjID().toString().equals(annotionVo.getPageId()) && null != annotionVo.getAnnots()) {
-                for (Annot annot : annotionVo.getAnnots()) {
+        for (AnnotionEntity annotionEntity : reader.getAnnotationEntities()) {
+            if (pageId.equals(annotionEntity.getPageId()) && null != annotionEntity.getAnnots()) {
+                for (Annot annot : annotionEntity.getAnnots()) {
                     Appearance appearance = annot.getAppearance();
                     writeContent(graphics, appearance, null, null);
                 }
@@ -153,12 +154,12 @@ public class ImageMaker {
         return ImageUtils.createImage(pageWidthPixel, pageHeightPixel, isStamp);
     }
 
-    private void writeStampAnnot(Graphics2D graphics, StampAnnotVo stampAnnotVo, StampAnnot stampAnnot) {
+    private void writeStampAnnot(Graphics2D graphics, StampAnnotEntity stampAnnotVo, StampAnnot stampAnnot) {
         BufferedImage stampImage = null;
         graphics = (Graphics2D) graphics.create();
-        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(stampAnnotVo.getImgByte())) {
-            if (stampAnnotVo.getType().equals("ofd")) {
-                ImageMaker imageMaker = new ImageMaker(new DLOFDReader(inputStream), ppm);
+        try (ByteArrayInputStream inputStream = stampAnnotVo.getImageStream()) {
+            if (stampAnnotVo.getImgType().equals("ofd")) {
+                ImageMaker imageMaker = new ImageMaker(new OFDReader(inputStream), ppm);
                 imageMaker.isStamp = true;
                 imageMaker.config.setDrawBoundary(config.drawBoundary);
                 if (imageMaker.pageSize() > 0) {
@@ -197,26 +198,19 @@ public class ImageMaker {
         }
     }
 
-    private void writePage(Graphics2D graphics, OfdPageVo page, Matrix matrix) {
-        Page contentPage = page.getContentPage();
-        Page templatePage = page.getTemplatePage();
-        List<CT_Layer> templateLayers = new ArrayList<>();
-        List<CT_Layer> layers = new ArrayList<>(contentPage.getContent().getLayers());
-        if (templatePage != null && templatePage.getContent() != null) {
-            templateLayers.addAll(templatePage.getContent().getLayers());
-        }
-
-        Comparator<CT_Layer> comparator = Comparator.comparing(CT_Layer::getType);
-        layers.sort(comparator);
-        templateLayers.sort(comparator);
-
-        for (CT_Layer layer : templateLayers) {
+    /**
+     * 绘制页面
+     *
+     * @param graphics 图形操作上下文
+     * @param pageInfo 页面信息
+     * @param matrix   变换矩阵
+     */
+    private void writePage(Graphics2D graphics, PageInfo pageInfo, Matrix matrix) {
+        // 获取页面内容出现的所有图层，包含模板页（所有页面均按照定义ZOrder排列）
+        final List<CT_Layer> layerList = pageInfo.getAllLayer();
+        for (CT_Layer layer : layerList) {
             writeContent(graphics, layer, null, matrix);
         }
-        for (CT_Layer layer : layers) {
-            writeContent(graphics, layer, null, matrix);
-        }
-
     }
 
 
@@ -261,8 +255,10 @@ public class ImageMaker {
                     } else if (object instanceof CT_Layer) {
                         CT_Layer layer = (CT_Layer) object;
                         ST_RefID drawParamRef = layer.getDrawParam();
-                        CT_DrawParam ctDrawParam = resourceManage.getDrawParam(drawParamRef.getRefId().toString());
-                        drawParams.add(ctDrawParam);
+                        if (drawParamRef != null) {
+                            CT_DrawParam ctDrawParam = resourceManage.getDrawParam(drawParamRef.getRefId().toString());
+                            drawParams.add(ctDrawParam);
+                        }
                         writeContent(graphics, layer, drawParams, parentMatrix);
                     }
                 } catch (Exception e) {
@@ -360,7 +356,7 @@ public class ImageMaker {
         List<Number> fontMatrix = null;
 
         if (typeFont == null) {
-            logger.error("加载字体失败：" + textObject.getFont());
+            logger.info("无法加载字体ID：" + textObject.getFont());
 //            typeFont = FontLoader.getInstance().loadDefaultFont();
             return;
         } else {
@@ -503,31 +499,6 @@ public class ImageMaker {
         }
     }
 
-    private String getResFilePath(String filename) {
-        String srcPath = ofdReader.getOFDDir().getSysAbsPath() + "/" + ofdReader.getOFDDocumentVo().getDocPath() + "/Res/" + filename;
-        if (!new File(srcPath).exists()) {
-            if (filename.indexOf("/") >= 0) {
-                filename = filename.substring(filename.lastIndexOf("/") + 1);
-            }
-            File file = findFile(new File(ofdReader.getOFDDir().getSysAbsPath()), filename);
-            if (file != null) return file.getAbsolutePath();
-        }
-        return srcPath;
-    }
-
-    private static File findFile(File dir, String filename) {
-        for (File file : dir.listFiles()) {
-            if (file.isDirectory()) {
-                File res = findFile(file, filename);
-                if (res != null) return res;
-            } else {
-                if (file.getName().toLowerCase().equals(filename.toLowerCase())) {
-                    return file;
-                }
-            }
-        }
-        return null;
-    }
 
     /**
      * 解析字体对象获取字体
@@ -549,16 +520,8 @@ public class ImageMaker {
             // 命中缓存，直接返还已经缓存的字体对象
             return fontCache.get(key);
         }
-
-        TrueTypeFont trueTypeFont = null;
-        if (ctFont.getFontFile() != null) {
-            String absFontPath = getResFilePath(ctFont.getFontFile().toString());
-            logger.debug("加载内嵌字体：" + absFontPath);
-            trueTypeFont = FontLoader.getInstance().loadExternalFont(absFontPath);
-        } else {
-            logger.debug("加载系统字体：" + ctFont.getFamilyName() + " " + ctFont.getFontName());
-            trueTypeFont = FontLoader.getInstance().loadSystemFont(ctFont.getFamilyName(), ctFont.getFontName());
-        }
+        // 加载字体
+        TrueTypeFont trueTypeFont = FontLoader.getInstance().loadFont(this.reader.getResourceLocator(), ctFont);
         // 更新缓存 即便 trueTypeFont 也设置，不存在字体时(null)重复加载问题。
         fontCache.put(key, trueTypeFont);
         return trueTypeFont;

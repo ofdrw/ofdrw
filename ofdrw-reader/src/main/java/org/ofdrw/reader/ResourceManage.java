@@ -194,7 +194,7 @@ public class ResourceManage {
      * @param current 当前图元对象
      * @return 继承到的绘制参数
      */
-    public CT_DrawParam superDrawParam(CT_GraphicUnit current) {
+    public CT_DrawParam superDrawParam(CT_GraphicUnit<?> current) {
         if (current == null) {
             return null;
         }

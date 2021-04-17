@@ -9,24 +9,18 @@ import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.pageObj.CT_TemplatePage;
 import org.ofdrw.core.basicStructure.pageObj.Page;
-import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
-import org.ofdrw.core.basicStructure.res.OFDResource;
-import org.ofdrw.core.basicStructure.res.Res;
-import org.ofdrw.core.basicStructure.res.resources.*;
+
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_Loc;
-import org.ofdrw.core.compositeObj.CT_VectorG;
-import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
-import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
+
 import org.ofdrw.core.signatures.Signature;
 import org.ofdrw.core.signatures.sig.SignedInfo;
-import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.gm.ses.parse.SESVersion;
 import org.ofdrw.gm.ses.parse.SESVersionHolder;
 import org.ofdrw.gm.ses.parse.VersionParser;
 import org.ofdrw.gm.ses.v4.SES_Signature;
 import org.ofdrw.gm.ses.v4.TBS_Sign;
-import org.ofdrw.reader.model.AnnotionVo;
+import org.ofdrw.reader.model.AnnotionEntity;
 import org.ofdrw.reader.model.OFDDocumentVo;
 import org.ofdrw.reader.model.OfdPageVo;
 import org.ofdrw.reader.model.StampAnnotVo;
@@ -41,7 +35,9 @@ import java.util.*;
  *
  * @author dltech21
  * @since 2020/8/11
+ * @deprecated {@link OFDReader}
  */
+@Deprecated
 public class DLOFDReader extends OFDReader {
     private ST_Loc docRoot;
     private Document document;
@@ -226,24 +222,6 @@ public class DLOFDReader extends OFDReader {
                         stampAnnotVo.setImgByte(sealBytes);
                         stampAnnotVoList.add(stampAnnotVo);
                     }
-//                    if (type != null) {
-//                        stampAnnotVo.setType(type.toLowerCase());
-//                        if (type.toLowerCase().equals("ofd")) {
-//                            stampAnnotVo.setImgByte(sealBytes);
-//                            SealOFDReader sealReader = new SealOFDReader(new ByteArrayInputStream(sealBytes));
-//                            stampAnnotVo.setOfdPageVoList(sealReader.getOFDPageVO());
-//                            stampAnnotVo.setCtDrawParamList(sealReader.getPublicResDrawParam());
-//                            stampAnnotVo.setCtFontList(sealReader.getPublicResFonts());
-//                            stampAnnotVoList.add(stampAnnotVo);
-//                            sealReader.close();
-//                        } else if (type.toLowerCase().equals("png")) {
-//                            stampAnnotVo.setImgByte(sealBytes);
-//                            stampAnnotVoList.add(stampAnnotVo);
-//                        } else {
-//                            stampAnnotVo.setImgByte(sealBytes);
-//                            stampAnnotVoList.add(stampAnnotVo);
-//                        }
-//                    }
                 }
             }
         } catch (Exception e) {
@@ -254,20 +232,18 @@ public class DLOFDReader extends OFDReader {
         return stampAnnotVoList;
     }
 
-    private List<AnnotionVo> getAnnotaions() {
-        List<AnnotionVo> annotaionList = new ArrayList<>();
+    private List<AnnotionEntity> getAnnotaions() {
+        List<AnnotionEntity> annotaionList = new ArrayList<>();
         try {
             Annotations annotations = this.getAnnotations();
             if (annotations == null) {
                 return annotaionList;
             }
             List<AnnPage> annPages = annotations.getPages();
-            AnnotionVo annotionVo;
             this.getResourceLocator().save();
             this.getResourceLocator().cd(docRoot.parent());
             for (AnnPage page : annPages) {
-                annotionVo = new AnnotionVo();
-                annotionVo.setPageId(page.getPageID().toString());
+
                 ST_Loc antLoc = page.getFileLoc();
                 if (antLoc.toString().contains(docRoot.parent())) {
                     antLoc = ST_Loc.getInstance(antLoc.toString().replace(docRoot.parent() + "/", "").replaceFirst("/", ""));
@@ -277,8 +253,7 @@ public class DLOFDReader extends OFDReader {
                 }
                 try {
                     PageAnnot pageAnnot = this.getResourceLocator().get(antLoc, PageAnnot::new);
-                    annotionVo.setAnnots(pageAnnot.getAnnots());
-                    annotaionList.add(annotionVo);
+                    annotaionList.add(new AnnotionEntity(page.getPageID().toString(),pageAnnot.getAnnots()));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

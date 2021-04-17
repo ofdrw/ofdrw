@@ -17,13 +17,13 @@ public class OFDDocumentVo {
 
     private List<OfdPageVo> ofdPageVoList;
     private final List<StampAnnotVo> stampAnnotVos;
-    private final List<AnnotionVo> annotaions;
+    private final List<AnnotionEntity> annotaions;
 
     public OFDDocumentVo(String docPath,
                          double pageWidth, double pageHeight,
                          List<OfdPageVo> ofdPageVoList,
                          List<StampAnnotVo> stampAnnotVoList,
-                         List<AnnotionVo> annotaions) {
+                         List<AnnotionEntity> annotaions) {
         this.docPath = docPath;
         this.pageWidth = pageWidth;
         this.pageHeight = pageHeight;
@@ -32,9 +32,9 @@ public class OFDDocumentVo {
         this.annotaions = annotaions;
     }
 
-    public List<OfdPageVo> getOfdPageVoList() {
-        return ofdPageVoList;
-    }
+//    public List<OfdPageVo> getOfdPageVoList() {
+//        return ofdPageVoList;
+//    }
 
     public String getDocPath() {
         return docPath;
@@ -53,7 +53,7 @@ public class OFDDocumentVo {
         return pageHeight;
     }
 
-    public List<AnnotionVo> getAnnotaions() {
+    public List<AnnotionEntity> getAnnotaions() {
         return annotaions;
     }
 

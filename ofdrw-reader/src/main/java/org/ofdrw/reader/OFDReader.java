@@ -3,27 +3,39 @@ package org.ofdrw.reader;
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
 import org.ofdrw.core.annotation.Annotations;
+import org.ofdrw.core.annotation.pageannot.AnnPage;
+import org.ofdrw.core.annotation.pageannot.PageAnnot;
 import org.ofdrw.core.attachment.Attachments;
 import org.ofdrw.core.attachment.CT_Attachment;
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
+import org.ofdrw.core.basicStructure.pageObj.CT_TemplatePage;
 import org.ofdrw.core.basicStructure.pageObj.Page;
+import org.ofdrw.core.basicStructure.pageObj.Template;
+import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.core.signatures.Signature;
 import org.ofdrw.core.signatures.Signatures;
+import org.ofdrw.gm.ses.parse.SESVersionHolder;
+import org.ofdrw.gm.ses.parse.VersionParser;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
+import org.ofdrw.reader.model.AnnotionEntity;
+import org.ofdrw.reader.model.StampAnnotEntity;
+import org.ofdrw.reader.model.TemplatePageEntity;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * OFD解析器
@@ -50,12 +62,17 @@ public class OFDReader implements Closeable {
      * <p>
      * 解析路径获取资源
      */
-    private ResourceLocator rl;
+    protected ResourceLocator rl;
 
     /**
      * 是否已经关闭文档
      */
     private boolean closed = false;
+
+    /**
+     * 资源加载器
+     */
+    private ResourceManage resMgt;
 
     private OFDReader() {
     }
@@ -81,6 +98,7 @@ public class OFDReader implements Closeable {
         ofdDir = new OFDDir(workDir);
         // 创建资源定位器
         rl = new ResourceLocator(ofdDir);
+        resMgt = new ResourceManage(this);
     }
 
     /**
@@ -109,6 +127,7 @@ public class OFDReader implements Closeable {
         ofdDir = new OFDDir(workDir);
         // 创建资源定位器
         rl = new ResourceLocator(ofdDir);
+        resMgt = new ResourceManage(this);
     }
 
     /**
@@ -130,7 +149,7 @@ public class OFDReader implements Closeable {
         if (!deleteOnClose) {
             closed = true;
         }
-
+        resMgt = new ResourceManage(this);
     }
 
     /**
@@ -212,12 +231,8 @@ public class OFDReader implements Closeable {
      */
     public Annotations getAnnotations() {
         try {
-            rl.save();
-            DocBody docBody = ofdDir.getOfd().getDocBody();
-            ST_Loc docRoot = docBody.getDocRoot();
             // 路径解析对象获取并缓存虚拟容器
-            Document document = rl.get(docRoot, Document::new);
-            rl.cd(docRoot.parent());
+            Document document = cdDefaultDoc();
 
             ST_Loc annotations = document.getAnnotations();
             if (annotations == null) {
@@ -239,12 +254,8 @@ public class OFDReader implements Closeable {
      */
     public int getNumberOfPages() {
         try {
-            rl.save();
-            DocBody docBody = ofdDir.getOfd().getDocBody();
-            ST_Loc docRoot = docBody.getDocRoot();
             // 路径解析对象获取并缓存虚拟容器
-            Document document = rl.get(docRoot, Document::new);
-            rl.cd(docRoot.parent());
+            Document document = cdDefaultDoc();
             Pages pages = document.getPages();
             return pages.getSize();
         } catch (FileNotFoundException | DocumentException e) {
@@ -266,14 +277,10 @@ public class OFDReader implements Closeable {
             throw new NumberFormatException("页码(pageNum)不能小于0");
         }
         try {
-            int index = pageNum - 1;
-            // 保存切换目录前的工作区
             rl.save();
-            DocBody docBody = ofdDir.getOfd().getDocBody();
-            ST_Loc docRoot = docBody.getDocRoot();
+            int index = pageNum - 1;
             // 路径解析对象获取并缓存虚拟容器
-            Document document = rl.get(docRoot, Document::new);
-            rl.cd(docRoot.parent());
+            Document document = cdDefaultDoc();
             Pages pages = document.getPages();
             List<org.ofdrw.core.basicStructure.pageTree.Page> pageList = pages.getPages();
             if (index >= pageList.size()) {
@@ -285,20 +292,120 @@ public class OFDReader implements Closeable {
             Page obj = rl.get(pageLoc, Page::new);
             // 获取页面的容器绝对路径
             pageLoc = rl.getAbsTo(pageLoc);
-
             ST_Box pageSize = getPageSize(obj);
+
+            // 加载模板
+            ArrayList<TemplatePageEntity> templatePages = new ArrayList<>();
+            for (Template item : obj.getTemplates()) {
+                TemplatePageEntity template = getTemplate(item.getTemplateID().toString());
+                Type type = Type.getInstance(item.attributeValue("ZOrder"));
+                template.setOrder(type);
+                templatePages.add(template);
+            }
+
             return new PageInfo()
                     .setIndex(pageNum)
                     .setId(pageList.get(index).getID())
                     .setObj(obj)
                     .setSize(pageSize.clone())
-                    .setPageAbsLoc(pageLoc);
+                    .setPageAbsLoc(pageLoc)
+                    .setTemplates(templatePages);
         } catch (FileNotFoundException | DocumentException e) {
+
             throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
         } finally {
             // 还原原有工作区
             rl.restore();
         }
+    }
+
+    /**
+     * 获取 页面信息集合
+     *
+     * @return 页面信息集合
+     */
+    public List<PageInfo> getPageList() {
+        // 获取总页码数
+        final int numberOfPages = getNumberOfPages();
+        List<PageInfo> res = new ArrayList<>(numberOfPages);
+        for (int i = 0; i < numberOfPages; i++) {
+            PageInfo pageInfo = getPageInfo(i + 1);
+            res.add(pageInfo);
+        }
+        return res;
+    }
+
+    /**
+     * 解析页面模板对象
+     *
+     * @param id 模板ID
+     * @return 模板实体，如果模板不存在返还null
+     */
+    public TemplatePageEntity getTemplate(String id) {
+        if (id == null || id.trim().length() == 0) {
+            return null;
+        }
+        try {
+            final Document document = cdDefaultDoc();
+            final CT_CommonData commonData = document.getCommonData();
+            TemplatePageEntity res = null;
+            for (CT_TemplatePage item : commonData.getTemplatePages()) {
+                String itemId = item.getID().toString();
+                if (id.equals(itemId)) {
+                    ST_Loc loc = item.getBaseLoc();
+                    if (loc == null) {
+                        break;
+                    }
+                    // 加载模板内容
+                    Page page = rl.get(loc, Page::new);
+                    res = new TemplatePageEntity(item, page);
+                    break;
+                }
+            }
+            return res;
+        } catch (DocumentException | FileNotFoundException e) {
+            return null;
+        } finally {
+            rl.restore();
+        }
+    }
+
+    /**
+     * 切换目录到指定的文档下
+     * <p>
+     * 该操作将会导致资源加载器变更目录
+     * <p>
+     * 如果需要恢复被切换的目录请主动在外部调用restore
+     *
+     * @param numOfDoc 文档序号
+     * @return 文档对象
+     * @throws DocumentException     文档解析异常
+     * @throws FileNotFoundException Document.xml文档不存在
+     */
+    public Document cdDoc(int numOfDoc) throws DocumentException, FileNotFoundException {
+        rl.save();
+        rl.cd("/");
+        DocBody docBody = ofdDir.getOfd().getDocBody(numOfDoc);
+        ST_Loc docRoot = docBody.getDocRoot();
+        final Document document = rl.get(docRoot, Document::new);
+        // 路径解析对象获取并缓存虚拟容器
+        rl.cd(docRoot.parent());
+        return document;
+    }
+
+    /**
+     * 切换目录到默认的文档目录下下
+     * <p>
+     * 该操作将会导致资源加载器变更目录
+     * <p>
+     * 如果需要恢复被切换的目录请主动在外部调用restore
+     *
+     * @return 文档对象
+     * @throws DocumentException     文档解析异常
+     * @throws FileNotFoundException Document.xml文档不存在
+     */
+    public Document cdDefaultDoc() throws DocumentException, FileNotFoundException {
+        return cdDoc(0);
     }
 
     /**
@@ -451,6 +558,106 @@ public class OFDReader implements Closeable {
             }
         }
         return null;
+    }
+
+    /**
+     * 获取默认文档中的签章信息
+     *
+     * @return 签章信息
+     */
+    public List<StampAnnotEntity> getStampAnnots() {
+        if (!hasSignature()) {
+            // 没有签名的情况下返还空集合，防止NPE
+            return Collections.EMPTY_LIST;
+        }
+
+        try {
+            rl.save();
+            ST_Loc signaturesLoc = getDefaultDocSignaturesPath();
+            // 切换目录到 Signatures.xml所在目录
+            rl.cd(signaturesLoc.parent());
+            // 签名列表
+            final Signatures sigFileList = getDefaultSignatures();
+            final List<Signature> sigInfoList = sigFileList.getSignatures();
+            List<StampAnnotEntity> res = new ArrayList<>(sigInfoList.size());
+            for (Signature sigInfoItem : sigInfoList) {
+                ST_Loc signatureBaseLoc = sigInfoItem.getBaseLoc();
+                try {
+                    // 签名描述文件
+                    final org.ofdrw.core.signatures.sig.Signature sigDesp = rl.get(signatureBaseLoc, org.ofdrw.core.signatures.sig.Signature::new);
+                    final ST_Loc signedValueLoc = sigDesp.getSignedValue();
+                    rl.save();
+                    try {
+                        rl.cd(signedValueLoc.parent());
+                        // 获取签名值文件
+                        final Path signedValueFile = rl.getFile(signedValueLoc);
+                        // 解析电子印章
+                        SESVersionHolder v = VersionParser.parseSES_SignatureVersion(Files.readAllBytes(signedValueFile));
+                        res.add(new StampAnnotEntity(v, sigDesp.getSignedInfo()));
+                    }finally {
+                        rl.restore();
+                    }
+                } catch (Exception ignored) {
+                    // 忽略错误：
+                    //      文件不存在
+                    //      无法解析的印章，因为签名值可能是 电子签名值
+                }
+            }
+            return res;
+        } finally {
+            rl.restore();
+        }
+    }
+
+    /**
+     * 获取默认文档中的所有注释信息
+     *
+     * @return 注释实体信息列表
+     */
+    public List<AnnotionEntity> getAnnotationEntities() {
+        try {
+            // 路径解析对象获取并缓存虚拟容器
+            Document document = cdDefaultDoc();
+            final ST_Loc annInfosLoc = document.getAnnotations();
+            if (annInfosLoc == null) {
+                return Collections.EMPTY_LIST;
+            }
+            Annotations annotations = rl.get(annInfosLoc, Annotations::new);
+            if (annotations == null) {
+                return Collections.EMPTY_LIST;
+            }
+            // 切换目录到 Annotations.xml所在文件目录
+            rl.cd(annInfosLoc.parent());
+            try {
+                List<AnnPage> annPages = annotations.getPages();
+                List<AnnotionEntity> res = new ArrayList<>(annPages.size());
+                for (AnnPage annPage : annPages) {
+                    try {
+                        final ST_Loc fileLoc = annPage.getFileLoc();
+                        final PageAnnot pageAnnot = rl.get(fileLoc, PageAnnot::new);
+                        res.add(new AnnotionEntity(annPage.getPageID().toString(), pageAnnot.getAnnots()));
+                    } catch (Exception ignore) {
+                        // 忽略无法加载的注释文件，尽力而为
+                    }
+                }
+                return res;
+            }finally {
+                rl.restore();
+            }
+        } catch (DocumentException | FileNotFoundException e) {
+            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 获取资源管理器
+     * <p>
+     * 资源管理器获取到的对象均为只读对象
+     *
+     * @return 资源管理器
+     */
+    public ResourceManage getResMgt() {
+        return resMgt;
     }
 
 

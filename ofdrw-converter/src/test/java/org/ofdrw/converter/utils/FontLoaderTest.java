@@ -1,14 +1,11 @@
 package org.ofdrw.converter.utils;
 
-import org.apache.fontbox.ttf.TTFParser;
-import org.apache.fontbox.ttf.TrueTypeFont;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.FontLoader;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+
 
 /**
  * @author 权观宇
@@ -27,8 +24,9 @@ class FontLoaderTest {
 
     @Test
     public void testFontLoad() throws IOException {
-        final Path path = Paths.get("src/test/resources/font_10.ttf");
-        final TrueTypeFont parse = new TTFParser(true).parse(path.toFile());
+//        final Path path = Paths.get("src/test/resources/font_10.ttf");
+//        final TrueTypeFont parse = new TTFParser(true).parse(path.toFile());
+//        final FontProgram font = FontProgramFactory.createFont("C:\\Users\\pc\\Desktop\\font_85_85.ttf");
 
     }
 }

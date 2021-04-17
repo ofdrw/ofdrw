@@ -7,9 +7,11 @@ import org.ofdrw.core.text.font.CT_Font;
 import java.util.List;
 
 /**
+ * @deprecated {@link StampAnnotEntity}
  * @author dltech21
  * @since 2020/8/11
  */
+@Deprecated
 public class StampAnnotVo {
 
     private List<StampAnnot> stampAnnots;
