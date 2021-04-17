@@ -90,12 +90,22 @@ OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwe
 - 将OFD渲染为SVG实现矢量的无失真的OFD预览体验。
 - 完全基于浏览器在前端完成所有渲染工作，不需要服务端支持和插件。
 
+#### 开源客户端
+
+推荐开源客户端预览解决方案： [roy19831015/OfdiumEx . https://github.com/roy19831015/OfdiumEx](https://github.com/roy19831015/OfdiumEx)
+
+- 基于cairo库渲染OFD。
+- Windows客户端
+
 #### 图片转换
+
+> 目前已经被合并到`ofdrw-converter` 模块
 
 推荐开源OFD图片转换解决方案： [QAQtutu/ofdbox . https://github.com/QAQtutu/ofdbox](https://github.com/QAQtutu/ofdbox)
 
 - 支持OFD解析。
 - 基于java.awt解析OFD实现图片绘制。
+
 
 ## 源码安装
 
