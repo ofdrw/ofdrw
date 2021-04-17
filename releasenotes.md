@@ -2,6 +2,25 @@
 
 ## 进展
 
+## Version 1.8.5 2021-4-17 21:46:59
+
+> Alias:  Pokemon
+
+修复:
+
+- 内嵌字体加载异常问题
+- 修复了字体加载的Bug
+
+新增:
+
+- 优化Reader的代码结构
+- 迁移`DLOFDReader` 主要功能到`OFDReader`
+- `OFDReader`:
+  - 增签章获取PageInfo的能力，简化转换模块解析工作。
+  - 增加获取注解信息的方法。`org.ofdrw.reader.OFDReader.getStampAnnots`
+  - 增加了获取电子签章信息方法`org.ofdrw.reader.OFDReader.getAnnotationEntities`
+  - 增加了获取页面集合方法`org.ofdrw.reader.OFDReader.getPageList`
+
 ## Version 1.8.4 2021-4-15 23:27:22
 
 > Alias:  PlasticMemories
