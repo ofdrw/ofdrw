@@ -1,20 +1,16 @@
 package org.ofdrw.converter.utils;
 
-import com.itextpdf.io.font.TrueTypeFont;
 import org.apache.fontbox.cff.CFFFont;
 import org.apache.fontbox.cff.CFFParser;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.processing.Filer;
-import java.io.File;
-import java.io.FileNotFoundException;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

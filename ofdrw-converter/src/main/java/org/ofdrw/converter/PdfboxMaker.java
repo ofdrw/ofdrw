@@ -1,5 +1,6 @@
 package org.ofdrw.converter;
 
+import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.jbig2.JBIG2ImageReader;
 import org.apache.pdfbox.jbig2.JBIG2ImageReaderSpi;
@@ -46,12 +47,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageInputStream;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.List;
 
 import static org.ofdrw.converter.utils.CommonUtil.*;
 
@@ -475,32 +478,13 @@ public class PdfboxMaker {
         contentStream.restoreGraphicsState();
     }
 
-    /**
-     * 读取图片文件
-     *
-     * @param isJb2 是否Jb2
-     * @param image 图片输入流
-     * @return 图片对象
-     * @throws IOException 读取异常
-     */
-    public BufferedImage readImageFile(boolean isJb2, InputStream image) throws IOException {
-        if (isJb2) {
-            DefaultInputStreamFactory defaultInputStreamFactory = new DefaultInputStreamFactory();
-            ImageInputStream imageInputStream = defaultInputStreamFactory.getInputStream(image);
-            JBIG2ImageReader imageReader = new JBIG2ImageReader(new JBIG2ImageReaderSpi());
-            imageReader.setInput(imageInputStream);
-            return imageReader.read(0, imageReader.getDefaultReadParam());
-        } else {
-            return ImageIO.read(image);
-        }
-    }
-
     private void writeSealImage(PDPageContentStream contentStream, ST_Box box, byte[] image, ST_Box sealBox, ST_Box clipBox) throws IOException {
         if (image == null) {
             return;
         }
         contentStream.saveGraphicsState();
-        PDImageXObject pdfImageObject = PDImageXObject.createFromByteArray(pdf, image, "");
+
+        PDImageXObject pdfImageObject = LosslessFactory.createFromImage(pdf, ImageIO.read(new ByteArrayInputStream(image)));
         float x = sealBox.getTopLeftX().floatValue();
         float y = box.getHeight().floatValue() - (sealBox.getTopLeftY().floatValue() + sealBox.getHeight().floatValue());
         float width = sealBox.getWidth().floatValue();
