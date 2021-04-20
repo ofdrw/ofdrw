@@ -41,13 +41,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageInputStream;
-import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.List;
 
@@ -58,11 +55,31 @@ public class PdfboxMaker {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfboxMaker.class);
 
+    /**
+     * OFD解析器
+     */
     private final OFDReader reader;
+
+    /**
+     * PDF文档上下文
+     */
     private final PDDocument pdf;
+    /**
+     * 资源加载器
+     * <p>
+     * 用于获取OFD内资源
+     */
     private final ResourceManage resMgt;
+    /**
+     * 默认字体，在无法找到可用字体时使用该字体替换
+     */
     private final PDType0Font DEFAULT_FONT;
 
+    /**
+     * 字体缓存防止重复加载字体
+     * <p>
+     * KEY: 自族名_字体名_字体路径
+     */
     private Map<String, PDFont> fontCache = new HashMap<>();
 
 
@@ -494,7 +511,7 @@ public class PdfboxMaker {
         contentStream.restoreGraphicsState();
     }
 
-    private void writeText(ResourceManage resMgt ,PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, TextObject textObject, PDColor fillColor, int alpha) throws IOException {
+    private void writeText(ResourceManage resMgt, PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, TextObject textObject, PDColor fillColor, int alpha) throws IOException {
         float fontSize = textObject.getSize().floatValue();
 
         if (sealBox != null && textObject.getBoundary() != null) {

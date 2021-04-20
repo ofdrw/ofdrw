@@ -5,6 +5,7 @@ import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 import org.ofdrw.font.FontName;
 import org.ofdrw.layout.OFDDoc;
+import org.ofdrw.layout.PageLayout;
 import org.ofdrw.layout.VirtualPage;
 import org.ofdrw.layout.element.Position;
 
@@ -22,6 +23,30 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class DrawContextTest {
 
+    @Test
+    public void testLineTo() throws IOException {
+        Path outP = Paths.get("target/LineTo.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            final PageLayout pageLayout = ofdDoc.getPageLayout();
+            VirtualPage vPage = new VirtualPage(pageLayout);
+
+            Canvas canvas = new Canvas(pageLayout.getWidth(), pageLayout.getHeight());
+            canvas.setPosition(Position.Absolute);
+//                    .setX(0D).setY(0D);
+            canvas.setDrawer(ctx -> {
+                ctx.beginPath()
+                        .moveTo(0, 0)
+                        .lineTo(100, 100)
+                        .setStrokeColor(0, 0, 0)
+                        .setLineWidth(3)
+                        .stroke();
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
 
     @Test
     void stroke() throws IOException {
