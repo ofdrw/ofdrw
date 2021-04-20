@@ -1,6 +1,7 @@
 package org.ofdrw.layout.element.canvas;
 
 import org.ofdrw.font.Font;
+import org.ofdrw.font.FontName;
 import org.ofdrw.layout.element.TextFontInfo;
 
 /**
@@ -60,6 +61,29 @@ public class FontSetting implements Cloneable, TextFontInfo {
      * 文本内容的当前对齐方式。
      */
     private TextAlign textAlign = TextAlign.start;
+
+    /**
+     * 简化构造提供默认的字体配置
+     * <p>
+     * 字体类型为宋体
+     *
+     * @return 字体配置
+     */
+    public static FontSetting getInstance() {
+        return new FontSetting(5, FontName.SimSun.font());
+    }
+
+    /**
+     * 简化构造提供可选的字体配置
+     * <p>
+     * 字体类型为宋体
+     *
+     * @param fontSize
+     * @return 字体配置
+     */
+    public static FontSetting getInstance(double fontSize) {
+        return new FontSetting(fontSize, FontName.SimSun.font());
+    }
 
     public FontSetting(double fontSize, Font fontObj) {
         this.fontObj = fontObj;

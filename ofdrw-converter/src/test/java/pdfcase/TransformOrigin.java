@@ -20,22 +20,23 @@ public class TransformOrigin {
 
     @Test
     public void testMoveToLeftTop() throws IOException {
+        Path outP = Paths.get("target/MoveToLeftTop.pdf");
         try (PDDocument doc = new PDDocument()) {
             final float height = PDRectangle.A4.getHeight();
             PDPage page = new PDPage(PDRectangle.A4);
             doc.addPage(page);
             try (PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.OVERWRITE, false, false)) {
-//                Matrix m = new Matrix();
-//                m.translate(0, height);
-//                m.scale(1,-1);
+                Matrix m = new Matrix();
+                m.translate(0, height);
+                m.scale(1,-1);
+                contentStream.transform(m);
 
-//                contentStream.transform(m);
                 contentStream.saveGraphicsState();
                 contentStream.setLineWidth(3);
                 contentStream.setStrokingColor(0f,0f,0f);
 
                 contentStream.moveTo(0, 0);
-                contentStream.lineTo(100,100);
+                contentStream.lineTo(200,200);
                 contentStream.stroke();
 //                contentStream.beginText();
 //                contentStream.moveTo(40,40);
@@ -45,7 +46,9 @@ public class TransformOrigin {
                 contentStream.restoreGraphicsState();
 
             }
-            doc.save("target/MoveToLeftTop.pdf");
+            doc.save(outP.toFile());
+            System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+
         }
     }
 }

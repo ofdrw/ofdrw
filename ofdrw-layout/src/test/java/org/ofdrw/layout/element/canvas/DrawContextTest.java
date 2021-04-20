@@ -31,15 +31,15 @@ class DrawContextTest {
             VirtualPage vPage = new VirtualPage(pageLayout);
 
             Canvas canvas = new Canvas(pageLayout.getWidth(), pageLayout.getHeight());
-            canvas.setPosition(Position.Absolute);
-//                    .setX(0D).setY(0D);
+            canvas.setPosition(Position.Absolute).setX(0D).setY(0D);
             canvas.setDrawer(ctx -> {
-                ctx.beginPath()
-                        .moveTo(0, 0)
-                        .lineTo(100, 100)
-                        .setStrokeColor(0, 0, 0)
-                        .setLineWidth(3)
-                        .stroke();
+                ctx.setFont(FontSetting.getInstance()).fillText("Hello world!", 0, 5);
+//                ctx.beginPath()
+//                        .moveTo(0, 0)
+//                        .lineTo(100, 100)
+//                        .setStrokeColor(0, 0, 0)
+//                        .setLineWidth(1)
+//                        .stroke();
             });
             vPage.add(canvas);
 
