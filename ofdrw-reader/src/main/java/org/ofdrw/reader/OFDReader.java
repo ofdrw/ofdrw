@@ -586,9 +586,9 @@ public class OFDReader implements Closeable {
                 try {
                     // 签名描述文件
                     final org.ofdrw.core.signatures.sig.Signature sigDesp = rl.get(signatureBaseLoc, org.ofdrw.core.signatures.sig.Signature::new);
-                    rl.cd(signatureBaseLoc.parent());
-                    ST_Loc signedValueLoc = sigDesp.getSignedValue();
                     try {
+                        rl.cd(signatureBaseLoc.parent());
+                        ST_Loc signedValueLoc = sigDesp.getSignedValue();
                         rl.cd(signedValueLoc.parent());
                         // 获取签名值文件
                         final Path signedValueFile = rl.getFile(signedValueLoc);
