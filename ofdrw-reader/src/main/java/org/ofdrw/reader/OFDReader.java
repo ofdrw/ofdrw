@@ -582,11 +582,12 @@ public class OFDReader implements Closeable {
             List<StampAnnotEntity> res = new ArrayList<>(sigInfoList.size());
             for (Signature sigInfoItem : sigInfoList) {
                 ST_Loc signatureBaseLoc = sigInfoItem.getBaseLoc();
+                rl.save();
                 try {
                     // 签名描述文件
                     final org.ofdrw.core.signatures.sig.Signature sigDesp = rl.get(signatureBaseLoc, org.ofdrw.core.signatures.sig.Signature::new);
-                    final ST_Loc signedValueLoc = sigDesp.getSignedValue();
-                    rl.save();
+                    rl.cd(signatureBaseLoc.parent());
+                    ST_Loc signedValueLoc = sigDesp.getSignedValue();
                     try {
                         rl.cd(signedValueLoc.parent());
                         // 获取签名值文件

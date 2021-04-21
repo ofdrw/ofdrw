@@ -27,8 +27,8 @@ public class TransformOrigin {
             doc.addPage(page);
             try (PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.OVERWRITE, false, false)) {
                 Matrix m = new Matrix();
-                m.translate(0, height);
                 m.scale(1,-1);
+                m.translate(0, -height);
                 contentStream.transform(m);
 
                 contentStream.saveGraphicsState();
@@ -36,13 +36,14 @@ public class TransformOrigin {
                 contentStream.setStrokingColor(0f,0f,0f);
 
                 contentStream.moveTo(0, 0);
-                contentStream.lineTo(200,200);
+                contentStream.lineTo(100,200);
                 contentStream.stroke();
-//                contentStream.beginText();
-//                contentStream.moveTo(40,40);
-//                contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
-//                contentStream.showText("Hello world!");
-//                contentStream.endText();
+
+                contentStream.moveTo(0, 0);
+                contentStream.beginText();
+                contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
+                contentStream.showText("Hello world!");
+                contentStream.endText();
                 contentStream.restoreGraphicsState();
 
             }
