@@ -34,6 +34,7 @@ public class AbbreviatedData extends OFDElement implements Cloneable {
         super("AbbreviatedData");
         this.dataQueue = new LinkedList<>();
     }
+
     public AbbreviatedData(List<OptVal> list) {
         this();
         this.dataQueue = new LinkedList<>(list);
@@ -81,6 +82,15 @@ public class AbbreviatedData extends OFDElement implements Cloneable {
             res.add(new OptVal(opt, values));
         }
         return res;
+    }
+
+    /**
+     * 获取原始的操作符和操作数
+     *
+     * @return 操作符和操作数的结合
+     */
+    public LinkedList<OptVal> getRawOptVal() {
+        return this.dataQueue;
     }
 
     /**
