@@ -16,7 +16,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2019-09-28 10:40:37
  */
-public class ST_Array extends STBase implements Cloneable{
+public class ST_Array extends STBase implements Cloneable {
 
     /**
      * 元素收容
@@ -183,7 +183,7 @@ public class ST_Array extends STBase implements Cloneable{
         return mtx;
     }
 
-    public void printMtx(){
+    public void printMtx() {
         double[][] m = toMtx();
         for (int i = 0; i < m.length; i++) {
             for (int j = 0; j < m[i].length; j++) {
@@ -193,8 +193,83 @@ public class ST_Array extends STBase implements Cloneable{
         }
     }
 
+    /**
+     * 获取Index上的数字
+     * <p>
+     * 注意数组越位
+     *
+     * @param index index
+     * @return 数字
+     */
+    public Double get(int index) {
+        final String s = array.get(index);
+        return Double.parseDouble(s);
+    }
+
+    /**
+     * 获取Index上的数字
+     * <p>
+     * 注意数组越位
+     *
+     * @param index index
+     * @return 数字
+     */
+    public Integer getInt(int index) {
+        final String s = array.get(index);
+        return Integer.parseInt(s);
+    }
+
+    /**
+     * 获取期待长度的数组
+     * <p>
+     * 如果无法解析或长度不足则补充0
+     *
+     * @param len 长度
+     * @return 数组
+     */
+    public int[] expectIntArr(int len) {
+        int[] res = new int[len];
+        for (int i = 0; i < len; i++) {
+            if (i >= array.size()) {
+                // 防止越界
+                break;
+            }
+            try {
+                res[i] = getInt(i);
+            } catch (NumberFormatException e) {
+                res[i] = 0;
+            }
+        }
+        return res;
+
+    }
+
+    /**
+     * 获取期待长度的数组
+     * <p>
+     * 如果无法解析或长度不足则补充0
+     *
+     * @param len 长度
+     * @return 数组
+     */
+    public double[] expectArr(int len) {
+        double[] res = new double[len];
+        for (int i = 0; i < len; i++) {
+            if (i >= array.size()) {
+                // 防止越界
+                break;
+            }
+            try {
+                res[i] = get(i);
+            } catch (NumberFormatException e) {
+                res[i] = 0;
+            }
+        }
+        return res;
+    }
+
     @Override
-    public ST_Array clone(){
+    public ST_Array clone() {
         ST_Array res = new ST_Array();
         for (String item : this.array) {
             res.add(item);

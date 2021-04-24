@@ -22,6 +22,19 @@ public class Arc extends Command {
         super("Arc");
     }
 
+    public Arc(double rx, double ry,
+               double angle,
+               double large,
+               double sweep,
+               double x, double y) {
+        this();
+        setEllipseSize(rx, ry);
+        setRotationAngle(angle);
+        setLargeArc(large != 0);
+        setSweepDirection(sweep != 0);
+        setEndPoint(x, y);
+    }
+
     /**
      * 【必选 属性】
      * 设置 弧线方向是否顺时针
@@ -227,5 +240,39 @@ public class Arc extends Command {
      */
     public ST_Pos getEndPoint() {
         return ST_Pos.getInstance(this.attributeValue("EndPoint"));
+    }
+
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder().append("A ");
+        final ST_Array ellipseSize = this.getEllipseSize();
+        if (ellipseSize != null) {
+            sb.append(ellipseSize.toString()).append(" ");
+        } else {
+            sb.append("0 0 ");
+        }
+        try {
+            sb.append(getRotationAngle()).append(" ");
+        } catch (NumberFormatException e) {
+            sb.append("0 ");
+        }
+        if (getLargeArc()) {
+            sb.append("1 ");
+        } else {
+            sb.append("0 ");
+        }
+        if (getSweepDirection()) {
+            sb.append("1 ");
+        } else {
+            sb.append("0 ");
+        }
+         ST_Pos endPoint = getEndPoint();
+        if (endPoint != null) {
+            sb.append(endPoint.toString());
+        }else{
+            sb.append("0 0");
+        }
+        return sb.toString();
     }
 }

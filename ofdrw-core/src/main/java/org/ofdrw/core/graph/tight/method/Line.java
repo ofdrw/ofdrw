@@ -52,4 +52,16 @@ public class Line extends Command {
     public ST_Pos getPoint1() {
         return ST_Pos.getInstance(this.attributeValue("Point1"));
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder().append("L ");
+        final ST_Pos point1 = getPoint1();
+        if (point1 != null) {
+            sb.append(point1.toString());
+        }else{
+            sb.append("0 0");
+        }
+        return sb.toString();
+    }
 }
