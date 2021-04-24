@@ -3,9 +3,6 @@ package org.ofdrw.converter;
 import org.apache.fontbox.ttf.GlyphData;
 import org.apache.fontbox.ttf.TrueTypeFont;
 import org.ofdrw.converter.point.Tuple2;
-import org.ofdrw.reader.OFDReader;
-import org.ofdrw.reader.PageInfo;
-import org.ofdrw.reader.tools.ImageUtils;
 import org.ofdrw.converter.utils.MatrixUtils;
 import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.annotation.pageannot.Appearance;
@@ -15,6 +12,7 @@ import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_RefID;
+import org.ofdrw.core.compositeObj.CT_VectorG;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
@@ -24,20 +22,27 @@ import org.ofdrw.core.signatures.appearance.StampAnnot;
 import org.ofdrw.core.text.CT_CGTransform;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.core.text.font.CT_Font;
+import org.ofdrw.reader.OFDReader;
+import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.ResourceManage;
 import org.ofdrw.reader.model.AnnotionEntity;
 import org.ofdrw.reader.model.StampAnnotEntity;
+import org.ofdrw.reader.tools.ImageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ujmp.core.Matrix;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
 
 /**
  * 图片转换类
@@ -222,12 +227,7 @@ public class ImageMaker {
 
             if (pageBlock instanceof CT_Layer) {
                 ST_RefID drawParamRef = ((CT_Layer) pageBlock).getDrawParam();
-                if (drawParamRef != null) {
-                    CT_DrawParam ctDrawParam = resourceManage.getDrawParam(drawParamRef.getRefId().toString());
-                    if (ctDrawParam != null) {
-                        drawParams.add(ctDrawParam);
-                    }
-                }
+                addDrawParams(drawParams, drawParamRef);
             }
 
             if (pageBlock.attribute("Boundary") != null) {
@@ -238,6 +238,11 @@ public class ImageMaker {
 
             for (PageBlockType object : pageBlock.getPageBlocks()) {
                 try {
+
+                    if (object instanceof CT_GraphicUnit) {
+                        drawParams = addDrawParams(drawParams, (CT_GraphicUnit) object);
+                    }
+
                     if (object instanceof TextObject) {
                         TextObject textObject = (TextObject) object;
                         writeText(graphics, textObject, drawParams, parentMatrix);
@@ -248,7 +253,8 @@ public class ImageMaker {
                         PathObject pathObject = (PathObject) object;
                         writePath(graphics, pathObject, drawParams, parentMatrix);
                     } else if (object instanceof CompositeObject) {
-                        logger.info("暂不支持复合对象");
+                        CompositeObject compositeObject = (CompositeObject) object;
+                        writeComposite(graphics, compositeObject, drawParams, parentMatrix);
                     } else if (object instanceof CT_PageBlock) {
                         CT_PageBlock block = (CT_PageBlock) object;
                         writeContent(graphics, block, drawParams, parentMatrix);
@@ -269,6 +275,48 @@ public class ImageMaker {
             graphics.dispose();
         }
     }
+
+    private void writeComposite(Graphics2D graphics, CompositeObject compositeObject, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
+        ST_RefID refID = compositeObject.getResourceID();
+        if (refID == null) return;
+
+        CT_VectorG vectorG = resourceManage.getCompositeGraphicUnit(refID.getRefId().getId().toString());
+        if (vectorG == null) return;
+        ST_Box boundary = compositeObject.getBoundary();
+
+        Matrix m = MatrixUtils.base();
+
+        if (compositeObject.getCTM() != null) {
+            m = m.mtimes(MatrixUtils.ctm(compositeObject.getCTM().toDouble()));
+        }
+        if (boundary != null) {
+            m = MatrixUtils.move(m, boundary.getTopLeftX(), boundary.getTopLeftY());
+        }
+        m = m.mtimes(parentMatrix);
+
+        writeContent(graphics, vectorG.getContent(), drawParams, m);
+    }
+
+    /*
+     * 将一个绘制参数添加到列表
+     *
+     * DrawParam只在当前层级一下时有效，所以返回一个新列表
+     * */
+    private List<CT_DrawParam> addDrawParams(List<CT_DrawParam> drawParams, ST_RefID refID) {
+        drawParams = new ArrayList<>(drawParams);
+        if (refID != null) {
+            CT_DrawParam ctDrawParam = resourceManage.getDrawParam(refID.getRefId().toString());
+            if (ctDrawParam != null) {
+                drawParams.add(ctDrawParam);
+            }
+        }
+        return drawParams;
+    }
+
+    private List<CT_DrawParam> addDrawParams(List<CT_DrawParam> drawParams, CT_GraphicUnit graphicUnit) {
+        return addDrawParams(drawParams, graphicUnit.getDrawParam());
+    }
+
 
     private void writePath(Graphics2D graphics, PathObject pathObject, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
         ST_Box boundary = pathObject.getBoundary();
@@ -374,7 +422,7 @@ public class ImageMaker {
         int transPoint = -1; // 下一个Transforms，-1表示不存在
         if (transforms != null && transforms.size() >= 1) {
             transPoint = 0;
-            transforms.stream().forEach(transform -> {
+            transforms.forEach(transform -> {
                 if (transform.getCodePosition() == null) {
                     transform.setCodePosition(0);
                 }
@@ -531,14 +579,12 @@ public class ImageMaker {
         graphics.setColor(Color.RED);
         graphics.setStroke(new BasicStroke(0.1f * ppm));
         Matrix m = MatrixUtils.base().mtimes(parentMatrix);
-
-
-        graphics.setTransform(MatrixUtils.createAffineTransform(m));
-
         if (boundary != null) {
-
+            /*
+             * 计算包围框在世界坐标系的位置
+             * */
+            graphics.setTransform(new AffineTransform());
             Polygon shape = new Polygon();
-
             Tuple2<Double, Double> p00 = MatrixUtils.pointTransform(m, boundary.getTopLeftX(), boundary.getTopLeftY() - 1);
             Tuple2<Double, Double> p01 = MatrixUtils.pointTransform(m, boundary.getTopLeftX() + boundary.getWidth() + 2, boundary.getTopLeftY() - 1);
             Tuple2<Double, Double> p10 = MatrixUtils.pointTransform(m, boundary.getTopLeftX(), boundary.getTopLeftY() + boundary.getHeight() + 2);
@@ -549,11 +595,13 @@ public class ImageMaker {
             shape.addPoint(Double.valueOf(p11.getFirst() * ppm).intValue(), Double.valueOf(p11.getSecond() * ppm).intValue());
             shape.addPoint(Double.valueOf(p10.getFirst() * ppm).intValue(), Double.valueOf(p10.getSecond() * ppm).intValue());
 
+            graphics.setClip(null);
             if (config.drawBoundary) {
-                graphics.setClip(null);
-                graphics.drawPolygon(shape);
+                graphics.draw(shape);
             }
-            graphics.setClip(shape);
+            if (config.clip) {
+                graphics.setClip(shape);
+            }
         }
 
         m = MatrixUtils.scale(m, ppm, ppm);
@@ -650,7 +698,7 @@ public class ImageMaker {
         ST_RefID refID = ctColor.getColorSpace();
         CT_ColorSpace ctColorSpace = null;
         if (refID != null) {
-            resourceManage.getColorSpace(refID.toString());
+            ctColorSpace = resourceManage.getColorSpace(refID.toString());
         }
         if (ctColorSpace != null) {
             if (ctColorSpace.getType() != null) {
@@ -734,6 +782,11 @@ public class ImageMaker {
          * */
         private boolean drawBoundary;
 
+        /*
+         * 是否进行剪裁
+         * */
+        private boolean clip = true;
+
         public float getStampOpacity() {
             return stampOpacity;
         }
@@ -774,6 +827,14 @@ public class ImageMaker {
                 stampBackgroundGray = 255;
             }
             this.stampBackgroundGray = stampBackgroundGray;
+        }
+
+        public boolean isClip() {
+            return clip;
+        }
+
+        public void setClip(boolean clip) {
+            this.clip = clip;
         }
     }
 }
