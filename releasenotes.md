@@ -2,6 +2,19 @@
 
 ## 进展
 
+## Version 1.8.8 2021-4-25 21:15:46
+
+> Alias: DailyLivesOfHighSchoolBoys
+
+修复：
+
+- 修复了获取页面存储，没有考虑模板页面的问题。
+- 修复了绘制参数存在继承情况的clone异常的问题。
+
+新增:
+
+- 替换了PDF转换模块的实现的为iText，部分内嵌字体问题缺失表的情况仍然没有解决。
+
 ## Version 1.8.7 2021-4-24 20:32:36
 
 > Alias: ScissorSeven
