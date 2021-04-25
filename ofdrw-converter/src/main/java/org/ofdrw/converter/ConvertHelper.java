@@ -1,16 +1,14 @@
 package org.ofdrw.converter;
 
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
 import org.apache.pdfbox.jbig2.util.log.Logger;
 import org.apache.pdfbox.jbig2.util.log.LoggerFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -35,7 +33,7 @@ public class ConvertHelper {
      */
     public static void ofd2pdf(Object input, Object output) {
         OFDReader reader = null;
-        PDDocument pdfDocument = null;
+        PdfDocument pdfDocument = null;
         try {
             if (input instanceof InputStream) {
                 reader = new OFDReader((InputStream) input);
@@ -48,27 +46,34 @@ public class ConvertHelper {
             } else {
                 throw new IllegalArgumentException("不支持的输入格式(input)，仅支持InputStream、Path、File、String");
             }
-            pdfDocument = new PDDocument();
 
-
-            PdfboxMaker pdfMaker = new PdfboxMaker(reader, pdfDocument);
             List<PageInfo> ofdPageVoList = reader.getPageList();
-            long start = 0, end = 0, pageNum = 1;
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            PdfWriter pdfWriter = new PdfWriter(bos);
+            pdfDocument = new PdfDocument(pdfWriter);
+            long start;
+            long end;
+            int pageNum = 1;
+
+            ItextMaker pdfMaker = new ItextMaker(reader);
             for (PageInfo pageInfo : ofdPageVoList) {
                 start = System.currentTimeMillis();
-                pdfMaker.makePage(pageInfo);
+                pdfMaker.makePage(pdfDocument, pageInfo);
                 end = System.currentTimeMillis();
                 logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
             }
 
+            pdfDocument.close();
             if (output instanceof OutputStream) {
-                pdfDocument.save((OutputStream) output);
+                bos.writeTo((OutputStream) output);
             } else if (output instanceof File) {
-                pdfDocument.save((File) output);
+                FileOutputStream fileOutputStream = new FileOutputStream((File) output);
+                bos.writeTo(fileOutputStream);
             } else if (output instanceof String) {
-                pdfDocument.save((String) output);
+                FileOutputStream fileOutputStream = new FileOutputStream(new File((String) output));
+                bos.writeTo(fileOutputStream);
             } else if (output instanceof Path) {
-                pdfDocument.save(Files.newOutputStream((Path) output));
+                bos.writeTo(Files.newOutputStream((Path) output));
             } else {
                 throw new IllegalArgumentException("不支持的输出格式(output)，仅支持OutputStream、Path、File、String");
             }
