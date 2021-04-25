@@ -264,4 +264,23 @@ public class CT_PageArea extends OFDElement {
     public ST_Box getBleedBox() {
         return ST_Box.getInstance(this.getOFDElementText("BleedBox"));
     }
+
+
+    /**
+     * 尝试获取页面最大区域
+     * <p>
+     * PhysicalBox >  ApplicationBox > ContentBox
+     *
+     * @return 区域
+     */
+    public ST_Box getBox() {
+        ST_Box res = this.getPhysicalBox();
+        if (res == null) {
+            res = this.getApplicationBox();
+        }
+        if (res == null) {
+            res = this.getContentBox();
+        }
+        return res;
+    }
 }

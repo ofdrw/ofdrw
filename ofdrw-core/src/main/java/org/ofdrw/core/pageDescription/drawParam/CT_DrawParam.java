@@ -373,4 +373,9 @@ public class CT_DrawParam extends OFDElement {
         Element e = this.getOFDElement("StrokeColor");
         return e == null ? null : new StrokeColor(e);
     }
+
+    @Override
+    public CT_DrawParam clone() {
+        return new CT_DrawParam((Element) super.clone());
+    }
 }

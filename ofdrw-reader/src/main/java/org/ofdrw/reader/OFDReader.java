@@ -418,19 +418,38 @@ public class OFDReader implements Closeable {
      */
     public ST_Box getPageSize(Page page) {
         CT_PageArea pageArea = page.getArea();
-        if (pageArea == null || pageArea.getPhysicalBox() == null) {
-            // 如果页面没有定义页面区域，则使用文件 CommonData中的定义
-            Document document;
-            try {
-                document = ofdDir.obtainDocDefault().getDocument();
-            } catch (FileNotFoundException | DocumentException e) {
-                throw new BadOFDException("OFD解析失败，原因:" + e.getMessage(), e);
+        if (pageArea.getBox() == null) {
+            CT_PageArea tplArea = null;
+            int biggestOrder = -1;
+            // 从模板中获取
+            for (Template item : page.getTemplates()) {
+                TemplatePageEntity template = getTemplate(item.getTemplateID().toString());
+                if (template == null || template.getPage() == null) continue;
+                CT_PageArea area = template.getPage().getArea();
+                int order = template.getZOrder().order();
+
+                if (area != null && order > biggestOrder && area.getBox() != null) {
+                    tplArea = area;
+                    biggestOrder = order;
+                }
             }
-            CT_CommonData commonData = document.getCommonData();
-            pageArea = commonData.getPageArea();
+            pageArea = tplArea;
+            // 从文档信息中获取
+            if (pageArea == null) {
+                Document document;
+                try {
+                    document = ofdDir.obtainDocDefault().getDocument();
+                } catch (FileNotFoundException | DocumentException e) {
+                    throw new BadOFDException("OFD解析失败，原因:" + e.getMessage(), e);
+                }
+                CT_CommonData commonData = document.getCommonData();
+                pageArea = commonData.getPageArea();
+            }
         }
-        return pageArea.getPhysicalBox();
+        if (pageArea == null) return null;
+        return pageArea.getBox();
     }
+
 
     /**
      * 通过页面页码获取页面对象
@@ -595,7 +614,7 @@ public class OFDReader implements Closeable {
                         // 解析电子印章
                         SESVersionHolder v = VersionParser.parseSES_SignatureVersion(Files.readAllBytes(signedValueFile));
                         res.add(new StampAnnotEntity(v, sigDesp.getSignedInfo()));
-                    }finally {
+                    } finally {
                         rl.restore();
                     }
                 } catch (Exception ignored) {
@@ -642,7 +661,7 @@ public class OFDReader implements Closeable {
                     }
                 }
                 return res;
-            }finally {
+            } finally {
                 rl.restore();
             }
         } catch (DocumentException | FileNotFoundException e) {

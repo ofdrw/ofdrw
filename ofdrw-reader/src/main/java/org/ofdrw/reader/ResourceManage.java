@@ -141,7 +141,7 @@ public class ResourceManage {
             return null;
         }
         // 复制为副本防止造成污染
-        current = (CT_DrawParam) current.clone();
+        current = current.clone();
         ST_RefID relative = current.getRelative();
         if (relative == null) {
             return current;
