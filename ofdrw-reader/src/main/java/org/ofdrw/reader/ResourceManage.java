@@ -607,4 +607,11 @@ public class ResourceManage {
     public List<CT_VectorG> getCompositeGraphicUnits() {
         return new ArrayList<>(compositeGraphicUnitMap.values());
     }
+
+    /**
+     * @return 解析器
+     */
+    public OFDReader getOfdReader() {
+        return ofdReader;
+    }
 }

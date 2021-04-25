@@ -1,7 +1,5 @@
 package org.ofdrw.converter;
 
-import com.itextpdf.io.font.FontProgram;
-import com.itextpdf.io.font.FontProgramFactory;
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.font.otf.Glyph;
 import com.itextpdf.io.font.otf.GlyphLine;
@@ -24,11 +22,11 @@ import com.itextpdf.kernel.pdf.extgstate.PdfExtGState;
 import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import com.itextpdf.kernel.pdf.xobject.PdfImageXObject;
 import com.itextpdf.layout.Canvas;
+import org.apache.commons.io.IOUtils;
 import org.dom4j.Element;
 import org.ofdrw.converter.point.PathPoint;
 import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.converter.utils.CommonUtil;
-import org.ofdrw.converter.utils.FontToolSet;
 import org.ofdrw.converter.utils.PointUtil;
 import org.ofdrw.converter.utils.StringUtils;
 import org.ofdrw.core.annotation.pageannot.Annot;
@@ -45,11 +43,10 @@ import org.ofdrw.core.signatures.appearance.StampAnnot;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
+import org.ofdrw.reader.ResourceLocator;
 import org.ofdrw.reader.ResourceManage;
 import org.ofdrw.reader.model.AnnotionEntity;
 import org.ofdrw.reader.model.StampAnnotEntity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -65,32 +62,39 @@ import static org.ofdrw.converter.utils.CommonUtil.converterDpi;
  * pdf生成器
  *
  * @author dltech21
- * @time 2020/8/11
+ * @since 2020.08.11
  */
 public class ItextMaker {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private Map<String, PdfFont> fontCache = new HashMap<>();
 
     private final OFDReader ofdReader;
-
+    /**
+     * 资源加载器
+     * <p>
+     * 用于获取OFD内资源
+     */
     private final ResourceManage resMgt;
 
+    /**
+     * 默认字体，在无法找到可用字体时使用该字体替换
+     */
     private PdfFont DEFAULT_FONT;
 
     public ItextMaker(OFDReader ofdReader) throws IOException {
         this.ofdReader = ofdReader;
         this.resMgt = ofdReader.getResMgt();
-        this.DEFAULT_FONT = PdfFontFactory.createFont(PdfFontHolder.getFont("宋体"), PdfEncodings.IDENTITY_H, false);
+        byte[] font = IOUtils.toByteArray(this.getClass().getClassLoader().getResourceAsStream("fonts/simsun.ttf"));
+        this.DEFAULT_FONT = PdfFontFactory.createFont(font, PdfEncodings.WINANSI, true);
     }
 
     /**
      * ofd每页的object画到pdf
      *
-     * @param pdf
-     * @param pageInfo
-     * @return
-     * @throws IOException
+     * @param pdf      PDF文档对象
+     * @param pageInfo 页面信息
+     * @return PDF页面
+     * @throws IOException 文档操作过程中发生异常
      */
     public PdfPage makePage(PdfDocument pdf, PageInfo pageInfo) throws IOException {
         ST_Box pageBox = pageInfo.getSize();
@@ -124,7 +128,7 @@ public class ItextMaker {
      * 绘制印章
      *
      * @param pdf                  PDF内容流
-     * @param pdfCanvas
+     * @param pdfCanvas            绘制上下文
      * @param parent               OFD页面信息
      * @param stampAnnotEntityList 印章列表
      * @throws IOException 文件读写异常
@@ -168,18 +172,27 @@ public class ItextMaker {
         }
     }
 
+    /**
+     * 绘制 图层
+     *
+     * @param resMgt    资源管理器
+     * @param pdfCanvas Canvas上下文
+     * @param layerList 图层
+     * @param box       页面区域
+     * @param sealBox   印章区域
+     * @throws IOException 绘制异常
+     */
     private void writeLayer(ResourceManage resMgt,
                             PdfCanvas pdfCanvas,
                             List<CT_Layer> layerList,
                             ST_Box box,
                             ST_Box sealBox) throws IOException {
         for (CT_Layer layer : layerList) {
-            List<PageBlockType> pageBlockTypeList = layer.getPageBlocks();
             writePageBlock(resMgt,
                     pdfCanvas,
                     box,
                     sealBox,
-                    pageBlockTypeList,
+                    layer.getPageBlocks(),
                     layer.getDrawParam(),
                     null,
                     null,
@@ -211,6 +224,22 @@ public class ItextMaker {
         }
     }
 
+    /**
+     * 绘制 页块
+     *
+     * @param resMgt                  资源管理器
+     * @param pdfCanvas               Canvas上下文
+     * @param box                     页面区域
+     * @param sealBox                 印章区域
+     * @param pageBlockTypeList       需要绘制的页块
+     * @param drawparam               绘制参数ID
+     * @param annotBox                注释区域
+     * @param compositeObjectAlpha    透明度
+     * @param compositeObjectBoundary 符合对象区域
+     * @param compositeObjectCTM      符合对象变换矩阵
+     * @throws IOException 绘制异常
+     * @throws IOException 文档操作异常
+     */
     private void writePageBlock(ResourceManage resMgt,
                                 PdfCanvas pdfCanvas,
                                 ST_Box box, ST_Box sealBox,
@@ -226,7 +255,7 @@ public class ItextMaker {
         // 递归的获取绘制参数
         CT_DrawParam ctDrawParam = null;
         if (drawparam != null) {
-            ctDrawParam = resMgt.getDrawParam(drawparam.toString());
+            ctDrawParam = resMgt.getDrawParamFinal(drawparam.toString());
         }
         if (ctDrawParam != null) {
             if (ctDrawParam.getLineWidth() != null) {
@@ -590,7 +619,7 @@ public class ItextMaker {
 
         // 加载字体
         CT_Font ctFont = resMgt.getFont(textObject.getFont().toString());
-        PdfFont font = getFont(ctFont);
+        PdfFont font = getFont(resMgt.getOfdReader().getResourceLocator(), ctFont);
         List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCGTransforms(), compositeObjectBoundary, compositeObjectCTM, textObject.getCTM() != null, textObject.getCTM(), true);
         double rx = 0, ry = 0;
         for (int i = 0; i < textCodePointList.size(); i++) {
@@ -647,46 +676,22 @@ public class ItextMaker {
             pdfCanvas.endText();
             pdfCanvas.restoreState();
         }
-
     }
 
     /**
      * 加载字体
      *
+     * @param rl     资源加载器
      * @param ctFont 字体对象
      * @return 字体
      */
-    private PdfFont getFont(CT_Font ctFont) {
+    private PdfFont getFont(ResourceLocator rl, CT_Font ctFont) {
         String key = String.format("%s_%s_%s", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile());
         if (fontCache.containsKey(key)) {
             return fontCache.get(key);
         }
-        PdfFont font;
-        try {
-            // 加载字体
-            FontProgram fontProgram = null;
-            ST_Loc fontFileLoc = ctFont.getFontFile();
-            if (fontFileLoc != null) {
-                // 通过资源加载器获取文件的绝对路径
-                String fontAbsPath = ofdReader.getResourceLocator().getFile(ctFont.getFontFile()).toAbsolutePath().toString();
-                String suffix = fontAbsPath.substring(fontAbsPath.lastIndexOf(".") + 1);
-                if (suffix.equalsIgnoreCase("ttf")) {
-                    FontToolSet.FixOS2(fontAbsPath);
-                }
-                fontProgram = FontProgramFactory.createFont(fontAbsPath);
-            }
-            if (fontProgram != null) {
-                font = PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, true);
-            } else {
-                fontProgram = PdfFontHolder.getFont(ctFont.getFontName().toLowerCase());
-                if (fontProgram != null) {
-                    font = PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, false);
-                } else {
-                    font = DEFAULT_FONT;
-                }
-            }
-        } catch (Exception e) {
-            logger.info("无法使用字体: {} {} {}", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile().toString());
+        PdfFont font = FontLoader.getInstance().loadPDFFont(rl, ctFont);
+        if (font == null) {
             font = DEFAULT_FONT;
         }
         fontCache.put(key, font);

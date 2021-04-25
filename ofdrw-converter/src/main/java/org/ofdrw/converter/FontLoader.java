@@ -1,6 +1,11 @@
 package org.ofdrw.converter;
 
 
+import com.itextpdf.io.font.FontProgram;
+import com.itextpdf.io.font.FontProgramFactory;
+import com.itextpdf.io.font.PdfEncodings;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
 import org.apache.fontbox.ttf.*;
 import org.ofdrw.converter.utils.OSinfo;
 import org.ofdrw.converter.utils.StringUtils;
@@ -10,9 +15,11 @@ import org.ofdrw.reader.ResourceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.ws.Holder;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -280,6 +287,43 @@ public final class FontLoader {
     }
 
     /**
+     * 加载字体
+     *
+     * @param rl     资源加载器，用于从虚拟容器中取出文件
+     * @param ctFont 字体对象
+     * @return 字体或null
+     */
+    public PdfFont loadPDFFont(ResourceLocator rl, CT_Font ctFont) {
+        if (ctFont == null) {
+            return null;
+        }
+        try {
+            ST_Loc fontFileLoc = ctFont.getFontFile();
+            String fontAbsPath = null;
+            if (fontFileLoc != null) {
+                // 通过资源加载器获取文件的绝对路径
+                fontAbsPath = rl.getFile(fontFileLoc).toAbsolutePath().toString();
+            } else {
+                fontAbsPath = getSystemFontPath(ctFont.getFamilyName(), ctFont.getFontName());
+            }
+            if (fontAbsPath == null) {
+                return null;
+            }
+            // 即便设置不缓存，任然会出现文件没有关闭的问题。
+            // 因此，读取到内存防止因为 FontProgram 的缓存导致无法删除临时OFD文件的问题。
+            final byte[] fontBin = Files.readAllBytes(Paths.get(fontAbsPath));
+            FontProgram fontProgram  = FontProgramFactory.createFont(fontBin,false);
+            return PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, true);
+        } catch (Exception e) {
+            log.info("无法加载字体 {} {} {}，原因:{}",
+                    ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
+                    e.getMessage());
+            return null;
+        }
+    }
+
+
+    /**
      * 加载默认字体
      *
      * @return 默认字体宋体
@@ -405,4 +449,43 @@ public final class FontLoader {
     }
 
 
+    /**
+     * 修复了字体
+     * <p>
+     * 小写os/2导致无法读取的问题
+     *
+     * @param src 待修复字体文件路径
+     * @throws IOException 文件读写IO异常
+     */
+    public static void FixOS2(String src) throws IOException {
+        try (RandomAccessFile raf = new RandomAccessFile(new File(src), "rws")) {
+            // Version: 4 byte
+            int v1 = raf.readUnsignedShort();
+            int v2 = raf.readUnsignedShort();
+            // Number of Tables: 2 byte
+            int numberOfTables = raf.readUnsignedShort();
+            // Search Range: 2 byte
+            int searchRange = raf.readUnsignedShort();
+            // Entry Selector: 2 byte
+            int entrySelector = raf.readUnsignedShort();
+            // Range Shift: 2 byte
+            int rangeShift = raf.readUnsignedShort();
+            for (int i = 0; i < numberOfTables; i++) {
+                byte[] buff = new byte[4];
+                raf.read(buff);                 // 4byte
+                String tag = new String(buff, StandardCharsets.ISO_8859_1);
+                int checkSum = raf.readInt();   // 4 byte
+                int offset = raf.readInt();     // 4 byte
+                int length = raf.readInt();     // 4 byte
+                if (tag.equals("os/2")) {
+                    long before = raf.getFilePointer(); // 游标
+                    long p = before - 4 * 4; // 移动游标到TAG之前
+                    raf.seek(p);
+                    raf.write(new byte[]{'O', 'S', '/', '2'});
+                    raf.seek(before);
+                    break;
+                }
+            }
+        }
+    }
 }

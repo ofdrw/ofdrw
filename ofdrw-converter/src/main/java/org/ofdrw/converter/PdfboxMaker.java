@@ -50,7 +50,10 @@ import java.util.List;
 
 import static org.ofdrw.converter.utils.CommonUtil.*;
 
-
+/**
+ * @deprecated  由于绘制效果上存在问题建议使用 {@link ItextMaker}
+ */
+@Deprecated
 public class PdfboxMaker {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfboxMaker.class);

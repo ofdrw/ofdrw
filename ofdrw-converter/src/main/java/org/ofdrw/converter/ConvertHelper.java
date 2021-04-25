@@ -84,11 +84,11 @@ public class ConvertHelper {
             throw new GeneralConvertException(e);
         } finally {
             try {
-                if (reader != null) {
-                    reader.close();
-                }
                 if (pdfDocument != null) {
                     pdfDocument.close();
+                }
+                if (reader != null) {
+                    reader.close();
                 }
             } catch (IOException e) {
                 logger.error("close OFDReader failed", e);
@@ -202,11 +202,11 @@ public class ConvertHelper {
             throw new GeneralConvertException(e);
         } finally {
             try {
-                if (reader != null) {
-                    reader.close();
-                }
                 if (pdfDocument != null) {
                     pdfDocument.close();
+                }
+                if (reader != null) {
+                    reader.close();
                 }
             } catch (IOException e) {
                 logger.error("close OFDReader failed", e);
