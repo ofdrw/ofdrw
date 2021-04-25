@@ -269,8 +269,8 @@ public class CT_PageArea extends OFDElement {
     /**
      * 尝试获取页面最大区域
      * <p>
-     * PhysicalBox >  ApplicationBox > ContentBox
-     *
+     * PhysicalBox | ApplicationBox| ContentBox
+     * </p>
      * @return 区域
      */
     public ST_Box getBox() {

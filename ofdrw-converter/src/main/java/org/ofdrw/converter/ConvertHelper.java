@@ -24,6 +24,29 @@ public class ConvertHelper {
     private final static Logger logger = LoggerFactory.getLogger(ConvertHelper.class);
 
     /**
+     * 转换使用库名称
+     */
+    public static Lib lib = Lib.iText;
+
+    public static enum Lib {
+        iText, PDFBox
+    }
+
+    /**
+     * 使用iText作为转换实现
+     */
+    public static void useIText() {
+        lib = Lib.iText;
+    }
+
+    /**
+     * 使用PDFBox作为转换实现
+     */
+    public static void usePDFBox() {
+        lib = Lib.PDFBox;
+    }
+
+    /**
      * OFD转换PDF
      *
      * @param input  OFD文件路径，支持OutputStream、Path、String（文件路径）
@@ -33,7 +56,6 @@ public class ConvertHelper {
      */
     public static void ofd2pdf(Object input, Object output) {
         OFDReader reader = null;
-        PdfDocument pdfDocument = null;
         try {
             if (input instanceof InputStream) {
                 reader = new OFDReader((InputStream) input);
@@ -47,23 +69,39 @@ public class ConvertHelper {
                 throw new IllegalArgumentException("不支持的输入格式(input)，仅支持InputStream、Path、File、String");
             }
 
-            List<PageInfo> ofdPageVoList = reader.getPageList();
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            PdfWriter pdfWriter = new PdfWriter(bos);
-            pdfDocument = new PdfDocument(pdfWriter);
-            long start;
-            long end;
-            int pageNum = 1;
-
-            ItextMaker pdfMaker = new ItextMaker(reader);
-            for (PageInfo pageInfo : ofdPageVoList) {
-                start = System.currentTimeMillis();
-                pdfMaker.makePage(pdfDocument, pageInfo);
-                end = System.currentTimeMillis();
-                logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
+            switch (lib) {
+                case iText: {
+                    try (PdfWriter pdfWriter = new PdfWriter(bos);
+                         PdfDocument pdfDocument = new PdfDocument(pdfWriter);) {
+                        long start;
+                        long end;
+                        int pageNum = 1;
+                        ItextMaker pdfMaker = new ItextMaker(reader);
+                        for (PageInfo pageInfo :  reader.getPageList()) {
+                            start = System.currentTimeMillis();
+                            pdfMaker.makePage(pdfDocument, pageInfo);
+                            end = System.currentTimeMillis();
+                            logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
+                        }
+                    }
+                    break;
+                }
+                case PDFBox: {
+                    try (PDDocument pdfDocument = new PDDocument();) {
+                        PdfboxMaker pdfMaker = new PdfboxMaker(reader, pdfDocument);
+                        long start = 0, end = 0, pageNum = 1;
+                        for (PageInfo pageInfo : reader.getPageList()) {
+                            start = System.currentTimeMillis();
+                            pdfMaker.makePage(pageInfo);
+                            end = System.currentTimeMillis();
+                            logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
+                        }
+                        pdfDocument.save(bos);
+                    }
+                }
             }
 
-            pdfDocument.close();
             if (output instanceof OutputStream) {
                 bos.writeTo((OutputStream) output);
             } else if (output instanceof File) {
@@ -84,9 +122,6 @@ public class ConvertHelper {
             throw new GeneralConvertException(e);
         } finally {
             try {
-                if (pdfDocument != null) {
-                    pdfDocument.close();
-                }
                 if (reader != null) {
                     reader.close();
                 }
@@ -96,6 +131,7 @@ public class ConvertHelper {
 
         }
     }
+
 
     /**
      * 转PDF
