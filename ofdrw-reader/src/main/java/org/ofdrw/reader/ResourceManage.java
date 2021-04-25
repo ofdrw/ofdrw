@@ -1,5 +1,6 @@
 package org.ofdrw.reader;
 
+import org.apache.commons.io.IOUtils;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
@@ -274,6 +275,33 @@ public class ResourceManage {
                 } else {
                     return ImageIO.read(in);
                 }
+            }
+        } finally {
+            rl.restore();
+        }
+    }
+
+    /**
+     * 获取图片资源的图片对象
+     *
+     * @param refID 引用ID
+     * @return byte[]
+     * @throws IOException IO异常
+     */
+    public byte[] getImageByteArray(String refID) throws IOException {
+        CT_MultiMedia multiMedia = getMultiMedia(refID);
+        if (multiMedia == null) return null;
+        if (MediaType.Image != multiMedia.getType()) return null;
+
+        // 该路径在解析是已经被映射成绝对路径
+        ST_Loc loc = multiMedia.getMediaFile();
+        if (loc == null) return null;
+        final ResourceLocator rl = ofdReader.getResourceLocator();
+        rl.save();
+        try {
+            final Path imgPath = rl.getFile(loc);
+            try (InputStream in = Files.newInputStream(imgPath)) {
+                return IOUtils.toByteArray(in);
             }
         } finally {
             rl.restore();

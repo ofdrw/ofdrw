@@ -107,7 +107,7 @@ public class PdfboxMaker {
         pdf.addPage(pdfPage);
         final List<AnnotionEntity> annotationEntities = reader.getAnnotationEntities();
         final List<StampAnnotEntity> stampAnnots = reader.getStampAnnots();
-        try (PDPageContentStream contentStream = new PDPageContentStream(pdf, pdfPage);) {
+        try (PDPageContentStream contentStream = new PDPageContentStream(pdf, pdfPage)) {
             // 获取页面内容出现的所有图层，包含模板页（所有页面均按照定义ZOrder排列）
             List<CT_Layer> layerList = pageInfo.getAllLayer();
             // 绘制 模板层 和 页面内容层
@@ -282,7 +282,6 @@ public class PdfboxMaker {
                 ST_Box currentCompositeObjectBoundary = compositeObject.getBoundary();
                 ST_Array currentCompositeObjectCTM = compositeObject.getCTM();
                 writePageBlock(resMgt, contentStream, box, sealBox, vectorG.getContent().getPageBlocks(), drawparam, annotBox, currentCompositeObjectAlpha, currentCompositeObjectBoundary, currentCompositeObjectCTM);
-                break;
             } else if (block instanceof CT_PageBlock) {
                 writePageBlock(resMgt, contentStream, box, sealBox, ((CT_PageBlock) block).getPageBlocks(), drawparam, annotBox, compositeObjectAlpha, compositeObjectBoundary, compositeObjectCTM);
             }
