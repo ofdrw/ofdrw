@@ -2,6 +2,14 @@
 
 ## 进展
 
+## Version 1.8.9 2021-4-26 18:39:53
+
+> Alias: OnePunchMan
+
+修复
+
+- Reader解析页面大小造成的NPE
+
 ## Version 1.8.8 2021-4-25 21:15:46
 
 > Alias: DailyLivesOfHighSchoolBoys
