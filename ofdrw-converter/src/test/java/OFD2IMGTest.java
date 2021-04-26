@@ -30,7 +30,7 @@ public class OFD2IMGTest {
 //        toPng("src/test/resources/zsbk.ofd", "target/zsbk.ofd");
 //        toPng("src/test/resources/ano.ofd", "target/ano.ofd");
 //        toPng("src/test/resources/文字横向-数科.ofd", "target/文字横向-数科.ofd");
-        toPng("src/test/resources/发票示例.ofd", "target/发票示例.ofd");
+        toPng("src/test/resources/z.ofd", "target/z.ofd");
 //        toPng("src/test/resources/不规范资源路径.ofd", "target/不规范资源路径.ofd");
         System.out.printf(">> 总计花费: %dms\n", System.currentTimeMillis() - start);
     }

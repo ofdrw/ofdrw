@@ -16,8 +16,8 @@ public class OFD2PDFTest {
 
     @Test
     public void convertPdf() {
-        Path src = Paths.get("src/test/resources/y.ofd");
-        Path dst = Paths.get("target/y.pdf");
+        Path src = Paths.get("src/test/resources/z.ofd");
+        Path dst = Paths.get("target/z.pdf");
 //        Path src = Paths.get("src/test/resources/zsbk.ofd");
 //        Path dst = Paths.get("target/zsbk.pdf");
         try {
