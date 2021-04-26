@@ -417,8 +417,11 @@ public class OFDReader implements Closeable {
      * @return 页面大小
      */
     public ST_Box getPageSize(Page page) {
+        if (page == null) {
+            return null;
+        }
         CT_PageArea pageArea = page.getArea();
-        if (pageArea.getBox() == null) {
+        if (pageArea ==  null || pageArea.getBox() == null) {
             CT_PageArea tplArea = null;
             int biggestOrder = -1;
             // 从模板中获取
