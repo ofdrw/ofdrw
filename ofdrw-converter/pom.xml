@@ -88,5 +88,12 @@
             <version>${itext.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <!--SVG-->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-transcoder</artifactId>
+            <version>1.14</version>
+        </dependency>
     </dependencies>
 </project>
