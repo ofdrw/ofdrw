@@ -369,10 +369,10 @@ public class PointUtil {
                         }
                     }
                     int index = i - 1;
-                    boolean keepSameDX = false;
-                    if ((i - 1) >= deltaXList.size()) {
+//                    boolean keepSameDX = false;
+                    if (index >= deltaXList.size()) {
                         index = deltaXList.size() - 1;
-                        keepSameDX = true;
+//                        keepSameDX = true;
                     }
                     double dx = Double.parseDouble(deltaXList.get(index));
                     if (dx != 0) {
@@ -399,14 +399,15 @@ public class PointUtil {
                             }
                         }
                     }
-                    x += keepSameDX ? 0 : !skipPosition ? dx : 0;
+//                    x += keepSameDX ? dx : !skipPosition ? dx : 0;
+                    x += !skipPosition ? dx : 0;
                 }
                 if (i > 0 && Objects.nonNull(deltaYList)) {
                     int index = i - 1;
-                    boolean keepSameDY = false;
+//                    boolean keepSameDY = false;
                     if ((i - 1) >= deltaYList.size()) {
                         index = deltaYList.size() - 1;
-                        keepSameDY = true;
+//                        keepSameDY = true;
                     }
                     double dy = Double.parseDouble(deltaYList.get(index));
                     if (dy != 0) {
@@ -429,7 +430,8 @@ public class PointUtil {
                             }
                         }
                     }
-                    y += keepSameDY ? 0 : dy;
+//                    y += keepSameDY ? 0 : dy;
+                    y += dy;
                 }
                 double[] realPos = adjustPos(width, height, x, y, boundary);
                 if (compositeObjectCTM != null) {
