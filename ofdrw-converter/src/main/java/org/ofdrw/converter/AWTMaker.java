@@ -153,6 +153,8 @@ public abstract class AWTMaker {
 
     /**
      * 印章混合模式
+     * 
+     * @return 复合对象
      */
     protected Composite getStampComposite() {
         // 正片叠底
