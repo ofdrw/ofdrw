@@ -23,11 +23,11 @@ public class OFD2SVGTest {
 //                .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体");
 
         long start = System.currentTimeMillis();
-        toSVG("src/test/resources/999.ofd", "target/999.ofd");
+//        toSVG("src/test/resources/999.ofd", "target/999.ofd");
 //        toSVG("src/test/resources/zsbk.ofd", "target/zsbk.ofd");
 //        toSVG("src/test/resources/ano.ofd", "target/ano.ofd");
 //        toSVG("src/test/resources/文字横向-数科.ofd", "target/文字横向-数科.ofd");
-        toSVG("src/test/resources/z.ofd", "target/z.ofd");
+//        toSVG("src/test/resources/z.ofd", "target/z.ofd");
         toSVG("src/test/resources/发票示例.ofd", "target/发票示例.ofd");
 //        toPng("src/test/resources/不规范资源路径.ofd", "target/不规范资源路径.ofd");
         System.out.printf(">> 总计花费: %dms\n", System.currentTimeMillis() - start);
@@ -42,11 +42,8 @@ public class OFD2SVGTest {
         svgMaker.config.setClip(false);
         for (int i = 0; i < svgMaker.pageSize(); i++) {
             String svg = svgMaker.makePage(i);
-//            System.out.println(svg);
-
-            try (OutputStream out = new FileOutputStream(dirPath + "/" + i + ".svg")) {
-                out.write(svg.getBytes());
-            }
+            Path dist = Paths.get(dirPath, i + ".svg");
+            Files.write(dist, svg.getBytes());
         }
     }
 

@@ -72,21 +72,18 @@
             <groupId>com.itextpdf</groupId>
             <artifactId>kernel</artifactId>
             <version>${itext.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>layout</artifactId>
             <version>${itext.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>font-asian</artifactId>
             <version>${itext.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!--SVG-->
