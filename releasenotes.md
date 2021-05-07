@@ -2,6 +2,21 @@
 
 ## 进展
 
+## Version 1.9.0 2021-5-7 22:18:27
+
+> Alias: Natsume'sBookOfFriends
+
+新增：
+
+- OFD转换SVG，相较于转换图片，速度更快，可以无失真的缩放。
+  - [快速入门 ofdrw-converter/README.md](./ofdrw-converter/README.md)
+  - [测试用例 OFD2SVGTest.java](./ofdrw-converter/src/test/java/OFD2SVGTest.java)
+
+修复：
+
+- PDF转换文字重叠一起，TextCode DeltaX 没有提供，缺少的DeltaX使用重复最后出现的DeltaX。
+- 修复由于iText包provider引入造成的NCE问题。
+
 ## Version 1.8.9 2021-4-26 18:39:53
 
 > Alias: OnePunchMan
