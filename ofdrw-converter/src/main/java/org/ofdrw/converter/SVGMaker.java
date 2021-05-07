@@ -83,4 +83,11 @@ public class SVGMaker extends AWTMaker {
         return null;
     }
 
+    /**
+     * SVG只支持有限的颜色混合，使用透明度混合
+     */
+    @Override
+    protected Composite getStampComposite() {
+        return AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, config.getStampOpacity());
+    }
 }
