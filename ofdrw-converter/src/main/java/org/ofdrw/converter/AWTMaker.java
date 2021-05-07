@@ -2,6 +2,8 @@ package org.ofdrw.converter;
 
 import org.apache.fontbox.ttf.GlyphData;
 import org.apache.fontbox.ttf.TrueTypeFont;
+import org.apache.pdfbox.pdmodel.graphics.blend.BlendComposite;
+import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
 import org.ofdrw.converter.point.Tuple2;
 import org.ofdrw.converter.utils.MatrixUtils;
 import org.ofdrw.core.annotation.pageannot.Annot;
@@ -139,7 +141,7 @@ public abstract class AWTMaker {
                 m = MatrixUtils.scale(m, ppm, ppm);
 
                 graphics.setClip(null);
-                graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, config.stampOpacity));
+                graphics.setComposite(getStampComposite());
                 graphics.drawImage(stampImage, MatrixUtils.createAffineTransform(m), null);
             }
         } catch (Exception e) {
@@ -147,6 +149,14 @@ public abstract class AWTMaker {
         } finally {
             graphics.dispose();
         }
+    }
+
+    /**
+     * 印章混合模式
+     */
+    protected Composite getStampComposite() {
+        // 正片叠底
+        return BlendComposite.getInstance(BlendMode.MULTIPLY, 1);
     }
 
     /**
