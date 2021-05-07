@@ -11,7 +11,7 @@
     <packaging>pom</packaging>
     <version>1.9.0</version>
 
-    <url>https://github.com/Trisia/ofdrw</url>
+    <url>https://github.com/ofdrw/ofdrw</url>
     <description>Open Fixed layout Document Reader And Writer Libary(OFD-RW) provider developers to generate ofd
         document and edit it.
     </description>
@@ -50,14 +50,14 @@
     <licenses>
         <license>
             <name>MIT License</name>
-            <url>https://github.com/Trisia/ofdrw/blob/master/LICENSE</url>
+            <url>https://github.com/ofdrw/ofdrw/blob/master/LICENSE</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
 
     <scm>
-        <url>https://github.com/Trisia/ofdrw.git</url>
-        <connection>scm:git:https://github.com/Trisia/ofdrw.git</connection>
+        <url>https://github.com/ofdrw/ofdrw.git</url>
+        <connection>scm:git:https://github.com/ofdrw/ofdrw.git</connection>
     </scm>
 
     <distributionManagement>

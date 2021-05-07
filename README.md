@@ -146,4 +146,4 @@ mvn install
 
 > 项目获得 Star曲线
 
-[![Stargazers over time](https://starchart.cc/Trisia/ofdrw.svg)](https://starchart.cc/Trisia/ofdrw)
+[![Stargazers over time](https://starchart.cc/ofdrw/ofdrw.svg)](https://starchart.cc/ofdrw/ofdrw)
