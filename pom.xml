@@ -34,7 +34,7 @@
             <id>ofdrw</id>
             <name>OFD Reader And Writer</name>
             <email>quanguanyu@qq.com</email>
-            <url>https://github.com/Trisia</url>
+            <url>https://github.com/ofdrw</url>
         </developer>
     </developers>
 
@@ -49,7 +49,7 @@
 
     <licenses>
         <license>
-            <name>MIT License</name>
+            <name>Apache License 2.0</name>
             <url>https://github.com/ofdrw/ofdrw/blob/master/LICENSE</url>
             <distribution>repo</distribution>
         </license>
