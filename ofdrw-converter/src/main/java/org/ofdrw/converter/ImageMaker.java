@@ -1,17 +1,18 @@
 package org.ofdrw.converter;
 
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.tools.ImageUtils;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-
 /**
  * 图片转换类
  *
  * @author qaqtutu
+ * @author iandjava
  * @since 2021-03-13 10:00:01
  */
 public class ImageMaker extends AWTMaker {
@@ -25,9 +26,22 @@ public class ImageMaker extends AWTMaker {
      * @param reader OFD解析器
      * @param ppm    每毫米像素数量(Pixels per millimeter)
      */
-
+	@Deprecated
     public ImageMaker(OFDReader reader, int ppm) {
         super(reader, ppm);
+    }
+    
+    /**
+     * 创建图片转换对象实例
+     * <p>
+     * OFD内部使用毫米作为基本单位
+     *
+     * @param reader OFD解析器
+     * @param ppm    每毫米像素数量(Pixels per millimeter) 调用CommonUtil.dpiToPixel(200) 给定DPI下的像素数量
+     */
+
+    public ImageMaker(OFDReader reader,double ppm) {
+        super(reader,ppm);
     }
 
     /**
@@ -42,10 +56,12 @@ public class ImageMaker extends AWTMaker {
         }
         PageInfo pageInfo = pages.get(pageIndex);
         ST_Box pageBox = pageInfo.getSize();
-        double pageWidthPixel = ppm * pageBox.getWidth();
-        double pageHeightPixel = ppm * pageBox.getHeight();
+        
+        //按照标准 ImageIO.write之后还需要对图片 exif dpi设置生成的dpi值 这样第三方通过像素和DPI换算出纸质尺寸
+        int pageWidthPixel = (int) Math.round(ppm * pageBox.getWidth());
+        int pageHeightPixel = (int) Math.round(ppm * pageBox.getHeight());
 
-        BufferedImage image = createImage((int) pageWidthPixel, (int) pageHeightPixel);
+        BufferedImage image = createImage(pageWidthPixel,pageHeightPixel);
         Graphics2D graphics = (Graphics2D) image.getGraphics();
 
         writePage(graphics, pageInfo, null);

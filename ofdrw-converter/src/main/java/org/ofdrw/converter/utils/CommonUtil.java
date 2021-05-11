@@ -28,6 +28,7 @@ import java.util.UUID;
 
 /**
  * @author dltech21
+ * @author  iandjava
  * @since 2020/8/11
  */
 public class CommonUtil {
@@ -36,9 +37,19 @@ public class CommonUtil {
         return (double) (mm * dpi / 25.4f);
     }
 
+    
     public static double pixelToMillimeters(double px, double dpi) {
         //像素转毫米：px * 25.4 / dpi
         return (double) ((px * 25.4f) / dpi);
+    }
+    
+    /**
+     * 获取指定DPI下的每毫米像素数量
+     * @param dpi 每英寸的像素 如200、300
+     * @return
+     */
+    public static double dpiToPixel(int dpi) {
+    	return ((0.01/0.254)*dpi);
     }
 
     public static float[] doubleArrayToFloatArray(Double[] doubleArray) {

@@ -5,6 +5,7 @@ import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendComposite;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
 import org.ofdrw.converter.point.Tuple2;
+import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.converter.utils.MatrixUtils;
 import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.annotation.pageannot.Appearance;
@@ -50,6 +51,7 @@ import java.util.Map;
  * AWT设备转换类
  *
  * @author qaqtutu
+ * @author iandjava
  * @since 2021-05-06 23:00:01
  */
 public abstract class AWTMaker {
@@ -62,9 +64,9 @@ public abstract class AWTMaker {
     /**
      * 每毫米像素数量(Pixels per millimeter)
      * <p>
-     * 默认为： 8像素/毫米
+     * 默认为： 200dpi->7.874015748031496
      */
-    protected int ppm = 8;
+    protected double ppm =CommonUtil.dpiToPixel(200);
 
     public final Config config = new Config();
 
@@ -94,7 +96,24 @@ public abstract class AWTMaker {
      * @param reader OFD解析器
      * @param ppm    每毫米像素数量(Pixels per millimeter)
      */
+    @Deprecated
     public AWTMaker(OFDReader reader, int ppm) {
+        this.reader = reader;
+        this.resourceManage = reader.getResMgt();
+        this.pages = reader.getPageList();
+        if (this.ppm > 0) {
+            this.ppm = ppm;
+        }
+    }
+    /**
+     * 创建图片转换对象实例
+     * <p>
+     * OFD内部使用毫米作为基本单位
+     *
+     * @param reader OFD解析器
+     * @param ppm    每毫米像素数量(Pixels per millimeter)
+     */
+    public AWTMaker(OFDReader reader,double ppm) {
         this.reader = reader;
         this.resourceManage = reader.getResMgt();
         this.pages = reader.getPageList();
@@ -153,8 +172,6 @@ public abstract class AWTMaker {
 
     /**
      * 印章混合模式
-     * 
-     * @return 复合对象
      */
     protected Composite getStampComposite() {
         // 正片叠底
@@ -558,7 +575,7 @@ public abstract class AWTMaker {
 
     private Matrix renderBoundaryAndSetClip(Graphics2D graphics, ST_Box boundary, Matrix parentMatrix) {
         graphics.setColor(Color.RED);
-        graphics.setStroke(new BasicStroke(0.1f * ppm));
+        graphics.setStroke(new BasicStroke(0.1f * (float)ppm));
         Matrix m = MatrixUtils.base().mtimes(parentMatrix);
         if (boundary != null) {
             /*
@@ -743,7 +760,7 @@ public abstract class AWTMaker {
         }
         return arr;
     }
-
+    
     public static class Config {
         /*
          * 印章透明度
