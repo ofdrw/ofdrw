@@ -63,8 +63,9 @@ public class SVGMaker extends AWTMaker {
         }
         PageInfo pageInfo = pages.get(pageIndex);
         ST_Box pageBox = pageInfo.getSize();
-        int pageWidthPixel = Double.valueOf(ppm * pageBox.getWidth()).intValue();
-        int pageHeightPixel = Double.valueOf(ppm * pageBox.getHeight()).intValue();
+        
+        int pageWidthPixel = (int) Math.round(ppm * pageBox.getWidth());
+        int pageHeightPixel = (int) Math.round(ppm * pageBox.getHeight());
 
         DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
 
