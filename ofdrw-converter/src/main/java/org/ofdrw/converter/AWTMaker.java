@@ -66,7 +66,7 @@ public abstract class AWTMaker {
      * <p>
      * 默认为： 200dpi->7.874015748031496
      */
-    protected double ppm =CommonUtil.dpiToPixel(200);
+    protected double ppm =CommonUtil.dpiToPpm(200);
 
     public final Config config = new Config();
 

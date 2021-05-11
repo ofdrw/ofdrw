@@ -48,7 +48,7 @@ public class CommonUtil {
      * @param dpi 每英寸的像素 如200、300
      * @return
      */
-    public static double dpiToPixel(int dpi) {
+    public static double dpiToPpm(int dpi) {
     	return ((0.01/0.254)*dpi);
     }
 
