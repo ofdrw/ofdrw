@@ -2,6 +2,15 @@
 
 ## 进展
 
+## Version 1.9.1 2021-5-11 22:01:07
+
+> Alias: TIGER×DRAGON!
+
+新增：
+
+- 图片转换接口新增 `double`类型的PPM设置
+
+
 ## Version 1.9.0 2021-5-7 22:18:27
 
 > Alias: Natsume'sBookOfFriends
