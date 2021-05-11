@@ -19,6 +19,7 @@ import java.io.Writer;
  * SVG转换类
  *
  * @author qaqtutu
+ * @version iandjava
  * @since 2021-05-06 23:00:01
  */
 public class SVGMaker extends AWTMaker {
@@ -32,8 +33,21 @@ public class SVGMaker extends AWTMaker {
      * @param reader OFD解析器
      * @param ppm    每毫米像素数量(Pixels per millimeter)
      */
-
+	@Deprecated
     public SVGMaker(OFDReader reader, int ppm) {
+        super(reader, ppm);
+    }
+    
+    /**
+     * 创建SVG转换对象实例
+     * <p>
+     * OFD内部使用毫米作为基本单位
+     *
+     * @param reader OFD解析器
+     * @param ppm    每毫米像素数量(Pixels per millimeter) 调用CommonUtil.dpiToPpm(200) 给定DPI下的像素数量
+     */
+
+    public SVGMaker(OFDReader reader,double ppm) {
         super(reader, ppm);
     }
 

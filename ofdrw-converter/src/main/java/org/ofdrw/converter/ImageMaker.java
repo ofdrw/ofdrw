@@ -37,7 +37,7 @@ public class ImageMaker extends AWTMaker {
      * OFD内部使用毫米作为基本单位
      *
      * @param reader OFD解析器
-     * @param ppm    每毫米像素数量(Pixels per millimeter) 调用CommonUtil.dpiToPixel(200) 给定DPI下的像素数量
+     * @param ppm    每毫米像素数量(Pixels per millimeter) 调用CommonUtil.dpiToPpm(200) 给定DPI下的像素数量
      */
 
     public ImageMaker(OFDReader reader,double ppm) {
