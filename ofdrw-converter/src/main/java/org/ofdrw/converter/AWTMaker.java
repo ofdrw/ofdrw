@@ -51,7 +51,6 @@ import java.util.Map;
  * AWT设备转换类
  *
  * @author qaqtutu
- * @author iandjava
  * @since 2021-05-06 23:00:01
  */
 public abstract class AWTMaker {
@@ -64,9 +63,9 @@ public abstract class AWTMaker {
     /**
      * 每毫米像素数量(Pixels per millimeter)
      * <p>
-     * 默认为： 200dpi->7.874015748031496
+     * 默认为： 7.874015748031496 ppm (约200 dpi）
      */
-    protected double ppm =CommonUtil.dpiToPpm(200);
+    protected double ppm = CommonUtil.dpiToPpm(200);
 
     public final Config config = new Config();
 
@@ -92,11 +91,12 @@ public abstract class AWTMaker {
      * 创建图片转换对象实例
      * <p>
      * OFD内部使用毫米作为基本单位
+     * <p>
+     * 如果需要更加精确的表示单位请使用 {@link #AWTMaker(org.ofdrw.reader.OFDReader, double)}
      *
      * @param reader OFD解析器
      * @param ppm    每毫米像素数量(Pixels per millimeter)
      */
-    @Deprecated
     public AWTMaker(OFDReader reader, int ppm) {
         this.reader = reader;
         this.resourceManage = reader.getResMgt();
@@ -105,15 +105,17 @@ public abstract class AWTMaker {
             this.ppm = ppm;
         }
     }
+
     /**
      * 创建图片转换对象实例
      * <p>
      * OFD内部使用毫米作为基本单位
      *
      * @param reader OFD解析器
-     * @param ppm    每毫米像素数量(Pixels per millimeter)
+     * @param ppm    每毫米像素数量(Pixels per millimeter)，DPI与PPM转换可以使用{@link CommonUtil#dpiToPpm(int)}。
+     * @author iandjava
      */
-    public AWTMaker(OFDReader reader,double ppm) {
+    public AWTMaker(OFDReader reader, double ppm) {
         this.reader = reader;
         this.resourceManage = reader.getResMgt();
         this.pages = reader.getPageList();
@@ -575,7 +577,7 @@ public abstract class AWTMaker {
 
     private Matrix renderBoundaryAndSetClip(Graphics2D graphics, ST_Box boundary, Matrix parentMatrix) {
         graphics.setColor(Color.RED);
-        graphics.setStroke(new BasicStroke(0.1f * (float)ppm));
+        graphics.setStroke(new BasicStroke(0.1f * (float) ppm));
         Matrix m = MatrixUtils.base().mtimes(parentMatrix);
         if (boundary != null) {
             /*
@@ -760,7 +762,7 @@ public abstract class AWTMaker {
         }
         return arr;
     }
-    
+
     public static class Config {
         /*
          * 印章透明度
