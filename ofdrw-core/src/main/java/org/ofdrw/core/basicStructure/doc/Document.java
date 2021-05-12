@@ -124,7 +124,7 @@ public class Document extends OFDElement {
      * @return 文档的权限声明
      */
     public CT_Permission getPermission() {
-        Element e = this.getOFDElement("Permission");
+        Element e = this.getOFDElement("Permissions");
         return e == null ? null : new CT_Permission(e);
     }
 
