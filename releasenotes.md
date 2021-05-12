@@ -2,6 +2,15 @@
 
 ## 进展
 
+## Version 1.9.2 2021-5-12 21:20:05
+
+> Alias: CrayonShinChan
+
+修复：
+
+- Core模块中对 CT_Permissions实例错误定义，实例应该是Permissions。
+
+
 ## Version 1.9.1 2021-5-11 22:01:07
 
 > Alias: TIGER×DRAGON!

@@ -30,7 +30,7 @@ pom引入相关模块
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-converter</artifactId>
-    <version>1.9.1</version>
+    <version>1.9.2</version>
 </dependency>
 ```
 
