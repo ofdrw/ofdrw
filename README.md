@@ -97,6 +97,10 @@ OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwe
 - 基于cairo库渲染OFD。
 - Windows客户端
 
+#### OFD R&W Android
+
+OFD Reader and Writer 安卓平台解决方案： [DLTech21/ofdrw-aar . https://github.com/DLTech21/ofdrw-aar](https://github.com/DLTech21/ofdrw-aar)
+
 #### 图片转换
 
 > 目前已经被合并到`ofdrw-converter` 模块
@@ -105,7 +109,6 @@ OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwe
 
 - 支持OFD解析。
 - 基于java.awt解析OFD实现图片绘制。
-
 
 ## 源码安装
 
