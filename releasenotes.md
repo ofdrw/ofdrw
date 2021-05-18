@@ -2,6 +2,14 @@
 
 ## 进展
 
+## Version 1.9.3 2021-5-18 20:16:13
+
+> Alias: EromangaSensei
+
+修复：
+
+- 向OFD文件添加水印文件时，发生的强制类型转换错误的问题。
+
 ## Version 1.9.2 2021-5-12 21:20:05
 
 > Alias: CrayonShinChan
