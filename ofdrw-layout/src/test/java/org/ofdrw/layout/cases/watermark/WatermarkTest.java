@@ -26,7 +26,7 @@ public class WatermarkTest {
      */
     @Test
     public void addWatermark() throws IOException {
-        Path srcP = Paths.get("src/test/resources", "AddAttachment.ofd");
+        Path srcP = Paths.get("src/test/resources", "no_page_container.ofd");
         Path outP = Paths.get("target/AddWatermarkAnnot.ofd");
 
         try (OFDReader reader = new OFDReader(srcP);
