@@ -2,6 +2,14 @@
 
 ## 进展
 
+## Version 1.9.4 2021-5-19 21:03:33
+
+> Alias: Kaguya-samaLoveIsWar
+
+修复：
+
+- 图片转换骑缝章图章绘制错误问题。
+
 ## Version 1.9.3 2021-5-18 20:16:13
 
 > Alias: EromangaSensei
