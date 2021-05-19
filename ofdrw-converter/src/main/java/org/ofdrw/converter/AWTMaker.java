@@ -149,6 +149,7 @@ public abstract class AWTMaker {
                 }
 
                 ST_Box stBox = stampAnnot.getBoundary();
+                ST_Box clip = stampAnnot.getClip();
                 Matrix m = MatrixUtils.base();
                 graphics.setTransform(MatrixUtils.createAffineTransform(m));
 
@@ -161,7 +162,15 @@ public abstract class AWTMaker {
                 // 缩放适应
                 m = MatrixUtils.scale(m, ppm, ppm);
 
-                graphics.setClip(null);
+                if (clip != null) {
+                    Matrix m1 = MatrixUtils.base();
+                    m1 = MatrixUtils.scale(m1, fx, fy);
+                    m1 = MatrixUtils.move(m1, stBox.getTopLeftX() + clip.getTopLeftX(), stBox.getTopLeftY() + clip.getTopLeftY());
+                    m1 = MatrixUtils.scale(m1, ppm, ppm);
+                    graphics.setClip((int)  m1.getAsDouble(2, 0), (int) m1.getAsDouble(2, 1),
+                            (int) (stampImage.getWidth() * m1.getAsDouble(0, 0) * (clip.getWidth()/ stBox.getWidth())),
+                            (int) (stampImage.getHeight() *  m1.getAsDouble(1, 1) * (clip.getHeight()/ stBox.getHeight())));
+                }
                 graphics.setComposite(getStampComposite());
                 graphics.drawImage(stampImage, MatrixUtils.createAffineTransform(m), null);
             }
