@@ -2,6 +2,15 @@
 
 ## 进展
 
+## Version 1.9.5 2021-5-24 20:52:26
+
+> Alias: ToYourEternity
+
+新增：
+
+- 数字签名清理工具，见[示例](./ofdrw-sign/src/test/java/org/ofdrw/sign/SignCleanerTest.java)
+- PKCS工具增加了流式输入参数解析私钥。
+
 ## Version 1.9.4 2021-5-19 21:03:33
 
 > Alias: Kaguya-samaLoveIsWar

@@ -35,7 +35,7 @@
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.9.4</version>
+  <version>1.9.5</version>
 </dependency>
 ```
 
@@ -66,6 +66,7 @@ public class HelloWorld {
 - [文字抽取示例](./ofdrw-reader/src/test/java/org/ofdrw/reader/ContentExtractorTest.java)
 - [水印示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/cases/watermark/WatermarkTest.java)
 - [段落示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/cases/content/ParagraphCase.java)
+- [数字签名清理示例](./ofdrw-sign/src/test/java/org/ofdrw/sign/SignCleanerTest.java)
 
 相关文档目录：
 
