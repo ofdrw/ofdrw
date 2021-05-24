@@ -78,7 +78,7 @@ public class FontSetting implements Cloneable, TextFontInfo {
      * <p>
      * 字体类型为宋体
      *
-     * @param fontSize
+     * @param fontSize 字体大小，单位：毫米（mm）
      * @return 字体配置
      */
     public static FontSetting getInstance(double fontSize) {
