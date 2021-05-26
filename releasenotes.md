@@ -2,6 +2,14 @@
 
 ## 进展
 
+## Version 1.9.6 2021-5-26 22:05:33
+
+> Alias: TheJourneyofElaina
+
+修复：
+
+- 修复流式布局下，设置段落宽度无效的问题。
+
 ## Version 1.9.5 2021-5-24 20:52:26
 
 > Alias: ToYourEternity
