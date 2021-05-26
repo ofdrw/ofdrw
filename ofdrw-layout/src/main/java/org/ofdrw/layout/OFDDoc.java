@@ -303,6 +303,10 @@ public class OFDDoc implements Closeable {
      * @return this
      */
     public OFDDoc add(Div item) {
+        if (streamQueue.contains(item)) {
+            throw new IllegalArgumentException("元素已经存在，请重复放入");
+        }
+
         streamQueue.add(item);
         return this;
     }

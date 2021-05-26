@@ -8,7 +8,11 @@
 
 修复：
 
-- 修复流式布局下，设置段落宽度无效的问题。
+- 修复流式布局下，段落布局问题：
+  - 居中不正确
+  - 设置宽度无效
+  - 设置高度无效
+  - 见 [流式段落布局示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/ParagraphLayoutDemo.java)
 
 ## Version 1.9.5 2021-5-24 20:52:26
 
