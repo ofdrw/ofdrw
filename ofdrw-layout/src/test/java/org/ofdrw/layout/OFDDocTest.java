@@ -39,6 +39,31 @@ import static org.junit.jupiter.api.Assertions.*;
 class OFDDocTest {
 
     /**
+     * 流式布局 段落宽度设置
+     */
+    @Test
+    public void testPWidth() throws Exception {
+        Path outP = Paths.get("target/TestPWidth.ofd");
+
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            Paragraph p = new Paragraph();
+            p.setWidth(80d);
+            p.setHeight(20d);
+            p.setBorder(0.4d);
+            p.setPadding(5d);
+            p.setClear(Clear.none).setIntegrity(true);
+            p.setPosition(Position.Relative);
+            Span sp = new Span("序号")
+                    .setFont(FontName.SimHei.font())
+                    .setFontSize(4d);
+            p.add(sp);
+            ofdDoc.add(p);
+            System.out.printf("Paragraph width x height: %f : %f\n", p.getWidth(), p.getHeight());
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    /**
      * 字体宽度溢出可用最大宽度测试
      */
     @Test
@@ -48,6 +73,7 @@ class OFDDocTest {
         try (OFDDoc ofdDoc = new OFDDoc(outP)) {
             Paragraph p = new Paragraph(10d, 20d).setFontSize(15d);
             p.add("l我l");
+            p.setBorder(0.1d);
             ofdDoc.add(p);
             // Expect: 只显示 "l"
         }
@@ -427,6 +453,8 @@ class OFDDocTest {
 
             ofdDoc.addVPage(vPage);
         }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+
     }
 
 

@@ -64,6 +64,14 @@ public class Paragraph extends Div {
                 .setHeight(height);
     }
 
+    /**
+     * 创建一个段落对象
+     * <p>
+     * 注意如果不主动对 Paragraph 设置宽度，那么Paragraph
+     * 会独占整个段，并且与段具有相同宽度，也就是页面宽度，
+     * 在需要更加细致盒式的布局时 请设置{@link #setClear(Clear)}
+     * 并设置段落宽度 {@link #setWidth(Double)}。
+     */
     public Paragraph() {
         this.setClear(Clear.both);
         this.contents = new LinkedList<>();
@@ -298,6 +306,20 @@ public class Paragraph extends Div {
     }
 
     /**
+     * 如果宽度高度不存在那么设置宽度
+     * <p>
+     * 如果已经设置了宽度，该方法不会对该宽度造成影响
+     *
+     * @param width 宽度
+     */
+    private void setWidthIfNotExist(double width) {
+        if (getWidth() == null || getWidth() == 0) {
+            setWidth(width);
+        }
+    }
+
+
+    /**
      * 预布局
      *
      * @param widthLimit 宽度限制
@@ -386,7 +408,7 @@ public class Paragraph extends Div {
          */
         if (lines.size() == 1) {
             width = lines.get(0).getWidth();
-            setWidth(width);
+            setWidthIfNotExist(width);
         }
 
         width += widthPlus();
