@@ -171,15 +171,6 @@ public class Paragraph extends Div {
     /**
      * 创建新的行
      *
-     * @return 行块
-     */
-    private TxtLineBlock newLine() {
-        return new TxtLineBlock(getWidth(), lineSpace);
-    }
-
-    /**
-     * 创建新的行
-     *
      * @param width 行宽度
      * @return 行块
      */
@@ -379,7 +370,7 @@ public class Paragraph extends Div {
                 // 如果加入的Span是一个需要占满剩余行空间的元素，那么新起一行
                 if (s.hasLinebreak()) {
                     lines.add(line);
-                    line = newLine();
+                    line = newLine(lineMaxAvailableWidth);
                 }
                 // 成功加入
                 continue;
@@ -388,7 +379,7 @@ public class Paragraph extends Div {
             // 无法加入行内，且Span 不可分割，那么需要换行
             if (s.isIntegrity()) {
                 lines.add(line);
-                line = newLine();
+                line = newLine(lineMaxAvailableWidth);
                 // 重新进入队列
                 seq.push(s);
                 continue;
@@ -403,7 +394,7 @@ public class Paragraph extends Div {
                 seq.push(toNextLineSpan);
             }
             lines.add(line);
-            line = newLine();
+            line = newLine(lineMaxAvailableWidth);
         }
         // 最后一行处理
         if (!line.isEmpty()) {
