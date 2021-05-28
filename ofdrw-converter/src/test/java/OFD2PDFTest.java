@@ -20,12 +20,10 @@ public class OFD2PDFTest {
 //        Path dst = Paths.get("target/1.pdf");
 //        Path src = Paths.get("src/test/resources/zsbk.ofd");
 //        Path dst = Paths.get("target/zsbk.pdf");
-        Path src = Paths.get("C:\\Users\\pc\\Documents\\Tencent Files\\1009020096\\FileRecv\\【北京】北京市知识产权局……自查报告.ofd");
-        Path dst = Paths.get("target/aaa.pdf");
         try {
-            ConvertHelper.toPdf(src, dst);
-//            ConvertHelper.toPdf( Paths.get("src/test/resources/signout.ofd"), Paths.get("target/signout.pdf"));
-//            ConvertHelper.toPdf( Paths.get("src/test/resources/n.ofd"), Paths.get("target/n.pdf"));
+//            ConvertHelper.toPdf(src, dst);
+            ConvertHelper.toPdf( Paths.get("src/test/resources/signout.ofd"), Paths.get("target/signout.pdf"));
+            ConvertHelper.toPdf( Paths.get("src/test/resources/n.ofd"), Paths.get("target/n.pdf"));
 
         } catch (GeneralConvertException e) {
             e.printStackTrace();
