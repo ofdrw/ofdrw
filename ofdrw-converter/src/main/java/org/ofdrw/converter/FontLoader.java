@@ -290,12 +290,27 @@ public final class FontLoader {
 
     /**
      * 加载字体
+     * <p>
+     * 兼容性保留
      *
      * @param rl     资源加载器，用于从虚拟容器中取出文件
      * @param ctFont 字体对象
-     * @return 字体或null
+     * @return 字体 或 null
      */
-    public PdfFontWrapper loadPDFFont(ResourceLocator rl, CT_Font ctFont) {
+    public PdfFont loadPDFFont(ResourceLocator rl, CT_Font ctFont) {
+        return this.loadPDFFontSimilar(rl, ctFont).getPdfFont();
+    }
+
+    /**
+     * 尽可能的加载字体
+     * <p>
+     * 如果字体无法加载时使用相近字体替换
+     *
+     * @param rl     资源加载器，用于从虚拟容器中取出文件
+     * @param ctFont 字体对象
+     * @return 字体 或 null
+     */
+    public PdfFontWrapper loadPDFFontSimilar(ResourceLocator rl, CT_Font ctFont) {
         if (ctFont == null) {
             return null;
         }
@@ -309,8 +324,7 @@ public final class FontLoader {
                 fontAbsPath = getSystemFontPath(ctFont.getFamilyName(), ctFont.getFontName());
             }
             if (fontAbsPath == null) {
-//                return null;
-                throw new IOException();
+                throw new FileNotFoundException("无法在OFD内找到字体 " + fontAbsPath);
             }
             // 即便设置不缓存，任然会出现文件没有关闭的问题。
             // 因此，读取到内存防止因为 FontProgram 的缓存导致无法删除临时OFD文件的问题。
@@ -320,32 +334,31 @@ public final class FontLoader {
 
         } catch (Exception e) {
             log.info("无法加载字体 {} {} {}，原因:{}",
-                ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
-                e.getMessage());
-
+                    ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
+                    e.getMessage());
             try {
                 PdfFont df;
                 String name = ctFont.getFontName().toLowerCase();
                 String fontName;
                 byte[] font;
-                if (name.contains("simfang") || name.contains("仿宋"))
+                if (name.contains("simfang") || name.contains("仿宋")) {
                     fontName = "fonts/SIMFANG.ttf";
-                else if (name.contains("kai") || name.contains("楷"))
+                } else if (name.contains("kai") || name.contains("楷")) {
                     fontName = "fonts/simkai.ttf";
-                else if (name.contains("hei") || name.contains("simhei") || name.contains("黑体"))
+                } else if (name.contains("hei") || name.contains("simhei") || name.contains("黑体")) {
                     fontName = "fonts/simhei.ttf";
-                else if (name.contains("标宋"))
+                } else if (name.contains("标宋")) {
                     fontName = "fonts/方正小标宋简体.ttf";
-                else
+                } else {
                     fontName = "fonts/simsun.ttf";
 
+                }
                 font = IOUtils.toByteArray(this.getClass().getClassLoader().getResourceAsStream(fontName));
                 df = PdfFontFactory.createFont(font, PdfEncodings.IDENTITY_H, false);
-
                 log.info("已使用 {} 字体替代 {}", fontName, ctFont.getFontName());
                 return new PdfFontWrapper(df, true);
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
+            } catch (IOException ee) {
+                ee.printStackTrace();
             }
 
             return null;

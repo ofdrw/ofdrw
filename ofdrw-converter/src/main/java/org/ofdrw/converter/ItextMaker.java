@@ -106,10 +106,10 @@ public class ItextMaker {
         PdfPage pdfPage = pdf.addNewPage(pageSize);
 
         pdfPage.setMediaBox(
-            new Rectangle(
-                (float) converterDpi(pageBox.getTopLeftX()), (float) converterDpi(pageBox.getTopLeftY()),
-                (float) converterDpi(pageBox.getWidth()), (float) converterDpi(pageBox.getHeight())
-            )
+                new Rectangle(
+                        (float) converterDpi(pageBox.getTopLeftX()), (float) converterDpi(pageBox.getTopLeftY()),
+                        (float) converterDpi(pageBox.getWidth()), (float) converterDpi(pageBox.getHeight())
+                )
         );
 
         final List<AnnotionEntity> annotationEntities = ofdReader.getAnnotationEntities();
@@ -161,9 +161,9 @@ public class ItextMaker {
                             writeLayer(sealResMgt, pdfCanvas, layerList, pageBox, sealBox);
                             // 绘制注释
                             writeAnnoAppearance(sealResMgt, pdfCanvas,
-                                ofdPageVo,
-                                sealOfdReader.getAnnotationEntities(),
-                                pageBox);
+                                    ofdPageVo,
+                                    sealOfdReader.getAnnotationEntities(),
+                                    pageBox);
                         }
                     }
                 } else {
@@ -191,15 +191,15 @@ public class ItextMaker {
                             ST_Box sealBox) throws IOException {
         for (CT_Layer layer : layerList) {
             writePageBlock(resMgt,
-                pdfCanvas,
-                box,
-                sealBox,
-                layer.getPageBlocks(),
-                layer.getDrawParam(),
-                null,
-                null,
-                null,
-                null);
+                    pdfCanvas,
+                    box,
+                    sealBox,
+                    layer.getPageBlocks(),
+                    layer.getDrawParam(),
+                    null,
+                    null,
+                    null,
+                    null);
         }
     }
 
@@ -329,15 +329,15 @@ public class ItextMaker {
         if (ctDrawParam != null) {
             // 使用绘制参数补充缺省的颜色
             if (pathObject.getStrokeColor() == null
-                && ctDrawParam.getStrokeColor() != null) {
+                    && ctDrawParam.getStrokeColor() != null) {
                 pathObject.setStrokeColor(ctDrawParam.getStrokeColor());
             }
             if (pathObject.getFillColor() == null
-                && ctDrawParam.getFillColor() != null) {
+                    && ctDrawParam.getFillColor() != null) {
                 pathObject.setFillColor(ctDrawParam.getFillColor());
             }
             if (pathObject.getLineWidth() == null
-                && ctDrawParam.getLineWidth() != null) {
+                    && ctDrawParam.getLineWidth() != null) {
                 pathObject.setLineWidth(ctDrawParam.getLineWidth());
             }
         }
@@ -371,7 +371,7 @@ public class ItextMaker {
                 x2 = realPos[0];
                 y2 = box.getHeight() - realPos[1];
                 PdfShading.Axial axial = new PdfShading.Axial(new PdfDeviceCs.Rgb(), 0, 0, convertOfdColor(start).getColorValue(),
-                    box.getWidth().floatValue(), box.getHeight().floatValue(), convertOfdColor(end).getColorValue());
+                        box.getWidth().floatValue(), box.getHeight().floatValue(), convertOfdColor(end).getColorValue());
                 PdfPattern.Shading shading = new PdfPattern.Shading(axial);
                 pdfCanvas.setStrokeColorShading(shading);
                 defaultStrokeColor = convertOfdColor(end);
@@ -409,10 +409,11 @@ public class ItextMaker {
 //            System.out.println(pathObject.getLineWidth()+"="+lineWidth+"-"+converterDpi(lineWidth)+"-"+defaultLineWidth);
 
             //TODO 如果转换又可能过粗
-            if (compositeObjectBoundary != null)
+            if (compositeObjectBoundary != null) {
                 pdfCanvas.setLineWidth(lineWidth);
-            else
+            } else {
                 pdfCanvas.setLineWidth((float) converterDpi(lineWidth));
+            }
 
             pdfCanvas.stroke();
             pdfCanvas.restoreState();
@@ -474,17 +475,17 @@ public class ItextMaker {
         }
         if (sealBox != null) {
             pathObject.setBoundary(pathObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
-                pathObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
-                pathObject.getBoundary().getWidth(),
-                pathObject.getBoundary().getHeight());
+                    pathObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
+                    pathObject.getBoundary().getWidth(),
+                    pathObject.getBoundary().getHeight());
         }
         if (annotBox != null) {
             //TODO 修复annot中的注解的定位
             pathObject.setBoundary(
-                pathObject.getBoundary().getTopLeftX() + converterDpi(annotBox.getTopLeftX()),
-                pathObject.getBoundary().getTopLeftY() + converterDpi(annotBox.getTopLeftY()),
-                pathObject.getBoundary().getWidth(),
-                pathObject.getBoundary().getHeight());
+                    pathObject.getBoundary().getTopLeftX() + converterDpi(annotBox.getTopLeftX()),
+                    pathObject.getBoundary().getTopLeftY() + converterDpi(annotBox.getTopLeftY()),
+                    pathObject.getBoundary().getWidth(),
+                    pathObject.getBoundary().getHeight());
         }
         List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), compositeObjectBoundary, compositeObjectCTM, true);
         for (int i = 0; i < listPoint.size(); i++) {
@@ -494,11 +495,11 @@ public class ItextMaker {
                 pdfCanvas.lineTo(listPoint.get(i).x1, listPoint.get(i).y1);
             } else if (listPoint.get(i).type.equals("B")) {
                 pdfCanvas.curveTo(listPoint.get(i).x1, listPoint.get(i).y1,
-                    listPoint.get(i).x2, listPoint.get(i).y2,
-                    listPoint.get(i).x3, listPoint.get(i).y3);
+                        listPoint.get(i).x2, listPoint.get(i).y2,
+                        listPoint.get(i).x3, listPoint.get(i).y3);
             } else if (listPoint.get(i).type.equals("Q")) {
                 pdfCanvas.curveTo(listPoint.get(i).x1, listPoint.get(i).y1,
-                    listPoint.get(i).x2, listPoint.get(i).y2);
+                        listPoint.get(i).x2, listPoint.get(i).y2);
             } else if (listPoint.get(i).type.equals("C")) {
                 pdfCanvas.closePath();
             }
@@ -586,7 +587,7 @@ public class ItextMaker {
                 x2 = realPos[0];
                 y2 = box.getHeight() - realPos[1];
                 PdfShading.Axial axial = new PdfShading.Axial(new PdfDeviceCs.Rgb(), (float) x1, (float) y1, convertOfdColor(start).getColorValue(),
-                    (float) x2, (float) y2, convertOfdColor(end).getColorValue());
+                        (float) x2, (float) y2, convertOfdColor(end).getColorValue());
                 PdfPattern.Shading shading = new PdfPattern.Shading(axial);
                 pdfCanvas.setFillColorShading(shading);
             }
@@ -597,15 +598,15 @@ public class ItextMaker {
 
         if (sealBox != null && textObject.getBoundary() != null) {
             textObject.setBoundary(textObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
-                textObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
-                textObject.getBoundary().getWidth(),
-                textObject.getBoundary().getHeight());
+                    textObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
+                    textObject.getBoundary().getWidth(),
+                    textObject.getBoundary().getHeight());
         }
         if (annotBox != null && textObject.getBoundary() != null) {
             textObject.setBoundary(textObject.getBoundary().getTopLeftX() + annotBox.getTopLeftX(),
-                textObject.getBoundary().getTopLeftY() + annotBox.getTopLeftY(),
-                textObject.getBoundary().getWidth(),
-                textObject.getBoundary().getHeight());
+                    textObject.getBoundary().getTopLeftY() + annotBox.getTopLeftY(),
+                    textObject.getBoundary().getWidth(),
+                    textObject.getBoundary().getHeight());
         }
         if (textObject.getCTM() != null) {
             Double[] ctm = textObject.getCTM().toDouble();
@@ -722,7 +723,7 @@ public class ItextMaker {
         if (fontCache.containsKey(key)) {
             return fontCache.get(key);
         }
-        PdfFontWrapper font = FontLoader.getInstance().loadPDFFont(rl, ctFont);
+        PdfFontWrapper font = FontLoader.getInstance().loadPDFFontSimilar(rl, ctFont);
 //        if (font == null) {
 //            font = DEFAULT_FONT;
 //        }
