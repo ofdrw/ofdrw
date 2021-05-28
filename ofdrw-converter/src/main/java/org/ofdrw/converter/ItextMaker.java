@@ -285,6 +285,7 @@ public class ItextMaker {
                     }
                     alpha = textObject.getFillColor().getAlpha();
                 }
+                //TODO 修复annot中的文字注解的定位
                 writeText(resMgt, pdfCanvas, box, sealBox, textObject, fillColor, alpha, compositeObjectAlpha, compositeObjectBoundary, compositeObjectCTM);
             } else if (block instanceof ImageObject) {
                 ImageObject imageObject = (ImageObject) block;
@@ -468,6 +469,7 @@ public class ItextMaker {
                     pathObject.getBoundary().getHeight());
         }
         if (annotBox != null) {
+            //TODO 修复annot中的注解的定位
             pathObject.setBoundary(pathObject.getBoundary().getTopLeftX() + annotBox.getTopLeftX(),
                     pathObject.getBoundary().getTopLeftY() + annotBox.getTopLeftY(),
                     pathObject.getBoundary().getWidth(),
