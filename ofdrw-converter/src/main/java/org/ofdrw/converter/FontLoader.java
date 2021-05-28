@@ -8,7 +8,6 @@ import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.fontbox.ttf.*;
-import org.ofdrw.converter.font.LocalPdfFont;
 import org.ofdrw.converter.font.PdfFontWrapper;
 import org.ofdrw.converter.utils.OSinfo;
 import org.ofdrw.converter.utils.StringUtils;
