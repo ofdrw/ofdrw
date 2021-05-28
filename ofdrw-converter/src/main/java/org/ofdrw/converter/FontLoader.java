@@ -326,12 +326,18 @@ public final class FontLoader {
             if (fontAbsPath == null) {
                 throw new FileNotFoundException("无法在OFD内找到字体 " + fontAbsPath);
             }
-            // 即便设置不缓存，任然会出现文件没有关闭的问题。
-            // 因此，读取到内存防止因为 FontProgram 的缓存导致无法删除临时OFD文件的问题。
-            final byte[] fontBin = Files.readAllBytes(Paths.get(fontAbsPath));
-            FontProgram fontProgram = FontProgramFactory.createFont(fontBin, false);
+            FontProgram fontProgram = null;
+            // 解决TTC无法加载问题
+            if (fontAbsPath.toLowerCase().endsWith(".ttc")){
+                fontAbsPath = fontAbsPath + ",0";
+                fontProgram = FontProgramFactory.createFont(fontAbsPath, false);
+            }else{
+                // 即便设置不缓存，任然会出现文件没有关闭的问题。
+                // 因此，读取到内存防止因为 FontProgram 的缓存导致无法删除临时OFD文件的问题。
+                final byte[] fontBin = Files.readAllBytes(Paths.get(fontAbsPath));
+                fontProgram = FontProgramFactory.createFont(fontBin, false);
+            }
             return new PdfFontWrapper(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, true));
-
         } catch (Exception e) {
             log.info("无法加载字体 {} {} {}，原因:{}",
                     ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
