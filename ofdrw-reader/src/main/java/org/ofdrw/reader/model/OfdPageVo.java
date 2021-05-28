@@ -4,9 +4,12 @@ package org.ofdrw.reader.model;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 
 /**
+ * @deprecated {@link org.ofdrw.reader.PageInfo}
+ *
  * @author dltech21
  * @since 2020/8/11
  */
+@Deprecated
 public class OfdPageVo {
     private Page contentPage;
 

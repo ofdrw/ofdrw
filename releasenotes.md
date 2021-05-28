@@ -2,9 +2,185 @@
 
 ## 进展
 
+## Version 1.9.6 2021-5-26 22:05:33
+
+> Alias: TheJourneyofElaina
+
+修复：
+
+- 修复流式布局下，段落布局问题：
+  - 居中不正确
+  - 设置宽度无效
+  - 设置高度无效
+  - 见 [段落布局示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/cases/content/ParagraphCase.java)
+
+## Version 1.9.5 2021-5-24 20:52:26
+
+> Alias: ToYourEternity
+
+新增：
+
+- 数字签名清理工具，见[示例](./ofdrw-sign/src/test/java/org/ofdrw/sign/SignCleanerTest.java)
+- PKCS工具增加了流式输入参数解析私钥。
+
+## Version 1.9.4 2021-5-19 21:03:33
+
+> Alias: Kaguya-samaLoveIsWar
+
+修复：
+
+- 图片转换骑缝章图章绘制错误问题。
+
+## Version 1.9.3 2021-5-18 20:16:13
+
+> Alias: EromangaSensei
+
+修复：
+
+- 向OFD文件添加水印文件时，发生的强制类型转换错误的问题。
+
+## Version 1.9.2 2021-5-12 21:20:05
+
+> Alias: CrayonShinChan
+
+修复：
+
+- Core模块中对 CT_Permissions实例错误定义，实例应该是Permissions。
+
+
+## Version 1.9.1 2021-5-11 22:01:07
+
+> Alias: TIGER×DRAGON!
+
+新增：
+
+- 图片转换接口新增 `double`类型的PPM设置
+
+
+## Version 1.9.0 2021-5-7 22:18:27
+
+> Alias: Natsume'sBookOfFriends
+
+新增：
+
+- OFD转换SVG，相较于转换图片，速度更快，可以无失真的缩放。
+  - [快速入门 ofdrw-converter/README.md](./ofdrw-converter/README.md)
+  - [测试用例 OFD2SVGTest.java](./ofdrw-converter/src/test/java/OFD2SVGTest.java)
+
+修复：
+
+- PDF转换文字重叠一起，TextCode DeltaX 没有提供，缺少的DeltaX使用重复最后出现的DeltaX。
+- 修复由于iText包provider引入造成的NCE问题。
+
+## Version 1.8.9 2021-4-26 18:39:53
+
+> Alias: OnePunchMan
+
+修复
+
+- Reader解析页面大小造成的NPE
+
+## Version 1.8.8 2021-4-25 21:15:46
+
+> Alias: DailyLivesOfHighSchoolBoys
+
+修复：
+
+- 修复了获取页面存储，没有考虑模板页面的问题。
+- 修复了绘制参数存在继承情况的clone异常的问题。
+
+新增:
+
+- 替换了PDF转换模块的实现的为iText，部分内嵌字体问题缺失表的情况仍然没有解决。
+
+## Version 1.8.7 2021-4-24 20:32:36
+
+> Alias: ScissorSeven
+
+修复：
+
+- 图片转换绘制参数没有正确设置的问题。
+
+新增：
+
+- 图片转换支持 符合对象。
+- 支持对Path对象紧缩表示的解析。
+
+## Version 1.8.6 2021-4-21 20:58:47
+
+> Alias: GINTAMA
+
+修复:
+
+- 解析印章过程由于路径错误造成无法读取印章的问题。
+- 优化了Canvas字体配置构造的复杂性问题。
+- Layout布局在绝对定位方式下需要手动指定坐标的友好提示。
+
+## Version 1.8.5 2021-4-17 21:46:59
+
+> Alias:  Pokemon
+
+修复:
+
+- 内嵌字体加载异常问题
+- 修复了字体加载的Bug
+
+新增:
+
+- 优化Reader的代码结构
+- 迁移`DLOFDReader` 主要功能到`OFDReader`
+- `OFDReader`:
+  - 增签章获取PageInfo的能力，简化转换模块解析工作。
+  - 增加获取注解信息的方法。`org.ofdrw.reader.OFDReader.getStampAnnots`
+  - 增加了获取电子签章信息方法`org.ofdrw.reader.OFDReader.getAnnotationEntities`
+  - 增加了获取页面集合方法`org.ofdrw.reader.OFDReader.getPageList`
+
+## Version 1.8.4 2021-4-15 23:27:22
+
+> Alias:  PlasticMemories
+
+新增:
+
+- 字体加载器简化字体加载`FontLoader`
+
+修复:
+
+- 修复了转换过程内嵌字体无法加载的大部分问题。
+- 优化了PDF的代码。
+- 修复了PDF转换过程中无法获取部分资源造成页面内容缺失。
+- 兼容了坐标字符可能含有非数字成分问题。
+
+## Version 1.8.3 2021-4-10 14:30:55
+
+> Alias:  ZOMBIELANDSAGA
+
+新增:
+
+- Reader模块下新增资源加载器`ResourceManage`用于简化资源的获取:
+  - 资源涵盖 公共资源序列（`PublicRes.xml`） 和 文档资源序列（`DocumentRes`.xml）中所有资源
+  - 通过资源ID就可以获取到资源对象。
+  - 资源对象中如果存在文件路径，将全部替换为绝对路径。
+  - 获取到的所有资源对象均为只读副本，不允许修改。
+
+修复:
+
+- OFD转图片：
+    - 电子印章位置不正确的问题。
+    - 修复了空白页面没有`ofd:Content`导致的NPE问题。
+- 修复了资源加载器无法获取到`PublicRes.xml`下的图片资源问题。
+
+## Version 1.8.2 2021-3-30 18:49:24
+
+> Alias: JujutsuKaisen
+
+修复:
+
+- Img元素无法解析CMYK图片造成的IIOException。
+- `Img(java.nio.file.Path)` 构造器不再推荐使用，添加图片应该手动指定图片大小`Img(double, double, java.nio.file.Path)`
+
 ## Version 1.8.1 2021-3-18 19:24:18
 
-Alias: InitialD
+> Alias: InitialD
 
 修复:
 
@@ -16,7 +192,7 @@ Alias: InitialD
 
 ## Version 1.8.0 2021-3-15 20:41:01
 
-Alias: MyYouthRomanticComedyIsWrongAsIExpected
+> Alias: MyYouthRomanticComedyIsWrongAsIExpected
 
 新增：
 
@@ -28,7 +204,7 @@ Alias: MyYouthRomanticComedyIsWrongAsIExpected
 
 ## Version 1.7.4 2021-3-8 19:43:42
 
-Alias: AttackOnTitan
+> Alias: AttackOnTitan
 
 修复：
 
@@ -37,7 +213,7 @@ Alias: AttackOnTitan
 
 ## Version 1.7.3 2021-1-15 22:37:53
 
-Alias: LogHorizon
+> Alias: LogHorizon
 
 新增
 
@@ -52,7 +228,7 @@ Alias: LogHorizon
 
 ## Version 1.7.2 2020-12-8 20:11:15
 
-Alias: CellsAtWork
+> Alias: CellsAtWork
 
 新增
 
@@ -64,7 +240,7 @@ Alias: CellsAtWork
 
 ## Version 1.7.1 2020-12-1 19:16:34
 
-Alias: HYOUKA
+> Alias: HYOUKA
 
 修复
 
@@ -73,7 +249,7 @@ Alias: HYOUKA
 
 ## Version 1.7.0 2020-11-20 19:48:21
 
-Alias: Fate/Zero
+> Alias: Fate/Zero
 
 新增
 
@@ -87,7 +263,7 @@ Alias: Fate/Zero
 
 ## Version 1.6.10 2020-11-18 11:05:50
 
-Alias: MobileSuitGundamSEED
+> Alias: MobileSuitGundamSEED
 
 新增
 
@@ -102,7 +278,7 @@ Alias: MobileSuitGundamSEED
 
 ## Version 1.6.9 2020-11-12 19:22:21
 
-Alias: 	MobuSaikoHyaku
+> Alias: 	MobuSaikoHyaku
 
 新增
 
@@ -116,7 +292,7 @@ Alias: 	MobuSaikoHyaku
 
 ## Version 1.6.8 2020-11-9 21:49:46
 
-Alias: FlyMeToTheMoon
+> Alias: FlyMeToTheMoon
 
 新增:
 
@@ -129,7 +305,7 @@ Alias: FlyMeToTheMoon
 
 ## Version 1.6.7 2020-11-6 19:20:12
 
-Alias: OriginalGod
+> Alias: OriginalGod
 
 新增:
 
@@ -142,7 +318,7 @@ Alias: OriginalGod
 
 ## Version 1.6.6 2020-10-29 20:35:01
 
-Alias: KimetsuNoYaiba
+> Alias: KimetsuNoYaiba
 
 新增:
 
@@ -156,7 +332,7 @@ Alias: KimetsuNoYaiba
 
 ## Version 1.6.5 2020-10-26 21:55:01
 
-Alias: GrandBlue
+> Alias: GrandBlue
 
 修复:
 
@@ -168,7 +344,7 @@ Alias: GrandBlue
 
 ## Version 1.6.4 2020-10-23 23:33:38
 
-Alias: BlackLagoon
+> Alias: BlackLagoon
 
 修复:
 
@@ -180,7 +356,7 @@ Alias: BlackLagoon
 
 ## Version 1.6.3 2020-10-21 20:08:32
 
-Alias: HimoutoUmaru
+> Alias: HimoutoUmaru
 
 新增:
 
@@ -192,7 +368,7 @@ Alias: HimoutoUmaru
 
 > 为了增加版本趣味性，增加了别名
 
-Alias: overlord
+> Alias: overlord
 
 修复：
 

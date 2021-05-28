@@ -6,7 +6,7 @@
 在使用OFDRW前请务必悉知 [***《OFD Reader & Writer免责声明》***](免责声明.md)。
 
 
-> 如何clone和预览存在困难，请移步 [https://gitee.com/Trisia/ofdrw](https://gitee.com/Trisia/ofdrw)
+> 如何clone和预览存在困难，请移步 [https://gitee.com/ofdrw/ofdrw](https://gitee.com/ofdrw/ofdrw)
 
 
 **Talk is cheap,Show me the code. ——Linus Torvalds**
@@ -25,7 +25,7 @@
 - [**ofdrw-sign**](./ofdrw-sign) OFD文档数字签章。
 - [**ofdrw-gm**](./ofdrw-gm) 用于支持签章模块需要的国密电子签章数据结构。
 - [**ofdrw-gv**](./ofdrw-gv) OFDRW 所有模块所共用的全局变量。
-- [**ofdrw-converter**](./ofdrw-converter) OFD文档转换PDF、图片。***New***
+- [**ofdrw-converter**](./ofdrw-converter) OFD文档转换PDF、图片、SVG。
 - [**ofdrw-full**](./ofdrw-full) 上述所有模块整合包，用于简化依赖引入。
 
 ## QuickStart
@@ -35,7 +35,7 @@
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.8.1</version>
+  <version>1.9.6</version>
 </dependency>
 ```
 
@@ -65,7 +65,8 @@ public class HelloWorld {
 - [Canvas示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/element/canvas/DrawContextTest.java)
 - [文字抽取示例](./ofdrw-reader/src/test/java/org/ofdrw/reader/ContentExtractorTest.java)
 - [水印示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/cases/watermark/WatermarkTest.java)
-- [段落示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/cases/content/ParagraphCase.java)
+- [段落布局示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/cases/content/ParagraphCase.java)
+- [数字签名清理示例](./ofdrw-sign/src/test/java/org/ofdrw/sign/SignCleanerTest.java)
 
 相关文档目录：
 
@@ -90,7 +91,20 @@ OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwe
 - 将OFD渲染为SVG实现矢量的无失真的OFD预览体验。
 - 完全基于浏览器在前端完成所有渲染工作，不需要服务端支持和插件。
 
+#### 开源客户端
+
+推荐开源客户端预览解决方案： [roy19831015/OfdiumEx . https://github.com/roy19831015/OfdiumEx](https://github.com/roy19831015/OfdiumEx)
+
+- 基于cairo库渲染OFD。
+- Windows客户端
+
+#### OFD R&W Android
+
+OFD Reader and Writer 安卓平台解决方案： [DLTech21/ofdrw-aar . https://github.com/DLTech21/ofdrw-aar](https://github.com/DLTech21/ofdrw-aar)
+
 #### 图片转换
+
+> 目前已经被合并到`ofdrw-converter` 模块
 
 推荐开源OFD图片转换解决方案： [QAQtutu/ofdbox . https://github.com/QAQtutu/ofdbox](https://github.com/QAQtutu/ofdbox)
 
@@ -136,4 +150,4 @@ mvn install
 
 > 项目获得 Star曲线
 
-[![Stargazers over time](https://starchart.cc/Trisia/ofdrw.svg)](https://starchart.cc/Trisia/ofdrw)
+[![Stargazers over time](https://starchart.cc/ofdrw/ofdrw.svg)](https://starchart.cc/ofdrw/ofdrw)

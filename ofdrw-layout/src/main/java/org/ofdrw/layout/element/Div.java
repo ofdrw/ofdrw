@@ -246,6 +246,12 @@ public class Div implements RenderPrepare, ElementSplit {
         return this;
     }
 
+    /**
+     * 设置背景颜色 RGB
+     *
+     * @param backgroundColor RGB数组
+     * @return this
+     */
     Div setBackgroundColor(int[] backgroundColor) {
         this.backgroundColor = backgroundColor;
         return this;
@@ -273,6 +279,21 @@ public class Div implements RenderPrepare, ElementSplit {
         return padding;
     }
 
+    /**
+     * 设置 内边距
+     * <p>
+     * 根据参数的参数不同设置涉及到了到 上、右、下、左 各部分参数
+     * 1个参数，上、右、下、左 都相同      {arr[0], arr[0], arr[0], arr[0]}
+     * <p>
+     * 2个参数，上和下相同、左和右相同       {arr[0], arr[1], arr[0], arr[1]}
+     * <p>
+     * 3个参数，上、右、下、左(0) 分别设置  {arr[0], arr[1], arr[2], 0}
+     * <p>
+     * 4个参数，上、右、下、左 分别设置     {arr[0], arr[1], arr[2], arr[3]}
+     *
+     * @param padding 内边距，可变参数。
+     * @return this
+     */
     public Div setPadding(Double... padding) {
         this.padding = ArrayParamTool.arr4p(padding);
         return this;
@@ -282,6 +303,21 @@ public class Div implements RenderPrepare, ElementSplit {
         return border;
     }
 
+    /**
+     * 设置 边框宽度
+     * <p>
+     * 根据参数的参数不同设置涉及到了到 上、右、下、左 各部分参数
+     * 1个参数，上、右、下、左 都相同      {arr[0], arr[0], arr[0], arr[0]}
+     * <p>
+     * 2个参数，上和下相同、左和右相同       {arr[0], arr[1], arr[0], arr[1]}
+     * <p>
+     * 3个参数，上、右、下、左(0) 分别设置  {arr[0], arr[1], arr[2], 0}
+     * <p>
+     * 4个参数，上、右、下、左 分别设置     {arr[0], arr[1], arr[2], arr[3]}
+     *
+     * @param border 边框宽度，可变参数。
+     * @return this
+     */
     public Div setBorder(Double... border) {
         this.border = ArrayParamTool.arr4p(border);
         return this;
@@ -291,6 +327,21 @@ public class Div implements RenderPrepare, ElementSplit {
         return margin;
     }
 
+    /**
+     * 设置 外边距
+     * <p>
+     * 根据参数的参数不同设置涉及到了到 上、右、下、左 各部分参数
+     * 1个参数，上、右、下、左 都相同      {arr[0], arr[0], arr[0], arr[0]}
+     * <p>
+     * 2个参数，上和下相同、左和右相同       {arr[0], arr[1], arr[0], arr[1]}
+     * <p>
+     * 3个参数，上、右、下、左(0) 分别设置  {arr[0], arr[1], arr[2], 0}
+     * <p>
+     * 4个参数，上、右、下、左 分别设置     {arr[0], arr[1], arr[2], arr[3]}
+     *
+     * @param margin 外边距，可变参数。
+     * @return this
+     */
     public Div setMargin(Double... margin) {
         this.margin = ArrayParamTool.arr4p(margin);
         return this;

@@ -12,6 +12,7 @@ import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.pkg.container.ResDir;
 import org.ofdrw.pkg.container.VirtualContainer;
+import org.ofdrw.reader.model.StampAnnotEntity;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -21,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.List;
 
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -119,7 +121,7 @@ class OFDReaderTest {
 
 
     @Test
-    public void testReader() throws Exception{
+    public void testReader() throws Exception {
         Path src = Paths.get("src/test/resources/helloworld.ofd");
         byte[] ofdSrc = Files.readAllBytes(src);
         Path fileTemp = Files.createTempDirectory("ofd_tmp");
@@ -177,6 +179,7 @@ class OFDReaderTest {
     /**
      * 测试Document.xml中 ofd:Attachments 指向路径和Document.xml不在同一级目录时无法获取附件路径
      * 具体参见img中电子票据文件夹
+     *
      * @throws Exception
      */
     @Test
@@ -191,4 +194,14 @@ class OFDReaderTest {
         }
     }
 
+    @Test
+    void getStampAnnots() throws IOException {
+        Path path = Paths.get("src/test/resources/发票示例.ofd");
+        try (OFDReader ofdReader = new OFDReader(path)) {
+            final List<StampAnnotEntity> stampAnnots = ofdReader.getStampAnnots();
+            System.out.println(stampAnnots.size());
+            assertEquals(1, stampAnnots.size());
+        }
+
+    }
 }

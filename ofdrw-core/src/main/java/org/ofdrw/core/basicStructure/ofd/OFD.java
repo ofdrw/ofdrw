@@ -107,6 +107,16 @@ public class OFD extends OFDElement {
         return e == null ? null : new DocBody(e);
     }
 
+    /**
+     * 获取指定序号的文档
+     *
+     * @param num 文档序号，从0起
+     * @return 文件对象入口（如果有多个则获取第一个）
+     */
+    public DocBody getDocBody(int num) {
+        return getDocBodies().get(num);
+    }
+
 
     /**
      * 获取所有文档入口
@@ -114,7 +124,7 @@ public class OFD extends OFDElement {
      * @return 所有文档入口
      */
     public List<DocBody> getDocBodies() {
-        return this.getOFDElements("DocBody",DocBody::new);
+        return this.getOFDElements("DocBody", DocBody::new);
     }
 
     @Override

@@ -1,16 +1,14 @@
 package org.ofdrw.converter;
 
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
 import org.apache.pdfbox.jbig2.util.log.Logger;
 import org.apache.pdfbox.jbig2.util.log.LoggerFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.ofdrw.reader.DLOFDReader;
-import org.ofdrw.reader.model.OfdPageVo;
+import org.ofdrw.reader.OFDReader;
+import org.ofdrw.reader.PageInfo;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -26,52 +24,94 @@ public class ConvertHelper {
     private final static Logger logger = LoggerFactory.getLogger(ConvertHelper.class);
 
     /**
+     * 转换使用库名称
+     */
+    public static Lib lib = Lib.iText;
+
+    public static enum Lib {
+        iText, PDFBox
+    }
+
+    /**
+     * 使用iText作为转换实现
+     */
+    public static void useIText() {
+        lib = Lib.iText;
+    }
+
+    /**
+     * 使用PDFBox作为转换实现
+     */
+    public static void usePDFBox() {
+        lib = Lib.PDFBox;
+    }
+
+    /**
      * OFD转换PDF
      *
-·    * @param input  OFD文件路径，支持OutputStream、Path、String（文件路径）
+     * @param input  OFD文件路径，支持OutputStream、Path、String（文件路径）
      * @param output PDF输出流，支持OutputStream、Path、File、String（文件路径）
      * @throws IllegalArgumentException 参数错误
      * @throws GeneralConvertException  文档转换过程中异常
      */
     public static void ofd2pdf(Object input, Object output) {
-        DLOFDReader reader = null;
-        PDDocument pdfDocument = null;
+        OFDReader reader = null;
         try {
             if (input instanceof InputStream) {
-                reader = new DLOFDReader((InputStream) input);
+                reader = new OFDReader((InputStream) input);
             } else if (input instanceof Path) {
-                reader = new DLOFDReader((Path) input);
+                reader = new OFDReader((Path) input);
             } else if (input instanceof File) {
-                reader = new DLOFDReader(new FileInputStream((File) input));
+                reader = new OFDReader(new FileInputStream((File) input));
             } else if (input instanceof String) {
-                reader = new DLOFDReader((String) input);
+                reader = new OFDReader((String) input);
             } else {
                 throw new IllegalArgumentException("不支持的输入格式(input)，仅支持InputStream、Path、File、String");
             }
-            pdfDocument = new PDDocument();
 
-            List<OfdPageVo> ofdPageVoList = reader.getOFDDocumentVo().getOfdPageVoList();
-
-            long start;
-            long end;
-            int pageNum = 1;
-
-            PdfboxMaker pdfMaker = new PdfboxMaker(reader, pdfDocument);
-            for (OfdPageVo ofdPageVo : ofdPageVoList) {
-                start = System.currentTimeMillis();
-                pdfMaker.makePage(ofdPageVo);
-                end = System.currentTimeMillis();
-                logger.info(String.format("page %d speed time %d", pageNum++, end - start));
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            switch (lib) {
+                case iText: {
+                    try (PdfWriter pdfWriter = new PdfWriter(bos);
+                         PdfDocument pdfDocument = new PdfDocument(pdfWriter);) {
+                        long start;
+                        long end;
+                        int pageNum = 1;
+                        ItextMaker pdfMaker = new ItextMaker(reader);
+                        for (PageInfo pageInfo :  reader.getPageList()) {
+                            start = System.currentTimeMillis();
+                            pdfMaker.makePage(pdfDocument, pageInfo);
+                            end = System.currentTimeMillis();
+                            logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
+                        }
+                    }
+                    break;
+                }
+                case PDFBox: {
+                    try (PDDocument pdfDocument = new PDDocument();) {
+                        PdfboxMaker pdfMaker = new PdfboxMaker(reader, pdfDocument);
+                        long start = 0, end = 0, pageNum = 1;
+                        for (PageInfo pageInfo : reader.getPageList()) {
+                            start = System.currentTimeMillis();
+                            pdfMaker.makePage(pageInfo);
+                            end = System.currentTimeMillis();
+                            logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
+                        }
+                        pdfDocument.save(bos);
+                    }
+                }
             }
 
             if (output instanceof OutputStream) {
-                pdfDocument.save((OutputStream) output);
+                bos.writeTo((OutputStream) output);
             } else if (output instanceof File) {
-                pdfDocument.save((File) output);
+                FileOutputStream fileOutputStream = new FileOutputStream((File) output);
+                bos.writeTo(fileOutputStream);
             } else if (output instanceof String) {
-                pdfDocument.save((String) output);
+                FileOutputStream fileOutputStream = new FileOutputStream(new File((String) output));
+                bos.writeTo(fileOutputStream);
             } else if (output instanceof Path) {
-                pdfDocument.save(Files.newOutputStream((Path) output));
+                bos.writeTo(Files.newOutputStream((Path) output));
             } else {
                 throw new IllegalArgumentException("不支持的输出格式(output)，仅支持OutputStream、Path、File、String");
             }
@@ -85,15 +125,13 @@ public class ConvertHelper {
                 if (reader != null) {
                     reader.close();
                 }
-                if (pdfDocument != null) {
-                    pdfDocument.close();
-                }
             } catch (IOException e) {
                 logger.error("close OFDReader failed", e);
             }
 
         }
     }
+
 
     /**
      * 转PDF
@@ -176,27 +214,21 @@ public class ConvertHelper {
      * @param deleteOnClose    退出时是否删除 unzippedPathRoot 文件，true - 退出时删除；false - 不删除
      */
     public static void toPdf(String unzippedPathRoot, String output, boolean deleteOnClose) {
-        DLOFDReader reader = null;
+        OFDReader reader = null;
         PDDocument pdfDocument = null;
         try {
-            reader = new DLOFDReader(unzippedPathRoot, deleteOnClose);
+            reader = new OFDReader(unzippedPathRoot, deleteOnClose);
             pdfDocument = new PDDocument();
 
-            List<OfdPageVo> ofdPageVoList = reader.getOFDDocumentVo().getOfdPageVoList();
-
-            long start;
-            long end;
-            int pageNum = 1;
-
             PdfboxMaker pdfMaker = new PdfboxMaker(reader, pdfDocument);
-            for (OfdPageVo ofdPageVo : ofdPageVoList) {
+            List<PageInfo> ofdPageVoList = reader.getPageList();
+            long start = 0, end = 0, pageNum = 1;
+            for (PageInfo pageInfo : ofdPageVoList) {
                 start = System.currentTimeMillis();
-                pdfMaker.makePage(ofdPageVo);
+                pdfMaker.makePage(pageInfo);
                 end = System.currentTimeMillis();
-                logger.info(String.format("page %d speed time %d", pageNum++, end - start));
+                logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
             }
-
-
             pdfDocument.save(output);
 
         } catch (IllegalArgumentException e) {
@@ -206,11 +238,11 @@ public class ConvertHelper {
             throw new GeneralConvertException(e);
         } finally {
             try {
-                if (reader != null) {
-                    reader.close();
-                }
                 if (pdfDocument != null) {
                     pdfDocument.close();
+                }
+                if (reader != null) {
+                    reader.close();
                 }
             } catch (IOException e) {
                 logger.error("close OFDReader failed", e);

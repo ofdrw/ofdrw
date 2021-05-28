@@ -9,9 +9,9 @@
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw</artifactId>
     <packaging>pom</packaging>
-    <version>1.8.1</version>
+    <version>1.9.6</version>
 
-    <url>https://github.com/Trisia/ofdrw</url>
+    <url>https://github.com/ofdrw/ofdrw</url>
     <description>Open Fixed layout Document Reader And Writer Libary(OFD-RW) provider developers to generate ofd
         document and edit it.
     </description>
@@ -34,7 +34,7 @@
             <id>ofdrw</id>
             <name>OFD Reader And Writer</name>
             <email>quanguanyu@qq.com</email>
-            <url>https://github.com/Trisia</url>
+            <url>https://github.com/ofdrw</url>
         </developer>
     </developers>
 
@@ -49,15 +49,15 @@
 
     <licenses>
         <license>
-            <name>MIT License</name>
-            <url>https://github.com/Trisia/ofdrw/blob/master/LICENSE</url>
+            <name>Apache License 2.0</name>
+            <url>https://github.com/ofdrw/ofdrw/blob/master/LICENSE</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
 
     <scm>
-        <url>https://github.com/Trisia/ofdrw.git</url>
-        <connection>scm:git:https://github.com/Trisia/ofdrw.git</connection>
+        <url>https://github.com/ofdrw/ofdrw.git</url>
+        <connection>scm:git:https://github.com/ofdrw/ofdrw.git</connection>
     </scm>
 
     <distributionManagement>
@@ -96,7 +96,7 @@
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.6</version>
+                <version>2.8.0</version>
             </dependency>
 
         </dependencies>
@@ -164,6 +164,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-release-plugin</artifactId>
+                        <version>2.5.3</version>
                     </plugin>
                     <!-- 构建时跳过单元测试 -->
                     <plugin>

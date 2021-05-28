@@ -16,6 +16,7 @@ import org.ofdrw.layout.engine.ResManager;
 import org.ofdrw.layout.engine.render.RenderException;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.PageDir;
+import org.ofdrw.pkg.container.VirtualContainer;
 import org.ofdrw.reader.BadOFDException;
 import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.ResourceLocator;
@@ -96,7 +97,7 @@ public class AnnotationRender {
      * @param pageInfo 需要渲染注释的页面信息
      * @param build    注释对象构造器
      * @throws RenderException 渲染发生错误
-     * @throws IOException 文件操作异常
+     * @throws IOException     文件操作异常
      */
     public void render(PageInfo pageInfo, Annotation build) throws RenderException, IOException {
         Drawer drawer = build.getDrawer();
@@ -130,20 +131,22 @@ public class AnnotationRender {
          * 获取页面所处容器
          */
         String pageContainerPath = pageInfo.getPageAbsLoc().parent();
-        PageDir pageDir;
-        try {
-            pageDir = (PageDir) rl.getContainer(pageContainerPath);
-        } catch (FileNotFoundException e) {
-            throw new BadOFDException("错误的OFD结构无法获取到" + pageContainerPath, e);
-        }
+
 
         if (annotContainer == null) {
+            VirtualContainer pageDir;
+            try {
+                pageDir = rl.getContainer(pageContainerPath);
+            } catch (FileNotFoundException e) {
+                throw new BadOFDException("错误的OFD结构无法获取到" + pageContainerPath, e);
+            }
             // 创建 分页注释文件 PageAnnot
             annotContainer = new PageAnnot();
             pageDir.putObj(PageDir.AnnotationFileName, annotContainer);
             // 重新设置分页注释条目位置为页面所处位置加上文件名
             record.setFileLoc(new ST_Loc(pageContainerPath).cat(PageDir.AnnotationFileName));
         }
+
         // 获取注解对象，设置ID
         Annot annot = build.build();
         annot.setObjID(maxUnitID.incrementAndGet());

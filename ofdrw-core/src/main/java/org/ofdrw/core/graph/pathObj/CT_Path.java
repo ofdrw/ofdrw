@@ -237,4 +237,20 @@ public class CT_Path extends CT_GraphicUnit<CT_Path> implements ClipAble {
         return e == null ? null : e.getText();
     }
 
+    /**
+     * 【必选】
+     * 获取 图形轮廓数据对象
+     * <p>
+     * 由一系列紧缩的操作符和操作数构成
+     *
+     * @return 图形轮廓数据对象
+     */
+    public AbbreviatedData getAbbreviatedDataEle() {
+        Element e = this.getOFDElement("AbbreviatedData");
+        if (e != null) {
+            return new AbbreviatedData(e);
+        }
+        return null;
+    }
+
 }

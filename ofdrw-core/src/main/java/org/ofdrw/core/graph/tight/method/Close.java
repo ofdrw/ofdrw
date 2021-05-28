@@ -18,4 +18,10 @@ public class Close extends Command {
     public Close() {
         super("Close");
     }
+
+
+    @Override
+    public String toString() {
+        return "C";
+    }
 }
