@@ -6,7 +6,9 @@ import com.itextpdf.io.font.FontProgramFactory;
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
+import org.apache.commons.io.IOUtils;
 import org.apache.fontbox.ttf.*;
+import org.ofdrw.converter.font.PdfFontWrapper;
 import org.ofdrw.converter.utils.OSinfo;
 import org.ofdrw.converter.utils.StringUtils;
 import org.ofdrw.core.basicType.ST_Loc;
@@ -293,7 +295,7 @@ public final class FontLoader {
      * @param ctFont 字体对象
      * @return 字体或null
      */
-    public PdfFont loadPDFFont(ResourceLocator rl, CT_Font ctFont) {
+    public PdfFontWrapper loadPDFFont(ResourceLocator rl, CT_Font ctFont) {
         if (ctFont == null) {
             return null;
         }
@@ -307,17 +309,45 @@ public final class FontLoader {
                 fontAbsPath = getSystemFontPath(ctFont.getFamilyName(), ctFont.getFontName());
             }
             if (fontAbsPath == null) {
-                return null;
+//                return null;
+                throw new IOException();
             }
             // 即便设置不缓存，任然会出现文件没有关闭的问题。
             // 因此，读取到内存防止因为 FontProgram 的缓存导致无法删除临时OFD文件的问题。
             final byte[] fontBin = Files.readAllBytes(Paths.get(fontAbsPath));
-            FontProgram fontProgram  = FontProgramFactory.createFont(fontBin,false);
-            return PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, true);
+            FontProgram fontProgram = FontProgramFactory.createFont(fontBin, false);
+            return new PdfFontWrapper(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, true));
+
         } catch (Exception e) {
             log.info("无法加载字体 {} {} {}，原因:{}",
-                    ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
-                    e.getMessage());
+                ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
+                e.getMessage());
+
+            try {
+                PdfFont df;
+                String name = ctFont.getFontName().toLowerCase();
+                String fontName;
+                byte[] font;
+                if (name.contains("simfang") || name.contains("仿宋"))
+                    fontName = "fonts/SIMFANG.ttf";
+                else if (name.contains("kai") || name.contains("楷"))
+                    fontName = "fonts/simkai.ttf";
+                else if (name.contains("hei") || name.contains("simhei") || name.contains("黑体"))
+                    fontName = "fonts/simhei.ttf";
+                else if (name.contains("标宋"))
+                    fontName = "fonts/方正小标宋简体.ttf";
+                else
+                    fontName = "fonts/simsun.ttf";
+
+                font = IOUtils.toByteArray(this.getClass().getClassLoader().getResourceAsStream(fontName));
+                df = PdfFontFactory.createFont(font, PdfEncodings.IDENTITY_H, false);
+
+                log.info("已使用 {} 字体替代 {}", fontName, ctFont.getFontName());
+                return new PdfFontWrapper(df, true);
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+
             return null;
         }
     }
