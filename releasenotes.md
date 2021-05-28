@@ -2,6 +2,15 @@
 
 ## 进展
 
+## Version 1.9.7 2021-5-28 22:16:44
+
+> Alias: Re:Zero
+
+修复：
+
+- PDF转换TTC格式字体加载失败问题。
+- 修复PDF转换字体无法加载时使用相近字体替代。
+
 ## Version 1.9.6 2021-5-26 22:05:33
 
 > Alias: TheJourneyofElaina
