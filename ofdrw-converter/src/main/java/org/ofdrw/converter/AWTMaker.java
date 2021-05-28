@@ -407,6 +407,9 @@ public abstract class AWTMaker {
         ST_Box boundary = textObject.getBoundary();
         Matrix baseMatrix = renderBoundaryAndSetClip(graphics, boundary, parentMatrix);
 
+        BasicStroke basicStroke = new BasicStroke(getLineWidth(textObject, drawParams).floatValue()*15,0,0);
+        graphics.setStroke(basicStroke);
+
         // 读取字体
         TrueTypeFont typeFont = getFont(textObject);
         List<Number> fontMatrix = null;
@@ -543,7 +546,7 @@ public abstract class AWTMaker {
         if (shape == null) return;
         graphics.setClip(null);
         graphics.setTransform(MatrixUtils.createAffineTransform(m));
-        graphics.setStroke(new BasicStroke(0.1f));
+//        graphics.setStroke(new BasicStroke(0.1f));
         graphics.setColor(Color.BLACK);
         graphics.setBackground(Color.white);
         if (stroke != null) {
