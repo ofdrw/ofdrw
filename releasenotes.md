@@ -2,6 +2,16 @@
 
 ## 进展
 
+## Version 1.9.8 2021-5-31 19:08:43
+
+> Alias: MEGALOBOX
+
+修复：
+
+- `FontLoader`：
+  - 对于系统字体不再使用嵌入式字体的加载方式。 
+  - 增加了开关用于控制强制启用加载字体为嵌入式字体。`FontLoader#enableForceEmbedded`
+
 ## Version 1.9.7 2021-5-28 22:16:44
 
 > Alias: Re:Zero
