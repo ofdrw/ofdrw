@@ -49,6 +49,10 @@ public final class FontLoader {
     private static TrueTypeFont defaultFont;
 
     private static FontLoader instance = null;
+    /**
+     * 设置强制加载字体为嵌入字体
+     */
+    private boolean forceEmbedded = false;
 
     private FontLoader() {
     }
@@ -64,6 +68,17 @@ public final class FontLoader {
             // 初始化加载字体信息
             instance.init();
         }
+    }
+
+    /**
+     * 启用强制 加载字体为嵌入式字体
+     *
+     * @return 实例
+     */
+    public static FontLoader enableForceEmbedded() {
+        FontLoader instance = getInstance();
+        instance.forceEmbedded = true;
+        return instance;
     }
 
     public static FontLoader getInstance() {
@@ -317,27 +332,33 @@ public final class FontLoader {
         try {
             ST_Loc fontFileLoc = ctFont.getFontFile();
             String fontAbsPath = null;
+            boolean embedded = true;
             if (fontFileLoc != null) {
                 // 通过资源加载器获取文件的绝对路径
                 fontAbsPath = rl.getFile(fontFileLoc).toAbsolutePath().toString();
             } else {
                 fontAbsPath = getSystemFontPath(ctFont.getFamilyName(), ctFont.getFontName());
+                embedded = false;
             }
             if (fontAbsPath == null) {
                 throw new FileNotFoundException("无法在OFD内找到字体 " + fontAbsPath);
             }
             FontProgram fontProgram = null;
             // 解决TTC无法加载问题
-            if (fontAbsPath.toLowerCase().endsWith(".ttc")){
+            if (fontAbsPath.toLowerCase().endsWith(".ttc")) {
                 fontAbsPath = fontAbsPath + ",0";
                 fontProgram = FontProgramFactory.createFont(fontAbsPath, false);
-            }else{
+            } else {
                 // 即便设置不缓存，任然会出现文件没有关闭的问题。
                 // 因此，读取到内存防止因为 FontProgram 的缓存导致无法删除临时OFD文件的问题。
                 final byte[] fontBin = Files.readAllBytes(Paths.get(fontAbsPath));
                 fontProgram = FontProgramFactory.createFont(fontBin, false);
             }
-            return new PdfFontWrapper(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, true));
+            if (forceEmbedded) {
+                // 强制加载为嵌入式字体
+                embedded =  true;
+            }
+            return new PdfFontWrapper(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, embedded));
         } catch (Exception e) {
             log.info("无法加载字体 {} {} {}，原因:{}",
                     ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
@@ -360,7 +381,8 @@ public final class FontLoader {
 
                 }
                 font = IOUtils.toByteArray(this.getClass().getClassLoader().getResourceAsStream(fontName));
-                df = PdfFontFactory.createFont(font, PdfEncodings.IDENTITY_H, false);
+                boolean embedded = forceEmbedded ? true : false;
+                df = PdfFontFactory.createFont(font, PdfEncodings.IDENTITY_H, embedded);
                 log.info("已使用 {} 字体替代 {}", fontName, ctFont.getFontName());
                 return new PdfFontWrapper(df, true);
             } catch (IOException ee) {
