@@ -55,6 +55,7 @@ public class SignCleaner {
      * 该操作会关闭Reader
      *
      * @throws IOException 文件操作异常
+     * @throws DocumentException 文档结构无法解析
      */
     public void clean() throws IOException, DocumentException {
         final OFDDir ofdDir = reader.getOFDDir();

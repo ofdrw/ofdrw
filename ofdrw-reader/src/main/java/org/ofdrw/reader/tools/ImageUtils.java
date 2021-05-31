@@ -97,6 +97,7 @@ public class ImageUtils {
      * @param r 红色通道
      * @param g 绿色通道
      * @param b 蓝色通道
+     * @return 灰度值
      */
     public static int gray(int r, int g, int b) {
         return (r * 19595 + g * 38469 + b * 7472) >> 16;
@@ -108,6 +109,7 @@ public class ImageUtils {
      * @param width         图形宽度
      * @param height        图像高度
      * @param isTransparent 是否透明
+     * @return 图片对象
      */
     public static BufferedImage createImage(int width, int height, boolean isTransparent) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -128,6 +130,7 @@ public class ImageUtils {
      *
      * @param in   输入图片
      * @param gray 灰度阈值
+     * @return 清空背景的图片
      * @deprecated
      */
     public static BufferedImage clearWhiteBackground(BufferedImage in, int gray) {

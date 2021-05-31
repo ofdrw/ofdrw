@@ -167,9 +167,9 @@ public abstract class AWTMaker {
                     m1 = MatrixUtils.scale(m1, fx, fy);
                     m1 = MatrixUtils.move(m1, stBox.getTopLeftX() + clip.getTopLeftX(), stBox.getTopLeftY() + clip.getTopLeftY());
                     m1 = MatrixUtils.scale(m1, ppm, ppm);
-                    graphics.setClip((int)  m1.getAsDouble(2, 0), (int) m1.getAsDouble(2, 1),
-                            (int) (stampImage.getWidth() * m1.getAsDouble(0, 0) * (clip.getWidth()/ stBox.getWidth())),
-                            (int) (stampImage.getHeight() *  m1.getAsDouble(1, 1) * (clip.getHeight()/ stBox.getHeight())));
+                    graphics.setClip((int) m1.getAsDouble(2, 0), (int) m1.getAsDouble(2, 1),
+                            (int) (stampImage.getWidth() * m1.getAsDouble(0, 0) * (clip.getWidth() / stBox.getWidth())),
+                            (int) (stampImage.getHeight() * m1.getAsDouble(1, 1) * (clip.getHeight() / stBox.getHeight())));
                 }
                 graphics.setComposite(getStampComposite());
                 graphics.drawImage(stampImage, MatrixUtils.createAffineTransform(m), null);
@@ -183,6 +183,8 @@ public abstract class AWTMaker {
 
     /**
      * 印章混合模式
+     *
+     * @return 正片叠底复合对象
      */
     protected Composite getStampComposite() {
         // 正片叠底
