@@ -29,6 +29,13 @@ public class VirtualPage {
      */
     private List<Div> content = new LinkedList<>();
 
+    /**
+     * 插入的虚拟页面页码（插入位置）
+     * <p>
+     * 仅在不为空时候表示需要将插入到指定页码位置。
+     */
+    private Integer pageNum = null;
+
     protected VirtualPage() {
     }
 
@@ -58,7 +65,7 @@ public class VirtualPage {
         if (d == null) {
             return this;
         }
-        if (d.getFloat() != AFloat.left){
+        if (d.getFloat() != AFloat.left && Position.Absolute == d.getPosition()) {
             System.err.println("虚拟页面下不支持浮动属性，仅支持绝对定位");
         }
         if (d.getPosition() != Position.Absolute) {
@@ -80,6 +87,29 @@ public class VirtualPage {
 
     VirtualPage setContent(List<Div> content) {
         this.content = content;
+        return this;
+    }
+
+    /**
+     * 获取虚拟页面页码
+     *
+     * @return 页码（从1起）
+     */
+    public Integer getPageNum() {
+        return pageNum;
+    }
+
+    /**
+     * 设置虚拟页面页码
+     *
+     * @param pageNum 页码（从1起）
+     * @return this
+     */
+    public VirtualPage setPageNum(int pageNum) {
+        if(pageNum <= 0){
+            throw new IllegalArgumentException("虚拟页面页码(pageNum)错误");
+        }
+        this.pageNum = pageNum;
         return this;
     }
 }

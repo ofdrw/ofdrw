@@ -81,6 +81,8 @@ public class Paragraph extends Div {
     /**
      * 新建一个段落对象
      *
+     * 如果在指定段落中文字大小建议使用{@link Paragraph#Paragraph(java.lang.String, java.lang.Double)}
+     *
      * @param text 文字内容
      */
     public Paragraph(String text) {
@@ -88,6 +90,21 @@ public class Paragraph extends Div {
         if (text == null) {
             throw new IllegalArgumentException("文字内容为null");
         }
+        this.add(text);
+    }
+
+    /**
+     * 新建一个段落对象，并指定文字大小
+     *
+     * @param text            文字内容
+     * @param defaultFontSize 默认字体大小。
+     */
+    public Paragraph(String text, Double defaultFontSize) {
+        this();
+        if (text == null) {
+            throw new IllegalArgumentException("文字内容为null");
+        }
+        this.setFontSize(defaultFontSize);
         this.add(text);
     }
 
@@ -149,6 +166,17 @@ public class Paragraph extends Div {
         return defaultFontSize;
     }
 
+    /**
+     * 设置段落内默认的字体大小
+     * <p>
+     * 如果加入的文字没有设置大小，那么默认使用该值。
+     * <p>
+     * 注意：该操作不会对段落内已经存在的文字生效，
+     * 因此在添加文字之后，在调用该方法，原有的文字大小不会变换。
+     *
+     * @param defaultFontSize 默认字体大小
+     * @return this
+     */
     public Paragraph setFontSize(Double defaultFontSize) {
         this.defaultFontSize = defaultFontSize;
         return this;

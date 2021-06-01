@@ -475,6 +475,36 @@ public class Div implements RenderPrepare, ElementSplit {
         return this;
     }
 
+    /**
+     * 设置位置
+     *
+     * @param x 左上角X坐标
+     * @param y 左上角Y坐标
+     * @return this
+     */
+    public Div setXY(Double x, Double y) {
+        setX(x);
+        setY(y);
+        return this;
+    }
+
+    /**
+     * 设置盒式模型的主要属性
+     *
+     * @param x      左上角X坐标
+     * @param y      左上角Y坐标
+     * @param width  宽度
+     * @param height 高度
+     * @return this
+     */
+    public Div setBox(Double x, Double y, Double width, Double height) {
+        setX(x);
+        setY(y);
+        setWidth(width);
+        setHeight(height);
+        return this;
+    }
+
     public Clear getClear() {
         return clear;
     }
@@ -488,6 +518,15 @@ public class Div implements RenderPrepare, ElementSplit {
         return aFloat;
     }
 
+    /**
+     * 设置浮动样式
+     * <p>
+     * 注意：如果需要设置居中，那么还需要同时设置 {@link #setClear(Clear)}
+     * 为{@link Clear#none}或{@link Clear#right}
+     *
+     * @param aFloat 浮动样式
+     * @return this
+     */
     public Div setFloat(AFloat aFloat) {
         this.aFloat = aFloat;
         return this;

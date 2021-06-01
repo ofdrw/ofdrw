@@ -504,7 +504,9 @@ public class OFDDoc implements Closeable {
                 VPageParseEngine parseEngine = new VPageParseEngine(pageLayout, docDefault, prm, MaxUnitID);
                 // 解析虚拟页面
                 parseEngine.process(vPageList);
-            } else if (annotationRender == null && reader == null) {
+            }
+
+            if (vPageList.isEmpty() && annotationRender == null && reader == null) {
                 // 虚拟页面为空，也没有注解对象，也不是编辑模式，那么空的操作报错
                 throw new IllegalStateException("OFD文档中没有页面，无法生成OFD文档");
             }

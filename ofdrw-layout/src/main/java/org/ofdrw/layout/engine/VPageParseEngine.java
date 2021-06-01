@@ -106,8 +106,13 @@ public class VPageParseEngine {
                 // 执行页面编辑
                 pageEdit((AdditionVPage) virtualPage);
             } else {
+                PageDir pageDir = null;
                 // 创建一个全新的页面容器对象
-                PageDir pageDir = newPage();
+                if (virtualPage.getPageNum() == null){
+                    pageDir = newPage();
+                }else{
+                    pageDir = addNewPage(virtualPage.getPageNum() - 1);
+                }
                 // 解析虚拟页面，并加入到容器中
                 convertPageContent(virtualPage, pageDir);
             }
@@ -195,7 +200,30 @@ public class VPageParseEngine {
         // 设置页面index与页面定位路径一致
         PageDir pageDir = pagesDir.newPageDir();
         String pageLoc = String.format("Pages/Page_%d/Content.xml", pageDir.getIndex());
-        pages.addPage(new Page(maxUnitID.incrementAndGet(), pageLoc));
+        final Page page = new Page(maxUnitID.incrementAndGet(), pageLoc);
+        pages.addPage(page);
+        return pageDir;
+    }
+
+    /**
+     * 添加页面到指定页码
+     *
+     * @param index 页码Index （页码 - 1）
+     * @return 页面容器
+     */
+    private PageDir addNewPage(int index) {
+        // 设置页面index与页面定位路径一致
+        PageDir pageDir = pagesDir.newPageDir();
+        String pageLoc = String.format("Pages/Page_%d/Content.xml", pageDir.getIndex());
+        final Page page = new Page(maxUnitID.incrementAndGet(), pageLoc);
+        final int size = pages.getSize();
+        // 防止页码越界
+        if (index <= 0) {
+            index = 0;
+        } else if (index >= size) {
+            index = size;
+        }
+        pages.elements().add(index, page);
         return pageDir;
     }
 
