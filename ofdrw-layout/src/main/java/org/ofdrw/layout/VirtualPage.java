@@ -58,14 +58,14 @@ public class VirtualPage {
     /**
      * 向虚拟页面中加入对象
      *
-     * @param d 对象
+     * @param d 采用绝对定位的元素
      * @return this
      */
     public VirtualPage add(Div d) {
         if (d == null) {
             return this;
         }
-        if (d.getFloat() != AFloat.left && Position.Absolute == d.getPosition()) {
+        if (d.getFloat() != AFloat.left) {
             System.err.println("虚拟页面下不支持浮动属性，仅支持绝对定位");
         }
         if (d.getPosition() != Position.Absolute) {
@@ -106,7 +106,7 @@ public class VirtualPage {
      * @return this
      */
     public VirtualPage setPageNum(int pageNum) {
-        if(pageNum <= 0){
+        if (pageNum <= 0) {
             throw new IllegalArgumentException("虚拟页面页码(pageNum)错误");
         }
         this.pageNum = pageNum;

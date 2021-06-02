@@ -82,7 +82,6 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
         if (this.remainWidth == 0) {
             return false;
         }
-        AFloat aFloat = div.getFloat();
         // 根据段宽度重置加入元素尺寸
         Rectangle blockSize = div.doPrepare(this.width);
         if (blockSize.getWidth() > this.remainWidth) {
@@ -105,27 +104,47 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
             add(div, blockSize);
             return true;
         }
-        // 新加入的元素为居中元素，但是目前的段内不处于居中样式，那么无法加入
-        if (aFloat == AFloat.center && !isCenterFloat()) {
-            return false;
-        }
-        // 排除特殊占有情况
-        Clear clear = div.getClear();
-        if (clear == Clear.left || clear == Clear.right) {
-            for (Div inner : content) {
-                if (clear == Clear.left) {
-                    // clear left 但是left 有元素
-                    if (inner.getFloat() == AFloat.left) {
-                        return false;
+
+        if (!this.isEmpty()) {
+            if (isCenterFloat()) {
+                // 段内含有居中元素:
+                // 1. 新加入元素非居中元素
+                // 2. 新加入元素设置 clear left
+                // 3. 最后一个元素设置 clear right
+                if (div.getFloat() != AFloat.center) {
+                    return false;
+                }
+                if (Clear.left == div.getClear()) {
+                    return false;
+                }
+                if (Clear.right == content.get(content.size() - 1).getClear()) {
+                    return false;
+                }
+            } else {
+                // 段内不含居中元素:
+                // 1. Float == Clear Left: 段内已经含有左浮动元素
+                // 2. Float == Clear Right: 段内已经含有右浮动元素
+                // 3. 新加入元素为居中元素
+                if (AFloat.left == div.getFloat() && Clear.left == div.getClear()) {
+                    for (Div existDiv : content) {
+                        if (existDiv.getFloat() == AFloat.left) {
+                            return false;
+                        }
                     }
-                } else {
-                    // clear right 但是right 有元素
-                    if (inner.getFloat() == AFloat.right) {
-                        return false;
+                }
+                if (AFloat.right == div.getFloat() && Clear.right == div.getClear()) {
+                    for (Div existDiv : content) {
+                        if (existDiv.getFloat() == AFloat.right) {
+                            return false;
+                        }
                     }
+                }
+                if (AFloat.center == div.getFloat()) {
+                    return false;
                 }
             }
         }
+        // 段内不含元素时直接加入
 
         this.remainWidth -= blockSize.getWidth();
         add(div, blockSize);
