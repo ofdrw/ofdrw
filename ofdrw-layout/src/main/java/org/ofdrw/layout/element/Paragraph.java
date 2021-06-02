@@ -507,11 +507,13 @@ public class Paragraph extends Div {
         p1.setLines(seq1)
                 .setMarginBottom(0d)
                 .setBorderBottom(0d)
-                .setPaddingBottom(0d);
+                .setPaddingBottom(0d)
+                .setHeight(sHeight);
         p2.setLines(seq2)
                 .setMarginTop(0d)
                 .setBorderTop(0d)
-                .setPaddingTop(0d);
+                .setPaddingTop(0d)
+                .setHeight(seq2.stream().mapToDouble(TxtLineBlock::getHeight).sum());
         return new Div[]{p1, p2};
     }
 
