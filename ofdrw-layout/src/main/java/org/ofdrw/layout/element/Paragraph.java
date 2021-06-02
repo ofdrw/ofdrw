@@ -12,7 +12,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2020-02-03 01:27:20
  */
-public class Paragraph extends Div {
+public class Paragraph extends Div<Paragraph> {
 
     /**
      * 首行缩进字符数

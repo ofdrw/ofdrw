@@ -22,7 +22,7 @@ import java.util.Iterator;
  * @author 权观宇
  * @since 2020-02-03 03:34:31
  */
-public class Img extends Div {
+public class Img extends Div<Img> {
     /**
      * 图片文件路径
      */

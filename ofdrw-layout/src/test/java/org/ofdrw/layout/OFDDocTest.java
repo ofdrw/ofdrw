@@ -96,8 +96,8 @@ class OFDDocTest {
             });
 
             ofdDoc.addAnnotation(1, annotation);
-            ofdDoc.addAnnotation(3, annotation);
-            ofdDoc.addAnnotation(5, annotation);
+            ofdDoc.addAnnotation(2, annotation);
+            ofdDoc.addAnnotation(2, annotation);
 
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
