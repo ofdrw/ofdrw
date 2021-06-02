@@ -4,7 +4,7 @@
 
 ## Version 1.10.0 2021-6-2 23:20:49
 
-> Alias: HarmonyOS2.0
+> Alias: MissKobayashiDragonMaid
 
 修复：
 
