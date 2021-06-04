@@ -11,10 +11,13 @@ import java.util.Arrays;
 /**
  * 盒式模型基础
  *
+ * 每个继承Div的对象都不必须提供泛型参数T,用于简化链式调用。
+ *
+ * @param <T> 链式调用返还值，Div的子类
  * @author 权观宇
  * @since 2020-02-03 12:46:15
  */
-public class Div implements RenderPrepare, ElementSplit {
+public class Div<T extends Div> implements RenderPrepare, ElementSplit {
 
     /**
      * 背景颜色
@@ -194,7 +197,7 @@ public class Div implements RenderPrepare, ElementSplit {
      * @param opacity 透明度取值区间 [0,1]
      * @return this
      */
-    public Div setOpacity(Double opacity) {
+    public T setOpacity(Double opacity) {
         if (opacity == null) {
         } else if (opacity > 1) {
             opacity = 1d;
@@ -202,48 +205,48 @@ public class Div implements RenderPrepare, ElementSplit {
             opacity = 0d;
         }
         this.opacity = opacity;
-        return this;
+        return (T) this;
     }
 
     public int[] getBorderColor() {
         return borderColor;
     }
 
-    public Div setBorderColor(int r, int g, int b) {
+    public T setBorderColor(int r, int g, int b) {
         this.borderColor = new int[]{r, g, b};
-        return this;
+        return (T) this;
     }
 
-    Div setBorderColor(int[] rgb) {
+    public T setBorderColor(int[] rgb) {
         this.borderColor = rgb;
-        return this;
+        return (T) this;
     }
 
     public Double getTop() {
         return top;
     }
 
-    public Div setTop(Double top) {
+    public T setTop(Double top) {
         this.top = top;
-        return this;
+        return (T) this;
     }
 
     public Position getPosition() {
         return position;
     }
 
-    public Div setPosition(Position position) {
+    public T setPosition(Position position) {
         this.position = position;
-        return this;
+        return (T) this;
     }
 
     public int[] getBackgroundColor() {
         return backgroundColor;
     }
 
-    public Div setBackgroundColor(int r, int g, int b) {
+    public T setBackgroundColor(int r, int g, int b) {
         this.backgroundColor = new int[]{r, g, b};
-        return this;
+        return (T) this;
     }
 
     /**
@@ -261,18 +264,18 @@ public class Div implements RenderPrepare, ElementSplit {
         return width;
     }
 
-    public Div setWidth(Double width) {
+    public T setWidth(Double width) {
         this.width = width;
-        return this;
+        return (T) this;
     }
 
     public Double getHeight() {
         return height;
     }
 
-    public Div setHeight(Double height) {
+    public T setHeight(Double height) {
         this.height = height;
-        return this;
+        return (T) this;
     }
 
     public Double[] getPadding() {
@@ -294,9 +297,9 @@ public class Div implements RenderPrepare, ElementSplit {
      * @param padding 内边距，可变参数。
      * @return this
      */
-    public Div setPadding(Double... padding) {
+    public T setPadding(Double... padding) {
         this.padding = ArrayParamTool.arr4p(padding);
-        return this;
+        return (T) this;
     }
 
     public Double[] getBorder() {
@@ -318,9 +321,9 @@ public class Div implements RenderPrepare, ElementSplit {
      * @param border 边框宽度，可变参数。
      * @return this
      */
-    public Div setBorder(Double... border) {
+    public T setBorder(Double... border) {
         this.border = ArrayParamTool.arr4p(border);
-        return this;
+        return (T) this;
     }
 
     public Double[] getMargin() {
@@ -342,81 +345,81 @@ public class Div implements RenderPrepare, ElementSplit {
      * @param margin 外边距，可变参数。
      * @return this
      */
-    public Div setMargin(Double... margin) {
+    public T setMargin(Double... margin) {
         this.margin = ArrayParamTool.arr4p(margin);
-        return this;
+        return (T) this;
     }
 
     public Double getMarginTop() {
         return margin[0];
     }
 
-    public Div setMarginTop(Double top) {
+    public T setMarginTop(Double top) {
         margin[0] = top;
-        return this;
+        return (T) this;
     }
 
     public Double getMarginRight() {
         return margin[1];
     }
 
-    public Div setMarginRight(Double right) {
+    public T setMarginRight(Double right) {
         margin[1] = right;
-        return this;
+        return (T) this;
     }
 
     public Double getMarginBottom() {
         return margin[2];
     }
 
-    public Div setMarginBottom(Double bottom) {
+    public T setMarginBottom(Double bottom) {
         margin[2] = bottom;
-        return this;
+        return (T) this;
     }
 
     public Double getMarginLeft() {
         return margin[3];
     }
 
-    public Div setMarginLeft(Double left) {
+    public T setMarginLeft(Double left) {
         margin[3] = left;
-        return this;
+        return (T) this;
     }
 
     public Double getBorderTop() {
         return border[0];
     }
 
-    public Div setBorderTop(Double top) {
+    public T setBorderTop(Double top) {
         border[0] = top;
-        return this;
+        return (T) this;
     }
 
     public Double getBorderRight() {
         return border[1];
     }
 
-    public Div setBorderRight(Double right) {
+    public T setBorderRight(Double right) {
         border[1] = right;
-        return this;
+        return (T) this;
     }
 
     public Double getBorderBottom() {
         return border[2];
     }
 
-    public Div setBorderBottom(Double bottom) {
+    public T setBorderBottom(Double bottom) {
         border[2] = bottom;
-        return this;
+        return (T) this;
     }
 
     public Double getBorderLeft() {
         return border[3];
     }
 
-    public Div setBorderLeft(Double left) {
+    public T setBorderLeft(Double left) {
         border[3] = left;
-        return this;
+        return (T) this;
     }
 
 
@@ -424,36 +427,36 @@ public class Div implements RenderPrepare, ElementSplit {
         return padding[0];
     }
 
-    public Div setPaddingTop(Double top) {
+    public T setPaddingTop(Double top) {
         padding[0] = top;
-        return this;
+        return (T) this;
     }
 
     public Double getPaddingRight() {
         return padding[1];
     }
 
-    public Div setPaddingRight(Double right) {
+    public T setPaddingRight(Double right) {
         padding[1] = right;
-        return this;
+        return (T) this;
     }
 
     public Double getPaddingBottom() {
         return padding[2];
     }
 
-    public Div setPaddingBottom(Double bottom) {
+    public T setPaddingBottom(Double bottom) {
         padding[2] = bottom;
-        return this;
+        return (T) this;
     }
 
     public Double getPaddingLeft() {
         return padding[3];
     }
 
-    public Div setPaddingLeft(Double left) {
+    public T setPaddingLeft(Double left) {
         padding[3] = left;
-        return this;
+        return (T) this;
     }
 
 
@@ -461,54 +464,93 @@ public class Div implements RenderPrepare, ElementSplit {
         return x;
     }
 
-    public Div setX(Double x) {
+    public T setX(Double x) {
         this.x = x;
-        return this;
+        return (T) this;
     }
 
     public Double getY() {
         return y;
     }
 
-    public Div setY(Double y) {
+    public T setY(Double y) {
         this.y = y;
-        return this;
+        return (T) this;
+    }
+
+    /**
+     * 设置位置
+     *
+     * @param x 左上角X坐标
+     * @param y 左上角Y坐标
+     * @return this
+     */
+    public T setXY(Double x, Double y) {
+        setX(x);
+        setY(y);
+        return (T) this;
+    }
+
+    /**
+     * 设置盒式模型的主要属性
+     *
+     * @param x      左上角X坐标
+     * @param y      左上角Y坐标
+     * @param width  宽度
+     * @param height 高度
+     * @return this
+     */
+    public T setBox(Double x, Double y, Double width, Double height) {
+        setX(x);
+        setY(y);
+        setWidth(width);
+        setHeight(height);
+        return (T) this;
     }
 
     public Clear getClear() {
         return clear;
     }
 
-    public Div setClear(Clear clear) {
+    public T setClear(Clear clear) {
         this.clear = clear;
-        return this;
+        return (T) this;
     }
 
     public AFloat getFloat() {
         return aFloat;
     }
 
-    public Div setFloat(AFloat aFloat) {
+    /**
+     * 设置浮动样式
+     * <p>
+     * 注意：如果需要设置居中，那么还需要同时设置 {@link #setClear(Clear)}
+     * 为{@link Clear#none}或{@link Clear#right}
+     *
+     * @param aFloat 浮动样式
+     * @return this
+     */
+    public T setFloat(AFloat aFloat) {
         this.aFloat = aFloat;
-        return this;
+        return (T) this;
     }
 
     public Double getLeft() {
         return left;
     }
 
-    public Div setLeft(Double left) {
+    public T setLeft(Double left) {
         this.left = left;
-        return this;
+        return (T) this;
     }
 
     public Double getRight() {
         return right;
     }
 
-    public Div setRight(Double right) {
+    public T setRight(Double right) {
         this.right = right;
-        return this;
+        return (T) this;
     }
 
     /**
@@ -520,9 +562,9 @@ public class Div implements RenderPrepare, ElementSplit {
         return integrity;
     }
 
-    public Div setIntegrity(Boolean integrity) {
+    public T setIntegrity(Boolean integrity) {
         this.integrity = integrity;
-        return this;
+        return (T) this;
     }
 
     /**
@@ -595,9 +637,9 @@ public class Div implements RenderPrepare, ElementSplit {
         return placeholder;
     }
 
-    public Div setPlaceholder(boolean placeholder) {
+    public T setPlaceholder(boolean placeholder) {
         this.placeholder = placeholder;
-        return this;
+        return (T) this;
     }
 
     /**

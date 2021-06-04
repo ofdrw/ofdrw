@@ -443,17 +443,19 @@ public class PointUtil {
                 TextCodePoint textCodePoint = new TextCodePoint(converterDpi(realPos[0]), converterDpi(fixOriginToPdf ? (height - realPos[1]) : realPos[1]), text);
                 textCodePointList.add(textCodePoint);
             }
-        }
-        for (CT_CGTransform cgTransform : cgTransforms) {
-            int pos = cgTransform.getCodePosition();
-            int glyphCount = cgTransform.getGlyphCount();
-            int codeCount = cgTransform.getCodeCount();
-            for (int i = pos; i < glyphCount + pos; i++) {
-                if (textCodePointList.size() <= i) {
-                    String glyphs = textCodePointList.get(textCodePointList.size() - 1).getGlyph() + " " + cgTransform.getGlyphs().getArray().get(i - pos);
-                    textCodePointList.get(textCodePointList.size() - 1).setGlyph(glyphs);
-                } else {
-                    textCodePointList.get(i).setGlyph(cgTransform.getGlyphs().getArray().get(i - pos));
+        }//todo 先按textcode有值
+        if (textCodePointList.size() > 0) {
+            for (CT_CGTransform cgTransform : cgTransforms) {
+                int pos = cgTransform.getCodePosition();
+                int glyphCount = cgTransform.getGlyphCount();
+                int codeCount = cgTransform.getCodeCount();
+                for (int i = pos; i < glyphCount + pos; i++) {
+                    if (textCodePointList.size() <= i) {
+                        String glyphs = textCodePointList.get(textCodePointList.size() - 1).getGlyph() + " " + cgTransform.getGlyphs().getArray().get(i - pos);
+                        textCodePointList.get(textCodePointList.size() - 1).setGlyph(glyphs);
+                    } else {
+                        textCodePointList.get(i).setGlyph(cgTransform.getGlyphs().getArray().get(i - pos));
+                    }
                 }
             }
         }

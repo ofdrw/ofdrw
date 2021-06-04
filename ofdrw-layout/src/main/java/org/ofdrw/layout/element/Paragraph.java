@@ -12,7 +12,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2020-02-03 01:27:20
  */
-public class Paragraph extends Div {
+public class Paragraph extends Div<Paragraph> {
 
     /**
      * 首行缩进字符数
@@ -81,6 +81,8 @@ public class Paragraph extends Div {
     /**
      * 新建一个段落对象
      *
+     * 如果在指定段落中文字大小建议使用{@link Paragraph#Paragraph(java.lang.String, java.lang.Double)}
+     *
      * @param text 文字内容
      */
     public Paragraph(String text) {
@@ -88,6 +90,21 @@ public class Paragraph extends Div {
         if (text == null) {
             throw new IllegalArgumentException("文字内容为null");
         }
+        this.add(text);
+    }
+
+    /**
+     * 新建一个段落对象，并指定文字大小
+     *
+     * @param text            文字内容
+     * @param defaultFontSize 默认字体大小。
+     */
+    public Paragraph(String text, Double defaultFontSize) {
+        this();
+        if (text == null) {
+            throw new IllegalArgumentException("文字内容为null");
+        }
+        this.setFontSize(defaultFontSize);
         this.add(text);
     }
 
@@ -149,6 +166,17 @@ public class Paragraph extends Div {
         return defaultFontSize;
     }
 
+    /**
+     * 设置段落内默认的字体大小
+     * <p>
+     * 如果加入的文字没有设置大小，那么默认使用该值。
+     * <p>
+     * 注意：该操作不会对段落内已经存在的文字生效，
+     * 因此在添加文字之后，在调用该方法，原有的文字大小不会变换。
+     *
+     * @param defaultFontSize 默认字体大小
+     * @return this
+     */
     public Paragraph setFontSize(Double defaultFontSize) {
         this.defaultFontSize = defaultFontSize;
         return this;
@@ -479,11 +507,13 @@ public class Paragraph extends Div {
         p1.setLines(seq1)
                 .setMarginBottom(0d)
                 .setBorderBottom(0d)
-                .setPaddingBottom(0d);
+                .setPaddingBottom(0d)
+                .setHeight(sHeight);
         p2.setLines(seq2)
                 .setMarginTop(0d)
                 .setBorderTop(0d)
-                .setPaddingTop(0d);
+                .setPaddingTop(0d)
+                .setHeight(seq2.stream().mapToDouble(TxtLineBlock::getHeight).sum());
         return new Div[]{p1, p2};
     }
 

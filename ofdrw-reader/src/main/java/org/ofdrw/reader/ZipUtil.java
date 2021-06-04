@@ -25,6 +25,7 @@ public class ZipUtil {
     /**
      * 解压文件到指定目录
      *
+     * @param src 压缩文件流
      * @param descDir 解压到目录
      * @throws IOException 文件操作IO异常
      */

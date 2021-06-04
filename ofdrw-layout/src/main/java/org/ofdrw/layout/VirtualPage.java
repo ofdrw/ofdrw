@@ -1,5 +1,6 @@
 package org.ofdrw.layout;
 
+import org.ofdrw.layout.element.AFloat;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.Position;
 
@@ -28,6 +29,13 @@ public class VirtualPage {
      */
     private List<Div> content = new LinkedList<>();
 
+    /**
+     * 插入的虚拟页面页码（插入位置）
+     * <p>
+     * 仅在不为空时候表示需要将插入到指定页码位置。
+     */
+    private Integer pageNum = null;
+
     protected VirtualPage() {
     }
 
@@ -50,12 +58,15 @@ public class VirtualPage {
     /**
      * 向虚拟页面中加入对象
      *
-     * @param d 对象
+     * @param d 采用绝对定位的元素
      * @return this
      */
     public VirtualPage add(Div d) {
         if (d == null) {
             return this;
+        }
+        if (d.getFloat() != AFloat.left) {
+            System.err.println("虚拟页面下不支持浮动属性，仅支持绝对定位");
         }
         if (d.getPosition() != Position.Absolute) {
             throw new IllegalArgumentException("加入虚拟页面的对象应该采用绝对定位（Position: Absolute）");
@@ -76,6 +87,29 @@ public class VirtualPage {
 
     VirtualPage setContent(List<Div> content) {
         this.content = content;
+        return this;
+    }
+
+    /**
+     * 获取虚拟页面页码
+     *
+     * @return 页码（从1起）
+     */
+    public Integer getPageNum() {
+        return pageNum;
+    }
+
+    /**
+     * 设置虚拟页面页码
+     *
+     * @param pageNum 页码（从1起）
+     * @return this
+     */
+    public VirtualPage setPageNum(int pageNum) {
+        if (pageNum <= 0) {
+            throw new IllegalArgumentException("虚拟页面页码(pageNum)错误");
+        }
+        this.pageNum = pageNum;
         return this;
     }
 }

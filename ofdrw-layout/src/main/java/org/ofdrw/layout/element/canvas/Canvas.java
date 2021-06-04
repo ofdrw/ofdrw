@@ -12,7 +12,7 @@ import org.ofdrw.layout.element.Div;
  * @author 权观宇
  * @since 2020-05-01 11:04:46
  */
-public class Canvas extends Div {
+public class Canvas extends Div<Canvas> {
 
     /**
      * 绘制器

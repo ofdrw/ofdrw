@@ -2,6 +2,42 @@
 
 ## 进展
 
+## Version 1.10.0 2021-6-2 23:20:49
+
+> Alias: MissKobayashiDragonMaid
+
+修复：
+
+- 修复了段落内容分页造成的没有重设高度造成的死循环。
+- 修复Clear和 Float共同作用式发生得到布局错误。
+- 内部布局调用容器直接添加到虚拟页面，而不是add接口，跳过参数检测带来的意料之外的错误提示打印。
+
+新增：
+
+- 修改了Div内大量参数的返还值，现在通过子类也可以对父类的链式调用。
+- Div中加入了快捷的配置方法减少调用者配置负担。
+- 支持了虚拟页面的随意位置插入，[见测试用用例 DocEditDemos#pageInsertTest](./ofdrw-layout/src/test/java/org/ofdrw/layout/DocEditDemos.java)
+- 段落内增加了新的带有字体大小的构造器，引导用户创建字体时进行配置。
+
+## Version 1.9.8 2021-5-31 19:08:43
+
+> Alias: MEGALOBOX
+
+修复：
+
+- `FontLoader`：
+  - 对于系统字体不再使用嵌入式字体的加载方式。 
+  - 增加了开关用于控制强制启用加载字体为嵌入式字体。`FontLoader#enableForceEmbedded`
+
+## Version 1.9.7 2021-5-28 22:16:44
+
+> Alias: Re:Zero
+
+修复：
+
+- PDF转换TTC格式字体加载失败问题。
+- 修复PDF转换字体无法加载时使用相近字体替代。
+
 ## Version 1.9.6 2021-5-26 22:05:33
 
 > Alias: TheJourneyofElaina

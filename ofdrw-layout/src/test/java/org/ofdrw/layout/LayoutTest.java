@@ -13,6 +13,67 @@ import java.nio.file.Paths;
  */
 public class LayoutTest {
 
+    /**
+     * 浮动布局 +  Clear属性
+     */
+    @Test
+    public void testFloatClear() throws Exception {
+        Path path = Paths.get("target/TestFloatClear.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            Div divLeft = new Div(10d, 10d)
+                    .setBackgroundColor(255,0,0)
+                    .setBorder(0.353)
+                    .setClear(Clear.none)
+                    .setFloat(AFloat.left);
+            Div divRight = new Div(10d, 10d)
+                    .setBackgroundColor(0,255,0)
+                    .setBorder(0.353)
+                    .setClear(Clear.none)
+                    .setFloat(AFloat.right);
+            Div divNone =  new Div(10d, 10d)
+                    .setBackgroundColor(0,0,255)
+                    .setBorder(0.353)
+                    .setClear(Clear.none);
+            Div divLeftLeft = new Div(10d, 10d)
+                    .setBackgroundColor(0,255,255)
+                    .setBorder(0.353)
+                    .setClear(Clear.right)
+                    .setFloat(AFloat.right);
+            ofdDoc.add(divLeft)
+                    .add(divRight)
+                    .add(divNone)
+                    .add(divLeftLeft);
+
+        }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+    }
+    /**
+     * 浮动布局测试
+     */
+    @Test
+    public void testFloat() throws Exception {
+        Path path = Paths.get("target/TestFloatLayout.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            Div divLeft = new Div(10d, 10d)
+                    .setBorder(0.353)
+                    .setClear(Clear.none)
+                    .setFloat(AFloat.left);
+            Div divCenter = new Div(10d, 10d)
+                    .setBorder(0.353)
+                    .setClear(Clear.none)
+                    .setFloat(AFloat.center);
+            Div divRight = new Div(10d, 10d)
+                    .setBorder(0.353)
+                    .setClear(Clear.none)
+                    .setFloat(AFloat.right);
+            ofdDoc.add(divLeft)
+                    .add(divCenter)
+                    .add(divRight);
+
+        }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+    }
+
     @Test
     void test1() throws IOException {
         Path path = Paths.get("target/Layout1.ofd");
@@ -157,6 +218,8 @@ public class LayoutTest {
                     .setBorder(1d);
             ofdDoc.add(div1).add(div2).add(div3);
         }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+
     }
 
     @Test
