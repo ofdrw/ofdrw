@@ -26,7 +26,7 @@ public class OFD2PDFTest {
             .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
             .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
 
-        FontLoader.enableSimilarFontReplace();
+        FontLoader.enableSimilarFontReplace(true);
 
         try {
 //            ConvertHelper.toPdf(src, dst);

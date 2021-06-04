@@ -34,7 +34,7 @@ public class OFD2SVGTest {
             .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
             .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
 
-        FontLoader.enableSimilarFontReplace();
+        FontLoader.enableSimilarFontReplace(true);
 
 
         long start = System.currentTimeMillis();
