@@ -30,7 +30,7 @@ public class OFD2PDFTest {
 
         try {
 //            ConvertHelper.toPdf(src, dst);
-            ConvertHelper.toPdf(Paths.get("src/test/resources/signout.ofd"), Paths.get("target/signout.pdf"));
+//            ConvertHelper.toPdf(Paths.get("src/test/resources/signout.ofd"), Paths.get("target/signout.pdf"));
             ConvertHelper.toPdf(Paths.get("src/test/resources/n.ofd"), Paths.get("target/n.pdf"));
 
         } catch (GeneralConvertException e) {

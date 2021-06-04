@@ -25,7 +25,7 @@ import com.itextpdf.kernel.pdf.xobject.PdfImageXObject;
 import com.itextpdf.layout.Canvas;
 import org.apache.commons.io.IOUtils;
 import org.dom4j.Element;
-import org.ofdrw.converter.font.PdfFontWrapper;
+import org.ofdrw.converter.font.FontWrapper;
 import org.ofdrw.converter.point.PathPoint;
 import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.converter.utils.CommonUtil;
@@ -35,7 +35,10 @@ import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
-import org.ofdrw.core.basicType.*;
+import org.ofdrw.core.basicType.ST_Array;
+import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.core.basicType.ST_Pos;
+import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.compositeObj.CT_VectorG;
 import org.ofdrw.core.graph.pathObj.FillColor;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
@@ -68,7 +71,7 @@ import static org.ofdrw.converter.utils.CommonUtil.converterDpi;
  */
 public class ItextMaker {
 
-    private Map<String, PdfFontWrapper> fontCache = new HashMap<>();
+    private Map<String, FontWrapper<PdfFont>> fontCache = new HashMap<>();
 
     private final OFDReader ofdReader;
     /**
@@ -639,8 +642,8 @@ public class ItextMaker {
 
         // 加载字体
         CT_Font ctFont = resMgt.getFont(textObject.getFont().toString());
-        PdfFontWrapper pdfFontWrapper = getFont(resMgt.getOfdReader().getResourceLocator(), ctFont);
-        PdfFont font = pdfFontWrapper.getPdfFont();
+        FontWrapper<PdfFont> pdfFontWrapper = getFont(resMgt.getOfdReader().getResourceLocator(), ctFont);
+        PdfFont font = pdfFontWrapper.getFont();
 
         List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCGTransforms(), compositeObjectBoundary, compositeObjectCTM, textObject.getCTM() != null, textObject.getCTM(), true);
         double rx = 0, ry = 0;
@@ -718,12 +721,12 @@ public class ItextMaker {
      * @param ctFont 字体对象
      * @return 字体
      */
-    private PdfFontWrapper getFont(ResourceLocator rl, CT_Font ctFont) {
+    private FontWrapper<PdfFont> getFont(ResourceLocator rl, CT_Font ctFont) {
         String key = String.format("%s_%s_%s", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile());
         if (fontCache.containsKey(key)) {
             return fontCache.get(key);
         }
-        PdfFontWrapper font = FontLoader.getInstance().loadPDFFontSimilar(rl, ctFont);
+        FontWrapper<PdfFont> font = FontLoader.getInstance().loadPDFFontSimilar(rl, ctFont);
 //        if (font == null) {
 //            font = DEFAULT_FONT;
 //        }

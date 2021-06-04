@@ -4,6 +4,7 @@ import org.apache.fontbox.ttf.GlyphData;
 import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendComposite;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
+import org.ofdrw.converter.font.FontWrapper;
 import org.ofdrw.converter.point.Tuple2;
 import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.converter.utils.MatrixUtils;
@@ -85,7 +86,7 @@ public abstract class AWTMaker {
      * <p>
      * KEY: 字族名_字体名_字体路径
      */
-    private final Map<String, TrueTypeFont> fontCache = new HashMap<>();
+    private final Map<String, FontWrapper<TrueTypeFont>> fontCache = new HashMap<>();
 
     /**
      * 创建图片转换对象实例
@@ -413,7 +414,8 @@ public abstract class AWTMaker {
         graphics.setStroke(basicStroke);
 
         // 读取字体
-        TrueTypeFont typeFont = getFont(textObject);
+        FontWrapper<TrueTypeFont> fontWrapper = getFont(textObject);
+        TrueTypeFont typeFont =fontWrapper.getFont();
         List<Number> fontMatrix = null;
 
         if (typeFont == null) {
@@ -459,7 +461,7 @@ public abstract class AWTMaker {
             if (y == null) y = 0.0;
 
             for (int j = 0; j < textCode.getContent().length(); j++) {
-                if (transPoint == -1 || globalPoint < transforms.get(transPoint).getCodePosition()) {
+                if (transPoint == -1 || globalPoint < transforms.get(transPoint).getCodePosition() || fontWrapper.isEnableSimilarFontReplace()) {
                     if (deltaOffset != -1) {
                         x += (deltaX == null || deltaX.size() < 0) ? 0.0 : (deltaOffset < deltaX.size() ? deltaX.get(deltaOffset) : deltaX.get(deltaX.size() - 1));
                         y += (deltaY == null || deltaY.size() < 0) ? 0.0 : (deltaOffset < deltaY.size() ? deltaY.get(deltaOffset) : deltaY.get(deltaY.size() - 1));
@@ -568,7 +570,7 @@ public abstract class AWTMaker {
      * @param textObject 字体对象
      * @return 字体
      */
-    private TrueTypeFont getFont(TextObject textObject) {
+    private FontWrapper<TrueTypeFont> getFont(TextObject textObject) {
         ST_RefID stRefID = textObject.getFont();
         if (stRefID == null) return null;
 
@@ -583,7 +585,7 @@ public abstract class AWTMaker {
             return fontCache.get(key);
         }
         // 加载字体
-        TrueTypeFont trueTypeFont = FontLoader.getInstance().loadFont(this.reader.getResourceLocator(), ctFont);
+        FontWrapper<TrueTypeFont> trueTypeFont = FontLoader.getInstance().loadFontSimilar(this.reader.getResourceLocator(), ctFont);
         // 更新缓存 即便 trueTypeFont 也设置，不存在字体时(null)重复加载问题。
         fontCache.put(key, trueTypeFont);
         return trueTypeFont;
