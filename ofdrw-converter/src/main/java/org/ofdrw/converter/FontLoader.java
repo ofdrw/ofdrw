@@ -86,9 +86,9 @@ public final class FontLoader {
      *
      * @return 实例
      */
-    public static FontLoader enableSimilarFontReplace() {
+    public static FontLoader enableSimilarFontReplace(boolean enable) {
         FontLoader instance = getInstance();
-        instance.enableSimilarFontReplace = true;
+        instance.enableSimilarFontReplace = enable;
         return instance;
     }
 
