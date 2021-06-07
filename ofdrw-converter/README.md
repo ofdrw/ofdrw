@@ -12,6 +12,7 @@ OFDR&W文档转换支持
 - **OFD `=>` PDF**
 - **OFD `=>` 图片**
 - **OFD `=>` SVG(矢量图形)**
+- **OFD `=>` HTML(SVG实现)**
 
 > SVG相较于图片可以无失真的缩放。
 
@@ -20,6 +21,8 @@ PDF转换概述： 通过对OFD的文档进行解析，使用 Apache Pdfbox生�
 图片转换概述： 通过对OFD的文档进行解析，采用`java.awt`绘制图片，支持转换为`PNG`、`JPEG`图片格式。
 
 SVG矢量图形转换概述： 使用Apache`batik-transcoder`提供的图形绘制实现`java.awt`API绘制，最终生成SVG矢量图形。
+
+HTML转换概述： 使用上述SVG矢量图形转换作为显示效果层A，再将OFD文档中的文字（仅）解析为SVG作为文字复制层B，B置于A层之上，文字颜色transparent，无需关心字体，在移动端同样正常显示。
 
 ## Quick Start
 
@@ -144,3 +147,58 @@ public class HelloWorld {
 效果图如下：
 
 ![转图片效果](./src/test/resources/转换结果.svg)
+
+
+
+### 转换 HTML
+
+> 在移动端能正常显示字体
+
+转换文档你需要:
+
+1. 提供待转换OFD文档。
+2. *配置字体(可选)。
+3. 创建转换转换对象，并设置HTML页面宽度(px)。
+4. 开始转换并存储HTML到文件。
+
+```java
+public class HelloWorld {
+    public static void main(String[] args) {
+        //配置文字映射、文字替换规则（可选）
+        FontLoader.getInstance()
+            .addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
+            .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
+
+            .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+            .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+            .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
+            .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
+            .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
+            .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
+
+        FontLoader.enableSimilarFontReplace(true);
+
+        try {
+
+            //开始转换OFD为HTML
+            ConvertHelper.toHtml(
+                new OFDReader(Paths.get("src/test/resources/n.ofd")),
+                Paths.get("target/n.html").toFile().getAbsolutePath(),
+                1000
+            );
+
+        } catch (GeneralConvertException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+- [测试用例](./src/test/java/OFD2HTMLTest.java)
+
+
+效果图如下：(蓝色为选中可复制文本)
+
+![转图片效果](./src/test/resources/ofd2html.jpg)
+
+

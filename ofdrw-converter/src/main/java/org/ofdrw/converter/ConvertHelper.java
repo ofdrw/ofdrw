@@ -78,7 +78,7 @@ public class ConvertHelper {
                         long end;
                         int pageNum = 1;
                         ItextMaker pdfMaker = new ItextMaker(reader);
-                        for (PageInfo pageInfo :  reader.getPageList()) {
+                        for (PageInfo pageInfo : reader.getPageList()) {
                             start = System.currentTimeMillis();
                             pdfMaker.makePage(pdfDocument, pageInfo);
                             end = System.currentTimeMillis();
@@ -254,12 +254,12 @@ public class ConvertHelper {
     /**
      * 转HTML
      *
-     * @param ofdReader  OFD输入文件
-     * @param output HTML输出文件路径
+     * @param ofdReader   OFD输入文件
+     * @param output      HTML输出文件路径
      * @param screenWidth 页面宽度，或者屏幕宽度
      */
-    public static void toHtml(OFDReader ofdReader, String output,int screenWidth) {
-        HtmlMaker htmlMaker = new HtmlMaker(ofdReader,output,screenWidth);
+    public static void toHtml(OFDReader ofdReader, String output, int screenWidth) {
+        HtmlMaker htmlMaker = new HtmlMaker(ofdReader, output, screenWidth);
         htmlMaker.parse();
     }
 
