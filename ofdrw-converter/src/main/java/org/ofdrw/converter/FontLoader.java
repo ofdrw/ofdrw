@@ -83,10 +83,26 @@ public final class FontLoader {
 
     /**
      * 是否开启 字体替换，替换规则 similarFontReplaceRegexMapping
-     *
+     * @deprecated {@link #setSimilarFontReplace}
      * @return 实例
      */
-    public static FontLoader enableSimilarFontReplace(boolean enable) {
+    @Deprecated
+    public static FontLoader enableSimilarFontReplace() {
+        FontLoader instance = getInstance();
+        instance.enableSimilarFontReplace = true;
+        return instance;
+    }
+
+    /**
+     * 设置是否开启相近字体替换
+     * <p>
+     * 该方法用于在字体无法识别的情况下采用默认的字体进行替换
+     * 防止渲染时字体内容缺失。
+     *
+     * @param enable true - 开启(默认); false - 关闭
+     * @return 实例
+     */
+    public static FontLoader setSimilarFontReplace(boolean enable) {
         FontLoader instance = getInstance();
         instance.enableSimilarFontReplace = enable;
         return instance;
@@ -155,8 +171,8 @@ public final class FontLoader {
     /**
      * 追加相似字体正则匹配规则
      *
-     * @param familyNameRegex      字族名匹配规则
-     * @param fontNameRegex        字体名匹配规则
+     * @param familyNameRegex 字族名匹配规则
+     * @param fontNameRegex   字体名匹配规则
      * @param aliasFamilyName 字族别名
      * @param aliasFontName   字体别名
      * @return this
@@ -247,6 +263,7 @@ public final class FontLoader {
 
     /**
      * 获取配置的 相似字体 对应的字体路径
+     *
      * @param familyName 字族名
      * @param fontName   字体名
      * @return 字体操作系统内绝对路径，如果不存在返还 null
@@ -364,7 +381,7 @@ public final class FontLoader {
      * @return 字体或null
      */
     public TrueTypeFont loadFont(ResourceLocator rl, CT_Font ctFont) {
-        return loadFontSimilar(rl,ctFont).getFont();
+        return loadFontSimilar(rl, ctFont).getFont();
     }
 
     /**
@@ -493,8 +510,8 @@ public final class FontLoader {
         } catch (Exception e) {
 //            e.printStackTrace();
             log.info("无法加载字体 {} {} {}，原因:{}",
-                ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
-                e.getMessage());
+                    ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
+                    e.getMessage());
             //如果是文件中的字体资源加载失败，使用系统中的字体: Type of font is not recognized.
             if (ctFont.getFontFile() != null) {
                 ctFont.setFontFile("");
