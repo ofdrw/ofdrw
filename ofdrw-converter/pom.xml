@@ -19,6 +19,12 @@
     <dependencies>
         <dependency>
             <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-layout</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.ofdrw</groupId>
             <artifactId>ofdrw-gv</artifactId>
             <version>${project.version}</version>
         </dependency>
