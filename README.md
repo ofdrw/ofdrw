@@ -137,9 +137,14 @@ mvn install
 
 ## 参与贡献
 
+参与贡献代码尽量遵守下面代码规约：
+
+1. **原则上禁止`public`方法、类、接口进行删除**：为了保留向下兼容性，如果是更新升级请标注过去已经暴露方法、接口、类为过时标记`@Deprecated`，并注释置新的实现位置`@deprecated {@link SomethingNew}`。
+2. **请为每个`public`方法、类、接口添加注释**：为了保留开发者的便利性，注释一般为多行注释，注释内容需要包含参数以及方法或类的作用、参数意义、返还值以及意义、异常抛出、以及参数意义。
+
 [>> GitHub 第一次参与开源(多语言)](https://github.com/firstcontributions/first-contributions)
 
-> [贡献指南](CONTRIBUTING.md)。
+> - [贡献指南](CONTRIBUTING.md)。
 
 ## 项目情况
 
