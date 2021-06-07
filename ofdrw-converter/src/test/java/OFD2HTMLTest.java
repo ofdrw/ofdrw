@@ -2,7 +2,9 @@ import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.ConvertHelper;
 import org.ofdrw.converter.FontLoader;
 import org.ofdrw.converter.GeneralConvertException;
+import org.ofdrw.reader.OFDReader;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 
 /**
@@ -29,12 +31,14 @@ public class OFD2HTMLTest {
         FontLoader.enableSimilarFontReplace(true);
 
         try {
-//            ConvertHelper.toPdf(src, dst);
-//                        ConvertHelper.toHtml(Paths.get("src/test/resources/1.ofd"), Paths.get("target/signout.pdf"));
-            ConvertHelper.toHtml(Paths.get("src/test/resources/signout.ofd"), Paths.get("target/signout.pdf"));
-//            ConvertHelper.toHtml(Paths.get("src/test/resources/n.ofd"), Paths.get("target/n.pdf"));
 
-        } catch (GeneralConvertException e) {
+            ConvertHelper.toHtml(
+                new OFDReader(Paths.get("src/test/resources/n.ofd")),
+                Paths.get("target/n.html").toFile().getAbsolutePath(),
+                1000
+            );
+
+        } catch (GeneralConvertException | IOException e) {
             e.printStackTrace();
         }
     }

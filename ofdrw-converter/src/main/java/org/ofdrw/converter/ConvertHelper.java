@@ -254,24 +254,13 @@ public class ConvertHelper {
     /**
      * 转HTML
      *
-     * @param input  OFD输入文件
+     * @param ofdReader  OFD输入文件
      * @param output HTML输出文件路径
-     * @throws IllegalArgumentException 参数错误
-     * @throws GeneralConvertException  文档转换过程中异常
+     * @param screenWidth 页面宽度，或者屏幕宽度
      */
-    public static void toHtml(Path input, Path output) {
-        OFDReader reader = null;
-        try {
-             reader =  new OFDReader((Path) input);
-        } catch (IOException e) {
-            e.printStackTrace();
-                throw new IllegalArgumentException("不支持的输入格式(input)，仅支持InputStream、Path、File、String");
-        }
-
-        HtmlMaker htmlMaker = new HtmlMaker(reader, input);
-
+    public static void toHtml(OFDReader ofdReader, String output,int screenWidth) {
+        HtmlMaker htmlMaker = new HtmlMaker(ofdReader,output,screenWidth);
         htmlMaker.parse();
-
     }
 
 }
