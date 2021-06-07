@@ -1,15 +1,9 @@
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.ConvertHelper;
+import org.ofdrw.converter.FontLoader;
 import org.ofdrw.converter.GeneralConvertException;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 public class OFD2PDFTest {
 
@@ -20,10 +14,24 @@ public class OFD2PDFTest {
 //        Path dst = Paths.get("target/1.pdf");
 //        Path src = Paths.get("src/test/resources/zsbk.ofd");
 //        Path dst = Paths.get("target/zsbk.pdf");
+
+        FontLoader.getInstance()
+            .addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
+            .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
+
+            .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+            .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+            .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
+            .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
+            .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
+            .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
+
+        FontLoader.enableSimilarFontReplace(true);
+
         try {
 //            ConvertHelper.toPdf(src, dst);
-            ConvertHelper.toPdf( Paths.get("src/test/resources/signout.ofd"), Paths.get("target/signout.pdf"));
-            ConvertHelper.toPdf( Paths.get("src/test/resources/n.ofd"), Paths.get("target/n.pdf"));
+//            ConvertHelper.toPdf(Paths.get("src/test/resources/signout.ofd"), Paths.get("target/signout.pdf"));
+            ConvertHelper.toPdf(Paths.get("src/test/resources/n.ofd"), Paths.get("target/n.pdf"));
 
         } catch (GeneralConvertException e) {
             e.printStackTrace();

@@ -6,9 +6,8 @@ import com.itextpdf.io.font.FontProgramFactory;
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
-import org.apache.commons.io.IOUtils;
 import org.apache.fontbox.ttf.*;
-import org.ofdrw.converter.font.PdfFontWrapper;
+import org.ofdrw.converter.font.FontWrapper;
 import org.ofdrw.converter.utils.OSinfo;
 import org.ofdrw.converter.utils.StringUtils;
 import org.ofdrw.core.basicType.ST_Loc;
@@ -18,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 /**
  * 字体加载器
@@ -39,20 +40,29 @@ public final class FontLoader {
     private final Map<String, String> pathMapping = new ConcurrentHashMap<>();
     private final Map<String, String> nameMapping = new ConcurrentHashMap<>();
     private final Map<String, String> aliasMapping = new ConcurrentHashMap<>();
-
+    /**
+     * 使用正则匹配映射到系统或嵌入字体
+     */
+    private final Map<String, String> similarFontReplaceRegexMapping = new ConcurrentHashMap<>();
 
     public static final String Separator = "$$$$";
+    public static final String SeparatorRegex = "\\$\\$\\$\\$";
+
     private static final String Empty = "null";
     private static final String DEFAULT_FONT_DIR_MAC = "/System/Library/Fonts";
     private static final String DEFAULT_FONT_DIR_WINDOWS = "C:/Windows/Fonts";
     private static final String DEFAULT_FONT_DIR_LINUX = "/usr/share/fonts";
     private static TrueTypeFont defaultFont;
+    /**
+     * 默认字体资源文件路径
+     */
+    private static final String DEFAULT_FONT_RESOURCE_PATH = "/fonts/simsun.ttf";
+
+    private static final String BUILD_IN_FONT_DIR = "/fonts";
 
     private static FontLoader instance = null;
-    /**
-     * 设置强制加载字体为嵌入字体
-     */
-    private boolean forceEmbedded = false;
+
+    private boolean enableSimilarFontReplace = true;
 
     private FontLoader() {
     }
@@ -70,14 +80,15 @@ public final class FontLoader {
         }
     }
 
+
     /**
-     * 启用强制 加载字体为嵌入式字体
+     * 是否开启 字体替换，替换规则 similarFontReplaceRegexMapping
      *
      * @return 实例
      */
-    public static FontLoader enableForceEmbedded() {
+    public static FontLoader enableSimilarFontReplace(boolean enable) {
         FontLoader instance = getInstance();
-        instance.forceEmbedded = true;
+        instance.enableSimilarFontReplace = enable;
         return instance;
     }
 
@@ -93,7 +104,7 @@ public final class FontLoader {
      * 加载系统字体
      * */
     public void init() {
-        try (InputStream in = FontLoader.class.getResourceAsStream("/fonts/simsun.ttf")) {
+        try (InputStream in = FontLoader.class.getResourceAsStream(DEFAULT_FONT_RESOURCE_PATH)) {
             defaultFont = new TTFParser(true).parse(in);
         } catch (IOException ignored) {
         }
@@ -140,6 +151,40 @@ public final class FontLoader {
         return this;
     }
 
+
+    /**
+     * 追加相似字体正则匹配规则
+     *
+     * @param familyNameRegex      字族名匹配规则
+     * @param fontNameRegex        字体名匹配规则
+     * @param aliasFamilyName 字族别名
+     * @param aliasFontName   字体别名
+     * @return this
+     */
+    public FontLoader addSimilarFontReplaceRegexMapping(String familyNameRegex, String fontNameRegex, String aliasFamilyName, String aliasFontName) {
+
+        if (familyNameRegex == null) {
+            familyNameRegex = Empty;
+        }
+        if (fontNameRegex == null) {
+            fontNameRegex = Empty;
+        }
+        if (aliasFamilyName == null) {
+            aliasFamilyName = Empty;
+        }
+        if (aliasFontName == null) {
+            aliasFontName = Empty;
+        }
+        String key1 = familyNameRegex + Separator + fontNameRegex;
+        String key2 = aliasFamilyName + Separator + aliasFontName;
+        if (pathMapping.get(key2) == null) {
+            log.info("字体别名 [{} {}] -> [{} {}] 不存在", familyNameRegex, fontNameRegex, aliasFamilyName, aliasFontName);
+            return this;
+        }
+        similarFontReplaceRegexMapping.put(key1, key2);
+        return this;
+    }
+
     /**
      * 增加字体映射
      * <p>
@@ -177,22 +222,54 @@ public final class FontLoader {
             familyName = Empty;
         }
         String key = familyName + Separator + fontName;
-        if (aliasMapping.get(key) != null) {
-            return aliasMapping.get(key);
-        }
+
         if (pathMapping.get(key) != null) {
             return pathMapping.get(key);
         }
+
+        if (aliasMapping.get(key) != null) {
+            // return aliasMapping.get(key);
+            String alias = aliasMapping.get(key);
+            if (pathMapping.get(alias) != null) {
+                String sysPath = pathMapping.get(alias);
+                log.info("映射字体 {} {} 为 {} , {}", familyName, fontName, alias.replace(Separator, " "), sysPath);
+                return sysPath;
+            }
+        }
+
         // 尝试使用单独字体名，不含字族名
-        key = Empty + Separator + fontName;
-        if (aliasMapping.get(key) != null) {
-            return aliasMapping.get(key);
-        }
-        if (pathMapping.get(key) != null) {
-            return pathMapping.get(key);
-        }
+        if (!Empty.equals(familyName))
+            return getSystemFontPath(Empty, fontName);
+
         return null;
     }
+
+
+    /**
+     * 获取配置的 相似字体 对应的字体路径
+     * @param familyName 字族名
+     * @param fontName   字体名
+     * @return 字体操作系统内绝对路径，如果不存在返还 null
+     */
+    public String getReplaceSimilarFontPath(String familyName, String fontName) {
+
+        for (String regexKey : similarFontReplaceRegexMapping.keySet()) {
+
+            String[] regexps = regexKey.split(SeparatorRegex);
+            boolean isMatchFamilyName = familyName != null && Pattern.matches(regexps[0], familyName);
+            boolean isMatchFontName = fontName != null && Pattern.matches(regexps[1], fontName);
+            if (isMatchFamilyName || isMatchFontName) {
+                String s = similarFontReplaceRegexMapping.get(regexKey);
+                String sysPath = pathMapping.get(s);
+//                Pattern.compile(".*MiniPro.*").matcher("MiniPro-sad").matches()
+                log.info("替换字体 {} {} 为 {} , {}", familyName, fontName, s.replace(Separator, " "), sysPath);
+                return sysPath;
+            }
+        }
+
+        return null;
+    }
+
 
     /**
      * 尝试从系统字体目录中加载字体
@@ -205,14 +282,16 @@ public final class FontLoader {
         // 尝试获取字体路径
         String fontFilePath = getSystemFontPath(familyName, fontName);
         if (fontFilePath == null) {
-            log.info("加载系统字体失败：[{} {}], 切换至默认字体(宋体)", familyName, fontName);
-            return loadDefaultFont();
+            return null;
+            //如果直接切换为默认字体，字体映射可能会错误
+//            log.info("加载系统字体失败：[{} {}], 切换至默认字体(宋体)", familyName, fontName);
+//            return loadDefaultFont();
         }
         // 加载字体
         TrueTypeFont ttf = loadExternalFont(fontFilePath, familyName, fontName);
-        if (ttf == null) {
-            return loadDefaultFont();
-        }
+//        if (ttf == null) {
+//            return loadDefaultFont();
+//        }
         return ttf;
     }
 
@@ -277,11 +356,25 @@ public final class FontLoader {
     /**
      * 加载字体
      *
+     * <p>
+     * 兼容性保留
+     *
      * @param rl     资源加载器，用于从虚拟容器中取出文件
      * @param ctFont 字体对象
      * @return 字体或null
      */
     public TrueTypeFont loadFont(ResourceLocator rl, CT_Font ctFont) {
+        return loadFontSimilar(rl,ctFont).getFont();
+    }
+
+    /**
+     * 加载字体
+     *
+     * @param rl     资源加载器，用于从虚拟容器中取出文件
+     * @param ctFont 字体对象
+     * @return 字体或null
+     */
+    public FontWrapper<TrueTypeFont> loadFontSimilar(ResourceLocator rl, CT_Font ctFont) {
         if (ctFont == null) {
             return null;
         }
@@ -293,10 +386,33 @@ public final class FontLoader {
                 String fontAbsPath = rl.getFile(ctFont.getFontFile()).toAbsolutePath().toString();
                 trueTypeFont = loadExternalFont(fontAbsPath, ctFont.getFamilyName(), ctFont.getFontName());
             }
-            if (trueTypeFont == null) {
-                trueTypeFont = loadSystemFont(ctFont.getFamilyName(), ctFont.getFontName());
+            CmapLookup cmapLookup = null;
+            try {
+                cmapLookup = trueTypeFont.getUnicodeCmapLookup();
+            } catch (Exception ignore) {
             }
-            return trueTypeFont;
+            boolean hasReplace = false;
+            if (trueTypeFont == null || trueTypeFont.getName() == null || cmapLookup == null) {
+                trueTypeFont = loadSystemFont(ctFont.getFamilyName(), ctFont.getFontName());
+
+                if (trueTypeFont == null && enableSimilarFontReplace) {
+                    String similarFontPath = getReplaceSimilarFontPath(ctFont.getFamilyName(), ctFont.getFontName());
+                    if (similarFontPath != null) {
+                        trueTypeFont = loadExternalFont(similarFontPath, null, null);
+                    }
+                    if (trueTypeFont != null) {
+                        hasReplace = true;
+                    } else {
+                        trueTypeFont = defaultFont;
+                        hasReplace = true;
+                    }
+                }
+//                else{
+//                    trueTypeFont = defaultFont;
+//                }
+
+            }
+            return new FontWrapper<TrueTypeFont>(trueTypeFont, hasReplace);
         } catch (Exception e) {
             log.info("无法加载字体: {} {} {}" + ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile());
             return null;
@@ -313,7 +429,7 @@ public final class FontLoader {
      * @return 字体 或 null
      */
     public PdfFont loadPDFFont(ResourceLocator rl, CT_Font ctFont) {
-        return this.loadPDFFontSimilar(rl, ctFont).getPdfFont();
+        return this.loadPDFFontSimilar(rl, ctFont).getFont();
     }
 
     /**
@@ -325,23 +441,41 @@ public final class FontLoader {
      * @param ctFont 字体对象
      * @return 字体 或 null
      */
-    public PdfFontWrapper loadPDFFontSimilar(ResourceLocator rl, CT_Font ctFont) {
+    public FontWrapper<PdfFont> loadPDFFontSimilar(ResourceLocator rl, CT_Font ctFont) {
         if (ctFont == null) {
             return null;
         }
         try {
             ST_Loc fontFileLoc = ctFont.getFontFile();
             String fontAbsPath = null;
-            boolean embedded = true;
+            boolean hasReplace = false;
             if (fontFileLoc != null) {
                 // 通过资源加载器获取文件的绝对路径
                 fontAbsPath = rl.getFile(fontFileLoc).toAbsolutePath().toString();
             } else {
                 fontAbsPath = getSystemFontPath(ctFont.getFamilyName(), ctFont.getFontName());
-                embedded = false;
+                if (fontAbsPath == null && enableSimilarFontReplace) {
+                    fontAbsPath = getReplaceSimilarFontPath(ctFont.getFamilyName(), ctFont.getFontName());
+                    if (fontAbsPath != null) {
+                        hasReplace = true;
+                    }
+                    //可以增加内建字体文件
+//                    else if(enableBuildInFont){
+//                    }
+                }
             }
+
+            boolean embedded = false;
             if (fontAbsPath == null) {
-                throw new FileNotFoundException("无法在OFD内找到字体 " + fontAbsPath);
+                if (enableSimilarFontReplace) {
+                    URL resource = FontLoader.class.getResource(DEFAULT_FONT_RESOURCE_PATH);
+                    if (resource != null) {
+                        embedded = true;
+                        fontAbsPath = new File(resource.getFile()).getPath();
+                        log.info("使用默认字体替代 {} ,{}", ctFont.getFontName(), fontAbsPath);
+                    }
+                } else
+                    throw new FileNotFoundException("无法在OFD内找到字体 " + fontAbsPath);
             }
             FontProgram fontProgram = null;
             // 解决TTC无法加载问题
@@ -354,39 +488,17 @@ public final class FontLoader {
                 final byte[] fontBin = Files.readAllBytes(Paths.get(fontAbsPath));
                 fontProgram = FontProgramFactory.createFont(fontBin, false);
             }
-            if (forceEmbedded) {
-                // 强制加载为嵌入式字体
-                embedded =  true;
-            }
-            return new PdfFontWrapper(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, embedded));
-        } catch (Exception e) {
-            log.info("无法加载字体 {} {} {}，原因:{}",
-                    ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
-                    e.getMessage());
-            try {
-                PdfFont df;
-                String name = ctFont.getFontName().toLowerCase();
-                String fontName;
-                byte[] font;
-                if (name.contains("simfang") || name.contains("仿宋")) {
-                    fontName = "fonts/SIMFANG.ttf";
-                } else if (name.contains("kai") || name.contains("楷")) {
-                    fontName = "fonts/simkai.ttf";
-                } else if (name.contains("hei") || name.contains("simhei") || name.contains("黑体")) {
-                    fontName = "fonts/simhei.ttf";
-                } else if (name.contains("标宋")) {
-                    fontName = "fonts/方正小标宋简体.ttf";
-                } else {
-                    fontName = "fonts/simsun.ttf";
 
-                }
-                font = IOUtils.toByteArray(this.getClass().getClassLoader().getResourceAsStream(fontName));
-                boolean embedded = forceEmbedded ? true : false;
-                df = PdfFontFactory.createFont(font, PdfEncodings.IDENTITY_H, embedded);
-                log.info("已使用 {} 字体替代 {}", fontName, ctFont.getFontName());
-                return new PdfFontWrapper(df, true);
-            } catch (IOException ee) {
-                ee.printStackTrace();
+            return new FontWrapper(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, embedded), hasReplace);
+        } catch (Exception e) {
+//            e.printStackTrace();
+            log.info("无法加载字体 {} {} {}，原因:{}",
+                ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
+                e.getMessage());
+            //如果是文件中的字体资源加载失败，使用系统中的字体: Type of font is not recognized.
+            if (ctFont.getFontFile() != null) {
+                ctFont.setFontFile("");
+                return loadPDFFontSimilar(rl, ctFont);
             }
 
             return null;
@@ -404,7 +516,7 @@ public final class FontLoader {
     }
 
     /**
-     * 扫描目录下所有字体并加兹安
+     * 扫描目录下所有字体并加载
      *
      * @param dir 目录
      */
