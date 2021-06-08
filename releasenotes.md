@@ -2,6 +2,20 @@
 
 ## 进展
 
+## Version 1.11.0 2021-6-8 21:46:30
+
+>  Alias: Hori-san to Miyamura-kun
+
+修复：
+
+- 颜色空间导致的NPE。
+- 修复在字体无法加载时使用系统字体进行模糊替换的BUG。
+
+新增：
+
+- [OFD转换HTML](./ofdrw-converter/README.md)
+
+
 ## Version 1.10.0 2021-6-2 23:20:49
 
 > Alias: MissKobayashiDragonMaid
