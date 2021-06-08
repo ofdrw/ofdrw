@@ -28,7 +28,7 @@ public class OFD2HTMLTest {
             .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
             .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
 
-        FontLoader.enableSimilarFontReplace(true);
+        FontLoader.setSimilarFontReplace(true);
 
         try {
 

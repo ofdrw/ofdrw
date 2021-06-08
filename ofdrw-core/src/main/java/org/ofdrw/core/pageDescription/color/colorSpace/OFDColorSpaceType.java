@@ -30,6 +30,7 @@ public enum OFDColorSpaceType {
      */
     public static OFDColorSpaceType getInstance(String type) {
       type = (type == null)? "" : type.trim();
+        type = type.toUpperCase();
         switch (type) {
             case "GRAY":
                 return GRAY;

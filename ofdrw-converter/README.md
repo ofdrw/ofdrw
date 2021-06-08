@@ -4,10 +4,11 @@
 > 
 > - *[DLTech21](https://github.com/DLTech21) OFD转换PDF*
 > - *[QAQtutu](https://github.com/QAQtutu) OFD转换图片、SVG。*
+> - *[yuanfangme](https://github.com/yuanfangme) OFD转换HTML。*
 > 
 > *OFDRW社区感谢你们对convert模块的辛勤开发！*
 
-OFDR&W文档转换支持
+OFDR&W文档转换支持：
 
 - **OFD `=>` PDF**
 - **OFD `=>` 图片**

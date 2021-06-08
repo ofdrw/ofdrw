@@ -12,6 +12,8 @@ import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.reader.ResourceManage;
 import org.ujmp.core.Matrix;
 
 import javax.imageio.ImageIO;
@@ -398,6 +400,11 @@ public class CommonUtil {
 //        CFFParser parser = new CFFParser();
 //        return parser.parse(content.toByteArray());
 //    }
+
+    /**
+     * @deprecated see {@link org.ofdrw.converter.ColorConvert#pdfRGB(ResourceManage, CT_Color)}
+     */
+    @Deprecated
     public static com.itextpdf.kernel.colors.Color convertOfdColor(ST_Array colorArray) {
         com.itextpdf.kernel.colors.Color color = null;
         String colorStr = colorArray.toString();

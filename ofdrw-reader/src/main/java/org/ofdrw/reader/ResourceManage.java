@@ -68,6 +68,11 @@ public class ResourceManage {
      */
     private final Map<String, CT_VectorG> compositeGraphicUnitMap = new HashMap<>();
 
+    /**
+     * 文档公共数据结构
+     */
+    private CT_CommonData commonData;
+
 
     private final OFDReader ofdReader;
 
@@ -344,12 +349,21 @@ public class ResourceManage {
      * <p>
      * 注意：资源管理器提供的资源对象均为只读对象（副本），不允许对资源进行修改。
      *
-     * @param id 资源ID
-     * @return 颜色空间，不存在返回null
+     * @param id 资源ID，如果为null则返回 Document.xml CommonData 中的默认颜色空间
+     * @return 颜色空间，不存在返回null(null时默认RGB)
      */
     public CT_ColorSpace getColorSpace(String id) {
+        if (id == null) {
+            ST_RefID defaultCSIdRef = commonData.getDefaultCS();
+            if (defaultCSIdRef == null) {
+                return null;
+            }
+            id = defaultCSIdRef.toString();
+        }
+
         return colorSpaceMap.get(id);
     }
+
 
     /**
      * 获取矢量图形
@@ -424,7 +438,7 @@ public class ResourceManage {
             Document document = rl.get(docRoot, Document::new);
             rl.cd(docRoot.parent());
 
-            final CT_CommonData commonData = document.getCommonData();
+            commonData = new CT_CommonData((Element) document.getCommonData().clone());
             // 公共资源序列（PublicRes）
             loadResFile(rl, commonData.getPublicRes());
             // 文档资源序列（DocumentRes）

@@ -83,8 +83,9 @@ public final class FontLoader {
 
     /**
      * 是否开启 字体替换，替换规则 similarFontReplaceRegexMapping
-     * @deprecated {@link #setSimilarFontReplace}
+     *
      * @return 实例
+     * @deprecated {@link #setSimilarFontReplace}
      */
     @Deprecated
     public static FontLoader enableSimilarFontReplace() {
@@ -495,10 +496,17 @@ public final class FontLoader {
                     throw new FileNotFoundException("无法在OFD内找到字体 " + fontAbsPath);
             }
             FontProgram fontProgram = null;
+            if (fontAbsPath == null) {
+                throw new IllegalArgumentException("无法找到字体路径");
+            }
             // 解决TTC无法加载问题
-            if (fontAbsPath.toLowerCase().endsWith(".ttc")) {
+            final String fileName = fontAbsPath.toLowerCase();
+            if (fileName.endsWith(".ttc")) {
                 fontAbsPath = fontAbsPath + ",0";
                 fontProgram = FontProgramFactory.createFont(fontAbsPath, false);
+            } else if (fileName.endsWith(".ttf") || fileName.endsWith(".otf")) {
+                final byte[] fontBin = Files.readAllBytes(Paths.get(fontAbsPath));
+                fontProgram = new com.itextpdf.io.font.TrueTypeFont(fontBin);
             } else {
                 // 即便设置不缓存，任然会出现文件没有关闭的问题。
                 // 因此，读取到内存防止因为 FontProgram 的缓存导致无法删除临时OFD文件的问题。
