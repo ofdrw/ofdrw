@@ -12,7 +12,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2020-02-03 01:27:20
  */
-public class Paragraph extends Div {
+public class Paragraph extends Div<Paragraph> {
 
     /**
      * 首行缩进字符数
@@ -64,6 +64,14 @@ public class Paragraph extends Div {
                 .setHeight(height);
     }
 
+    /**
+     * 创建一个段落对象
+     * <p>
+     * 注意如果不主动对 Paragraph 设置宽度，那么Paragraph
+     * 会独占整个段，并且与段具有相同宽度，也就是页面宽度，
+     * 在需要更加细致盒式的布局时 请设置{@link #setClear(Clear)}
+     * 并设置段落宽度 {@link #setWidth(Double)}。
+     */
     public Paragraph() {
         this.setClear(Clear.both);
         this.contents = new LinkedList<>();
@@ -73,6 +81,8 @@ public class Paragraph extends Div {
     /**
      * 新建一个段落对象
      *
+     * 如果在指定段落中文字大小建议使用{@link Paragraph#Paragraph(java.lang.String, java.lang.Double)}
+     *
      * @param text 文字内容
      */
     public Paragraph(String text) {
@@ -80,6 +90,21 @@ public class Paragraph extends Div {
         if (text == null) {
             throw new IllegalArgumentException("文字内容为null");
         }
+        this.add(text);
+    }
+
+    /**
+     * 新建一个段落对象，并指定文字大小
+     *
+     * @param text            文字内容
+     * @param defaultFontSize 默认字体大小。
+     */
+    public Paragraph(String text, Double defaultFontSize) {
+        this();
+        if (text == null) {
+            throw new IllegalArgumentException("文字内容为null");
+        }
+        this.setFontSize(defaultFontSize);
         this.add(text);
     }
 
@@ -141,6 +166,17 @@ public class Paragraph extends Div {
         return defaultFontSize;
     }
 
+    /**
+     * 设置段落内默认的字体大小
+     * <p>
+     * 如果加入的文字没有设置大小，那么默认使用该值。
+     * <p>
+     * 注意：该操作不会对段落内已经存在的文字生效，
+     * 因此在添加文字之后，在调用该方法，原有的文字大小不会变换。
+     *
+     * @param defaultFontSize 默认字体大小
+     * @return this
+     */
     public Paragraph setFontSize(Double defaultFontSize) {
         this.defaultFontSize = defaultFontSize;
         return this;
@@ -163,10 +199,11 @@ public class Paragraph extends Div {
     /**
      * 创建新的行
      *
+     * @param width 行宽度
      * @return 行块
      */
-    private TxtLineBlock newLine() {
-        return new TxtLineBlock(getWidth(), lineSpace);
+    private TxtLineBlock newLine(double width) {
+        return new TxtLineBlock(width, lineSpace);
     }
 
 
@@ -298,6 +335,20 @@ public class Paragraph extends Div {
     }
 
     /**
+     * 如果宽度高度不存在那么设置宽度
+     * <p>
+     * 如果已经设置了宽度，该方法不会对该宽度造成影响
+     *
+     * @param width 宽度
+     */
+    private void setWidthIfNotExist(double width) {
+        if (getWidth() == null || getWidth() == 0) {
+            setWidth(width);
+        }
+    }
+
+
+    /**
      * 预布局
      *
      * @param widthLimit 宽度限制
@@ -306,18 +357,20 @@ public class Paragraph extends Div {
     @Override
     public Rectangle doPrepare(Double widthLimit) {
         this.lines.clear();
-        Double width = this.getWidth();
+        Double originW = this.getWidth();
+        // 行内最大可用宽度
+        Double lineMaxAvailableWidth = this.getWidth();
         if (widthLimit == null) {
             throw new NullPointerException("widthLimit为空");
         }
         widthLimit -= widthPlus();
-        if (width == null || (width > widthLimit)) {
+        if (lineMaxAvailableWidth == null || (lineMaxAvailableWidth > widthLimit)) {
             // TODO 尺寸重设警告日志
-            width = widthLimit;
+            lineMaxAvailableWidth = widthLimit;
         }
 
-        setWidth(width);
-        TxtLineBlock line = newLine();
+//        setWidth(width);
+        TxtLineBlock line = newLine(lineMaxAvailableWidth);
         LinkedList<Span> seq = new LinkedList<>(contents);
         // 处理相对列中插入或调整首行缩进占位符
         processPlaceholder(seq);
@@ -328,14 +381,14 @@ public class Paragraph extends Div {
 
             // 获取Span整体的块的大小
             double blockWidth = s.blockSize().getWidth();
-            if (blockWidth > width && s.isIntegrity()) {
+            if (blockWidth > lineMaxAvailableWidth && s.isIntegrity()) {
                 // TODO 警告 不可分割元素如果大于行宽度则忽略
                 continue;
             }
             // 特殊的如果文字可以被分割，但是第一个
             // 文字的大小就已经超过可用最大空间限制
             // 那么丢弃系列文字
-            if (!s.isIntegrity() && width < s.glyphList().get(0).getW()) {
+            if (!s.isIntegrity() && lineMaxAvailableWidth < s.glyphList().get(0).getW()) {
                 continue;
             }
 
@@ -345,7 +398,7 @@ public class Paragraph extends Div {
                 // 如果加入的Span是一个需要占满剩余行空间的元素，那么新起一行
                 if (s.hasLinebreak()) {
                     lines.add(line);
-                    line = newLine();
+                    line = newLine(lineMaxAvailableWidth);
                 }
                 // 成功加入
                 continue;
@@ -354,7 +407,7 @@ public class Paragraph extends Div {
             // 无法加入行内，且Span 不可分割，那么需要换行
             if (s.isIntegrity()) {
                 lines.add(line);
-                line = newLine();
+                line = newLine(lineMaxAvailableWidth);
                 // 重新进入队列
                 seq.push(s);
                 continue;
@@ -369,7 +422,7 @@ public class Paragraph extends Div {
                 seq.push(toNextLineSpan);
             }
             lines.add(line);
-            line = newLine();
+            line = newLine(lineMaxAvailableWidth);
         }
         // 最后一行处理
         if (!line.isEmpty()) {
@@ -381,17 +434,23 @@ public class Paragraph extends Div {
                 .sum();
         // 设置元素高度，如果元素已经预设高度那么则不设置
         setHeightIfNotExist(height);
-        /*
-         * 段落中只有一行的情况，以行内元素确定元素宽度
-         */
-        if (lines.size() == 1) {
-            width = lines.get(0).getWidth();
-            setWidth(width);
+        // clean=both:
+        //  - 宽度: 固定值 widthLimit
+        // clean!=both:
+        //  - 宽度 = null: lineMaxAvailableWidth
+        //  - 宽度 != null: 区间 [宽度, widthLimit]
+        if (this.getClear() == Clear.both) {
+            setWidth(widthLimit);
+        } else if (this.getClear() != Clear.both && originW == null) {
+            double maxWidth = lines.stream().mapToDouble(TxtLineBlock::getWidth).max().getAsDouble();
+            setWidth(maxWidth);
+        } else {
+            setWidth(Math.min(getWidth(), widthLimit));
         }
 
-        width += widthPlus();
-        height += heightPlus();
-        return new Rectangle(width, height);
+        return new Rectangle(
+                getWidth() + widthPlus(),
+                getHeight() + heightPlus());
     }
 
     /**
@@ -448,11 +507,13 @@ public class Paragraph extends Div {
         p1.setLines(seq1)
                 .setMarginBottom(0d)
                 .setBorderBottom(0d)
-                .setPaddingBottom(0d);
+                .setPaddingBottom(0d)
+                .setHeight(sHeight);
         p2.setLines(seq2)
                 .setMarginTop(0d)
                 .setBorderTop(0d)
-                .setPaddingTop(0d);
+                .setPaddingTop(0d)
+                .setHeight(seq2.stream().mapToDouble(TxtLineBlock::getHeight).sum());
         return new Div[]{p1, p2};
     }
 

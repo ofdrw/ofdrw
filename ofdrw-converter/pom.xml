@@ -5,11 +5,16 @@
     <parent>
         <artifactId>ofdrw</artifactId>
         <groupId>org.ofdrw</groupId>
-        <version>1.7.2</version>
+        <version>1.11.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>ofdrw-converter</artifactId>
+
+    <properties>
+        <pdfbox.version>2.0.21</pdfbox.version>
+        <itext.version>7.1.10</itext.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -41,42 +46,51 @@
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>fontbox</artifactId>
+            <version>${pdfbox.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>jbig2-imageio</artifactId>
+            <version>${pdfbox.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.ujmp</groupId>
             <artifactId>ujmp-core</artifactId>
+            <version>0.3.0</version>
+        </dependency>
+
+        <!--用于与slf4j保持桥接-->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.14.1</version>
         </dependency>
 
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>kernel</artifactId>
-            <version>7.1.10</version>
-            <scope>provided</scope>
+            <version>${itext.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>layout</artifactId>
-            <version>7.1.10</version>
-            <scope>provided</scope>
+            <version>${itext.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>font-asian</artifactId>
-            <version>7.1.10</version>
-            <scope>provided</scope>
+            <version>${itext.version}</version>
+        </dependency>
+
+        <!--SVG-->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-transcoder</artifactId>
+            <version>1.14</version>
         </dependency>
     </dependencies>
 </project>

@@ -56,6 +56,13 @@ public class Span implements TextFontInfo {
     private boolean underline = false;
 
     /**
+     * 是否填充
+     * <p>
+     * 默认值为：true
+     */
+    private boolean fill = true;
+
+    /**
      * 文本内容
      */
     private String text;
@@ -78,6 +85,7 @@ public class Span implements TextFontInfo {
     private Boolean integrity = false;
 
     LinkedList<TxtGlyph> txtGlyphsCache = null;
+
 
     protected Span() {
         this.setFont(Font.getDefault());
@@ -121,7 +129,11 @@ public class Span implements TextFontInfo {
      * @return this
      */
     public Span setColor(int r, int g, int b) {
-        this.fillColor = new int[]{r, g, b};
+        this.fillColor = new int[]{
+                r,
+                g,
+                b
+        };
         return this;
     }
 
@@ -189,6 +201,15 @@ public class Span implements TextFontInfo {
         return this;
     }
 
+    public Boolean isFill() {
+        return fill;
+    }
+
+    public Span setFill(boolean fill) {
+        this.fill = fill;
+        return this;
+    }
+
     public String getText() {
         return text;
     }
@@ -221,6 +242,7 @@ public class Span implements TextFontInfo {
         this.integrity = integrity;
         return this;
     }
+
 
     /**
      * 获取字体图形列表
@@ -284,11 +306,12 @@ public class Span implements TextFontInfo {
         if (index < 0 || index >= text.length()) {
             throw new IllegalArgumentException("非法的切分数组坐标(index): " + index);
         }
-        Span s1 = this.clone()
-                .setText(this.text.substring(0, index));
-        Span s2 = this.clone()
-                .setText(this.text.substring(index));
-        return new Span[]{s1, s2};
+        Span s1 = this.clone().setText(this.text.substring(0, index));
+        Span s2 = this.clone().setText(this.text.substring(index));
+        return new Span[]{
+                s1,
+                s2
+        };
     }
 
     /**
@@ -323,8 +346,7 @@ public class Span implements TextFontInfo {
         } else {
             String[] split = this.text.split("\n");
             for (String item : split) {
-                Span lineSpan = this.clone()
-                        .setText(item)
+                Span lineSpan = this.clone().setText(item)
                         // 设置该元素为占满剩下行空间的Span
                         .setLinebreak(true);
                 res.add(lineSpan);
@@ -346,6 +368,7 @@ public class Span implements TextFontInfo {
         span.bold = bold;
         span.italic = italic;
         span.underline = underline;
+        span.fill = fill;
         span.text = new String(text);
         span.integrity = integrity;
         span.fillColor = fillColor == null ? null : fillColor.clone();

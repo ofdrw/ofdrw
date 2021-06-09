@@ -1,15 +1,19 @@
 package org.ofdrw.converter.utils;
 
+import com.itextpdf.kernel.colors.DeviceRgb;
 import org.apache.pdfbox.jbig2.JBIG2ImageReader;
 import org.apache.pdfbox.jbig2.JBIG2ImageReaderSpi;
 import org.apache.pdfbox.jbig2.io.DefaultInputStreamFactory;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
+import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceGray;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.ofdrw.converter.point.Tuple2;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.reader.ResourceManage;
 import org.ujmp.core.Matrix;
 
 import javax.imageio.ImageIO;
@@ -25,18 +29,32 @@ import java.util.SimpleTimeZone;
 import java.util.UUID;
 
 /**
+ * 转换工具集合
+ *
  * @author dltech21
  * @since 2020/8/11
  */
 public class CommonUtil {
     public static double millimetersToPixel(double mm, double dpi) {
         //毫米转像素：mm * dpi / 25.4
-        return (double) ((mm * dpi / 25.4f));
+        return (double) (mm * dpi / 25.4f);
     }
+
 
     public static double pixelToMillimeters(double px, double dpi) {
         //像素转毫米：px * 25.4 / dpi
-        return (double) (((px * 25.4f) / dpi));
+        return (double) ((px * 25.4f) / dpi);
+    }
+
+    /**
+     * 获取指定DPI下的每毫米像素数量
+     *
+     * @param dpi 每英寸的像素 如200、300
+     * @return 像素每毫米
+     * @author iandjava
+     */
+    public static double dpiToPpm(int dpi) {
+        return ((0.01 / 0.254) * dpi);
     }
 
     public static float[] doubleArrayToFloatArray(Double[] doubleArray) {
@@ -83,24 +101,32 @@ public class CommonUtil {
         String colorStr = colorArray.toString();
         if (colorStr.indexOf("#") != -1) {
             String[] rgbStr = colorStr.split(" ");
-            String r = rgbStr[0].replaceAll("#", "");
-            String g = rgbStr[1].replaceAll("#", "");
-            String b = rgbStr[2].replaceAll("#", "");
-            if (r.length() == 1) {
-                r += "0";
+            if (rgbStr.length >= 3) {
+                String r = rgbStr[0].replaceAll("#", "");
+                String g = rgbStr[1].replaceAll("#", "");
+                String b = rgbStr[2].replaceAll("#", "");
+                if (r.length() == 1) {
+                    r += "0";
+                }
+                if (g.length() == 1) {
+                    g += "0";
+                }
+                if (b.length() == 1) {
+                    b += "0";
+                }
+                Color jColor = Color.decode(String.format("#%s%s%s", r, g, b));
+                color = new PDColor(new float[]{
+                        jColor.getRed() / 255f,
+                        jColor.getGreen() / 255f,
+                        jColor.getBlue() / 255f}, PDDeviceRGB.INSTANCE);
             }
-            if (g.length() == 1) {
-                g += "0";
-            }
-            if (b.length() == 1) {
-                b += "0";
-            }
-            Color jColor = Color.decode(String.format("#%s%s%s", r,g,b));
-            color = new PDColor(new float[] {jColor.getRed() / 255f, jColor.getGreen() / 255f, jColor.getBlue() / 255f}, PDDeviceRGB.INSTANCE);
         } else {
             float[] colors = CommonUtil.doubleArrayToFloatArray(colorArray.toDouble());
             if (colors.length == 3) {
-                color = new PDColor(new float[] {(int)colors[0] / 255f, (int) colors[1] / 255f, (int) colors[2] / 255f}, PDDeviceRGB.INSTANCE);
+                color = new PDColor(new float[]{(int) colors[0] / 255f, (int) colors[1] / 255f, (int) colors[2] / 255f},
+                        PDDeviceRGB.INSTANCE);
+            } else if (colors.length == 1) {
+                color = new PDColor(new float[]{(int) colors[0] / 255f}, PDDeviceGray.INSTANCE);
             }
         }
         return color;
@@ -117,6 +143,8 @@ public class CommonUtil {
             float[] colors = CommonUtil.doubleArrayToFloatArray(colorArray.toDouble());
             if (colors.length == 3) {
                 color = String.format("rgb(%d,%d,%d)", (int) colors[0], (int) colors[1], (int) colors[2]);
+            } else if (colors.length == 1) {
+                color = String.format("rgb(%d,%d,%d)", (int) colors[0], (int) colors[0], (int) colors[0]);
             }
         }
         return color;
@@ -171,7 +199,7 @@ public class CommonUtil {
     }
 
     private static boolean hasFractionalSeconds(String time) {
-        for(int var1 = 0; var1 != time.length(); ++var1) {
+        for (int var1 = 0; var1 != time.length(); ++var1) {
             if (time.charAt(var1) == 46 && var1 == 14) {
                 return true;
             }
@@ -181,15 +209,49 @@ public class CommonUtil {
     }
 
     private static boolean hasSeconds(String time) {
-        return isDigit(time,12) && isDigit(time, 13);
+        return isDigit(time, 12) && isDigit(time, 13);
     }
 
     private static boolean hasMinutes(String time) {
-        return isDigit(time,10) && isDigit(time, 11);
+        return isDigit(time, 10) && isDigit(time, 11);
     }
 
     private static boolean isDigit(String time, int var1) {
         return time.length() > var1 && time.charAt(var1) >= 48 && time.charAt(var1) <= 57;
+    }
+
+    public static org.ujmp.core.Matrix getImageMatrixFromOfd(ImageObject nImageObject, ST_Box pageBox, ST_Array compositeObjectCTM) {
+        org.ujmp.core.Matrix matrix = MatrixUtils.base();
+        matrix = MatrixUtils.imageMatrix(matrix, 0, 1, 0);
+        matrix = MatrixUtils.move(matrix, 0, 1);
+        if (nImageObject.getCTM() != null) {
+            Matrix ctm = MatrixUtils.base();
+            ctm = ctm.mtimes(MatrixUtils.ctm(nImageObject.getCTM().toDouble()));
+            matrix = matrix.mtimes(ctm);
+        }
+
+        ST_Box boundary = nImageObject.getBoundary();
+        double x = boundary.getTopLeftX();
+        double y = boundary.getTopLeftY();
+        if (boundary == null) {
+            boundary = pageBox;
+        }
+        if (compositeObjectCTM != null) {
+            Matrix ctm = MatrixUtils.base();
+            ctm = ctm.mtimes(MatrixUtils.ctm(compositeObjectCTM.toDouble()));
+            matrix = matrix.mtimes(ctm);
+            double[] realPos = PointUtil.ctmCalPoint(x, y, compositeObjectCTM.toDouble());
+            x = realPos[0];
+            y = realPos[1];
+        }
+
+        matrix = matrix.mtimes(MatrixUtils.create(1, 0, 0, 1, x, y));
+
+        matrix = MatrixUtils.imageMatrix(matrix, 0, 1, 0);
+        matrix = matrix.mtimes(MatrixUtils.create(1, 0, 0, 1, 0, pageBox.getHeight()));
+
+        matrix = matrix.mtimes(MatrixUtils.create(converterDpi(1), 0, 0, converterDpi(1), 0, 0));
+        return matrix;
     }
 
     public static Matrix getImageMatrixFromOfd(ImageObject nImageObject, ST_Box pageBox) {
@@ -232,7 +294,7 @@ public class CommonUtil {
         return target;
     }
 
-//    private static PDFont getCFFFont(PDDocument doc, File fontFile)
+    //    private static PDFont getCFFFont(PDDocument doc, File fontFile)
 //            throws IOException
 //    {
 //        PDFont pdFont = null;
@@ -339,4 +401,35 @@ public class CommonUtil {
 //        return parser.parse(content.toByteArray());
 //    }
 
+    /**
+     * @deprecated see {@link org.ofdrw.converter.ColorConvert#pdfRGB(ResourceManage, CT_Color)}
+     */
+    @Deprecated
+    public static com.itextpdf.kernel.colors.Color convertOfdColor(ST_Array colorArray) {
+        com.itextpdf.kernel.colors.Color color = null;
+        String colorStr = colorArray.toString();
+        if (colorStr.indexOf("#") != -1) {
+            String[] rgbStr = colorStr.split(" ");
+            String r = rgbStr[0].replaceAll("#", "");
+            String g = rgbStr[1].replaceAll("#", "");
+            String b = rgbStr[2].replaceAll("#", "");
+            if (r.length() == 1) {
+                r += "0";
+            }
+            if (g.length() == 1) {
+                g += "0";
+            }
+            if (b.length() == 1) {
+                b += "0";
+            }
+            java.awt.Color jColor = java.awt.Color.decode(String.format("#%s%s%s", r, g, b));
+            color = new DeviceRgb(jColor.getRed() / 255f, jColor.getGreen() / 255f, jColor.getBlue() / 255f);
+        } else {
+            float[] colors = CommonUtil.doubleArrayToFloatArray(colorArray.toDouble());
+            if (colors.length == 3) {
+                color = new DeviceRgb(colors[0] / 255f, (int) colors[1] / 255f, (int) colors[2] / 255f);
+            }
+        }
+        return color;
+    }
 }

@@ -29,7 +29,7 @@ public class HelloWorld {
     void testOutputStream() throws IOException {
         Path path = Paths.get("target/helloworld.ofd").toAbsolutePath();
         System.out.println(path.toString());
-        try (OFDDoc ofdDoc = new OFDDoc(new FileOutputStream(path.getFileName().toString()))) {
+        try (OFDDoc ofdDoc = new OFDDoc(new FileOutputStream(path.toAbsolutePath().toString()))) {
             Paragraph p = new Paragraph("你好呀，OFD Reader&Writer！");
             ofdDoc.add(p);
         }

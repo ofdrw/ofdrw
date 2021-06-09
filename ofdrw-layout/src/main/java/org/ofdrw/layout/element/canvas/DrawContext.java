@@ -921,6 +921,16 @@ public class DrawContext implements Closeable {
         return this;
     }
 
+    /**
+     * 设置默认字体
+     * @param fontSize 字体大小
+     * @return this
+     */
+    public DrawContext setDefaultFont(double fontSize){
+        this.state.font = FontSetting.getInstance(fontSize);
+        return this;
+    }
+
 
     /**
      * 获取绘图透明度值

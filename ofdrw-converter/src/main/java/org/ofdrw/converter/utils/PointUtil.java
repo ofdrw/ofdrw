@@ -6,6 +6,7 @@ import org.ofdrw.converter.point.PathPoint;
 import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.core.text.CT_CGTransform;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.reader.DeltaTool;
 
@@ -319,4 +320,145 @@ public class PointUtil {
         return textCodePointList;
     }
 
+    public static List<TextCodePoint> calPdfTextCoordinate(double width, double height, ST_Box boundary, float fontSize, List<TextCode> textCodes, List<CT_CGTransform> cgTransforms, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM, boolean hasCtm, ST_Array ctm, boolean fixOriginToPdf) {
+        double x = 0, y = 0;
+        List<TextCodePoint> textCodePointList = new ArrayList<>();
+        for (TextCode textCode : textCodes) {
+            x = textCode.getX() == null ? 0 : textCode.getX();
+            y = textCode.getY() == null ? 0 : textCode.getY();
+
+            if (hasCtm) {
+                double[] newPoint = ctmCalPoint(x, y, ctm.toDouble());
+                x = newPoint[0];
+                y = newPoint[1];
+            }
+            List<String> deltaXList = null;
+            List<String> deltaYList = null;
+            String textStr = textCode.getText();
+            if (textCode.getDeltaX() != null && textCode.getDeltaX().getArray().size() > 0) {
+                deltaXList = textCode.getDeltaX().getArray();
+            }
+            if (textCode.getDeltaY() != null && textCode.getDeltaY().getArray().size() > 0) {
+                deltaYList = textCode.getDeltaY().getArray();
+            }
+
+            textStr = textStr.replaceAll("&lt;", "<");
+            textStr = textStr.replaceAll("&gt;", ">");
+            textStr = textStr.replaceAll("&amp;", "&");
+            textStr = textStr.replaceAll("\n", "");
+            textStr = textStr.replaceAll("&nbsp;", " ");
+            textStr = textStr.replaceAll("&quot;", "\"");
+            textStr = textStr.replaceAll("&copy;", "");
+            textStr = textStr.replaceAll("&apos;", "'");
+
+            int skipCount = 0;
+            for (int i = 0; i < textStr.length(); i++) {
+                String text = textStr.substring(i, i + 1);
+                boolean skipPosition = false;
+                if (i > 0 && Objects.nonNull(deltaXList)) {
+                    for (CT_CGTransform cgTransform : cgTransforms) {
+                        int pos = cgTransform.getCodePosition();
+                        int codeCount = cgTransform.getCodeCount();
+                        if (i > pos && i < (pos + codeCount)) {
+                            if (cgTransform.getGlyphs().size() < codeCount) {
+                                skipPosition = true;
+
+                                skipCount++;
+                            }
+                            break;
+                        }
+                    }
+                    int index = i - 1;
+//                    boolean keepSameDX = false;
+                    if (index >= deltaXList.size()) {
+                        index = deltaXList.size() - 1;
+//                        keepSameDX = true;
+                    }
+                    double dx = Double.parseDouble(deltaXList.get(index));
+                    if (dx != 0) {
+                        if (hasCtm) {
+                            Double[] ctms = ctm.toDouble();
+                            double a = ctms[0].doubleValue();
+                            double b = ctms[1].doubleValue();
+                            double c = ctms[2].doubleValue();
+                            double d = ctms[3].doubleValue();
+                            double e = ctms[4].doubleValue();
+                            double f = ctms[5].doubleValue();
+                            double angel = Math.atan2(-b, d);
+                            if (angel == 0) {
+                                double[] newPoint = ctmCalPoint(dx, 0, ctm.toDouble());
+                                dx = newPoint[0];
+                            } else {
+                                if (a == 0 && d == 0) {
+                                    dx = dx * fontSize;
+                                }
+                            }
+                        } else {
+                            if (skipPosition) {
+                                deltaXList.add(i - 1, "0");
+                            }
+                        }
+                    }
+//                    x += keepSameDX ? dx : !skipPosition ? dx : 0;
+                    x += !skipPosition ? dx : 0;
+                }
+                if (i > 0 && Objects.nonNull(deltaYList)) {
+                    int index = i - 1;
+//                    boolean keepSameDY = false;
+                    if ((i - 1) >= deltaYList.size()) {
+                        index = deltaYList.size() - 1;
+//                        keepSameDY = true;
+                    }
+                    double dy = Double.parseDouble(deltaYList.get(index));
+                    if (dy != 0) {
+                        if (hasCtm) {
+                            Double[] ctms = ctm.toDouble();
+                            double a = ctms[0].doubleValue();
+                            double b = ctms[1].doubleValue();
+                            double c = ctms[2].doubleValue();
+                            double d = ctms[3].doubleValue();
+                            double e = ctms[4].doubleValue();
+                            double f = ctms[5].doubleValue();
+                            double angel = Math.atan2(-b, d);
+                            if (angel == 0) {
+                                double[] newPoint = ctmCalPoint(0, dy, ctm.toDouble());
+                                dy = newPoint[1];
+                            } else {
+                                if (a == 0 && d == 0) {
+                                    dy = dy * fontSize;
+                                }
+                            }
+                        }
+                    }
+//                    y += keepSameDY ? 0 : dy;
+                    y += dy;
+                }
+                double[] realPos = adjustPos(width, height, x, y, boundary);
+                if (compositeObjectCTM != null) {
+                    realPos = ctmCalPoint(realPos[0], realPos[1], compositeObjectCTM.toDouble());
+                }
+                if (skipPosition) {
+                    text = "";
+                }
+                TextCodePoint textCodePoint = new TextCodePoint(converterDpi(realPos[0]), converterDpi(fixOriginToPdf ? (height - realPos[1]) : realPos[1]), text);
+                textCodePointList.add(textCodePoint);
+            }
+        }//todo 先按textcode有值
+        if (textCodePointList.size() > 0) {
+            for (CT_CGTransform cgTransform : cgTransforms) {
+                int pos = cgTransform.getCodePosition();
+                int glyphCount = cgTransform.getGlyphCount();
+                int codeCount = cgTransform.getCodeCount();
+                for (int i = pos; i < glyphCount + pos; i++) {
+                    if (textCodePointList.size() <= i) {
+                        String glyphs = textCodePointList.get(textCodePointList.size() - 1).getGlyph() + " " + cgTransform.getGlyphs().getArray().get(i - pos);
+                        textCodePointList.get(textCodePointList.size() - 1).setGlyph(glyphs);
+                    } else {
+                        textCodePointList.get(i).setGlyph(cgTransform.getGlyphs().getArray().get(i - pos));
+                    }
+                }
+            }
+        }
+        return textCodePointList;
+    }
 }

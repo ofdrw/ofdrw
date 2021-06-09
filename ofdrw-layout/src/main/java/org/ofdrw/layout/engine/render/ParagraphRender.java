@@ -109,6 +109,10 @@ public class ParagraphRender {
                 if (s.isItalic()) {
                     txtObj.setItalic(true);
                 }
+                // 是否填充，默认为true表示填充
+                if(!s.isFill()) {
+                    txtObj.setFill(false);
+                }
                 // 设置字体颜色，默认颜色为黑色
                 int[] color = s.getColor();
                 if (color != null && color.length >= 3) {

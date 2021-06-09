@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class OFDDocTest {
 
+
     /**
      * 字体宽度溢出可用最大宽度测试
      */
@@ -48,6 +49,7 @@ class OFDDocTest {
         try (OFDDoc ofdDoc = new OFDDoc(outP)) {
             Paragraph p = new Paragraph(10d, 20d).setFontSize(15d);
             p.add("l我l");
+            p.setBorder(0.1d);
             ofdDoc.add(p);
             // Expect: 只显示 "l"
         }
@@ -55,53 +57,7 @@ class OFDDocTest {
     }
 
     /**
-     * 向文件中加入附件文件
-     *
-     * @throws IOException
-     */
-    @Test
-    void addAttachment() throws IOException {
-        Path outP = Paths.get("target/AddAttachment.ofd");
-        Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
-        Path file2 = Paths.get("src/test/resources", "NotoSerifCJKsc-Regular.otf");
-
-        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
-            Paragraph p = new Paragraph();
-            Span span = new Span("这是一个带有附件的OFD文件").setFontSize(10d);
-            p.add(span);
-            ofdDoc.add(p);
-
-            // 加入附件文件
-            ofdDoc.addAttachment(new Attachment("Gao", file));
-            ofdDoc.addAttachment(new Attachment("FontFile", file2));
-        }
-        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
-    }
-
-    /**
-     * 替换附件文件
-     *
-     * @throws IOException
-     */
-    @Test
-    void replaceAttachment() throws IOException {
-        Path srcP = Paths.get("src/test/resources/AddAttachment.ofd");
-        Path outP = Paths.get("target/ReplaceAttachment.ofd");
-        Path file = Paths.get("src/test/resources", "ASCII字体宽度测量.html");
-
-        try (OFDReader reader = new OFDReader(srcP);
-             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
-            // 加入附件文件
-            ofdDoc.addAttachment(new Attachment("Gao", file));
-        }
-        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
-    }
-
-    /**
      * 加入印章类型注释对象
-     *
-     * @throws IOException
-     * @throws DocumentException
      */
     @Test
     void addAnnotationStamp() throws IOException, DocumentException {
@@ -124,9 +80,6 @@ class OFDDocTest {
 
     /**
      * 加入水印类型注释对象
-     *
-     * @throws IOException
-     * @throws DocumentException
      */
     @Test
     void addAnnotation() throws IOException {
@@ -143,68 +96,15 @@ class OFDDocTest {
             });
 
             ofdDoc.addAnnotation(1, annotation);
-            ofdDoc.addAnnotation(3, annotation);
-            ofdDoc.addAnnotation(5, annotation);
+            ofdDoc.addAnnotation(2, annotation);
+            ofdDoc.addAnnotation(2, annotation);
 
-        }
-        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
-    }
-
-
-    @Test
-    void addAnnot() throws IOException, DocumentException {
-        Path srcP = Paths.get("src/test/resources", "helloworld.ofd");
-        Path outP = Paths.get("target/AppendAnnot.ofd");
-        try (OFDReader reader = new OFDReader(srcP)) {
-            OFDDir ofdDir = reader.getOFDDir();
-            DocDir docDir = ofdDir.obtainDocDefault();
-            Document document = docDir.getDocument();
-            document.setAnnotations(new ST_Loc(DocDir.AnnotationsFileName));
-            Annotations annotations = new Annotations()
-                    .addPage(new AnnPage()
-                            .setPageID(new ST_ID(1))
-                            .setFileLoc(new ST_Loc("Pages/Page_0/Annotation.xml")));
-            docDir.setAnnotations(annotations);
-
-
-            Annot annot = new Annot()
-                    .setID(new ST_ID(5))
-                    .setType(AnnotType.Stamp)
-                    .setCreator("Cliven")
-                    .setLastModDate(LocalDate.now());
-
-            TextObject tObj = new TextObject(7);
-            TextCode txc = new TextCode()
-                    .setX(0d)
-                    .setY(11d)
-                    .setDeltaX(10d, 10d)
-                    .setContent("嘿嘿");
-            tObj.setBoundary(new ST_Box(0, 0, 50, 50))
-                    .setFont(new ST_RefID(3))
-                    .setSize(10d)
-                    .addTextCode(txc);
-
-            Appearance appearance = new Appearance(new ST_Box(40, 40, 50, 50))
-                    .addPageBlock(tObj);
-            appearance.setObjID(6);
-            annot.setAppearance(appearance);
-
-            PageAnnot pageAnnot = new PageAnnot()
-                    .addAnnot(annot);
-            PageDir pageDir = docDir.getPages().getByIndex(0);
-            pageDir.setPageAnnot(pageAnnot);
-
-            document.getCommonData().setMaxUnitID(7);
-
-            ofdDir.jar(outP);
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
 
     /**
      * 测试加入操作系统中的字体
-     *
-     * @throws IOException
      */
     @Test
     void testAddSysFont() throws IOException {
@@ -237,71 +137,6 @@ class OFDDocTest {
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
 
-    /**
-     * 文档内容追加 内置换行测试
-     */
-    @Test
-    void appendTest() throws IOException {
-        Path srcP = Paths.get("src/test/resources", "helloworld.ofd");
-        Path outP = Paths.get("target/AppendNewPage.ofd");
-        try (OFDReader reader = new OFDReader(srcP);
-             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
-            String plaintext = "小时候\n" +
-                    "乡愁是一枚小小的邮票\n" +
-                    "我在这头\n" +
-                    "母亲在那头\n" +
-                    "\n" +
-                    "长大后\n" +
-                    "乡愁是一张窄窄的船票\n" +
-                    "我在这头\n" +
-                    "新娘在那头\n" +
-                    "\n" +
-                    "后来啊\n" +
-                    "乡愁是一方矮矮的坟墓\n" +
-                    "我在外头\n" +
-                    "母亲在里头\n" +
-                    "\n" +
-                    "而现在\n" +
-                    "乡愁是一湾浅浅的海峡\n" +
-                    "我在这头\n" +
-                    "大陆在那头\n";
-            Span titleContent = new Span("乡愁").setBold(true).setFontSize(13d).setLetterSpacing(10d);
-            Paragraph title = new Paragraph().add(titleContent);
-            title.setFloat(AFloat.center).setMarginBottom(5d);
-            ofdDoc.add(title);
-            final String[] txtCollect = plaintext.split("\\\n");
-            for (String txt : txtCollect) {
-                Paragraph p = new Paragraph().setFontSize(4d)
-                        .setLineSpace(3d)
-                        .add(txt);
-                ofdDoc.add(p);
-            }
-        }
-        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
-    }
-
-
-    /**
-     * 修改页面测试
-     */
-    @Test
-    void editTest() throws IOException {
-        Path srcP = Paths.get("src/test/resources", "helloworld.ofd");
-        Path outP = Paths.get("target/EditedDoc.ofd");
-        try (OFDReader reader = new OFDReader(srcP);
-             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
-            AdditionVPage avPage = ofdDoc.getAVPage(1);
-            Div e = new Div(10d, 10d)
-                    .setPosition(Position.Absolute)
-                    .setX(70d).setY(113.5)
-                    .setBackgroundColor(255, 192, 203)
-                    .setBorder(0.353d)
-                    .setPadding(5d);
-
-            avPage.add(e);
-        }
-        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
-    }
 
 
     @Test
@@ -427,6 +262,8 @@ class OFDDocTest {
 
             ofdDoc.addVPage(vPage);
         }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+
     }
 
 
@@ -677,6 +514,47 @@ class OFDDocTest {
             vPage.add(p);
         }
         System.out.println("生成文档位置：" + path.toAbsolutePath());
+    }
+
+    /**
+     * 添加图片+特定位置文本
+     *
+     * @author zwd
+     */
+    @Test
+    void test05() throws IOException {
+        // 页面宽高设置
+        Double widthZb = 210d;
+        Double heightZb = 156d;
+
+        Path path = Paths.get("target", "addCMYKImage.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            PageLayout pageLayout = ofdDoc.getPageLayout();
+            // 设置最外层样式
+            VirtualPage vPage = new VirtualPage(pageLayout);
+            PageLayout style = new PageLayout(widthZb, heightZb);
+            vPage.setStyle(style);
+            // 设置图片相关信息
+            Path imgPath = Paths.get("src/test/resources", "img-CMYK.jpg");
+            // img部分代码有修改，具体使用要注意
+            Img img = new Img(imgPath);
+            img.setPosition(Position.Absolute).setX(0d).setY(0d);
+            img.setBorder(0d);
+            img.setPadding(0d);
+            img.setWidth(210d);
+            img.setHeight(156d);
+            // 添加图片
+            vPage.add(img);
+            // 设置文本相关信息
+            Paragraph p = new Paragraph(100d, 30d).setFontSize(4d);
+            p.add("zwd");
+            p.setPosition(Position.Absolute).setX(62d).setY(70d);
+            // 添加文本
+            vPage.add(p);
+            // 往ofd中添加页面一
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + path.toAbsolutePath().toString());
     }
 
 }

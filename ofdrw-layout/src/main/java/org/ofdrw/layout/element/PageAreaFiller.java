@@ -9,7 +9,7 @@ package org.ofdrw.layout.element;
  * @author 权观宇
  * @since 2020-03-16 10:52:21
  */
-public class PageAreaFiller extends Div {
+public class PageAreaFiller extends Div<PageAreaFiller> {
     public PageAreaFiller() {
         setPlaceholder(true);
         setClear(Clear.both);

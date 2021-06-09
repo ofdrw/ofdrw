@@ -44,7 +44,7 @@ public class Bookmarks extends OFDElement {
      * @return 书签列表
      */
     public List<Bookmark> getBookmarks() {
-        return this.getOFDElements("Bookmark",Bookmark::new);
+        return this.getElements("Bookmark",Bookmark::new);
     }
 
 }

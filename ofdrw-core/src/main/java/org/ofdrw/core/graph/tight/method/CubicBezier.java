@@ -25,6 +25,15 @@ public class CubicBezier extends Command {
         super("CubicBezier");
     }
 
+    public CubicBezier(double x1,double y1,
+                       double x2,double y2,
+                       double x3,double y3){
+        this(
+                new ST_Pos(x1, y1),
+                new ST_Pos(x2, y2),
+                new ST_Pos(x3, y3)
+        );
+    }
     public CubicBezier(ST_Pos point1, ST_Pos point2, ST_Pos point3) {
         this();
         this.setPoint1(point1)
@@ -96,5 +105,30 @@ public class CubicBezier extends Command {
      */
     public ST_Pos getPoint3() {
         return ST_Pos.getInstance(this.attributeValue("Point3"));
+    }
+
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder().append("B ");
+        final ST_Pos point1 = getPoint1();
+        if (point1 != null) {
+            sb.append(point1.toString()).append(" ");
+        }else{
+            sb.append("0 0 ");
+        }
+        final ST_Pos point2 = getPoint2();
+        if (point2 != null) {
+            sb.append(point2.toString()).append(" ");
+        }else{
+            sb.append("0 0 ");
+        }
+        final ST_Pos point3 = getPoint3();
+        if (point3 != null) {
+            sb.append(point3.toString());
+        }else{
+            sb.append("0 0");
+        }
+        return sb.toString();
     }
 }

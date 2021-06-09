@@ -18,7 +18,7 @@ public class CT_Permission extends OFDElement {
     }
 
     public CT_Permission() {
-        super("Permission");
+        super("Permissions");
     }
 
     /**

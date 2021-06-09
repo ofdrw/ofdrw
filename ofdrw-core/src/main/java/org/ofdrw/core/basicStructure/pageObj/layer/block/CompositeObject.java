@@ -4,6 +4,7 @@ import org.dom4j.Element;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_RefID;
+import org.ofdrw.core.compositeObj.CT_Composite;
 import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.image.CT_Image;
 
@@ -17,7 +18,7 @@ import org.ofdrw.core.image.CT_Image;
  * @author 权观宇
  * @since 2019-10-29 17:22:08
  */
-public class CompositeObject extends CT_Path implements PageBlockType {
+public class CompositeObject extends CT_Composite implements PageBlockType {
 
     public CompositeObject(Element proxy) {
         super(proxy);

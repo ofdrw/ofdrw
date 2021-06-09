@@ -303,6 +303,10 @@ public class OFDDoc implements Closeable {
      * @return this
      */
     public OFDDoc add(Div item) {
+        if (streamQueue.contains(item)) {
+            throw new IllegalArgumentException("元素已经存在，请重复放入");
+        }
+
         streamQueue.add(item);
         return this;
     }
@@ -403,7 +407,8 @@ public class OFDDoc implements Closeable {
                 .setCreationDate(LocalDate.now())
                 .setSize(size)
                 .setFileLoc(loc);
-        ResourceLocator rl = new ResourceLocator(ofdDir);
+        ResourceLocator rl = new ResourceLocator(docDefault);
+        //这边应该加个Doc_0目录,不然后面读取document中Attachments如果写的相对路径还是从根目录找就会找不到的。add by daiwf
         // 获取附件目录，并切换目录到与附件列表文件同级
         Attachments attachments = obtainAttachments(docDefault, rl);
         // 清理已经存在的同名附件
@@ -499,7 +504,9 @@ public class OFDDoc implements Closeable {
                 VPageParseEngine parseEngine = new VPageParseEngine(pageLayout, docDefault, prm, MaxUnitID);
                 // 解析虚拟页面
                 parseEngine.process(vPageList);
-            } else if (annotationRender == null && reader == null) {
+            }
+
+            if (vPageList.isEmpty() && annotationRender == null && reader == null) {
                 // 虚拟页面为空，也没有注解对象，也不是编辑模式，那么空的操作报错
                 throw new IllegalStateException("OFD文档中没有页面，无法生成OFD文档");
             }

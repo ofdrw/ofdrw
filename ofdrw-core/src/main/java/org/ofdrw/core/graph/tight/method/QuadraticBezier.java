@@ -26,6 +26,10 @@ public class QuadraticBezier extends Command {
         super("QuadraticBezier");
     }
 
+    public QuadraticBezier(double x1, double y1, double x2, double y2) {
+        this(new ST_Pos(x1, y1), new ST_Pos(x2, y2));
+    }
+
     public QuadraticBezier(ST_Pos point1, ST_Pos point2) {
         this();
         this.setPoint1(point1)
@@ -76,4 +80,22 @@ public class QuadraticBezier extends Command {
         return ST_Pos.getInstance(this.attributeValue("Point2"));
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder().append("Q ");
+        final ST_Pos point1 = getPoint1();
+        if (point1 != null) {
+            sb.append(point1.toString()).append(" ");
+        }else{
+            sb.append("0 0 ");
+        }
+        final ST_Pos point2 = getPoint2();
+        if (point2 != null) {
+            sb.append(point2.toString());
+        }else{
+            sb.append("0 0");
+        }
+
+        return sb.toString();
+    }
 }

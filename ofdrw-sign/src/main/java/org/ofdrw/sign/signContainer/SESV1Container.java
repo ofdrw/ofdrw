@@ -13,8 +13,13 @@ import org.ofdrw.sign.ExtendSignatureContainer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.Certificate;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
 
@@ -45,9 +50,10 @@ public class SESV1Container implements ExtendSignatureContainer {
 
     /**
      * V1版本的电子签章容器构造
+     *
      * @param privateKey 签名使用的私钥
-     * @param seal 电子印章
-     * @param signCert 签章用户证书
+     * @param seal       电子印章
+     * @param signCert   签章用户证书
      */
     public SESV1Container(PrivateKey privateKey, SESeal seal, Certificate signCert) {
         this.privateKey = privateKey;
@@ -96,7 +102,11 @@ public class SESV1Container implements ExtendSignatureContainer {
         // 签名原文杂凑值，也就是Signature.xml 文件的杂凑值
         byte[] digest = md.digest(IOUtils.toByteArray(inData));
 
-        ASN1UTCTime signUTCTime = new ASN1UTCTime(new Date(), Locale.CHINA);
+        // 签名时间
+        byte[] signUTCTime = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                .getBytes(StandardCharsets.UTF_8);
+//        ASN1UTCTime signUTCTime = new ASN1UTCTime(new Date(), Locale.CHINA);
         TBS_Sign tbsSign = new TBS_Sign()
                 .setVersion(new ASN1Integer(1))
                 .setEseal(seal)

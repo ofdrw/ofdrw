@@ -82,4 +82,22 @@ public class SESVersionHolder {
         }
         return (T) obj;
     }
+
+    /**
+     * 强制获取v1版本的电子签章数据
+     *
+     * @return v1电子签章数据
+     */
+    public org.ofdrw.gm.ses.v1.SES_Signature getInstanceV1() {
+        return this.SESObject();
+    }
+
+    /**
+     * 强制获取v4版本的电子签章数据
+     *
+     * @return v4电子签章数据
+     */
+    public org.ofdrw.gm.ses.v4.SES_Signature getInstanceV4() {
+        return this.SESObject();
+    }
 }
