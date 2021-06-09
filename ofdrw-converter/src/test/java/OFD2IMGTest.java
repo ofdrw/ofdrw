@@ -42,13 +42,16 @@ public class OFD2IMGTest {
         Files.createDirectories(Paths.get(dirPath));
         Path src = Paths.get(filename);
 
-        ImageMaker imageMaker = new ImageMaker(new OFDReader(src), 15);
-        imageMaker.config.setDrawBoundary(false);
-        for (int i = 0; i < imageMaker.pageSize(); i++) {
-            BufferedImage image = imageMaker.makePage(i);
-            Path dist = Paths.get(dirPath, i + ".png");
-            ImageIO.write(image, "PNG", dist.toFile());
+        try(OFDReader reader = new OFDReader(src);){
+            ImageMaker imageMaker = new ImageMaker(reader, 15);
+            imageMaker.config.setDrawBoundary(false);
+            for (int i = 0; i < imageMaker.pageSize(); i++) {
+                BufferedImage image = imageMaker.makePage(i);
+                Path dist = Paths.get(dirPath, i + ".png");
+                ImageIO.write(image, "PNG", dist.toFile());
+            }
         }
+
     }
 
 }

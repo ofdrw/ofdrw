@@ -134,6 +134,15 @@ public final class FontLoader {
         } else if (OSinfo.isLinux()) {
             scanFontDir(new File(DEFAULT_FONT_DIR_LINUX));
         }
+        // 预置一些常用的字体别名
+        this.addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
+                .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
+                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
+                .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
+                .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
+                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
     }
 
     /**

@@ -54,15 +54,17 @@ public class OFD2SVGTest {
     private static void toSVG(String filename, String dirPath) throws IOException {
         Files.createDirectories(Paths.get(dirPath));
         Path src = Paths.get(filename);
-
-        SVGMaker svgMaker = new SVGMaker(new OFDReader(src), 5);
-        svgMaker.config.setDrawBoundary(false);
-        svgMaker.config.setClip(false);
-        for (int i = 0; i < svgMaker.pageSize(); i++) {
-            String svg = svgMaker.makePage(i);
-            Path dist = Paths.get(dirPath, i + ".svg");
-            Files.write(dist, svg.getBytes());
+        try(OFDReader reader = new OFDReader(src)){
+            SVGMaker svgMaker = new SVGMaker(reader, 5d);
+            svgMaker.config.setDrawBoundary(false);
+            svgMaker.config.setClip(false);
+            for (int i = 0; i < svgMaker.pageSize(); i++) {
+                String svg = svgMaker.makePage(i);
+                Path dist = Paths.get(dirPath, i + ".svg");
+                Files.write(dist, svg.getBytes());
+            }
         }
+
     }
 
 }
