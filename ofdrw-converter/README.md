@@ -177,7 +177,7 @@ public class HelloWorld {
             .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
             .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
 
-        FontLoader.enableSimilarFontReplace(true);
+        FontLoader.setSimilarFontReplace(true);
 
         try {
 
