@@ -27,7 +27,7 @@ class KeywordExtractorTest {
 
         try (OFDReader reader = new OFDReader(src)) {
             List<KeywordPosition> positionList = KeywordExtractor.getKeyWordPositionList(reader, keyword);
-            assertEquals(5, positionList.size());
+            assertEquals(7, positionList.size());
         }
     }
 

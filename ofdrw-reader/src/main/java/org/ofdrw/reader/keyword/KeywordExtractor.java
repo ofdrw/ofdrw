@@ -297,11 +297,11 @@ public class KeywordExtractor {
     /**
      * 处理正常关键字
      *
-     * @param keyword         关键字
-     * @param boundaryMapping 映射对象
-     * @param positionList    位置列表
-     * @param textCode        文字定位
-     * @param textIndex       文本索引
+     * @param keyword         [in]关键字
+     * @param boundaryMapping [in]映射对象
+     * @param positionList    [out]位置列表
+     * @param textCode        [in]文字定位
+     * @param textIndex       [in]文本索引
      */
     private static void addNormalKeyword(String keyword, Map<TextCode, KeywordResource> boundaryMapping, List<KeywordPosition> positionList,
                                          TextCode textCode, int textIndex) {
