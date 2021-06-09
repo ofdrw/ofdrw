@@ -2,6 +2,15 @@
 
 ## 进展
 
+## Version 1.11.1 2021-6-9 19:05:23
+
+> Alias: A Certain Scientific Railgun
+
+修复：
+
+- 多个相同关键字只能检索到1个的问题。
+- 修复了测试 OFD转图片、SVG、HTML中示例OFDReader没有关闭造成的临时文件没有删除的问题。
+
 ## Version 1.11.0 2021-6-8 21:46:30
 
 >  Alias: Hori-san to Miyamura-kun
