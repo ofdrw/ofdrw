@@ -20,6 +20,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class KeywordExtractorTest {
 
+    @Test
+    void testKeyword() throws IOException, DocumentException {
+        Path src = Paths.get("src/test/resources/multiKeywordInTextCode.ofd");
+        String keyword = "打发";
+
+        try (OFDReader reader = new OFDReader(src)) {
+            List<KeywordPosition> positionList = KeywordExtractor.getKeyWordPositionList(reader, keyword);
+            assertEquals(5, positionList.size());
+        }
+    }
+
     /**
      * 获取关键字在文档中坐标
      */
