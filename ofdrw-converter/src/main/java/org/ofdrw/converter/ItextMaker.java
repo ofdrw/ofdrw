@@ -334,11 +334,11 @@ public class ItextMaker {
             // 使用绘制参数补充缺省的颜色
             if (pathObject.getStrokeColor() == null
                     && ctDrawParam.getStrokeColor() != null) {
-                pathObject.setStrokeColor(ctDrawParam.getStrokeColor());
+                pathObject.setStrokeColor(new CT_Color().setValue(ctDrawParam.getStrokeColor().getValue()));
             }
             if (pathObject.getFillColor() == null
                     && ctDrawParam.getFillColor() != null) {
-                pathObject.setFillColor(ctDrawParam.getFillColor());
+                pathObject.setStrokeColor(new CT_Color().setValue(ctDrawParam.getFillColor().getValue()));
             }
             if (pathObject.getLineWidth() == null
                     && ctDrawParam.getLineWidth() != null) {
