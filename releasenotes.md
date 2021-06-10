@@ -2,6 +2,15 @@
 
 ## 进展
 
+## Version 1.11.2 2021-6-10 19:11:42
+
+> Alias: Ghost in the Shell
+
+修复：
+
+- 对签名列表文件、注释列表文件、附件列表文件的存在性检查，修复 出现路径存在文件不存在BUG。
+- 修复 转换PDF时描边颜色转换错误的问题。
+
 ## Version 1.11.1 2021-6-9 19:05:23
 
 > Alias: A Certain Scientific Railgun
