@@ -2,6 +2,19 @@
 
 ## 进展
 
+## Version 1.12.0 2021-6-11 20:06:55
+
+> Alias: Sword Art Online
+
+修复：
+
+- 转换PDF对路径对象解析越界问题。
+
+新增：
+
+- 流式布局的页面插入功能
+    - 见测试用例 [DocEditDemos#streamInsertTest](./ofdrw-layout/src/test/java/org/ofdrw/layout/DocEditDemos.java)
+
 ## Version 1.11.2 2021-6-10 19:11:42
 
 > Alias: Ghost in the Shell

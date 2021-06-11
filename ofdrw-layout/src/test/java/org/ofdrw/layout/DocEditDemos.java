@@ -18,6 +18,9 @@ import java.nio.file.Paths;
  */
 public class DocEditDemos {
 
+    /**
+     * 向已有文档中 插入 流式布局的内容
+     */
     @Test
     void streamInsertTest()throws IOException {
         Path srcP = Paths.get("src/test/resources", "拿来主义_page6.ofd");
