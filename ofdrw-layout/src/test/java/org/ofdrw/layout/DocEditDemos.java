@@ -18,6 +18,31 @@ import java.nio.file.Paths;
  */
 public class DocEditDemos {
 
+    @Test
+    void streamInsertTest()throws IOException {
+        Path srcP = Paths.get("src/test/resources", "拿来主义_page6.ofd");
+        Path outP = Paths.get("target/StreamInserted.ofd");
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+            // 插入到第1页 位置，后面的所有内容从第1页开始递增
+            StreamCollect sPage1 = new StreamCollect(1);
+            sPage1.setPageNum(1);
+            Paragraph p = new Paragraph("封面", 30d).setWidth(100d);
+            sPage1.add(p);
+            // 换页： 插入占位符告诉解析器
+            sPage1.add(new PageAreaFiller());
+            // 这里开始 第2页 内容
+            Paragraph p2 = new Paragraph("前言", 15d).setWidth(40d);
+            sPage1.add(p2);
+            ofdDoc.addStreamCollect(sPage1);
+
+            // 插入到最后一页
+            Paragraph p3 = new Paragraph("尾页", 15d).setWidth(100d);
+            ofdDoc.add(p3);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
     /**
      * 向文档的指定页码插入页面
      * 原来位置上以及之后的页面，页面将会往后移动
@@ -39,9 +64,8 @@ public class DocEditDemos {
             vPage1.add(p);
             ofdDoc.addVPage(vPage1);
 
-            // 插入到第2页
             VirtualPage vPage2 = new VirtualPage(pageLayout);
-            // 插入到第1页
+            // 插入到第2页
             vPage2.setPageNum(2);
             Paragraph p2 = new Paragraph("前言", 15d);
             p2.setPosition(Position.Absolute);
