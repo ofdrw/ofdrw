@@ -92,7 +92,7 @@ public class HelloWorld {
         // FontLoader.getInstance().scanFontDir(new File("src/test/resources/fonts"));
         // 3. 创建转换转换对象，设置 每毫米像素数量(Pixels per millimeter)
         try(OFDReader reader = new OFDReader(src);) {
-            ImageMaker imageMaker = new ImageMaker(new OFDReader(src), 15);
+            ImageMaker imageMaker = new ImageMaker(reader, 15);
             for (int i = 0; i < imageMaker.pageSize(); i++) {
                 // 4. 指定页码转换图片
                 BufferedImage image = imageMaker.makePage(i);
