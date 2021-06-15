@@ -78,7 +78,7 @@ public class SignCleaner {
             if ("Signs".equalsIgnoreCase(container.getContainerName())) {
                 container.clean();
             }
-            // 删除签名列表文件
+            // 某些不规范的文件Signatures.xml 不在Signs目录下，因此需要删除签名列表文件
             if (Files.exists(signaturesXMLFile)) {
                 Files.delete(signaturesXMLFile);
             }
