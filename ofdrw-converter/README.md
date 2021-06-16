@@ -34,7 +34,7 @@ pom引入相关模块
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-converter</artifactId>
-    <version>1.11.1</version>
+    <version>1.12.0</version>
 </dependency>
 ```
 
@@ -92,7 +92,7 @@ public class HelloWorld {
         // FontLoader.getInstance().scanFontDir(new File("src/test/resources/fonts"));
         // 3. 创建转换转换对象，设置 每毫米像素数量(Pixels per millimeter)
         try(OFDReader reader = new OFDReader(src);) {
-            ImageMaker imageMaker = new ImageMaker(new OFDReader(src), 15);
+            ImageMaker imageMaker = new ImageMaker(reader, 15);
             for (int i = 0; i < imageMaker.pageSize(); i++) {
                 // 4. 指定页码转换图片
                 BufferedImage image = imageMaker.makePage(i);

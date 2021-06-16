@@ -10,6 +10,7 @@ import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.ResourceLocator;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -69,12 +70,17 @@ public class SignCleaner {
             if (signListFileLoc == null) {
                 continue;
             }
+            Path signaturesXMLFile = rl.getFile(signListFileLoc);
             // 2. save 进入签名列表文件目录
             String parent = signListFileLoc.parent();
             // 3. 判断上一级目录名称
             final VirtualContainer container = rl.getContainer(parent);
-            if ("Signs".equals(container.getContainerName())) {
+            if ("Signs".equalsIgnoreCase(container.getContainerName())) {
                 container.clean();
+            }
+            // 某些不规范的文件Signatures.xml 不在Signs目录下，因此需要删除签名列表文件
+            if (Files.exists(signaturesXMLFile)) {
+                Files.delete(signaturesXMLFile);
             }
             // 4. 打包输出文件
             ofdDir.jar(out.toAbsolutePath());

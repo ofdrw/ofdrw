@@ -33,8 +33,7 @@ public class PointUtil {
                 PathPoint point = new PathPoint("M", (float) Double.parseDouble(array[i + 1]), (float) Double.parseDouble(array[i + 2]), 0, 0, 0, 0);
                 i = i + 3;
                 pointList.add(point);
-            }
-            if (array[i].equals("L")) {
+            } else if (array[i].equals("L")) {
                 PathPoint point = new PathPoint("L", (float) Double.parseDouble(array[i + 1]), (float) Double.parseDouble(array[i + 2]), 0, 0, 0, 0);
                 i = i + 3;
                 pointList.add(point);

@@ -103,6 +103,11 @@ public class OFDDoc implements Closeable {
     private LinkedList<VirtualPage> vPageList = new LinkedList<>();
 
     /**
+     * 流式布局集合 队列（用于编辑）
+     */
+    private LinkedList<StreamCollect> sPageList = new LinkedList<>();
+
+    /**
      * 页面样式
      * <p>
      * 默认为 A4
@@ -325,6 +330,20 @@ public class OFDDoc implements Closeable {
     }
 
     /**
+     * 向文档中加入虚拟页面
+     * <p>
+     * 适合编辑时，添加流式的内容
+     *
+     * @param streamCollect 流式页面
+     * @return this
+     */
+    public OFDDoc addStreamCollect(StreamCollect streamCollect) {
+        sPageList.add(streamCollect);
+        return this;
+    }
+
+
+    /**
      * 获取指定页面追加页面对象
      * <p>
      * 并且追加到虚拟页面列表中
@@ -344,6 +363,8 @@ public class OFDDoc implements Closeable {
         this.addVPage(avp);
         return avp;
     }
+
+
 
     /**
      * 向页面中增加注释对象
@@ -497,7 +518,15 @@ public class OFDDoc implements Closeable {
                 List<VirtualPage> virtualPageList = analyzer.analyze(sgmQueue);
                 vPageList.addAll(virtualPageList);
             }
+            // 流式集合列表
+            if (!sPageList.isEmpty()) {
+                for (StreamCollect sCollect : sPageList) {
+                    List<VirtualPage> pageList = sCollect.analyze(pageLayout);
+                    vPageList.addAll(pageList);
+                }
+            }
 
+            // 虚拟页面布局
             if (!vPageList.isEmpty()) {
                 DocDir docDefault = ofdDir.obtainDocDefault();
                 // 创建虚拟页面解析引擎，并持有文档上下文。
@@ -505,6 +534,7 @@ public class OFDDoc implements Closeable {
                 // 解析虚拟页面
                 parseEngine.process(vPageList);
             }
+
 
             if (vPageList.isEmpty() && annotationRender == null && reader == null) {
                 // 虚拟页面为空，也没有注解对象，也不是编辑模式，那么空的操作报错

@@ -236,6 +236,18 @@ public class ResourceLocator {
     }
 
     /**
+     * 路径是否存在
+     *
+     * @param path 末端路径
+     * @return true -存在，false - 不存在
+     */
+    public boolean exist(String path) {
+        LinkedList<String> copy = new LinkedList<>(workDir);
+        copy.add(path);
+        return exist(copy);
+    }
+
+    /**
      * 判断路径是否存在
      *
      * @param workDir 路径集合

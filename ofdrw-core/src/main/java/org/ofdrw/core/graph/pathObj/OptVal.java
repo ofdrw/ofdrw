@@ -129,6 +129,37 @@ public class OptVal implements Cloneable {
         }
     }
 
+    /**
+     * 获取期待数量的参数值
+     * <p>
+     * 参数不足时补0
+     *
+     * @return 参数值
+     */
+    public double[] expectValues() {
+        switch (opt) {
+            case "S":
+            case "M":
+            case "L": {
+                return filling(values, 2);
+            }
+            case "Q": {
+                return filling(values, 4);
+            }
+            case "B": {
+                return filling(values, 6);
+            }
+            case "A": {
+                return filling(values, 7);
+            }
+            case "C": {
+                return new double[0];
+            }
+            default:
+                return new double[0];
+        }
+    }
+
     @Override
     public OptVal clone() {
         return new OptVal(this.opt, this.values.clone());
@@ -163,7 +194,7 @@ public class OptVal implements Cloneable {
                         STBase.fmt(arr[2]),
                         STBase.fmt(arr[3]),
                         STBase.fmt(arr[4]),
-                        STBase.fmt(arr[5]),STBase.fmt(arr[6]));
+                        STBase.fmt(arr[5]), STBase.fmt(arr[6]));
             }
             case "C": {
                 return "C";
