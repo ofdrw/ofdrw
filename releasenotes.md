@@ -2,6 +2,16 @@
 
 ## 进展
 
+## Version 1.12.1 2021-6-16 19:03:54
+
+> Alias: Your Lie in April
+
+修复：
+
+- 文件转换过程中由于印章解析异常导致NPE。
+- 升级PDFBox防止可能发生OOM攻击BUG。
+
+
 ## Version 1.12.0 2021-6-11 20:06:55
 
 > Alias: Sword Art Online
