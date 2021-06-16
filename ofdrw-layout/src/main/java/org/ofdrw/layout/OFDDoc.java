@@ -21,6 +21,7 @@ import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.engine.*;
 import org.ofdrw.layout.engine.render.RenderException;
 import org.ofdrw.layout.exception.DocReadException;
+import org.ofdrw.pkg.container.AnnotsDir;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.reader.OFDReader;
@@ -491,8 +492,9 @@ public class OFDDoc implements Closeable {
         }
         if (attachments == null) {
             attachments = new Attachments();
-            docDir.putObj(DocDir.Attachments, attachments);
-            ofdDocument.setAttachments(docDir.getAbsLoc().cat(DocDir.Attachments));
+            final AnnotsDir annotsDir = docDir.obtainAnnots();
+            annotsDir.putObj(DocDir.Attachments, attachments);
+            ofdDocument.setAttachments(annotsDir.getAbsLoc().cat(DocDir.Attachments));
         }
         return attachments;
     }

@@ -405,6 +405,17 @@ public class ResourceLocator {
      */
     public Path getFile(ST_Loc stLoc) throws FileNotFoundException {
         String loc = stLoc.getLoc();
+        return getFile(loc);
+    }
+
+    /**
+     * 获取路径下的文件
+     *
+     * @param loc 路径
+     * @return 系统文件路径
+     * @throws FileNotFoundException 文件或路径不存在
+     */
+    public Path getFile(String loc) throws FileNotFoundException {
         if (loc == null || loc.trim().equals("")) {
             throw new FileNotFoundException("路径为空（loc）");
         }

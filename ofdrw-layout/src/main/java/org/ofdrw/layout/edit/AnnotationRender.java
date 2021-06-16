@@ -14,9 +14,9 @@ import org.ofdrw.layout.element.canvas.DrawContext;
 import org.ofdrw.layout.element.canvas.Drawer;
 import org.ofdrw.layout.engine.ResManager;
 import org.ofdrw.layout.engine.render.RenderException;
+import org.ofdrw.pkg.container.AnnotsDir;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.PageDir;
-import org.ofdrw.pkg.container.VirtualContainer;
 import org.ofdrw.reader.BadOFDException;
 import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.ResourceLocator;
@@ -37,6 +37,13 @@ public class AnnotationRender {
      * 文档目录
      */
     private DocDir docDir;
+
+    /**
+     * 注释目录
+     * <p>
+     * GMT0099 OFD 2.0
+     */
+    private AnnotsDir annotsDir;
 
     /**
      * 注释文件目录
@@ -74,6 +81,7 @@ public class AnnotationRender {
         if (annListFileLoc != null) {
             try {
                 annotations = rl.get(annListFileLoc, Annotations::new);
+                annotsDir = new AnnotsDir(rl.getFile(annListFileLoc.parent()));
                 // 切换目录到注解目录文件所在目录中
                 rl.cd(annListFileLoc.parent());
             } catch (FileNotFoundException | DocumentException e) {
@@ -82,10 +90,12 @@ public class AnnotationRender {
             }
         }
         if (annotations == null) {
+            // 创建 注释容器
+            annotsDir = docDir.obtainAnnots();
+            document.setAnnotations(annotsDir.getAbsLoc().cat(DocDir.AnnotationsFileName));
             // 不存在注释列表文件需要创建该文件
             annotations = new Annotations();
-            document.setAnnotations(new ST_Loc(DocDir.AnnotationsFileName));
-            docDir.putObj(DocDir.AnnotationsFileName, annotations);
+            annotsDir.putObj(DocDir.AnnotationsFileName, annotations);
         }
 
     }
@@ -130,21 +140,16 @@ public class AnnotationRender {
         /*
          * 获取页面所处容器
          */
-        String pageContainerPath = pageInfo.getPageAbsLoc().parent();
+//        String pageContainerPath = pageInfo.getPageAbsLoc().parent();
 
 
         if (annotContainer == null) {
-            VirtualContainer pageDir;
-            try {
-                pageDir = rl.getContainer(pageContainerPath);
-            } catch (FileNotFoundException e) {
-                throw new BadOFDException("错误的OFD结构无法获取到" + pageContainerPath, e);
-            }
+            PageDir pageDir = annotsDir.obtainByIndex(pageInfo.getIndex());
             // 创建 分页注释文件 PageAnnot
             annotContainer = new PageAnnot();
-            pageDir.putObj(PageDir.AnnotationFileName, annotContainer);
+            pageDir.addAnnot(annotContainer);
             // 重新设置分页注释条目位置为页面所处位置加上文件名
-            record.setFileLoc(new ST_Loc(pageContainerPath).cat(PageDir.AnnotationFileName));
+            record.setFileLoc(pageDir.getAbsLoc().cat(PageDir.AnnotationFileName));
         }
 
         // 获取注解对象，设置ID

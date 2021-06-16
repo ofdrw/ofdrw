@@ -6,9 +6,14 @@ import org.ofdrw.core.annotation.pageannot.PageAnnot;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.res.Res;
 
+import javax.xml.ws.Holder;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 页面目录容器
@@ -37,6 +42,13 @@ public class PageDir extends VirtualContainer {
      * 记录了页面关联的注解对象
      */
     public static final String AnnotationFileName = "Annotation.xml";
+
+    /**
+     * 注释文件前缀
+     * <p>
+     * GMT0099 OFD 2.0
+     */
+    public static final String AnnotFilePrefix = "Annot_";
 
 
     /**
@@ -104,6 +116,38 @@ public class PageDir extends VirtualContainer {
     }
 
     /**
+     * 根据页面注释文件的名称前缀获取该目录下所有注释对象
+     * <p>
+     * 注释文件前缀： Annot_M.xml
+     *
+     * @return 容器内所有注释对象
+     * @throws IOException 文件读异常
+     */
+    public List<PageAnnot> getPageAnnots() throws IOException {
+        List<PageAnnot> res = new ArrayList<>(1);
+        // 过滤出注释文件
+        Files.list(this.getContainerPath()).filter((item) -> {
+            String fileName = item.getFileName().toString().toLowerCase();
+            // 不是目录 并且 文件名以 Annot_ 开头
+            return Files.isRegularFile(item)
+                    && fileName.startsWith(AnnotFilePrefix.toLowerCase())
+                    && fileName.endsWith(".xml");
+        }).forEach(item -> {
+            Element obj = null;
+            try {
+                obj = this.getObj(AnnotationFileName);
+            } catch (Exception e) {
+                // ignore
+                obj = null;
+            }
+            if (obj != null) {
+                res.add(new PageAnnot(obj));
+            }
+        });
+        return res;
+    }
+
+    /**
      * 设置分页注释文件
      *
      * @param pageAnnot 分页注释文件
@@ -145,6 +189,37 @@ public class PageDir extends VirtualContainer {
     public PageDir add(Path resource) throws IOException {
         // 如果存在那么获取容器，不存在则创建容器
         obtainRes().add(resource);
+        return this;
+    }
+
+    /**
+     * 向页面人品敏感期中加入新的注释文件
+     * @param pageAnnot 注释对象
+     * @return this
+     * @throws IOException 文件复制过程中发生异常
+     */
+    public PageDir addAnnot(PageAnnot pageAnnot)throws IOException {
+        if (pageAnnot == null) {
+            return this;
+        }
+        Holder<Integer> maxIndexHolder = new Holder<>(-1);
+        Files.list(this.getContainerPath()).forEach((item) -> {
+            if (!Files.isRegularFile(item)){
+                return;
+            }
+            String fileName = item.getFileName().toString().toLowerCase();
+            // 不是目录 并且 文件名以 Annot_ 开头
+            if (fileName.startsWith(AnnotFilePrefix.toLowerCase()) && fileName.endsWith(".xml")){
+                // TODO 找到最大Index
+                // test case 1 不存在
+                // test case 2 不规则文件名，如 Annot_Text.xml
+                // test case 3 已经存在Annot 但是不规则目录如直接存放在根目录
+
+            }
+
+        });
+        String fileName = AnnotFilePrefix + (maxIndexHolder.value + 1) + ".xml";
+        this.putObj(fileName, pageAnnot);
         return this;
     }
 
