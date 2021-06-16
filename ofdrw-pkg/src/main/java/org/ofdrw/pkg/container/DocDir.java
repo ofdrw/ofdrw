@@ -307,24 +307,24 @@ public class DocDir extends VirtualContainer {
     }
 
     /**
-     * 获取 自定义标签容器
+     * 获取 模板容器
      * <p>
      * 如果目录不存在则会创建
      * <p>
      * GMT0099 OFD 2.0
      *
-     * @return 自定义标签容器
+     * @return 模板容器
      */
     public VirtualContainer obtainTemps() {
         return this.obtainContainer(DocDir.TempsDir, VirtualContainer::new);
     }
 
     /**
-     * 获取 临时文件容器
+     * 获取 模板容器
      * <p>
      * GMT0099 OFD 2.0
      *
-     * @return 临时文件容器
+     * @return 模板容器
      * @throws FileNotFoundException 页面存储目录不存在
      */
     public VirtualContainer getTemps() throws FileNotFoundException {

@@ -41,6 +41,8 @@ public class AnnotationRender {
     /**
      * 注释目录
      * <p>
+     * 可能为空，为空时应该创建该目录
+     * <p>
      * GMT0099 OFD 2.0
      */
     private AnnotsDir annotsDir;
@@ -81,9 +83,15 @@ public class AnnotationRender {
         if (annListFileLoc != null) {
             try {
                 annotations = rl.get(annListFileLoc, Annotations::new);
-                annotsDir = new AnnotsDir(rl.getFile(annListFileLoc.parent()));
+                String parent = annListFileLoc.parent();
+                if (parent.toLowerCase().endsWith(DocDir.AnnotsDir.toLowerCase())) {
+                    annotsDir = new AnnotsDir(rl.getFile(parent));
+                } else {
+                    // 如果目录不规范，那么创建新的目录
+                    annotsDir = null;
+                }
                 // 切换目录到注解目录文件所在目录中
-                rl.cd(annListFileLoc.parent());
+                rl.cd(parent);
             } catch (FileNotFoundException | DocumentException e) {
                 System.err.println(e.getMessage());
                 // 无法获取到注解对象，因此重建注解对象
@@ -92,10 +100,10 @@ public class AnnotationRender {
         if (annotations == null) {
             // 创建 注释容器
             annotsDir = docDir.obtainAnnots();
-            document.setAnnotations(annotsDir.getAbsLoc().cat(DocDir.AnnotationsFileName));
             // 不存在注释列表文件需要创建该文件
             annotations = new Annotations();
             annotsDir.putObj(DocDir.AnnotationsFileName, annotations);
+            document.setAnnotations(annotsDir.getAbsLoc().cat(DocDir.AnnotationsFileName));
         }
 
     }
@@ -120,7 +128,7 @@ public class AnnotationRender {
         // 分页注释记录条目
         AnnPage record = annotations.getByPageId(id.toString());
         // 用于存放注解对象的容器
-        PageAnnot annotContainer = null;
+        PageAnnot pageAnnot = null;
         if (record == null) {
             record = new AnnPage().setPageID(pageInfo.getId());
             // 创建新的页面注释条目
@@ -130,33 +138,34 @@ public class AnnotationRender {
             ST_Loc annPageFileLoc = record.getFileLoc();
             try {
                 // 从文件中加载
-                annotContainer = rl.get(annPageFileLoc, PageAnnot::new);
+                pageAnnot = rl.get(annPageFileLoc, PageAnnot::new);
             } catch (FileNotFoundException | DocumentException e) {
                 // 如果文件不存
-                annotContainer = null;
+                pageAnnot = null;
             }
         }
 
         /*
          * 获取页面所处容器
          */
-//        String pageContainerPath = pageInfo.getPageAbsLoc().parent();
-
-
-        if (annotContainer == null) {
-            PageDir pageDir = annotsDir.obtainByIndex(pageInfo.getIndex());
+        if (pageAnnot == null) {
+            if (annotsDir == null) {
+                // 创建目录
+                annotsDir = docDir.obtainAnnots();
+            }
+            PageDir pageDir = annotsDir.obtainByIndex(pageInfo.getPageN());
             // 创建 分页注释文件 PageAnnot
-            annotContainer = new PageAnnot();
-            pageDir.addAnnot(annotContainer);
+            pageAnnot = new PageAnnot();
+            ST_Loc pageAnnotLoc = pageDir.addAnnot(pageAnnot);
             // 重新设置分页注释条目位置为页面所处位置加上文件名
-            record.setFileLoc(pageDir.getAbsLoc().cat(PageDir.AnnotationFileName));
+            record.setFileLoc(pageAnnotLoc);
         }
 
         // 获取注解对象，设置ID
         Annot annot = build.build();
         annot.setObjID(maxUnitID.incrementAndGet());
         // 加入注释容器中
-        annotContainer.addAnnot(annot);
+        pageAnnot.addAnnot(annot);
         Appearance container = annot.getAppearance();
         ST_Box box = container.getBoundary()
                 .clone()

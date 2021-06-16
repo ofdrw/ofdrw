@@ -27,11 +27,10 @@ public class AnnotsDir extends VirtualContainer {
      *
      * @param index 页面索引
      * @return 指定索引页面容器
-     * @throws FileNotFoundException 无法找到指定索引页面
      */
-    public PageDir obtainByIndex(int index) throws FileNotFoundException {
+    public PageDir obtainByIndex(int index) {
         String containerName = PageDir.PageContainerPrefix + index;
-        return this.getContainer(containerName, PageDir::new);
+        return this.obtainContainer(containerName, PageDir::new);
     }
 
     /**

@@ -307,13 +307,25 @@ public class OFDReader implements Closeable {
                 templatePages.add(template);
             }
 
+            // Page_N 数组
+            int n = index;
+            String pageNName = new ST_Loc(pageLoc.parent()).getFileName().toLowerCase();
+            if (pageNName.matches("page_\\d+")) {
+                try {
+                    n = Integer.parseInt(pageNName.replace("page_", ""));
+                } catch (NumberFormatException e) {
+                    // ignore
+                }
+            }
+
             return new PageInfo()
                     .setIndex(pageNum)
                     .setId(pageList.get(index).getID())
                     .setObj(obj)
                     .setSize(pageSize.clone())
                     .setPageAbsLoc(pageLoc)
-                    .setTemplates(templatePages);
+                    .setTemplates(templatePages)
+                    .setPageN(n);
         } catch (FileNotFoundException | DocumentException e) {
 
             throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
