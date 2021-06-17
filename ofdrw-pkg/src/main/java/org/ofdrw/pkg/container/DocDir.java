@@ -315,8 +315,8 @@ public class DocDir extends VirtualContainer {
      *
      * @return 模板容器
      */
-    public VirtualContainer obtainTemps() {
-        return this.obtainContainer(DocDir.TempsDir, VirtualContainer::new);
+    public TempsDir obtainTemps() {
+        return this.obtainContainer(DocDir.TempsDir, TempsDir::new);
     }
 
     /**
@@ -327,8 +327,8 @@ public class DocDir extends VirtualContainer {
      * @return 模板容器
      * @throws FileNotFoundException 页面存储目录不存在
      */
-    public VirtualContainer getTemps() throws FileNotFoundException {
-        return this.getContainer(DocDir.TempsDir, VirtualContainer::new);
+    public TempsDir getTemps() throws FileNotFoundException {
+        return this.getContainer(DocDir.TempsDir, TempsDir::new);
     }
 
     /**

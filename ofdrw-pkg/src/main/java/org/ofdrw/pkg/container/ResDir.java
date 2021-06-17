@@ -27,11 +27,8 @@ public class ResDir extends VirtualContainer {
      * @throws IOException 文件复制过程中发生的异常
      */
     public ResDir add(Path res) throws IOException {
-        if (res == null) {
+        if (res == null || Files.notExists(res)) {
             return this;
-        }
-        if (Files.notExists(res)) {
-            throw new IllegalArgumentException("加入的资源不存在: " + res.toAbsolutePath().toString());
         }
         this.putFile(res);
         return this;
