@@ -216,7 +216,12 @@ public class ST_Array extends STBase implements Cloneable {
      */
     public Integer getInt(int index) {
         final String s = array.get(index);
-        return Integer.parseInt(s);
+        if (s.startsWith("#")) {
+            // 16进制数字
+            return Integer.parseInt(s.substring(1), 16);
+        } else {
+            return Integer.parseInt(s);
+        }
     }
 
     /**
@@ -236,7 +241,7 @@ public class ST_Array extends STBase implements Cloneable {
             }
             try {
                 res[i] = getInt(i);
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException | IndexOutOfBoundsException e) {
                 res[i] = 0;
             }
         }

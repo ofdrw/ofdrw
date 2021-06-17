@@ -266,7 +266,8 @@ public class OFDSigner implements Closeable {
             // 获取Doc_0 的签名列表文件位置
             signaturesLoc = reader.getDefaultDocSignaturesPath();
             // 如果OFD.xml 不含有签名列表文件路径，那么设置需要更新
-            if (signaturesLoc == null) {
+            // 如果  Signature.xml 文件不存在时候，也需要重新创建
+            if (signaturesLoc == null || (!rl.exist(signaturesLoc.toString()))) {
                 // 最大签名ID从0起的
                 return;
             }
@@ -361,10 +362,11 @@ public class OFDSigner implements Closeable {
         /*
          * 1. 获取签名列表文件对象
          *
+         * 先尝试获取已经存在的 签名列表文件 Signatures.xml
          * 根据需要可能需要更新OFD.xml
          */
-        Signatures signListObj = null;
-        if (signaturesLoc == null) {
+        Signatures signListObj = reader.getDefaultSignatures();
+        if (signaturesLoc == null || signListObj == null) {
             signListObj = new Signatures();
             signsDir.setSignatures(signListObj);
 
@@ -379,8 +381,6 @@ public class OFDSigner implements Closeable {
             } catch (DocumentException e) {
                 throw new BadOFDException("OFD.xml 文件解析失败");
             }
-        } else {
-            signListObj = reader.getDefaultSignatures();
         }
 
         /*

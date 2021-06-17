@@ -33,6 +33,8 @@ class ST_ArrayTest {
         assertArrayEquals(a.expectIntArr(4), new int[]{1, 2, 3, 0});
         ST_Array b = new ST_Array(1, 0.2, 3);
         assertArrayEquals(b.expectIntArr(4), new int[]{1, 0, 3, 0});
+        ST_Array c = ST_Array.getInstance("#FF #FF");
+        assertArrayEquals(c.expectIntArr(3), new int[]{255, 255, 0});
     }
 
     @Test

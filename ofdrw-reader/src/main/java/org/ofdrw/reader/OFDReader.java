@@ -189,13 +189,17 @@ public class OFDReader implements Closeable {
 
     /**
      * 获取默认的签名列表对象
+     * <p>
+     * 如果文件不存在则返还null
      *
      * @return 签名列表对象
      */
     public Signatures getDefaultSignatures() {
         ST_Loc signaturesLoc = getDefaultDocSignaturesPath();
-        if (signaturesLoc == null) {
-            throw new BadOFDException("OFD文档中不存在Signatures.xml");
+        // 文件中不存在 Signatures.xml 或是 路基上的文件不存在，都认为文件不存在
+        if (signaturesLoc == null || !(rl.exist(signaturesLoc.toString()))) {
+            return null;
+//            throw new BadOFDException("OFD文档中不存在Signatures.xml");
         }
         // 获取签名列表对象
         try {
@@ -235,7 +239,7 @@ public class OFDReader implements Closeable {
             Document document = cdDefaultDoc();
 
             ST_Loc annotations = document.getAnnotations();
-            if (annotations == null) {
+            if (annotations == null || !(rl.exist(annotations.toString()))) {
                 return null;
             }
             return rl.get(annotations, Annotations::new);
@@ -421,7 +425,7 @@ public class OFDReader implements Closeable {
             return null;
         }
         CT_PageArea pageArea = page.getArea();
-        if (pageArea ==  null || pageArea.getBox() == null) {
+        if (pageArea == null || pageArea.getBox() == null) {
             CT_PageArea tplArea = null;
             int biggestOrder = -1;
             // 从模板中获取
@@ -556,7 +560,7 @@ public class OFDReader implements Closeable {
             throw new BadOFDException(e);
         }
         ST_Loc attachmentsLoc = document.getAttachments();
-        if (attachmentsLoc == null) {
+        if (attachmentsLoc == null || (!rl.exist(attachmentsLoc.toString()))) {
             // 文档中没有附件目录文件
             return null;
         }
@@ -595,11 +599,14 @@ public class OFDReader implements Closeable {
 
         try {
             rl.save();
+            // 签名列表
+            final Signatures sigFileList = getDefaultSignatures();
+            if (sigFileList == null){
+                return Collections.emptyList();
+            }
             ST_Loc signaturesLoc = getDefaultDocSignaturesPath();
             // 切换目录到 Signatures.xml所在目录
             rl.cd(signaturesLoc.parent());
-            // 签名列表
-            final Signatures sigFileList = getDefaultSignatures();
             final List<Signature> sigInfoList = sigFileList.getSignatures();
             List<StampAnnotEntity> res = new ArrayList<>(sigInfoList.size());
             for (Signature sigInfoItem : sigInfoList) {
@@ -642,12 +649,12 @@ public class OFDReader implements Closeable {
             // 路径解析对象获取并缓存虚拟容器
             Document document = cdDefaultDoc();
             final ST_Loc annInfosLoc = document.getAnnotations();
-            if (annInfosLoc == null) {
-                return Collections.EMPTY_LIST;
+            if (annInfosLoc == null || (!rl.exist(annInfosLoc.toString()))) {
+                return Collections.emptyList();
             }
             Annotations annotations = rl.get(annInfosLoc, Annotations::new);
             if (annotations == null) {
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             }
             // 切换目录到 Annotations.xml所在文件目录
             rl.cd(annInfosLoc.parent());

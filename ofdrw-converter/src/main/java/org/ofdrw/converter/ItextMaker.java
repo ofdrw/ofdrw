@@ -43,6 +43,7 @@ import org.ofdrw.core.compositeObj.CT_VectorG;
 import org.ofdrw.core.graph.pathObj.FillColor;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
 import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
+import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.signatures.appearance.StampAnnot;
 import org.ofdrw.core.text.font.CT_Font;
@@ -60,7 +61,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.ofdrw.converter.utils.CommonUtil.convertOfdColor;
 import static org.ofdrw.converter.utils.CommonUtil.converterDpi;
 
 /**
@@ -267,10 +267,10 @@ public class ItextMaker {
                 defaultLineWidth = ctDrawParam.getLineWidth().floatValue();
             }
             if (ctDrawParam.getStrokeColor() != null) {
-                defaultStrokeColor = convertOfdColor(ctDrawParam.getStrokeColor().getValue());
+                defaultStrokeColor = ColorConvert.pdfRGB(resMgt, ctDrawParam.getStrokeColor());
             }
             if (ctDrawParam.getFillColor() != null) {
-                defaultFillColor = convertOfdColor(ctDrawParam.getFillColor().getValue());
+                defaultFillColor = ColorConvert.pdfRGB(resMgt, ctDrawParam.getFillColor());
             }
         }
 
@@ -280,15 +280,16 @@ public class ItextMaker {
                 Color fillColor = defaultFillColor;
                 TextObject textObject = (TextObject) block;
                 int alpha = 255;
-                if (textObject.getFillColor() != null) {
-                    if (textObject.getFillColor().getValue() != null) {
-                        fillColor = CommonUtil.convertOfdColor(textObject.getFillColor().getValue());
-                    } else if (textObject.getFillColor().getColorByType() != null) {
+                final FillColor ctFillColor = textObject.getFillColor();
+                if (ctFillColor != null) {
+                    if (ctFillColor.getValue() != null) {
+                        fillColor = ColorConvert.pdfRGB(resMgt, ctFillColor);
+                    } else if (ctFillColor.getColorByType() != null) {
                         // todo
-                        CT_AxialShd ctAxialShd = textObject.getFillColor().getColorByType();
-                        fillColor = CommonUtil.convertOfdColor(ctAxialShd.getSegments().get(0).getColor().getValue());
+                        CT_AxialShd ctAxialShd = ctFillColor.getColorByType();
+                        fillColor = ColorConvert.pdfRGB(resMgt, ctAxialShd.getSegments().get(0).getColor());
                     }
-                    alpha = textObject.getFillColor().getAlpha();
+                    alpha = ctFillColor.getAlpha();
                 }
                 //TODO 修复annot中的文字注解的定位
                 writeText(resMgt, pdfCanvas, box, sealBox, annotBox, textObject, fillColor, alpha, compositeObjectAlpha, compositeObjectBoundary, compositeObjectCTM);
@@ -333,11 +334,11 @@ public class ItextMaker {
             // 使用绘制参数补充缺省的颜色
             if (pathObject.getStrokeColor() == null
                     && ctDrawParam.getStrokeColor() != null) {
-                pathObject.setStrokeColor(ctDrawParam.getStrokeColor());
+                pathObject.setStrokeColor(new CT_Color().setValue(ctDrawParam.getStrokeColor().getValue()));
             }
             if (pathObject.getFillColor() == null
                     && ctDrawParam.getFillColor() != null) {
-                pathObject.setFillColor(ctDrawParam.getFillColor());
+                pathObject.setStrokeColor(new CT_Color().setValue(ctDrawParam.getFillColor().getValue()));
             }
             if (pathObject.getLineWidth() == null
                     && ctDrawParam.getLineWidth() != null) {
@@ -348,13 +349,15 @@ public class ItextMaker {
         if (pathObject.getStrokeColor() != null) {
             StrokeColor strokeColor = pathObject.getStrokeColor();
             if (strokeColor.getValue() != null) {
-                pdfCanvas.setStrokeColor(convertOfdColor(strokeColor.getValue()));
+                pdfCanvas.setStrokeColor(ColorConvert.pdfRGB(resMgt, strokeColor));
             }
             Element e = strokeColor.getOFDElement("AxialShd");
             if (e != null) {
                 CT_AxialShd ctAxialShd = new CT_AxialShd(e);
-                ST_Array start = ctAxialShd.getSegments().get(0).getColor().getValue();
-                ST_Array end = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor().getValue();
+                final CT_Color startColor = ctAxialShd.getSegments().get(0).getColor();
+                final CT_Color endColor = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor();
+                ST_Array start = startColor.getValue();
+                ST_Array end = endColor.getValue();
                 ST_Pos startPos = ctAxialShd.getStartPoint();
                 ST_Pos endPos = ctAxialShd.getEndPoint();
                 double x1 = startPos.getX(), y1 = startPos.getY();
@@ -373,11 +376,11 @@ public class ItextMaker {
                 realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, pathObject.getBoundary());
                 x2 = realPos[0];
                 y2 = box.getHeight() - realPos[1];
-                PdfShading.Axial axial = new PdfShading.Axial(new PdfDeviceCs.Rgb(), 0, 0, convertOfdColor(start).getColorValue(),
-                        box.getWidth().floatValue(), box.getHeight().floatValue(), convertOfdColor(end).getColorValue());
+                PdfShading.Axial axial = new PdfShading.Axial(new PdfDeviceCs.Rgb(), 0, 0, ColorConvert.pdfRGB(resMgt, startColor).getColorValue(),
+                        box.getWidth().floatValue(), box.getHeight().floatValue(), ColorConvert.pdfRGB(resMgt, endColor).getColorValue());
                 PdfPattern.Shading shading = new PdfPattern.Shading(axial);
                 pdfCanvas.setStrokeColorShading(shading);
-                defaultStrokeColor = convertOfdColor(end);
+                defaultStrokeColor = ColorConvert.pdfRGB(resMgt, endColor);
                 pdfCanvas.setStrokeColor(defaultStrokeColor);
             }
         } else {
@@ -431,13 +434,15 @@ public class ItextMaker {
             FillColor fillColor = (FillColor) pathObject.getFillColor();
             if (fillColor != null) {
                 if (fillColor.getValue() != null) {
-                    pdfCanvas.setFillColor(convertOfdColor(fillColor.getValue()));
+                    pdfCanvas.setFillColor(ColorConvert.pdfRGB(resMgt, fillColor));
                 }
                 Element e = fillColor.getOFDElement("AxialShd");
                 if (e != null) {
                     CT_AxialShd ctAxialShd = new CT_AxialShd(e);
-                    ST_Array start = ctAxialShd.getSegments().get(0).getColor().getValue();
-                    ST_Array end = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor().getValue();
+                    final CT_Color startColor = ctAxialShd.getSegments().get(0).getColor();
+                    final CT_Color endColor = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor();
+                    ST_Array start = startColor.getValue();
+                    ST_Array end = endColor.getValue();
                     ST_Pos startPos = ctAxialShd.getStartPoint();
                     ST_Pos endPos = ctAxialShd.getEndPoint();
 //                    double x1 = startPos.getX(), y1 = startPos.getY();
@@ -460,7 +465,7 @@ public class ItextMaker {
 //                            (float) x2, (float) y2, convertOfdColor(end).getColorValue());
 //                    PdfPattern.Shading shading = new PdfPattern.Shading(axial);
 //                    pdfCanvas.setFillColorShading(shading);
-                    defaultFillColor = convertOfdColor(end);
+                    defaultFillColor = ColorConvert.pdfRGB(resMgt, endColor);
                     pdfCanvas.setFillColor(defaultFillColor);
                 }
             } else {
@@ -569,8 +574,12 @@ public class ItextMaker {
             Element e = textObject.getFillColor().getOFDElement("AxialShd");
             if (e != null) {
                 CT_AxialShd ctAxialShd = new CT_AxialShd(e);
-                ST_Array start = ctAxialShd.getSegments().get(0).getColor().getValue();
-                ST_Array end = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor().getValue();
+
+                final CT_Color startColor = ctAxialShd.getSegments().get(0).getColor();
+                final CT_Color endColor = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor();
+
+                ST_Array start = startColor.getValue();
+                ST_Array end = endColor.getValue();
                 ST_Pos startPos = ctAxialShd.getStartPoint();
                 ST_Pos endPos = ctAxialShd.getEndPoint();
                 double x1 = startPos.getX(), y1 = startPos.getY();
@@ -589,8 +598,8 @@ public class ItextMaker {
                 realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, textObject.getBoundary());
                 x2 = realPos[0];
                 y2 = box.getHeight() - realPos[1];
-                PdfShading.Axial axial = new PdfShading.Axial(new PdfDeviceCs.Rgb(), (float) x1, (float) y1, convertOfdColor(start).getColorValue(),
-                        (float) x2, (float) y2, convertOfdColor(end).getColorValue());
+                PdfShading.Axial axial = new PdfShading.Axial(new PdfDeviceCs.Rgb(), (float) x1, (float) y1, ColorConvert.pdfRGB(resMgt, startColor).getColorValue(),
+                        (float) x2, (float) y2, ColorConvert.pdfRGB(resMgt, endColor).getColorValue());
                 PdfPattern.Shading shading = new PdfPattern.Shading(axial);
                 pdfCanvas.setFillColorShading(shading);
             }

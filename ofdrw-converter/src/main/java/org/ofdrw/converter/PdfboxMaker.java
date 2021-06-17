@@ -51,6 +51,11 @@ import java.util.List;
 import static org.ofdrw.converter.utils.CommonUtil.*;
 
 
+/**
+ * PDFBox实现的PDF转换实现
+ *
+ * @deprecated see {@link ItextMaker}
+ */
 @Deprecated
 public class PdfboxMaker {
 

@@ -85,8 +85,25 @@ public final class FontLoader {
      * 是否开启 字体替换，替换规则 similarFontReplaceRegexMapping
      *
      * @return 实例
+     * @deprecated {@link #setSimilarFontReplace}
      */
-    public static FontLoader enableSimilarFontReplace(boolean enable) {
+    @Deprecated
+    public static FontLoader enableSimilarFontReplace() {
+        FontLoader instance = getInstance();
+        instance.enableSimilarFontReplace = true;
+        return instance;
+    }
+
+    /**
+     * 设置是否开启相近字体替换
+     * <p>
+     * 该方法用于在字体无法识别的情况下采用默认的字体进行替换
+     * 防止渲染时字体内容缺失。
+     *
+     * @param enable true - 开启(默认); false - 关闭
+     * @return 实例
+     */
+    public static FontLoader setSimilarFontReplace(boolean enable) {
         FontLoader instance = getInstance();
         instance.enableSimilarFontReplace = enable;
         return instance;
@@ -117,6 +134,15 @@ public final class FontLoader {
         } else if (OSinfo.isLinux()) {
             scanFontDir(new File(DEFAULT_FONT_DIR_LINUX));
         }
+        // 预置一些常用的字体别名
+        this.addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
+                .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
+                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
+                .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
+                .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
+                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
     }
 
     /**
@@ -155,8 +181,8 @@ public final class FontLoader {
     /**
      * 追加相似字体正则匹配规则
      *
-     * @param familyNameRegex      字族名匹配规则
-     * @param fontNameRegex        字体名匹配规则
+     * @param familyNameRegex 字族名匹配规则
+     * @param fontNameRegex   字体名匹配规则
      * @param aliasFamilyName 字族别名
      * @param aliasFontName   字体别名
      * @return this
@@ -247,6 +273,7 @@ public final class FontLoader {
 
     /**
      * 获取配置的 相似字体 对应的字体路径
+     *
      * @param familyName 字族名
      * @param fontName   字体名
      * @return 字体操作系统内绝对路径，如果不存在返还 null
@@ -364,7 +391,7 @@ public final class FontLoader {
      * @return 字体或null
      */
     public TrueTypeFont loadFont(ResourceLocator rl, CT_Font ctFont) {
-        return loadFontSimilar(rl,ctFont).getFont();
+        return loadFontSimilar(rl, ctFont).getFont();
     }
 
     /**
@@ -478,10 +505,17 @@ public final class FontLoader {
                     throw new FileNotFoundException("无法在OFD内找到字体 " + fontAbsPath);
             }
             FontProgram fontProgram = null;
+            if (fontAbsPath == null) {
+                throw new IllegalArgumentException("无法找到字体路径");
+            }
             // 解决TTC无法加载问题
-            if (fontAbsPath.toLowerCase().endsWith(".ttc")) {
+            final String fileName = fontAbsPath.toLowerCase();
+            if (fileName.endsWith(".ttc")) {
                 fontAbsPath = fontAbsPath + ",0";
                 fontProgram = FontProgramFactory.createFont(fontAbsPath, false);
+            } else if (fileName.endsWith(".ttf") || fileName.endsWith(".otf")) {
+                final byte[] fontBin = Files.readAllBytes(Paths.get(fontAbsPath));
+                fontProgram = new com.itextpdf.io.font.TrueTypeFont(fontBin);
             } else {
                 // 即便设置不缓存，任然会出现文件没有关闭的问题。
                 // 因此，读取到内存防止因为 FontProgram 的缓存导致无法删除临时OFD文件的问题。
@@ -493,8 +527,8 @@ public final class FontLoader {
         } catch (Exception e) {
 //            e.printStackTrace();
             log.info("无法加载字体 {} {} {}，原因:{}",
-                ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
-                e.getMessage());
+                    ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
+                    e.getMessage());
             //如果是文件中的字体资源加载失败，使用系统中的字体: Type of font is not recognized.
             if (ctFont.getFontFile() != null) {
                 ctFont.setFontFile("");

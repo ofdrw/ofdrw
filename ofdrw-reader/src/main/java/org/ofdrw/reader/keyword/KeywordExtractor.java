@@ -297,11 +297,11 @@ public class KeywordExtractor {
     /**
      * 处理正常关键字
      *
-     * @param keyword         关键字
-     * @param boundaryMapping 映射对象
-     * @param positionList    为转移列表
-     * @param textCode        文字定位
-     * @param textIndex       文本索引
+     * @param keyword         [in]关键字
+     * @param boundaryMapping [in]映射对象
+     * @param positionList    [out]位置列表
+     * @param textCode        [in]文字定位
+     * @param textIndex       [in]文本索引
      */
     private static void addNormalKeyword(String keyword, Map<TextCode, KeywordResource> boundaryMapping, List<KeywordPosition> positionList,
                                          TextCode textCode, int textIndex) {
@@ -309,22 +309,30 @@ public class KeywordExtractor {
         if (kr != null) {
             CT_Text ctText = kr.getText();
             if (ctText.getBoundary() != null) {
-                FontMetrics fontMetrics = FontDesignMetrics.getMetrics(getFont(ctText, kr.getFont()));
+                String content = textCode.getContent();
+                boolean hasNextKeyword = true;
 
-                List<Float> deltaX = DeltaTool.getDelta(textCode.getDeltaX(), textCode.getContent().length());
-                List<Float> deltaY = DeltaTool.getDelta(textCode.getDeltaY(), textCode.getContent().length());
+                while(hasNextKeyword) {
+                    FontMetrics fontMetrics = FontDesignMetrics.getMetrics(getFont(ctText, kr.getFont()));
 
-                KeywordPosition position;
-                ST_Array ctm = ctText.getCTM();
-                int keywordLength = keyword.length();
-                if (ctm != null) {
-                    position = getCtmKeywordPosition(textCode, textIndex, kr.getPage(), ctText, fontMetrics, ctm, deltaX, deltaY, keywordLength);
-                } else {
-                    position = getKeywordPosition(textCode, textIndex, kr.getPage(), ctText, fontMetrics, deltaX, deltaY, keywordLength);
+                    List<Float> deltaX = DeltaTool.getDelta(textCode.getDeltaX(), textCode.getContent().length());
+                    List<Float> deltaY = DeltaTool.getDelta(textCode.getDeltaY(), textCode.getContent().length());
+
+                    KeywordPosition position;
+                    ST_Array ctm = ctText.getCTM();
+                    int keywordLength = keyword.length();
+                    if (ctm != null) {
+                        position = getCtmKeywordPosition(textCode, textIndex, kr.getPage(), ctText, fontMetrics, ctm, deltaX, deltaY, keywordLength);
+                    } else {
+                        position = getKeywordPosition(textCode, textIndex, kr.getPage(), ctText, fontMetrics, deltaX, deltaY, keywordLength);
+                    }
+
+                    position.setKeyword(keyword);
+                    positionList.add(position);
+
+                    textIndex = content.indexOf(keyword, textIndex + keywordLength);
+                    hasNextKeyword = textIndex != -1;
                 }
-
-                position.setKeyword(keyword);
-                positionList.add(position);
             }
         }
     }
@@ -571,7 +579,7 @@ public class KeywordExtractor {
     }
 
     /**
-     * 获取获取模板字典
+     * 获取模板页数据
      *
      * @param locator  资源定位器
      * @param dataDir  Document File路径

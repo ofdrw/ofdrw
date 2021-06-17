@@ -2,6 +2,61 @@
 
 ## 进展
 
+## Version 1.12.1 2021-6-16 19:03:54
+
+> Alias: Your Lie in April
+
+修复：
+
+- 文件转换过程中由于印章解析异常导致NPE。
+- 升级PDFBox防止可能发生OOM攻击BUG。
+
+
+## Version 1.12.0 2021-6-11 20:06:55
+
+> Alias: Sword Art Online
+
+修复：
+
+- 转换PDF对路径对象解析越界问题。
+
+新增：
+
+- 流式布局的页面插入功能
+    - 见测试用例 [DocEditDemos#streamInsertTest](./ofdrw-layout/src/test/java/org/ofdrw/layout/DocEditDemos.java)
+
+## Version 1.11.2 2021-6-10 19:11:42
+
+> Alias: Ghost in the Shell
+
+修复：
+
+- 对签名列表文件、注释列表文件、附件列表文件的存在性检查，修复 出现路径存在文件不存在BUG。
+- 修复 转换PDF时描边颜色转换错误的问题。
+
+## Version 1.11.1 2021-6-9 19:05:23
+
+> Alias: A Certain Scientific Railgun
+
+修复：
+
+- 多个相同关键字只能检索到1个的问题。
+- 修复了测试 OFD转图片、SVG、HTML中示例OFDReader没有关闭造成的临时文件没有删除的问题。
+
+## Version 1.11.0 2021-6-8 21:46:30
+
+>  Alias: Hori-san to Miyamura-kun
+
+修复：
+
+- 颜色空间导致的NPE。
+- 修复在字体无法加载时使用系统字体进行模糊替换的BUG。
+
+新增：
+
+- [OFD转换HTML](./ofdrw-converter/README.md)
+
+
 ## Version 1.10.0 2021-6-2 23:20:49
 
 > Alias: MissKobayashiDragonMaid

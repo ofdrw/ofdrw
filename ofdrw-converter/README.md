@@ -4,10 +4,11 @@
 > 
 > - *[DLTech21](https://github.com/DLTech21) OFD转换PDF*
 > - *[QAQtutu](https://github.com/QAQtutu) OFD转换图片、SVG。*
+> - *[yuanfangme](https://github.com/yuanfangme) OFD转换HTML。*
 > 
 > *OFDRW社区感谢你们对convert模块的辛勤开发！*
 
-OFDR&W文档转换支持
+OFDR&W文档转换支持：
 
 - **OFD `=>` PDF**
 - **OFD `=>` 图片**
@@ -33,7 +34,7 @@ pom引入相关模块
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-converter</artifactId>
-    <version>1.10.0</version>
+    <version>1.12.1</version>
 </dependency>
 ```
 
@@ -80,6 +81,7 @@ public class HelloWorld {
 3. 创建转换转换对象，并设置PPM（每毫米像素数量 Pixels per millimeter）。
 4. 指定页码转换图片。
 5. 存储为指定格式图片。
+6. 关闭OFDReader。
 
 ```java
 public class HelloWorld {
@@ -89,14 +91,17 @@ public class HelloWorld {
         // 2. 加载指定目录字体(非必须)
         // FontLoader.getInstance().scanFontDir(new File("src/test/resources/fonts"));
         // 3. 创建转换转换对象，设置 每毫米像素数量(Pixels per millimeter)
-        ImageMaker imageMaker = new ImageMaker(new OFDReader(src), 15);
-        for (int i = 0; i < imageMaker.pageSize(); i++) {
-            // 4. 指定页码转换图片
-            BufferedImage image = imageMaker.makePage(i);
-            Path dist = Paths.get("target", i + ".png");
-            // 5. 存储为指定格式图片
-            ImageIO.write(image, "PNG", dist.toFile());
+        try(OFDReader reader = new OFDReader(src);) {
+            ImageMaker imageMaker = new ImageMaker(reader, 15);
+            for (int i = 0; i < imageMaker.pageSize(); i++) {
+                // 4. 指定页码转换图片
+                BufferedImage image = imageMaker.makePage(i);
+                Path dist = Paths.get("target", i + ".png");
+                // 5. 存储为指定格式图片
+                ImageIO.write(image, "PNG", dist.toFile());
+            }
         }
+        // 6. Close OFDReader 删除工作过程中的临时文件 try close 语法
     }
 }
 ```
@@ -120,6 +125,7 @@ public class HelloWorld {
 3. 创建转换转换对象，并设置PPM（每毫米像素数量 Pixels per millimeter）。
 4. 指定页码转换SVG，得到SVG(XML)。
 5. 存储SVG到文件。
+6. 关闭OFDReader。
 
 ```java
 public class HelloWorld {
@@ -129,14 +135,17 @@ public class HelloWorld {
         // 2. 加载指定目录字体(非必须)
         // FontLoader.getInstance().scanFontDir(new File("src/test/resources/fonts"));
         // 3. 创建转换转换对象，设置 每毫米像素数量(Pixels per millimeter)
-        SVGMaker svgMaker = new SVGMaker(new OFDReader(src), 20);
-        for (int i = 0; i < imageMaker.pageSize(); i++) {
-            // 4. 指定页码转换SVG，得到SVG(XML)
-            String svg = svgMaker.makePage(i);
-            Path dist = Paths.get("target", i + ".svg");
-            // 5. 存储到文件。
-            Files.write(dist, svg.getBytes());
+        try(OFDReader reader = new OFDReader(src)) {
+            SVGMaker svgMaker = new SVGMaker(reader, 20d);
+            for (int i = 0; i < imageMaker.pageSize(); i++) {
+                // 4. 指定页码转换SVG，得到SVG(XML)
+                String svg = svgMaker.makePage(i);
+                Path dist = Paths.get("target", i + ".svg");
+                // 5. 存储到文件。
+                Files.write(dist, svg.getBytes());
+            }
         }
+        // 6. Close OFDReader 删除工作过程中的临时文件 try close 语法
     }
 }
 ```
@@ -158,35 +167,20 @@ public class HelloWorld {
 
 1. 提供待转换OFD文档。
 2. *配置字体(可选)。
-3. 创建转换转换对象，并设置HTML页面宽度(px)。
-4. 开始转换并存储HTML到文件。
+3. 配置参数（HTML页面宽度(px)），转换并存储HTML到文件。
 
 ```java
 public class HelloWorld {
     public static void main(String[] args) {
-        //配置文字映射、文字替换规则（可选）
-        FontLoader.getInstance()
-            .addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
-            .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
-
-            .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-            .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-            .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
-            .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
-            .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
-            .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
-
-        FontLoader.enableSimilarFontReplace(true);
-
         try {
-
-            //开始转换OFD为HTML
-            ConvertHelper.toHtml(
-                new OFDReader(Paths.get("src/test/resources/n.ofd")),
-                Paths.get("target/n.html").toFile().getAbsolutePath(),
-                1000
-            );
-
+            // 1. 提供文档
+            Path ofdIn = Paths.get("src/test/resources/n.ofd");
+            Path htmlOut = Paths.get("target/n.html");
+            // 2. [可选]配置字体，别名，扫描目录等
+            // FontLoader.getInstance().addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
+            // FontLoader.getInstance().scanFontDir(new File("src/test/resources/fonts"));
+            // 3. 配置参数（HTML页面宽度(px)），转换并存储HTML到文件。
+            ConvertHelper.toHtml(ofdIn, htmlOut, 1000);
         } catch (GeneralConvertException | IOException e) {
             e.printStackTrace();
         }

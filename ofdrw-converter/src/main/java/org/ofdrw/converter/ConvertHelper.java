@@ -254,13 +254,31 @@ public class ConvertHelper {
     /**
      * 转HTML
      *
-     * @param ofdReader   OFD输入文件
+     * 需要手动关闭外部Reader
+     *
+     * @param ofdReader   OFD输入文件，OFDReader应该由外部关闭
      * @param output      HTML输出文件路径
      * @param screenWidth 页面宽度，或者屏幕宽度
+     * @throws IOException 文件处理异常
      */
-    public static void toHtml(OFDReader ofdReader, String output, int screenWidth) {
+    public static void toHtml(OFDReader ofdReader, String output, int screenWidth) throws IOException {
         HtmlMaker htmlMaker = new HtmlMaker(ofdReader, output, screenWidth);
         htmlMaker.parse();
+    }
+
+    /**
+     * OFD转HTML
+     *
+     * @param ofdIn OFD文件路径
+     * @param htmlOut HTML输出文件路径
+     * @param screenWidth 页面宽度，或者屏幕宽度
+     * @throws IOException 文件处理异常
+     */
+    public static void toHtml(Path ofdIn, Path htmlOut, int screenWidth) throws IOException{
+        try (OFDReader reader = new OFDReader(ofdIn)) {
+            HtmlMaker htmlMaker = new HtmlMaker(reader, htmlOut.toAbsolutePath().toString(), screenWidth);
+            htmlMaker.parse();
+        }
     }
 
 }

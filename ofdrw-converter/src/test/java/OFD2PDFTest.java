@@ -26,12 +26,13 @@ public class OFD2PDFTest {
             .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
             .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
 
-        FontLoader.enableSimilarFontReplace(true);
+        FontLoader.setSimilarFontReplace(true);
 
         try {
 //            ConvertHelper.toPdf(src, dst);
 //            ConvertHelper.toPdf(Paths.get("src/test/resources/signout.ofd"), Paths.get("target/signout.pdf"));
-            ConvertHelper.toPdf(Paths.get("src/test/resources/n.ofd"), Paths.get("target/n.pdf"));
+//            ConvertHelper.toPdf(Paths.get("src/test/resources/n.ofd"), Paths.get("target/n.pdf"));
+            ConvertHelper.toPdf(Paths.get("src/test/resources/999.ofd"), Paths.get("target/n.pdf"));
 
         } catch (GeneralConvertException e) {
             e.printStackTrace();
