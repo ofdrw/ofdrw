@@ -1,7 +1,10 @@
 package org.ofdrw.core.signatures.sig;
 
 import org.dom4j.Element;
+import org.jetbrains.annotations.Nullable;
 import org.ofdrw.core.OFDElement;
+
+import java.util.Base64;
 
 /**
  * 创建签名时所用的签章组件提供者信息
@@ -99,5 +102,69 @@ public class Provider extends OFDElement {
      */
     public String getCompany() {
         return this.attributeValue("Company");
+    }
+
+    /**
+     * 【可选 属性 OFD 2.0】
+     * 设置 创建签名时所用的签章组件的接口协议版本
+     * <p>
+     * GMT0099 表 B.2
+     *
+     * @param protocolVer 创建签名时所用的签章组件的接口协议版，如果为空则删除该属性
+     * @return this
+     */
+    public Provider setProtocolVer(@Nullable String protocolVer) {
+        if (protocolVer == null) {
+            this.removeAttr("ProtocolVer");
+            return this;
+        }
+        this.addAttribute("ProtocolVer", protocolVer);
+        return this;
+    }
+
+    /**
+     * 【可选 属性 OFD 2.0】
+     * 获取 创建签名时所用的签章组件的接口协议版本
+     * <p>
+     * GMT0099 表 B.2
+     *
+     * @return 创建签名时所用的签章组件的接口协议版，可能为空
+     */
+    @Nullable
+    public String getProtocolVer() {
+        return this.attributeValue("ProtocolVer");
+    }
+
+    /**
+     * 【可选 OFD 2.0】
+     * 设置 创建签名时所用的签章组件的扩展信息
+     * <p>
+     * GMT0099 表 B.2
+     *
+     * @param extendData 创建签名时所用的签章组件的扩展信息
+     * @return this
+     */
+    public Provider setExtendData(@Nullable byte[] extendData) {
+        if (extendData == null) {
+            extendData = new byte[0];
+        }
+        this.setOFDEntity("ExtendData", Base64.getEncoder().encodeToString(extendData));
+        return this;
+    }
+
+    /**
+     * 【可选 OFD 2.0】
+     * 获取 创建签名时所用的签章组件的扩展信息
+     * <p>
+     * GMT0099 表 B.2
+     *
+     * @return 创建签名时所用的签章组件的扩展信息，可能为空字节数组
+     */
+    public byte[] getExtendData() {
+        Element e = this.getOFDElement("ExtendData");
+        if (e == null) {
+            return new byte[0];
+        }
+        return Base64.getDecoder().decode(e.getTextTrim());
     }
 }

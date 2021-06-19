@@ -14,6 +14,7 @@ public class SignedInfoTest {
                 .setProvider(ProviderTest.providerCase())
                 .setReferences(ReferencesTest.referencesCase())
                 .addStampAnnot(StampAnnotTest.stampAnnotCase())
+                .setParameters(ParametersTest.ParametersCase())
                 .setSeal(SealTest.sealCase());
     }
 

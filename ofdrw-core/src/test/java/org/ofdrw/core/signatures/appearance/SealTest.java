@@ -15,5 +15,11 @@ public class SealTest {
     public void gen() throws Exception {
         TestTool.genXml("Seal", sealCase());
 
+        Seal seal = sealCase().setImageLoc(new ST_Loc("/Doc_0/Signs/Sign_0/Seal.png"));
+        TestTool.genXml("SealWithImage",seal);
+
+        seal = sealCase().setImageLoc(new ST_Loc("/Doc_0/Signs/Sign_0/Seal.png"));
+        seal.setImageLoc(null);
+        TestTool.genXml("SealDeleteImage",seal);
     }
 }
