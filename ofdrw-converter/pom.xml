@@ -61,11 +61,17 @@
             <version>0.3.0</version>
         </dependency>
 
-        <!--用于与slf4j保持桥接-->
+<!--        &lt;!&ndash;用于与slf4j保持桥接&ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.logging.log4j</groupId>-->
+<!--            <artifactId>log4j-slf4j-impl</artifactId>-->
+<!--            <version>2.14.1</version>-->
+<!--        </dependency>-->
+
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
-            <version>2.14.1</version>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.3</version>
         </dependency>
 
         <dependency>

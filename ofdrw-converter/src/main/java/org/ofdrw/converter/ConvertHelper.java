@@ -2,11 +2,11 @@ package org.ofdrw.converter;
 
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import org.apache.pdfbox.jbig2.util.log.Logger;
-import org.apache.pdfbox.jbig2.util.log.LoggerFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -82,7 +82,7 @@ public class ConvertHelper {
                             start = System.currentTimeMillis();
                             pdfMaker.makePage(pdfDocument, pageInfo);
                             end = System.currentTimeMillis();
-                            logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
+                            logger.info(String.format("page %d speed time %d", pageNum++, end - start));
                         }
                     }
                     break;
