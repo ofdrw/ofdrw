@@ -92,6 +92,16 @@ public class OFDSigner implements Closeable {
      */
     private List<StampAppearance> apList;
 
+
+    /**
+     * 待保护的文件的过滤器
+     * <p>
+     * 该过滤器会在签章之前调用，它会遍历OFD内的
+     * 每一个文件，由过滤器的结果来决定是否需要加入到签章保护范围中去。
+     */
+    private ProtectFileFilter protectFileFilter;
+
+
     /**
      * 签名实现容器
      */
@@ -111,6 +121,12 @@ public class OFDSigner implements Closeable {
      * 是否已经执行exeSign
      */
     private boolean hasSign;
+
+    /**
+     * 【2.0 版增加】
+     * 此签名基于的签名标识符，一旦签名标注的该属性，则验证时应同时验证“基”签名
+     */
+    private String relativeID = null;
 
 
     /**
@@ -321,13 +337,21 @@ public class OFDSigner implements Closeable {
                 String abxFilePath = FilenameUtils.separatorsToUnix(file.toAbsolutePath().toString());
                 // 替换文件系统的根路径，这样就为容器系统中的绝对路径
                 abxFilePath = abxFilePath.replace(sysRoot, "");
+                final ToDigestFileInfo fileInfo = new ToDigestFileInfo(abxFilePath, file);
+                // 执行文件的过滤行为通过过滤器选择出需要保护的文档。
+                try {
+                    if (protectFileFilter != null && !protectFileFilter.filter(fileInfo.getAbsPath())) {
+                        return FileVisitResult.CONTINUE;
+                    }
+                } catch (Exception ignore) {
+                }
                 // 如果采用继续签章模式，那么跳过对 Signatures.xml 的文件
                 if (signMode == SignMode.ContinueSign
                         && abxFilePath.equals(signaturesLoc.getLoc())) {
                     return FileVisitResult.CONTINUE;
                 }
                 // 构造加入文件信息列表
-                res.add(new ToDigestFileInfo(abxFilePath, file));
+                res.add(fileInfo);
                 return FileVisitResult.CONTINUE;
             }
         });
@@ -390,14 +414,19 @@ public class OFDSigner implements Closeable {
          */
         // 签名文件
         ST_Loc signatureLoc = signDir.getAbsLoc().cat(SignDir.SignatureFileName);
-        // 构造列表文件中的签名记录并放入签名列表中
-        signListObj.addSignature(new org.ofdrw.core.signatures.Signature()
+        // 构造列表文件中的签名记录
+        final org.ofdrw.core.signatures.Signature signatureRecord = new org.ofdrw.core.signatures.Signature()
                 // 设置ID
                 .setID(MaxSignID.incrementAndGet())
                 // 设置数字签名类型
                 .setType(signContainer.getSignType())
                 // 设置签名文件位置
-                .setBaseLoc(signatureLoc));
+                .setBaseLoc(signatureLoc);
+        if(this.relativeID != null && this.relativeID.trim().length() > 0){
+            signatureRecord.setRelative(this.relativeID);
+        }
+        // 放入签名列表中
+        signListObj.addSignature(signatureRecord);
         /*
          * 3. 构建签名文件对象
          *
@@ -563,5 +592,30 @@ public class OFDSigner implements Closeable {
         }
         // 关闭OFD解析器
         reader.close();
+    }
+
+    /**
+     * 设置 文件过滤器
+     * <p>
+     * 通过过滤器来实现选择需要保护的文件
+     *
+     * @param filter 过滤器
+     */
+    public OFDSigner setProtectFileFilter(ProtectFileFilter filter) {
+        this.protectFileFilter = filter;
+        return this;
+    }
+
+    /**
+     * 【可选 OFD 2.0】
+     * 设置 此签名基于的签名标识符
+     * <p>
+     * 一旦签名标注的该属性，则验证时应同时验证“基”签名
+     *
+     * @param id “基”签名ID
+     */
+    public OFDSigner setRelative(String id) {
+        this.relativeID = id;
+        return this;
     }
 }
