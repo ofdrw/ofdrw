@@ -46,7 +46,34 @@ public class Parameters extends OFDElement {
     }
 
     /**
+     * 【必选 OFD 2.0】
+     * 增加 签名扩展属性
+     *
+     * @param name  属性的名称
+     * @param value 属性的值
+     * @return this
+     */
+    public Parameters addParameter(@NotNull String name, String value) {
+        final Parameter parameter = new Parameter(name,value);
+        return this.addParameter(parameter);
+    }
+    /**
+     * 【必选 OFD 2.0】
+     * 增加 签名扩展属性
+     *
+     * @param name  属性的名称
+     * @param type  属性的类型
+     * @param value 属性的值
+     * @return this
+     */
+    public Parameters addParameter(@NotNull String name, String type, String value) {
+        final Parameter parameter = new Parameter(name, type, value);
+        return this.addParameter(parameter);
+    }
+
+    /**
      * 通过 属性名删除 签名扩展属性
+     *
      * @param name 签名扩展属性名称
      * @return 被删除的属性 或 null
      */
