@@ -395,12 +395,14 @@ public class OFDDoc implements Closeable {
     }
 
     /**
-     * 获取页面样式
+     * 获取页面样式（只读）
      *
-     * @return 页面样式
+     * 如果需要重新设置默认的页面样式那么请使用 {@link #setDefaultPageLayout}
+     *
+     * @return 页面样式(只读)
      */
     public PageLayout getPageLayout() {
-        return pageLayout;
+        return pageLayout.clone();
     }
 
     /**
