@@ -611,15 +611,14 @@ public class OFDReader implements Closeable {
 
         try {
             rl.save();
-            ST_Loc signaturesLoc = getDefaultDocSignaturesPath();
-            // 检查文件是否存在
-            if (!rl.exist(signaturesLoc.toString())) {
-                return Collections.EMPTY_LIST;
-            }
-            // 切换目录到 Signatures.xml所在目录
-            rl.cd(signaturesLoc.parent());
             // 签名列表
             final Signatures sigFileList = getDefaultSignatures();
+            if (sigFileList == null){
+                return Collections.emptyList();
+            }
+            ST_Loc signaturesLoc = getDefaultDocSignaturesPath();
+            // 切换目录到 Signatures.xml所在目录
+            rl.cd(signaturesLoc.parent());
             final List<Signature> sigInfoList = sigFileList.getSignatures();
             List<StampAnnotEntity> res = new ArrayList<>(sigInfoList.size());
             for (Signature sigInfoItem : sigInfoList) {
@@ -663,11 +662,11 @@ public class OFDReader implements Closeable {
             Document document = cdDefaultDoc();
             final ST_Loc annInfosLoc = document.getAnnotations();
             if (annInfosLoc == null || (!rl.exist(annInfosLoc.toString()))) {
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             }
             Annotations annotations = rl.get(annInfosLoc, Annotations::new);
             if (annotations == null) {
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             }
             // 切换目录到 Annotations.xml所在文件目录
             rl.cd(annInfosLoc.parent());
