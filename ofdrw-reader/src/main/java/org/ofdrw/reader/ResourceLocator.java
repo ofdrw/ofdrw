@@ -242,9 +242,16 @@ public class ResourceLocator {
      * @return true -存在，false - 不存在
      */
     public boolean exist(String path) {
-        LinkedList<String> copy = new LinkedList<>(workDir);
-        copy.add(path);
-        return exist(copy);
+        String ofwTmp = ofdDir.getSysAbsPath();
+        String fullPath = "";
+        if (path.startsWith("/")) {
+            // 绝对路径
+            fullPath = ofwTmp + path;
+        } else {
+            // 相对路径
+            fullPath = ofwTmp + pwd() + path;
+        }
+        return Files.exists(Paths.get(fullPath));
     }
 
     /**
