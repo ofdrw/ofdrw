@@ -121,7 +121,7 @@ public final class FontLoader {
      * 加载系统字体
      * */
     public void init() {
-        try (InputStream in = FontLoader.class.getResourceAsStream(DEFAULT_FONT_RESOURCE_PATH)) {
+        try (InputStream in = getClass().getResourceAsStream(DEFAULT_FONT_RESOURCE_PATH)) {
             defaultFont = new TTFParser(true).parse(in);
         } catch (IOException ignored) {
         }
@@ -495,7 +495,7 @@ public final class FontLoader {
             boolean embedded = false;
             if (fontAbsPath == null) {
                 if (enableSimilarFontReplace) {
-                    URL resource = FontLoader.class.getResource(DEFAULT_FONT_RESOURCE_PATH);
+                    URL resource = getClass().getResource(DEFAULT_FONT_RESOURCE_PATH);
                     if (resource != null) {
                         embedded = true;
                         fontAbsPath = new File(resource.getFile()).getPath();

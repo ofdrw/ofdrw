@@ -35,7 +35,7 @@
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.13.0</version>
+  <version>1.13.1</version>
 </dependency>
 ```
 

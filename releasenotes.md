@@ -2,6 +2,15 @@
 
 ## 进展
 
+## Version 1.13.1 2021-7-5 19:37:24
+
+> Alias: ODD TAXI
+
+新增:
+
+- 段落布局增加了行内的文字浮动方向配置
+  - [测试用例](./ofdrw-layout/src/test/java/org/ofdrw/layout/ParagraphLayoutDemo.java)
+
 ## Version 1.13.0 2021-6-30 18:49:52
 
 > Alias: Back arrow
