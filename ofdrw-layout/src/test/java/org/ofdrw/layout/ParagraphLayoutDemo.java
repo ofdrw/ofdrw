@@ -2,10 +2,7 @@ package org.ofdrw.layout;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.font.FontName;
-import org.ofdrw.layout.element.AFloat;
-import org.ofdrw.layout.element.Clear;
-import org.ofdrw.layout.element.Paragraph;
-import org.ofdrw.layout.element.Span;
+import org.ofdrw.layout.element.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -18,6 +15,43 @@ import java.nio.file.Paths;
  * @since 2021-05-26 23:11:21
  */
 public class ParagraphLayoutDemo {
+
+    /**
+     * 测试段落内文字浮动
+     */
+    @Test
+    void testParagraphInlineFloat() throws IOException {
+        Path outP = Paths.get("target/testParagraphInlineFloat.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+
+            // 向左浮动
+            Paragraph p1 = new Paragraph("这是左浮动内容", 4d)
+                    .setTextAlign(TextAlign.left);
+            Paragraph p2 = new Paragraph("这是\n多行的文本\n\n我将采用向左浮动", 4d)
+                    .setTextAlign(TextAlign.left);
+
+            // 右浮动
+            Paragraph p3 = new Paragraph("这是右浮动内容", 4d)
+                    .setTextAlign(TextAlign.right);
+            Paragraph p4 = new Paragraph("这是\n多行的文本\n\n我将采用向右浮动", 4d)
+                    .setTextAlign(TextAlign.right);
+
+            // 居中
+            Paragraph p5 = new Paragraph("这是居中内容", 4d)
+                    .setTextAlign(TextAlign.center);
+            Paragraph p6 = new Paragraph("这是\n多行的文本\n\n我将采用向居中", 4d)
+                    .setTextAlign(TextAlign.center);
+
+            ofdDoc.add(p1)
+                    .add(p2)
+                    .add(p3)
+                    .add(p4)
+                    .add(p5)
+                    .add(p6);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath());
+
+    }
 
     /**
      * 段落布局 各种情况演示
@@ -123,7 +157,7 @@ public class ParagraphLayoutDemo {
      * 段落布局模式
      */
     @Test
-     void testPLayoutPatten() throws IOException {
+    void testPLayoutPatten() throws IOException {
         Path outP = Paths.get("target/TestPLayoutPatten.ofd");
         try (OFDDoc ofdDoc = new OFDDoc(outP)) {
             // - 独占整个行

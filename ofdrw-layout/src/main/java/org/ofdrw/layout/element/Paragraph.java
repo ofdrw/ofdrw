@@ -53,6 +53,13 @@ public class Paragraph extends Div<Paragraph> {
     private LinkedList<TxtLineBlock> lines;
 
     /**
+     * 字体在段落内的浮动方向
+     * <p>
+     * 默认为：左浮动
+     */
+    private TextAlign textAlign = TextAlign.left;
+
+    /**
      * 创建一个固定大小段落对象
      *
      * @param width  内容宽度
@@ -80,7 +87,7 @@ public class Paragraph extends Div<Paragraph> {
 
     /**
      * 新建一个段落对象
-     *
+     * <p>
      * 如果在指定段落中文字大小建议使用{@link Paragraph#Paragraph(java.lang.String, java.lang.Double)}
      *
      * @param text 文字内容
@@ -203,7 +210,7 @@ public class Paragraph extends Div<Paragraph> {
      * @return 行块
      */
     private TxtLineBlock newLine(double width) {
-        return new TxtLineBlock(width, lineSpace);
+        return new TxtLineBlock(width, lineSpace, textAlign);
     }
 
 
@@ -259,6 +266,33 @@ public class Paragraph extends Div<Paragraph> {
     public Paragraph clearFirstLineIndent() {
         this.firstLineIndent = null;
         return this;
+    }
+
+    /**
+     * 设置段落内字体浮动
+     * <p>
+     * 默认为左浮动
+     *
+     * @param textAlign 浮动方向
+     * @return this
+     */
+    public Paragraph setTextAlign(TextAlign textAlign) {
+        if (textAlign == null) {
+            textAlign = TextAlign.left;
+        }
+        this.textAlign = textAlign;
+        return this;
+    }
+
+    /**
+     * 获取段落内字体浮动
+     * <p>
+     * 默认为左浮动
+     *
+     * @return 浮动方向
+     */
+    public TextAlign getTextAlign() {
+        return this.textAlign;
     }
 
     /**

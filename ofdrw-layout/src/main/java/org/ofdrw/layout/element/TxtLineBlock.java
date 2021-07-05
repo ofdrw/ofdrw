@@ -13,6 +13,12 @@ import java.util.List;
  */
 public class TxtLineBlock {
     /**
+     * 行内字体浮动方向
+     * <p>
+     * 默认：左浮动
+     */
+    private TextAlign textAlign;
+    /**
      * 行内所在元素
      */
     private List<Span> inlineSpans;
@@ -34,14 +40,35 @@ public class TxtLineBlock {
     /**
      * 行最大宽度
      */
-    private double lineWidth;
+    private double lineMaxAvailableWidth;
 
     private TxtLineBlock() {
     }
 
-    public TxtLineBlock(double lineWidth, Double lineSpace) {
-        this.lineWidth = lineWidth;
+    /**
+     * 创建行块
+     *
+     * @param lineMaxAvailableWidth 行内运行最大宽度
+     * @param lineSpace             行间距
+     */
+    public TxtLineBlock(double lineMaxAvailableWidth, Double lineSpace) {
+        this(lineMaxAvailableWidth, lineSpace, TextAlign.left);
+    }
+
+    /**
+     * 创建行块
+     *
+     * @param lineMaxAvailableWidth 行内运行最大宽度
+     * @param lineSpace             行间距
+     * @param textAlign             行内字体浮动方式
+     */
+    public TxtLineBlock(double lineMaxAvailableWidth, Double lineSpace, TextAlign textAlign) {
+        this.lineMaxAvailableWidth = lineMaxAvailableWidth;
         this.lineSpace = lineSpace;
+        if (textAlign == null) {
+            textAlign = TextAlign.left;
+        }
+        this.textAlign = textAlign;
         this.inlineSpans = new LinkedList<>();
     }
 
@@ -54,7 +81,7 @@ public class TxtLineBlock {
      */
     public boolean tryAdd(Span span) {
         Rectangle rec = span.blockSize();
-        if (rec.getWidth() + width > lineWidth) {
+        if (rec.getWidth() + width > lineMaxAvailableWidth) {
             // 空间不足不足以容纳元素
             return false;
         }
@@ -82,7 +109,7 @@ public class TxtLineBlock {
             throw new IllegalStateException("文字单元（Span）不可拆分");
         }
         // 获取剩余宽度
-        double remainWidth = lineWidth - width;
+        double remainWidth = lineMaxAvailableWidth - width;
         // 文字单元切分点
         int splitIndex = 0;
         // 行中的剩余空间不足且Span可以被换行等分割
@@ -166,5 +193,25 @@ public class TxtLineBlock {
      */
     public Double getWidth() {
         return width;
+    }
+
+    /**
+     * 获取文字在行内的浮动方式
+     * <p>
+     * 默认：左浮动
+     *
+     * @return 浮动方式
+     */
+    public TextAlign getTextAlign() {
+        return textAlign;
+    }
+
+    /**
+     * 获取 行内可用最大宽度
+     *
+     * @return 行内可用最大宽度
+     */
+    public double getLineMaxAvailableWidth() {
+        return lineMaxAvailableWidth;
     }
 }
