@@ -20,8 +20,6 @@ public class OFD2PDFTest {
             .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
 
             .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-            .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-            .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
             .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
             .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
             .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
