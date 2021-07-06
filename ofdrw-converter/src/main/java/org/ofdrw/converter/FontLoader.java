@@ -17,11 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -138,11 +135,9 @@ public final class FontLoader {
         this.addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
                 .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
                 .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
                 .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
                 .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
-                .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
-                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
+                .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体");
     }
 
     /**
@@ -288,7 +283,6 @@ public final class FontLoader {
             if (isMatchFamilyName || isMatchFontName) {
                 String s = similarFontReplaceRegexMapping.get(regexKey);
                 String sysPath = pathMapping.get(s);
-//                Pattern.compile(".*MiniPro.*").matcher("MiniPro-sad").matches()
                 log.info("替换字体 {} {} 为 {} , {}", familyName, fontName, s.replace(Separator, " "), sysPath);
                 return sysPath;
             }
@@ -314,12 +308,7 @@ public final class FontLoader {
 //            log.info("加载系统字体失败：[{} {}], 切换至默认字体(宋体)", familyName, fontName);
 //            return loadDefaultFont();
         }
-        // 加载字体
-        TrueTypeFont ttf = loadExternalFont(fontFilePath, familyName, fontName);
-//        if (ttf == null) {
-//            return loadDefaultFont();
-//        }
-        return ttf;
+        return loadExternalFont(fontFilePath, familyName, fontName);
     }
 
     /**
@@ -434,9 +423,6 @@ public final class FontLoader {
                         hasReplace = true;
                     }
                 }
-//                else{
-//                    trueTypeFont = defaultFont;
-//                }
 
             }
             return new FontWrapper<TrueTypeFont>(trueTypeFont, hasReplace);
@@ -486,23 +472,20 @@ public final class FontLoader {
                     if (fontAbsPath != null) {
                         hasReplace = true;
                     }
-                    //可以增加内建字体文件
-//                    else if(enableBuildInFont){
-//                    }
                 }
             }
 
             boolean embedded = false;
             if (fontAbsPath == null) {
                 if (enableSimilarFontReplace) {
-                    URL resource = FontLoader.class.getResource(DEFAULT_FONT_RESOURCE_PATH);
-                    if (resource != null) {
+                    InputStream stream = FontLoader.class.getResourceAsStream(DEFAULT_FONT_RESOURCE_PATH);
+                    if (stream != null) {
                         embedded = true;
-                        fontAbsPath = new File(resource.getFile()).getPath();
+                        fontAbsPath = DEFAULT_FONT_RESOURCE_PATH;
                         log.info("使用默认字体替代 {} ,{}", ctFont.getFontName(), fontAbsPath);
                     }
                 } else
-                    throw new FileNotFoundException("无法在OFD内找到字体 " + fontAbsPath);
+                    throw new FileNotFoundException("无法在OFD内找到字体");
             }
             FontProgram fontProgram = null;
             if (fontAbsPath == null) {
@@ -514,13 +497,12 @@ public final class FontLoader {
                 fontAbsPath = fontAbsPath + ",0";
                 fontProgram = FontProgramFactory.createFont(fontAbsPath, false);
             } else if (fileName.endsWith(".ttf") || fileName.endsWith(".otf")) {
-                final byte[] fontBin = Files.readAllBytes(Paths.get(fontAbsPath));
-                fontProgram = new com.itextpdf.io.font.TrueTypeFont(fontBin);
+
+                fontProgram = new com.itextpdf.io.font.TrueTypeFont(fontAbsPath);
             } else {
                 // 即便设置不缓存，任然会出现文件没有关闭的问题。
                 // 因此，读取到内存防止因为 FontProgram 的缓存导致无法删除临时OFD文件的问题。
-                final byte[] fontBin = Files.readAllBytes(Paths.get(fontAbsPath));
-                fontProgram = FontProgramFactory.createFont(fontBin, false);
+                fontProgram = FontProgramFactory.createFont(fontAbsPath, false);
             }
 
             return new FontWrapper(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, embedded), hasReplace);
