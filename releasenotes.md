@@ -2,6 +2,15 @@
 
 ## 进展
 
+## Version 1.13.2 2021-7-6 19:55:36
+
+> Alias: So I'm a Spider, So What?
+
+修复：
+
+- 修复了jar包内嵌字体无法加载导致NPE
+
+
 ## Version 1.13.1 2021-7-5 19:37:24
 
 > Alias: ODD TAXI
