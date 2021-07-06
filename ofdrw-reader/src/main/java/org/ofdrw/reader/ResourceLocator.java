@@ -242,9 +242,16 @@ public class ResourceLocator {
      * @return true -存在，false - 不存在
      */
     public boolean exist(String path) {
-        LinkedList<String> copy = new LinkedList<>(workDir);
-        copy.add(path);
-        return exist(copy);
+        String ofwTmp = ofdDir.getSysAbsPath();
+        String fullPath = "";
+        if (path.startsWith("/")) {
+            // 绝对路径
+            fullPath = ofwTmp + path;
+        } else {
+            // 相对路径
+            fullPath = ofwTmp + pwd() + path;
+        }
+        return Files.exists(Paths.get(fullPath));
     }
 
     /**
@@ -405,6 +412,17 @@ public class ResourceLocator {
      */
     public Path getFile(ST_Loc stLoc) throws FileNotFoundException {
         String loc = stLoc.getLoc();
+        return getFile(loc);
+    }
+
+    /**
+     * 获取路径下的文件
+     *
+     * @param loc 路径
+     * @return 系统文件路径
+     * @throws FileNotFoundException 文件或路径不存在
+     */
+    public Path getFile(String loc) throws FileNotFoundException {
         if (loc == null || loc.trim().equals("")) {
             throw new FileNotFoundException("路径为空（loc）");
         }

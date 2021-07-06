@@ -21,6 +21,7 @@ import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.engine.*;
 import org.ofdrw.layout.engine.render.RenderException;
 import org.ofdrw.layout.exception.DocReadException;
+import org.ofdrw.pkg.container.AnnotsDir;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.reader.OFDReader;
@@ -394,12 +395,14 @@ public class OFDDoc implements Closeable {
     }
 
     /**
-     * 获取页面样式
+     * 获取页面样式（只读）
      *
-     * @return 页面样式
+     * 如果需要重新设置默认的页面样式那么请使用 {@link #setDefaultPageLayout}
+     *
+     * @return 页面样式(只读)
      */
     public PageLayout getPageLayout() {
-        return pageLayout;
+        return pageLayout.clone();
     }
 
     /**
@@ -491,8 +494,9 @@ public class OFDDoc implements Closeable {
         }
         if (attachments == null) {
             attachments = new Attachments();
-            docDir.putObj(DocDir.Attachments, attachments);
-            ofdDocument.setAttachments(docDir.getAbsLoc().cat(DocDir.Attachments));
+            final AnnotsDir annotsDir = docDir.obtainAnnots();
+            annotsDir.putObj(DocDir.Attachments, attachments);
+            ofdDocument.setAttachments(annotsDir.getAbsLoc().cat(DocDir.Attachments));
         }
         return attachments;
     }

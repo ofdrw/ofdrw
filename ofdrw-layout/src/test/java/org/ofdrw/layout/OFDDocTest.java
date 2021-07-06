@@ -104,6 +104,29 @@ class OFDDocTest {
     }
 
     /**
+     * 加入水印类型注释对象
+     */
+    @Test
+    void addAnnotationExist() throws IOException {
+        Path srcP = Paths.get("src/test/resources", "ano.ofd");
+        Path outP = Paths.get("target/ano_two_mark.ofd");
+        Path imgPath = Paths.get("src/test/resources", "eg_tulip.jpg");
+
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+            ST_Box boundary = new ST_Box(50d, 50d, 60d, 60d);
+            Annotation annotation = new Annotation(boundary, AnnotType.Watermark, ctx -> {
+                ctx.setGlobalAlpha(0.53);
+                ctx.drawImage(imgPath, 0, 0, 40d, 30d);
+            });
+            ofdDoc.addAnnotation(1, annotation);
+            ofdDoc.addAnnotation(2, annotation);
+
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    /**
      * 测试加入操作系统中的字体
      */
     @Test

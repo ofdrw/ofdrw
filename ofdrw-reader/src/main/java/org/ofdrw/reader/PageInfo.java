@@ -46,6 +46,11 @@ public class PageInfo {
      */
     private ST_Loc pageAbsLoc;
 
+    /**
+     * 页码目录文件的序号
+     */
+    private Integer pageN;
+
     public PageInfo() {
     }
 
@@ -89,8 +94,34 @@ public class PageInfo {
         return pageAbsLoc;
     }
 
+    /**
+     * 设置页面的绝对路径
+     * <p>
+     * 同时设置 页面的索引号 Page_N
+     *
+     * @param pageAbsLoc 绝对路径
+     * @return this
+     */
     public PageInfo setPageAbsLoc(ST_Loc pageAbsLoc) {
         this.pageAbsLoc = pageAbsLoc;
+        return this;
+    }
+
+    /**
+     * 获取 Page_N容器 N的数字
+     * @return N的数字
+     */
+    public Integer getPageN() {
+        return pageN;
+    }
+
+    /**
+     * 设置 Page_N容器 N的数字
+     * @param pageN 数字
+     * @return this
+     */
+    public PageInfo setPageN(Integer pageN) {
+        this.pageN = pageN;
         return this;
     }
 

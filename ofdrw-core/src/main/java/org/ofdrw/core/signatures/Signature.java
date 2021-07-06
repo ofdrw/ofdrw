@@ -89,6 +89,36 @@ public class Signature extends OFDElement {
     }
 
     /**
+     * 【可选 属性 OFD 2.0】
+     * 设置 基于的签名ID
+     * <p>
+     * 此签名基于签名标识，一旦签名标注了该属性，则验证时应同时验证“基”签名。
+     *
+     * @param id 基于的签名ID，如果为null表示需要删除该属性。
+     * @return this
+     */
+    public Signature setRelative(String id) {
+        if (id == null) {
+            this.removeAttr("Relative");
+            return this;
+        }
+        this.addAttribute("Relative", id);
+        return this;
+    }
+
+    /**
+     * 【可选 属性 OFD 2.0】
+     * 获取 基于的签名ID
+     * <p>
+     * 此签名基于签名标识，一旦签名标注了该属性，则验证时应同时验证“基”签名。
+     *
+     * @return 基于的签名ID，可能为空
+     */
+    public String getRelative() {
+        return this.attributeValue("Relative");
+    }
+
+    /**
      * 【必选 属性】
      * 设置 指向包内的签名描述文件
      *

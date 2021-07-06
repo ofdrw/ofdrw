@@ -158,6 +158,29 @@ public class DocEditDemos {
     }
 
     /**
+     * 设置不同的页面大小
+     */
+    @Test
+    void setDiffPageSizeTest() throws IOException {
+        Path srcP = Paths.get("src/test/resources", "helloworld.ofd");
+        Path outP = Paths.get("target/SetDiffPageSizeTest.ofd");
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+            PageLayout pageLayout = ofdDoc.getPageLayout().clone();
+            pageLayout.setWidth(595d).setHeight(842d);
+            VirtualPage vPage1 = new VirtualPage(pageLayout);
+            Paragraph p = new Paragraph("测试内容", 30d);
+            p.setPosition(Position.Absolute);
+            p.setXY(60d, 60d);
+            p.setWidth(100d);
+            vPage1.add(p);
+            ofdDoc.addVPage(vPage1);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+
+    /**
      * 向文件中加入附件文件
      */
     @Test

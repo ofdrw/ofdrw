@@ -64,7 +64,21 @@ public class ParagraphRender {
         // 渲染每一行文字
         for (TxtLineBlock txtLine : lines) {
             // 行内的X偏移量为行开头
-            double offsetX = lineTopX;
+            double offsetX;
+            // 根据浮动方式确定起始字符坐标
+            switch (txtLine.getTextAlign()) {
+                case right:
+                    offsetX = lineTopX + (txtLine.getLineMaxAvailableWidth() - txtLine.getWidth());
+                    break;
+                case center:
+                    offsetX = lineTopX + (txtLine.getLineMaxAvailableWidth() - txtLine.getWidth()) / 2;
+                    break;
+                case left:
+                default:
+                    offsetX = lineTopX;
+                    break;
+            }
+
             // 一行内的所有Span的图元高度都为行高度（最高文字高度 + 行间距）
             double h = txtLine.getHeight();
             if (hCount + h > containerHeight) {
@@ -110,7 +124,7 @@ public class ParagraphRender {
                     txtObj.setItalic(true);
                 }
                 // 是否填充，默认为true表示填充
-                if(!s.isFill()) {
+                if (!s.isFill()) {
                     txtObj.setFill(false);
                 }
                 // 设置字体颜色，默认颜色为黑色

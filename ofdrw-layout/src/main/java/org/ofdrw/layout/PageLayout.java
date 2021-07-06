@@ -220,4 +220,11 @@ public class PageLayout {
         }
         return false;
     }
+
+    @Override
+    public PageLayout clone() {
+        PageLayout copy = new PageLayout(width, height);
+        copy.margin = margin.clone();
+        return copy;
+    }
 }
