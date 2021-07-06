@@ -118,7 +118,7 @@ public final class FontLoader {
      * 加载系统字体
      * */
     public void init() {
-        try (InputStream in = FontLoader.class.getResourceAsStream(DEFAULT_FONT_RESOURCE_PATH)) {
+        try (InputStream in = getClass().getResourceAsStream(DEFAULT_FONT_RESOURCE_PATH)) {
             defaultFont = new TTFParser(true).parse(in);
         } catch (IOException ignored) {
         }
@@ -133,11 +133,11 @@ public final class FontLoader {
         }
         // 预置一些常用的字体别名
         this.addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
-                .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
-                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
-                .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
-                .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体");
+            .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
+            .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+            .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
+            .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
+            .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体");
     }
 
     /**
@@ -478,7 +478,7 @@ public final class FontLoader {
             boolean embedded = false;
             if (fontAbsPath == null) {
                 if (enableSimilarFontReplace) {
-                    InputStream stream = FontLoader.class.getResourceAsStream(DEFAULT_FONT_RESOURCE_PATH);
+                    InputStream stream = getClass().getResourceAsStream(DEFAULT_FONT_RESOURCE_PATH);
                     if (stream != null) {
                         embedded = true;
                         fontAbsPath = DEFAULT_FONT_RESOURCE_PATH;
@@ -509,8 +509,8 @@ public final class FontLoader {
         } catch (Exception e) {
 //            e.printStackTrace();
             log.info("无法加载字体 {} {} {}，原因:{}",
-                    ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
-                    e.getMessage());
+                ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
+                e.getMessage());
             //如果是文件中的字体资源加载失败，使用系统中的字体: Type of font is not recognized.
             if (ctFont.getFontFile() != null) {
                 ctFont.setFontFile("");
