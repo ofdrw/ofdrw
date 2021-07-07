@@ -606,7 +606,7 @@ public class OFDReader implements Closeable {
     public List<StampAnnotEntity> getStampAnnots() {
         if (!hasSignature()) {
             // 没有签名的情况下返还空集合，防止NPE
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         try {
