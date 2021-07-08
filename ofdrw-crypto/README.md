@@ -26,8 +26,11 @@
 - `/OFDEntries.xml`：完整性描述文件，描述支撑文件完整性的包内文件列表、签名方案、保存的签名值等内容。
 - `/Doc_N/Extentions.xml`：（标准中没有明确提及作用，推测为扩展使用）
 
+
+## 章节目录
+
 各协议详情如下：
 
-- [《OFD签名协议》](./doc/OFD签名协议.md)
-- [《OFD加密协议》](./doc/OFD加密协议.md)
-- [《OFD完整性保护协议》](./doc/OFD完整性保护协议.md)
+- [《OFD签名协议》](./doc/sign/README.md)
+- [《OFD加密协议》](doc/enc/README.md)
+- [《OFD完整性保护协议》](./doc/protect/README.md)
