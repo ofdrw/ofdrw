@@ -6,11 +6,14 @@ import org.ofdrw.converter.point.PathPoint;
 import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.core.graph.pathObj.AbbreviatedData;
+import org.ofdrw.core.graph.pathObj.OptVal;
 import org.ofdrw.core.text.CT_CGTransform;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.reader.DeltaTool;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,45 +27,59 @@ import static org.ofdrw.converter.utils.CommonUtil.converterDpi;
 public class PointUtil {
     private final static Logger logger = LoggerFactory.getLogger(PointUtil.class);
 
+    /**
+     * 解析压缩路径为点坐标
+     *
+     * @param abbreviatedData 压缩路径
+     * @return 绘制点坐标序列
+     */
     public static List<PathPoint> convertPathAbbreviatedDatatoPoint(String abbreviatedData) {
+        // 解析成各个操作符和操作数
+        final LinkedList<OptVal> optValArr = AbbreviatedData.parse(abbreviatedData);
         List<PathPoint> pointList = new ArrayList<>();
-        String[] array = abbreviatedData.split(" ");
-        int i = 0;
-        while (i < array.length) {
-            if (array[i].equals("M")) {
-                PathPoint point = new PathPoint("M", (float) Double.parseDouble(array[i + 1]), (float) Double.parseDouble(array[i + 2]), 0, 0, 0, 0);
-                i = i + 3;
-                pointList.add(point);
-            } else if (array[i].equals("L")) {
-                PathPoint point = new PathPoint("L", (float) Double.parseDouble(array[i + 1]), (float) Double.parseDouble(array[i + 2]), 0, 0, 0, 0);
-                i = i + 3;
-                pointList.add(point);
-            } else if (array[i].equals("C")) {
-                PathPoint point = new PathPoint("C", 0, 0, 0, 0, 0, 0);
-                i++;
-                pointList.add(point);
-            } else if (array[i].equals("S")) {
-                PathPoint point = new PathPoint("S", (float) Double.parseDouble(array[i + 1]), (float) Double.parseDouble(array[i + 2]), 0, 0, 0, 0);
-                i = i + 3;
-                pointList.add(point);
-            } else if (array[i].equals("B")) {
-                PathPoint point = new PathPoint("B", (float) Double.parseDouble(array[i + 1]), (float) Double.parseDouble(array[i + 2]),
-                        (float) Double.parseDouble(array[i + 3]), (float) Double.parseDouble(array[i + 4]),
-                        (float) Double.parseDouble(array[i + 5]), (float) Double.parseDouble(array[i + 6]));
-                i = i + 7;
-                pointList.add(point);
-            } else if (array[i].equals("Q")) {
-                PathPoint point = new PathPoint("Q", (float) Double.parseDouble(array[i + 1]), (float) Double.parseDouble(array[i + 2]), (float) Double.parseDouble(array[i + 3]), (float) Double.parseDouble(array[i + 4]), 0, 0);
-                i = i + 5;
-                pointList.add(point);
-            } else if (array[i].equals("A")) {
-                PathPoint point = new PathPoint("A", (float) Double.parseDouble(array[i + 1]), (float) Double.parseDouble(array[i + 2]),
-                        (float) Double.parseDouble(array[i + 3]), (float) Double.parseDouble(array[i + 4]),
-                        (float) Double.parseDouble(array[i + 5]), (float) Double.parseDouble(array[i + 6]), (float) Double.parseDouble(array[i + 7]));
-                i = i + 8;
-                pointList.add(point);
-            } else {
-                i++;
+        for (OptVal optVal : optValArr) {
+            double[] array = optVal.expectValues();
+            switch (optVal.opt) {
+                case "M":
+                    pointList.add(new PathPoint("M",
+                            (float) array[0], (float) array[1],
+                            0, 0,
+                            0, 0));
+                    break;
+                case "L":
+                    pointList.add(new PathPoint("L",
+                            (float) array[0], (float) array[1],
+                            0, 0,
+                            0, 0));
+                    break;
+                case "C":
+                    pointList.add(new PathPoint("C", 0, 0, 0, 0, 0, 0));
+                    break;
+                case "S":
+                    pointList.add(new PathPoint("S",
+                            (float) array[0], (float) array[1],
+                            0, 0,
+                            0, 0));
+                    break;
+                case "B":
+                    pointList.add(new PathPoint("B",
+                            (float) array[0], (float) array[1],
+                            (float) array[2], (float) array[3],
+                            (float) array[4], (float) array[5]));
+                    break;
+                case "Q":
+                    pointList.add(new PathPoint("Q",
+                            (float) array[0], (float) array[1],
+                            (float) array[2], (float) array[3],
+                            0, 0));
+                    break;
+                case "A":
+                    pointList.add(new PathPoint("A",
+                            (float) array[0], (float) array[1],
+                            (float) array[2], (float) array[3],
+                            (float) array[4], (float) array[5],
+                            (float) array[6]));
+                    break;
             }
         }
         return pointList;
