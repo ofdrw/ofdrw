@@ -17,6 +17,8 @@ import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.compositeObj.CT_VectorG;
+import org.ofdrw.core.graph.pathObj.AbbreviatedData;
+import org.ofdrw.core.graph.pathObj.OptVal;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
@@ -43,10 +45,8 @@ import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 /**
  * AWT设备转换类
@@ -410,12 +410,12 @@ public abstract class AWTMaker {
         ST_Box boundary = textObject.getBoundary();
         Matrix baseMatrix = renderBoundaryAndSetClip(graphics, boundary, parentMatrix);
 
-        BasicStroke basicStroke = new BasicStroke(getLineWidth(textObject, drawParams).floatValue()*15,0,0);
+        BasicStroke basicStroke = new BasicStroke(getLineWidth(textObject, drawParams).floatValue() * 15, 0, 0);
         graphics.setStroke(basicStroke);
 
         // 读取字体
         FontWrapper<TrueTypeFont> fontWrapper = getFont(textObject);
-        TrueTypeFont typeFont =fontWrapper.getFont();
+        TrueTypeFont typeFont = fontWrapper.getFont();
         List<Number> fontMatrix = null;
 
         if (typeFont == null) {
@@ -625,44 +625,33 @@ public abstract class AWTMaker {
     }
 
     private Path2D buildPath(String abbreviatedData) {
+        // Path 压缩格式解析
+        LinkedList<OptVal> optValArr = AbbreviatedData.parse(abbreviatedData);
         Path2D path = new Path2D.Double();
         path.moveTo(0, 0);
-        String[] s = abbreviatedData.split("\\s+");
-        int i = 0;
-        while (i < s.length) {
-            String operator = s[i];
-            switch (operator) {
+        for (OptVal optVal : optValArr) {
+            double[] arr = optVal.expectValues();
+            switch (optVal.opt) {
                 case "S":
                 case "M":
-                    path.moveTo(Double.valueOf(s[i + 1]), Double.valueOf(s[i + 2]));
-                    i += 3;
+                    path.moveTo(arr[0], arr[1]);
                     break;
                 case "L":
-                    path.lineTo(Double.valueOf(s[i + 1]), Double.valueOf(s[i + 2]));
-                    i += 3;
+                    path.lineTo(arr[0], arr[1]);
                     break;
                 case "Q":
-                    path.quadTo(Double.valueOf(s[i + 1]), Double.valueOf(s[i + 2]), Double.valueOf(s[i + 3]),
-                            Double.valueOf(s[i + 4]));
-                    i += 5;
+                    path.quadTo(arr[0], arr[1], arr[2], arr[3]);
                     break;
                 case "B":
-                    path.curveTo(Double.valueOf(s[i + 1]), Double.valueOf(s[i + 2]), Double.valueOf(s[i + 3]),
-                            Double.valueOf(s[i + 4]), Double.valueOf(s[i + 5]),
-                            Double.valueOf(s[i + 6]));
-                    i += 7;
+                    path.curveTo(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]);
                     break;
                 case "A":
                     // path.append(new
                     // Arc2D.Double(Double.valueOf(s[i+1]),Double.valueOf(s[i+2]),Double.valueOf(s[i+3]),Double.valueOf(s[i+4]),Double.valueOf(s[i+5]),Double.valueOf(s[i+3]),-1),true);
-                    i += 7;
                     break;
                 case "C":
                     path.closePath();
-                    i++;
                     break;
-                default:
-                    i++;
             }
         }
         return path;

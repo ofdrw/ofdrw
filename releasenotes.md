@@ -2,6 +2,14 @@
 
 ## 进展
 
+## Version 1.13.3 2021-7-14 18:37:47
+
+> Alias: Cat's Eye
+
+修复：
+
+- 修复不规范的OFD路径操作符合操作数，造成无法转换PDF、图片的问题。
+
 ## Version 1.13.2 2021-7-6 19:55:36
 
 > Alias: So I'm a Spider, So What?
