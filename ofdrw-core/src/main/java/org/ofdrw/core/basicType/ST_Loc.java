@@ -89,6 +89,14 @@ public class ST_Loc extends STBase {
         }
         return loc.substring(0, indexOf);
     }
+    /**
+     * 获取父母路径
+     *
+     * @return 父母路径
+     */
+    public ST_Loc parentLoc(){
+        return new ST_Loc(this.parent());
+    }
 
     /**
      * 获取路径的文件名称
