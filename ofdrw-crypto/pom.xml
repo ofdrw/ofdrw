@@ -30,6 +30,11 @@
         </dependency>
         <dependency>
             <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-gv</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ofdrw</groupId>
             <artifactId>ofdrw-reader</artifactId>
             <version>${project.version}</version>
         </dependency>

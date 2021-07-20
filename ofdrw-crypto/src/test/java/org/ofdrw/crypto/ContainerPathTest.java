@@ -36,4 +36,13 @@ class ContainerPathTest {
         System.out.println(actual.getPath());
         System.out.println(encryptedFile.toAbsolutePath());
     }
+
+
+    @Test
+    public void resolve() throws Exception {
+        Path src = Paths.get("");
+        final Path resolve = src.resolve("not/exist/dir");
+        System.out.println(Files.notExists(resolve));
+        System.out.println(resolve.toAbsolutePath());
+    }
 }

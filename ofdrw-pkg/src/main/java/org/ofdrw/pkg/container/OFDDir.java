@@ -3,9 +3,11 @@ package org.ofdrw.pkg.container;
 import net.lingala.zip4j.ZipFile;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.jetbrains.annotations.Nullable;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.core.crypto.encryt.Encryptions;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -29,6 +31,10 @@ public class OFDDir extends VirtualContainer {
      * OFD文档主入口文件名称
      */
     public static final String OFDFileName = "OFD.xml";
+    /**
+     * 解密入口文件名称
+     */
+    public static final String EncryptionsFileName = "Encryptions.xml";
 
     /**
      * 最大文档索引 + 1
@@ -106,6 +112,61 @@ public class OFDDir extends VirtualContainer {
      */
     public OFDDir setOfd(OFD ofd) {
         this.putObj(OFDFileName, ofd);
+        return this;
+    }
+
+    /**
+     * 获取 解密入口文件
+     * <p>
+     * 如果文件不存在那么创建新的文件
+     *
+     * @return 解密入口文件
+     */
+    public Encryptions obtainEncryptions() {
+        Encryptions encryptions = null;
+        try {
+            encryptions = this.getEncryptions();
+        } catch (DocumentException e) {
+            throw new RuntimeException("无法解析解密入口文件", e);
+        }
+        if (encryptions == null) {
+            encryptions = new Encryptions();
+            // 添加到OFD容器内
+            this.setEncryptions(encryptions);
+        }
+        return encryptions;
+    }
+
+    /**
+     * 获取 解密入口文件
+     *
+     * @return 解密入口文件 或 null（不存在）
+     * @throws DocumentException     解密入口文件无法解析
+     */
+    @Nullable
+    public Encryptions getEncryptions() throws DocumentException {
+        try {
+            Element obj = this.getObj(EncryptionsFileName);
+            if (obj == null) {
+                return null;
+            }
+            return new Encryptions(obj);
+        } catch (FileNotFoundException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 设置 解密入口文件
+     *
+     * @param encryptions 解密入口文件
+     * @return this
+     */
+    public OFDDir setEncryptions(Encryptions encryptions) {
+        if (encryptions == null) {
+            return this;
+        }
+        this.putObj(EncryptionsFileName, encryptions);
         return this;
     }
 

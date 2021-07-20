@@ -10,15 +10,24 @@ import org.bouncycastle.crypto.paddings.PKCS7Padding;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
+import org.dom4j.Element;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.ofdrw.core.crypto.encryt.CT_EncryptInfo;
 import org.ofdrw.core.crypto.encryt.EncryptEntries;
+import org.ofdrw.core.crypto.encryt.Encryptions;
+import org.ofdrw.core.crypto.encryt.Provider;
+import org.ofdrw.core.signatures.sig.Parameters;
+import org.ofdrw.gv.GlobalVar;
 import org.ofdrw.pkg.container.OFDDir;
+import org.ofdrw.pkg.tool.ElemCup;
 import org.ofdrw.reader.ZipUtil;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,15 +40,16 @@ import java.util.stream.Collectors;
  */
 public class OFDEncryptor implements Closeable {
 
-//    /**
-//     * OFD虚拟容器对象
-//     */
-//    private final OFDDir ofdDir;
+
+    /**
+     * OFD虚拟容器根目录
+     */
+    private final OFDDir ofdDir;
 
     /**
      * 加密后文件输出位置
      */
-    private Path out;
+    private Path dest;
 
     /**
      * 工作过程中的工作目录
@@ -77,29 +87,35 @@ public class OFDEncryptor implements Closeable {
      */
     private ContainerFileFilter cfFilter;
 
+    /**
+     * 加密操作的附加描述集合
+     */
+    private Parameters parameters;
+
     private OFDEncryptor() {
+        this.ofdDir = null;
     }
 
     /**
      * 创建OFD加密器
      *
      * @param ofdFile 待加密的OFD文件路径
-     * @param out     加密后的OFD路径
+     * @param dest    加密后的OFD路径
      * @throws IOException IO操作异常
      */
-    public OFDEncryptor(@NotNull Path ofdFile, @NotNull Path out) throws IOException {
+    public OFDEncryptor(@NotNull Path ofdFile, @NotNull Path dest) throws IOException {
         if (ofdFile == null || Files.notExists(ofdFile)) {
             throw new IllegalArgumentException("文件位置(ofdFile)不正确");
         }
-        if (out == null) {
+        if (dest == null) {
             throw new IllegalArgumentException("加密后文件位置(out)为空");
         }
-        this.out = out;
+        this.dest = dest;
         this.workDir = Files.createTempDirectory("ofd-tmp-");
         // 解压文档，到临时的工作目录
         ZipUtil.unZipFiles(ofdFile.toFile(), this.workDir.toAbsolutePath() + File.separator);
         this.userEncryptorList = new ArrayList<>(3);
-//        this.ofdDir = new OFDDir(workDir);
+        this.ofdDir = new OFDDir(workDir.toAbsolutePath());
         this.random = new SecureRandom();
         this.blockCipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(new SM4Engine()), new PKCS7Padding());
     }
@@ -161,26 +177,68 @@ public class OFDEncryptor implements Closeable {
         if (this.userEncryptorList.isEmpty()) {
             throw new IllegalArgumentException("没有可用加密用户(UserFEKEncryptor)");
         }
-
-        if (!Files.exists(this.out)) {
-            Files.createDirectories(this.out.getParent());
+        if (!Files.exists(this.dest)) {
+            Files.createDirectories(this.dest.getParent());
         }
+        // 获取 解密入口文件对象。
+        final Encryptions encryptions = this.ofdDir.obtainEncryptions();
+        // 获取新的加密标识符：内最大 加密标识符 + 1
+        final String id = Integer.toString(encryptions.maxID() + 1);
+
         // 待加密文件列表
         final List<ContainerPath> tbEncArr = this.getToBeEncFiles();
         // 加密块大小
         int blockSize = blockCipher.getBlockSize();
         byte[] fek = new byte[blockSize];
         byte[] iv = new byte[blockSize];
-        // 生成文件加密密钥和IV
+        // a) 生成用于ZIP包内文件加密的对称密钥
         random.nextBytes(fek);
         random.nextBytes(iv);
         ParametersWithIV keyParam = new ParametersWithIV(new KeyParameter(fek), iv);
+
+        // b) 根据加密方案，使用步骤 a)生成的文件加密对称密钥调用对称密码算法加密包内文件并写入ZIP包内；
+        // c) 根据加密方案，对已经生成密文的明文文件进行处理，部分写入ZIP包；
         final EncryptEntries encryptEntries = this.encryptFiles(tbEncArr, keyParam);
-        // TODO: 创建或读取加密入口文件
+        encryptEntries.setID(id);
+        // d) 组装明密文映射表文件，根据加密方案对齐进行加密后或直接写入ZIP包。
+        final ContainerPath entriesMapCp = encryptElement(encryptEntries, "entriesmap.dat", keyParam);
+        // e) 组装加密入口文件，明文写入ZIP包内
+        CT_EncryptInfo encryptInfo = newEncryptInfo(id);
+        encryptions.addEncryptInfo(encryptInfo);
+        // 明密文映射表或其加密后的文件存储的路径
+        encryptInfo.setEntriesMapLoc(entriesMapCp.getPath());
+        // TODO: 密钥描述文件位置配置
+
         // 执行打包程序
-        new OFDDir(workDir.toAbsolutePath()).jar(out);
+        this.ofdDir.jar(dest);
         return this;
     }
+
+    /**
+     * 创建 加密描述信息
+     *
+     * @param id 加密操作标识
+     * @return 加密描述信息
+     */
+    private CT_EncryptInfo newEncryptInfo(String id) {
+        CT_EncryptInfo encryptInfo = new CT_EncryptInfo().setID(id);
+        if (this.parameters != null) {
+            // 设置 加密操作的附加描述集合
+            encryptInfo.setParameters(this.parameters);
+        }
+
+        // 设置提供者信息
+        final Provider provider = new Provider();
+        provider.setCompany("ofdrw.org")
+                .setProviderName("ofdrw-crypto")
+                .setVersion(GlobalVar.Version);
+        encryptInfo.setProvider(provider);
+        // 设置加密时间
+        encryptInfo.setEncryptDate(LocalDateTime.now());
+
+        return encryptInfo;
+    }
+
 
     /**
      * 获取待加密文件列表
@@ -220,38 +278,118 @@ public class OFDEncryptor implements Closeable {
      * @throws InvalidCipherTextException 加密过程中异常
      */
     private EncryptEntries encryptFiles(List<ContainerPath> tbEncArr, ParametersWithIV keyParam) throws IOException, InvalidCipherTextException {
-        EncryptEntries entriesMap = new EncryptEntries();
-        byte[] buffIn = new byte[4096];
-        byte[] buffOut = new byte[4096 + this.blockCipher.getBlockSize()];
-        int len = 0;
         // 创建明密文映射表
+        EncryptEntries entriesMap = new EncryptEntries();
         for (ContainerPath plaintextCp : tbEncArr) {
-            int bytesProcessed = 0;
-            // 创建加密后的文件
-            final ContainerPath encryptedCp = plaintextCp.createEncryptedFile();
-            try (InputStream in = Files.newInputStream(plaintextCp.getAbs());
-                 OutputStream out = Files.newOutputStream(encryptedCp.getAbs())) {
-                this.blockCipher.init(true, keyParam);
-                while ((len = in.read(buffIn)) != -1) {
-                    // 分块加密
-                    bytesProcessed = this.blockCipher.processBytes(buffIn, 0, len, buffOut, 0);
-                    if (bytesProcessed > 0) {
-                        out.write(buffOut, 0, bytesProcessed);
-                    }
-                }
-                // 执行最后一个分块的加密和填充
-                bytesProcessed = this.blockCipher.doFinal(buffOut, 0);
-                out.write(buffOut, 0, bytesProcessed);
-                this.blockCipher.reset();
-            }
-            // 加密完成后，删除源文件
-            Files.delete(plaintextCp.getAbs());
+            // 根据加密方案，使用步骤 a)生成的文件加密对称密钥调用对称密码算法加密包内文件并写入ZIP包内
+            // 并且对已经生成密文的明文文件进行删除；
+            final ContainerPath encryptedCp = encryptFile(plaintextCp, keyParam);
             // 添加明密文映射表的映射关系
             entriesMap.addEncryptEntry(plaintextCp.getPath(), encryptedCp.getPath());
         }
         return entriesMap;
     }
 
+    /**
+     * 加密单个文件
+     * <p>
+     * 加密后原文件将被删除
+     *
+     * @param plaintextCp 待加密容器内文件
+     * @param keyParam    加密密钥
+     * @return 加密后文件在容器内的位置
+     * @throws IOException                文件读写异常
+     * @throws InvalidCipherTextException 加密运算异常
+     */
+    private ContainerPath encryptFile(ContainerPath plaintextCp, CipherParameters keyParam) throws IOException, InvalidCipherTextException {
+        int bytesProcessed = 0;
+        int len = 0;
+        byte[] buffIn = new byte[4096];
+        byte[] buffOut = new byte[4096 + this.blockCipher.getBlockSize()];
+        // 创建加密后的文件
+        final ContainerPath encryptedCp = plaintextCp.createEncryptedFile();
+        try (InputStream in = Files.newInputStream(plaintextCp.getAbs());
+             OutputStream out = Files.newOutputStream(encryptedCp.getAbs())) {
+            this.blockCipher.init(true, keyParam);
+            while ((len = in.read(buffIn)) != -1) {
+                // 分块加密
+                bytesProcessed = this.blockCipher.processBytes(buffIn, 0, len, buffOut, 0);
+                if (bytesProcessed > 0) {
+                    out.write(buffOut, 0, bytesProcessed);
+                }
+            }
+            // 执行最后一个分块的加密和填充
+            bytesProcessed = this.blockCipher.doFinal(buffOut, 0);
+            out.write(buffOut, 0, bytesProcessed);
+            this.blockCipher.reset();
+        }
+        // 加密完成后，删除源文件
+        Files.delete(plaintextCp.getAbs());
+        return encryptedCp;
+    }
+
+    /**
+     * 加密OFD对象
+     *
+     * @param obj      OFD对象
+     * @param outPath  加密后存放路径，容器内路径
+     * @param keyParam 加密密钥
+     * @return 加密后文件在容器的路径
+     * @throws IOException                文件读写异常
+     * @throws InvalidCipherTextException 加密运算异常
+     */
+    private ContainerPath encryptElement(Element obj, String outPath, CipherParameters keyParam) throws IOException, InvalidCipherTextException {
+        if (outPath.startsWith("/")) {
+            outPath = outPath.substring(1);
+        }
+        // 解析输出位置
+        final Path encFilePath = workDir.resolve(outPath);
+        // 创建上级目录
+        Files.createDirectories(encFilePath.getParent());
+
+        int len = 0;
+        int bytesProcessed = 0;
+        byte[] buffIn = new byte[4096];
+        byte[] buffOut = new byte[4096 + this.blockCipher.getBlockSize()];
+        ByteArrayInputStream in = new ByteArrayInputStream(ElemCup.dump(obj));
+        this.blockCipher.init(true, keyParam);
+        try (OutputStream out = Files.newOutputStream(encFilePath)) {
+            while ((len = in.read(buffIn)) != -1) {
+                // 分块加密
+                bytesProcessed = this.blockCipher.processBytes(buffIn, 0, len, buffOut, 0);
+                if (bytesProcessed > 0) {
+                    out.write(buffOut, 0, bytesProcessed);
+                }
+            }
+            // 执行最后一个分块的加密和填充
+            bytesProcessed = this.blockCipher.doFinal(buffOut, 0);
+            out.write(buffOut, 0, bytesProcessed);
+            this.blockCipher.reset();
+        }
+
+        return new ContainerPath("/" + outPath, encFilePath);
+    }
+
+    /**
+     * 获取 加密操作的附加描述集合
+     *
+     * @return 加密操作的附加描述集合，可能为空
+     */
+    @Nullable
+    public Parameters getParameters() {
+        return parameters;
+    }
+
+    /**
+     * 设置 加密操作的附加描述集合
+     *
+     * @param parameters 加密操作的附加描述集合，可能为空
+     * @return this
+     */
+    public OFDEncryptor setParameters(Parameters parameters) {
+        this.parameters = parameters;
+        return this;
+    }
 
     /**
      * 关闭文档
