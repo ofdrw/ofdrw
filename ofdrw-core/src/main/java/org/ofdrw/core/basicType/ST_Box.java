@@ -96,8 +96,6 @@ public class ST_Box extends STBase implements Cloneable {
                 toDouble(values[3]));
     }
 
-
-
     public Double getTopLeftX() {
         return topLeftX;
     }
@@ -145,7 +143,7 @@ public class ST_Box extends STBase implements Cloneable {
 
     @Override
     public String toString() {
-        return fmt(topLeftX) + " " + fmt(topLeftY) + " " + fmt(width) + " " + fmt(height);
+        return String.format("%s %s %s %s", fmt(topLeftX), fmt(topLeftY), fmt(width), fmt(height));
     }
 
     @Override
