@@ -205,9 +205,12 @@ public class OFDEncryptor implements Closeable {
         // e) 组装加密入口文件，明文写入ZIP包内
         CT_EncryptInfo encryptInfo = newEncryptInfo(id);
         encryptions.addEncryptInfo(encryptInfo);
+        encryptInfo.setEncryptScope("All");
+        //密钥描述文件位置配置
+        final ContainerPath decryptseedCp = ContainerPath.newDatFile("decryptseed", this.workDir.toAbsolutePath());
+        encryptInfo.setDecryptSeedLoc(decryptseedCp.getPath());
         // 明密文映射表或其加密后的文件存储的路径
         encryptInfo.setEntriesMapLoc(entriesMapCp.getPath());
-        // TODO: 密钥描述文件位置配置
 
         // 执行打包程序
         this.ofdDir.jar(dest);
@@ -342,10 +345,8 @@ public class OFDEncryptor implements Closeable {
         if (outPath.startsWith("/")) {
             outPath = outPath.substring(1);
         }
-        // 解析输出位置
-        final Path encFilePath = workDir.resolve(outPath);
-        // 创建上级目录
-        Files.createDirectories(encFilePath.getParent());
+        // 创建加密后保存的文件路径
+        final ContainerPath res = ContainerPath.newDatFile(outPath, workDir);
 
         int len = 0;
         int bytesProcessed = 0;
@@ -353,7 +354,7 @@ public class OFDEncryptor implements Closeable {
         byte[] buffOut = new byte[4096 + this.blockCipher.getBlockSize()];
         ByteArrayInputStream in = new ByteArrayInputStream(ElemCup.dump(obj));
         this.blockCipher.init(true, keyParam);
-        try (OutputStream out = Files.newOutputStream(encFilePath)) {
+        try (OutputStream out = Files.newOutputStream(res.getAbs())) {
             while ((len = in.read(buffIn)) != -1) {
                 // 分块加密
                 bytesProcessed = this.blockCipher.processBytes(buffIn, 0, len, buffOut, 0);
@@ -366,8 +367,7 @@ public class OFDEncryptor implements Closeable {
             out.write(buffOut, 0, bytesProcessed);
             this.blockCipher.reset();
         }
-
-        return new ContainerPath("/" + outPath, encFilePath);
+        return res;
     }
 
     /**

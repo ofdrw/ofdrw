@@ -22,7 +22,6 @@ class ContainerPathTest {
     void createEncryptedFile() throws IOException {
 
         Path src = Paths.get("target/Doc_0/Page_0/Content.xml");
-        src.getParent().toFile().delete();
         Files.createDirectories(src.getParent());
         try (OutputStream out = Files.newOutputStream(src);) {
             out.write("Hello".getBytes(StandardCharsets.UTF_8));
