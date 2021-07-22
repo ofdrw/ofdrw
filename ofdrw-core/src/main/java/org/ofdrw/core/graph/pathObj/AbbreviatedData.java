@@ -364,6 +364,7 @@ public class AbbreviatedData extends OFDElement implements Cloneable {
         for (OptVal item : dataQueue) {
             clone.dataQueue.add(item.clone());
         }
+        clone.flush();
         return clone;
     }
 }

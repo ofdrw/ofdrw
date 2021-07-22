@@ -22,7 +22,7 @@ public class DocEditDemos {
      * 向已有文档中 插入 流式布局的内容
      */
     @Test
-    void streamInsertTest()throws IOException {
+    void streamInsertTest() throws IOException {
         Path srcP = Paths.get("src/test/resources", "拿来主义_page6.ofd");
         Path outP = Paths.get("target/StreamInserted.ofd");
         try (OFDReader reader = new OFDReader(srcP);
@@ -107,8 +107,16 @@ public class DocEditDemos {
                     .setBackgroundColor(255, 192, 203)
                     .setBorder(0.353d)
                     .setPadding(5d);
-
+            Paragraph p = new Paragraph("测试文字测试文字测试文字测试文字", 15d)
+                    .setPosition(Position.Absolute)
+                    .setX(50d).setY(50d)
+                    .setWidth(50d)
+                    .setBorderColor(255, 0, 0)
+                    .setBorder(3d)
+                    .setPadding(3d);
             avPage.add(e);
+            avPage.add(p);
+
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }

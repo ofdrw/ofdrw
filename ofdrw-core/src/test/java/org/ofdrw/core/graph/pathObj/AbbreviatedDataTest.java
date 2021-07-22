@@ -2,6 +2,7 @@ package org.ofdrw.core.graph.pathObj;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.LinkedList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,8 +19,8 @@ public class AbbreviatedDataTest {
     }
 
     @Test
-    public void gen() {
-        AbbreviatedData data = abbreviatedDataCase();
+    public void gen() throws IOException {
+        AbbreviatedData data = abbreviatedDataCase().flush();
 
         System.out.println(data);
         assertTrue("M 50 50 L 250 50 L 250 200 L 50 200 C".equals(data.toString()));
