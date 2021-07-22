@@ -27,14 +27,16 @@ public abstract class STBase implements Serializable {
     /**
      * 如果浮点数为整数，则省略小数
      *
+     * 浮点数含有小数，那么对保留2位小数，并且四舍五入
+     *
      * @param d 浮点数
-     * @return 没有小数点的整数字符串
+     * @return 数字字符串
      */
     public static String fmt(double d) {
         if (d == (long) d) {
             return String.format("%d", (long) d);
         } else {
-            return String.format("%s", d);
+            return String.format("%.2f", d);
         }
     }
 

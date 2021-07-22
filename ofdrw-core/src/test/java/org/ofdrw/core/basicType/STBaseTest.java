@@ -28,9 +28,18 @@ class STBaseTest {
                 put("\u202c+1.5", 1.5D);
             }
         };
-        arr.forEach((k,v)->{
+        arr.forEach((k, v) -> {
             System.out.println(k);
-            assertEquals(v,STBase.toDouble(k) );
+            assertEquals(v, STBase.toDouble(k));
         });
+    }
+
+    @Test
+    public void fmt() {
+        assertEquals("9", ST_Box.fmt(9));
+        assertEquals("9", ST_Box.fmt(9.0));
+        assertEquals("112.00", ST_Box.fmt(111.999999));
+        assertEquals("3.14", ST_Box.fmt(3.1415926));
+
     }
 }
