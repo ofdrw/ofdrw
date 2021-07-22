@@ -208,7 +208,7 @@ public class StreamingLayoutAnalyzer {
             }
             itemDiv.setPosition(Position.Absolute);
             // 加入到虚拟页面中
-            vPage.getContent().add(itemDiv);
+            vPage.addUnsafe(itemDiv);
         }
     }
 

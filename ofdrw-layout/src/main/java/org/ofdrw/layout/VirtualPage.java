@@ -56,6 +56,21 @@ public class VirtualPage {
     }
 
     /**
+     * 不对元素进行分析直接加入到虚拟页面容器内
+     * <p>
+     * 请在调用该接口时，对待加入的元素进行分析，否则很有可能抛出异常。
+     * <p>
+     * 如果没有特殊需求请使用 {@link #add}，不要使用该API
+     *
+     * @param d 采用绝对定位的元素
+     * @return this
+     */
+    public VirtualPage addUnsafe(Div d) {
+        this.content.add(d);
+        return this;
+    }
+
+    /**
      * 向虚拟页面中加入对象
      *
      * @param d 采用绝对定位的元素
@@ -77,14 +92,28 @@ public class VirtualPage {
         if (d.getWidth() == null) {
             throw new IllegalArgumentException("绝对定位元素至少需要指定元素宽度（Width）");
         }
+        // 追加内容时进行预处理
+        d.doPrepare(d.getWidth() + d.widthPlus());
         this.content.add(d);
         return this;
     }
 
+    /**
+     * 获取虚拟页面内的内容容器
+     * <p>
+     * 如果不需要分析元素，那么直接获取该容器来向容器内直接加入 元素
+     *
+     * @return 虚拟页面内的内容容器
+     */
     public List<Div> getContent() {
         return content;
     }
 
+    /**
+     * 替换 虚拟页面内的内容容器
+     *
+     * @return this
+     */
     VirtualPage setContent(List<Div> content) {
         this.content = content;
         return this;
