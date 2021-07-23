@@ -494,9 +494,8 @@ public class OFDDoc implements Closeable {
         }
         if (attachments == null) {
             attachments = new Attachments();
-            final AnnotsDir annotsDir = docDir.obtainAnnots();
-            annotsDir.putObj(DocDir.Attachments, attachments);
-            ofdDocument.setAttachments(annotsDir.getAbsLoc().cat(DocDir.Attachments));
+            docDir.putObj(DocDir.Attachments, attachments);
+            ofdDocument.setAttachments(docDir.getAbsLoc().cat(DocDir.Attachments));
         }
         return attachments;
     }
