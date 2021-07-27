@@ -1,4 +1,4 @@
-package org.ofdrw.reader.tools;
+package org.ofdrw.pkg.tool;
 
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -12,10 +12,8 @@ import org.ofdrw.core.Const;
  *
  * @author 权观宇
  * @since 2020-10-15 20:01:20
- * @deprecated {@link org.ofdrw.pkg.tool.OFDNameSpaceModifier}
  */
-@Deprecated
-public class NameSpaceModifier extends VisitorSupport {
+public class OFDNameSpaceModifier extends VisitorSupport {
     /**
      * 期望变更的命名空间
      */
@@ -26,7 +24,7 @@ public class NameSpaceModifier extends VisitorSupport {
      *
      * @param namespace 期望变更的新的命名空间
      */
-    public NameSpaceModifier(Namespace namespace) {
+    public OFDNameSpaceModifier(Namespace namespace) {
         if (namespace == null) {
             namespace = Const.OFD_NAMESPACE;
         }
@@ -38,7 +36,7 @@ public class NameSpaceModifier extends VisitorSupport {
      * <p>
      * 默认命名空间为: xmlns:ofd="http://www.ofdspec.org/2016
      */
-    public NameSpaceModifier() {
+    public OFDNameSpaceModifier() {
         this(Const.OFD_NAMESPACE);
     }
 
@@ -48,8 +46,15 @@ public class NameSpaceModifier extends VisitorSupport {
      * @param document 根节点对象
      */
     public void visit(Document document) {
-        document.getRootElement().additionalNamespaces().clear();
-        ((DefaultElement) document.getRootElement()).setNamespace(this.expectNs);
+        final DefaultElement rootElement = (DefaultElement) document.getRootElement();
+        if (rootElement == null) {
+            return;
+        }
+        // 如果命名空间不同，那么更新命名空间
+        if(!nsEqual(rootElement)){
+            rootElement.setNamespace(this.expectNs);
+            rootElement.additionalNamespaces().clear();
+        }
     }
 
     /**
@@ -76,22 +81,25 @@ public class NameSpaceModifier extends VisitorSupport {
      */
     public void visit(Element node) {
         if (node instanceof DefaultElement) {
-            ((DefaultElement) node).setNamespace(this.expectNs);
+            final DefaultElement element = (DefaultElement) node;
+            if (!nsEqual(element)){
+                element.setNamespace(this.expectNs);
+            }
         }
-    }
-
-    /**
-     * 设置期望变更到的命名空间
-     *
-     * @param expectNs 命名空间
-     * @return this
-     */
-    public NameSpaceModifier setExpectNs(Namespace expectNs) {
-        this.expectNs = expectNs;
-        return this;
     }
 
     public Namespace getExpectNs() {
         return expectNs;
+    }
+
+    /**
+     * 命名空间是否一致
+     *
+     * @param e 需要比较的元素
+     * @return true - 一致；false - 不一致
+     */
+    private boolean nsEqual(Element e) {
+        final Namespace n = e.getNamespace();
+        return expectNs.getPrefix().equals(n.getPrefix()) && expectNs.getText().equals(n.getText());
     }
 }

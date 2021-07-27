@@ -443,7 +443,7 @@ public class VirtualContainer implements Closeable {
             // 序列化为文件
             // 检查文件是否被修改，只有被修改的文件才能够非flush
             if (fileChanged(filename, element)) {
-                ElemCup.dump(element, filePath);
+                ElemCup.dumpUpNS(element, filePath);
             }
         }
         // 递归的刷新容器中包含的其他容器
@@ -488,7 +488,7 @@ public class VirtualContainer implements Closeable {
             Path filePath = Paths.get(fullPath, name);
             // 检查文件是否被修改，只有被修改的文件才能够非flush
             if (fileChanged(name, element)) {
-                ElemCup.dump(element, filePath);
+                ElemCup.dumpUpNS(element, filePath);
             }
         }
         return this;
