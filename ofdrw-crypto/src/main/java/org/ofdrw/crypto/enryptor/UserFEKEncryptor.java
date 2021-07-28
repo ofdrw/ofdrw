@@ -1,5 +1,6 @@
-package org.ofdrw.crypto;
+package org.ofdrw.crypto.enryptor;
 
+import org.bouncycastle.crypto.CryptoException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.ofdrw.core.crypto.ProtectionCaseID;
@@ -21,14 +22,13 @@ public interface UserFEKEncryptor {
     /**
      * 加密 文件加密密钥 并封装为
      *
-     * @param username 用户名
-     * @param userType 用户类型，默认为 User（用户）
-     * @param fek      文件加密密钥（File Encrypt Key ）
+     * @param fek 文件加密密钥（File Encrypt Key ）
+     * @param iv  加密向量IV
      * @return 用户信息（包含加密的文件加密密钥）
-     * @throws GeneralSecurityException 加密过程运行异常
+     * @throws CryptoException 加密过程运行异常
      * @throws IOException              IO操作异常
      */
-    UserInfo encrypt(@NotNull String username, @Nullable String userType, @NotNull String fek) throws GeneralSecurityException, IOException;
+    UserInfo encrypt(@NotNull byte[] fek, @NotNull byte[] iv) throws CryptoException, IOException;
 
     /**
      * 用户加密时使用的证书，仅在使用证书加密的加密器中需要实现
