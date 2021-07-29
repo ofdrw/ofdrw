@@ -25,6 +25,7 @@ import org.ofdrw.reader.ZipUtil;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -169,10 +170,11 @@ public class OFDEncryptor implements Closeable {
      * 执行加密
      *
      * @return this
-     * @throws IOException     加密
-     * @throws CryptoException 加密异常
+     * @throws IOException              加密
+     * @throws CryptoException          加密异常
+     * @throws GeneralSecurityException 证书解析异常
      */
-    public OFDEncryptor encrypt() throws IOException, CryptoException {
+    public OFDEncryptor encrypt() throws IOException, CryptoException, GeneralSecurityException {
         if (this.userEncryptorList.isEmpty()) {
             throw new IllegalArgumentException("没有可用加密用户(UserFEKEncryptor)");
         }
@@ -224,10 +226,10 @@ public class OFDEncryptor implements Closeable {
             final UserInfo userInfo = fekEncryptor.encrypt(fek, iv);
 
             // 如果是证书加密，需要获取证书
-            if(ProtectionCaseID.EncryptGMCert.getId().equals(fekEncryptor.encryptCaseId())){
+            if (ProtectionCaseID.EncryptGMCert.getId().equals(fekEncryptor.encryptCaseId())) {
                 // 证书加密使用的证书
                 final byte[] certBin = fekEncryptor.userCert();
-                if(certBin == null || certBin.length == 0){
+                if (certBin == null || certBin.length == 0) {
                     throw new CryptoException("无法获取加密证书");
                 }
                 userInfo.setUserCert(certBin);

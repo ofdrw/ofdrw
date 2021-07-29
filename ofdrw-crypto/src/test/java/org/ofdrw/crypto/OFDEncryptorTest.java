@@ -10,9 +10,10 @@ import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
-import org.ofdrw.core.crypto.encryt.UserInfo;
+import org.ofdrw.crypto.enryptor.UserCertEncryptor;
 import org.ofdrw.crypto.enryptor.UserFEKEncryptor;
 import org.ofdrw.crypto.enryptor.UserPasswordEncryptor;
+import org.ofdrw.gm.cert.PEMLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
+import java.security.cert.Certificate;
 
 /**
  * @author 权观宇
@@ -64,7 +66,7 @@ class OFDEncryptorTest {
     }
 
     @Test
-    void encrypt() throws IOException, CryptoException {
+    void encryptPassword() throws IOException, CryptoException, GeneralSecurityException {
         Path src = Paths.get("src/test/resources/hello.ofd");
         Path out = Paths.get("target/hello-enc.ofd");
         try (OFDEncryptor ofdEncryptor = new OFDEncryptor(src, out)) {
@@ -73,5 +75,20 @@ class OFDEncryptorTest {
             ofdEncryptor.encrypt();
         }
         System.out.println(">> " + out.toAbsolutePath().toString());
+    }
+
+    @Test
+    void encryptCert() throws IOException, CryptoException, GeneralSecurityException {
+        Path src = Paths.get("src/test/resources/hello.ofd");
+        Path out = Paths.get("target/hello-enc.ofd");
+        Path certPath  =  Paths.get("src/test/resources", "sign_cert.pem");
+        final Certificate certificate = PEMLoader.loadCert(certPath);
+
+        try (OFDEncryptor ofdEncryptor = new OFDEncryptor(src, out)) {
+            final UserFEKEncryptor encryptor = new UserCertEncryptor("777", certificate);
+            ofdEncryptor.addUser(encryptor);
+            ofdEncryptor.encrypt();
+        }
+        System.out.println(">> " + out.toAbsolutePath());
     }
 }

@@ -54,6 +54,12 @@ public class UserPasswordEncryptor implements UserFEKEncryptor {
      * @param password 加密口令
      */
     public UserPasswordEncryptor(@NotNull String username, String userType, @NotNull String password) {
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("用户名称(username)为空");
+        }
+        if (password == null || password.isEmpty()) {
+            throw new IllegalArgumentException("加密口令(password)为空");
+        }
         this.username = username;
         this.userType = userType;
         // 扩展口令为加密密钥

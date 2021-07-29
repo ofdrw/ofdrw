@@ -25,17 +25,19 @@ public interface UserFEKEncryptor {
      * @param fek 文件加密密钥（File Encrypt Key ）
      * @param iv  加密向量IV
      * @return 用户信息（包含加密的文件加密密钥）
-     * @throws CryptoException 加密过程运行异常
+     * @throws CryptoException          加密过程运行异常
      * @throws IOException              IO操作异常
+     * @throws GeneralSecurityException 加密异常
      */
-    UserInfo encrypt(@NotNull byte[] fek, @NotNull byte[] iv) throws CryptoException, IOException;
+    UserInfo encrypt(@NotNull byte[] fek, @NotNull byte[] iv) throws CryptoException, IOException, GeneralSecurityException;
 
     /**
      * 用户加密时使用的证书，仅在使用证书加密的加密器中需要实现
      *
      * @return 证书文件字节内容（DER编码），在使用口令加密时可返还null
+     * @throws GeneralSecurityException 证书编码错误
      */
-    byte[] userCert();
+    byte[] userCert() throws GeneralSecurityException;
 
     /**
      * 加密保护方案标识，见附录 A.1 {@link ProtectionCaseID}
