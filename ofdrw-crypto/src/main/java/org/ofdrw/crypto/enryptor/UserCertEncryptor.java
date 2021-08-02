@@ -9,7 +9,7 @@ import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil;
 import org.jetbrains.annotations.NotNull;
 import org.ofdrw.core.crypto.ProtectionCaseID;
 import org.ofdrw.core.crypto.encryt.UserInfo;
-import org.ofdrw.gm.sm2use.SM2Cipher;
+import org.ofdrw.gm.sm2strut.SM2Cipher;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
