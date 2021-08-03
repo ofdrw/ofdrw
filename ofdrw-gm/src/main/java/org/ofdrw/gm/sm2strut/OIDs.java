@@ -13,6 +13,10 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
  * @since 2021-08-02 19:26:18
  */
 public final class OIDs {
+    /*
+                    GMT 35275-2017 5. OID 定义
+     */
+
     /**
      * SM2密码算法加密签名消息语法规范
      */
