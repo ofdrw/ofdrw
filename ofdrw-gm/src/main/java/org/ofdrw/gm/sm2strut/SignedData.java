@@ -35,7 +35,7 @@ public final class SignedData extends ASN1Object {
      * 版本号，此处取值为 1
      * 见 {@link #VERSION_1}
      */
-    private ASN1Integer version;
+    private ASN1Integer version = VERSION_1;
 
     /**
      * 消息摘要算法标识符的集合
