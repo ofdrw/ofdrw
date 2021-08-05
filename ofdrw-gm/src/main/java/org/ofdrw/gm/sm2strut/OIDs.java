@@ -92,4 +92,10 @@ public final class OIDs {
      * SM3 密码杂凑算法，有密钥使用
      */
     public static final ASN1ObjectIdentifier sm3_2 = sm3.branch("1");
+
+
+    /**
+     * 基于SM2算法和SM3算法的签名
+     */
+    public static final ASN1ObjectIdentifier SM3withSM2 = new ASN1ObjectIdentifier("1.2.156.10197.501");
 }

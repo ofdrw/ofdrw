@@ -80,7 +80,7 @@ public final class ContentInfo extends ASN1Object {
     @Override
     public ASN1Primitive toASN1Primitive() {
        ASN1EncodableVector v = new ASN1EncodableVector(2);
-       v.add(content);
+       v.add(contentType);
         if (content != null) {
             v.add(new DERTaggedObject(0, content));
         }

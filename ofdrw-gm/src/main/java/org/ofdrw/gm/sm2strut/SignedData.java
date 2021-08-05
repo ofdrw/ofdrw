@@ -62,12 +62,10 @@ public final class SignedData extends ASN1Object {
      */
     private ASN1Set signerInfos;
 
-    public SignedData(ASN1Set digestAlgorithms, ContentInfo contentInfo, ASN1Set certificates, ASN1Set crls, ASN1Set signerInfos) {
-        this.version = VERSION_1;
+    public SignedData(ASN1Set digestAlgorithms, ContentInfo contentInfo, ASN1Set certificates, ASN1Set signerInfos) {
         this.digestAlgorithms = digestAlgorithms;
         this.contentInfo = contentInfo;
         this.certificates = certificates;
-        this.crls = crls;
         this.signerInfos = signerInfos;
     }
 
