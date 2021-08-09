@@ -5,32 +5,56 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
 import org.bouncycastle.jcajce.provider.digest.SM3;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.jetbrains.annotations.NotNull;
 import org.ofdrw.core.signatures.SigType;
+import org.ofdrw.gm.sm2strut.SignedData;
+import org.ofdrw.gm.sm2strut.builder.SignedDataBuilder;
 import org.ofdrw.sign.ExtendSignatureContainer;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.*;
+import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.cert.Certificate;
 
 /**
- * 国密SM2withSM3数字签名实现容器
- * @deprecated OFD的数字签名应符合 《GB/T 35275》  {@link GBT35275DSContainer}
+ * 根据 GM/T 0099-2020 7.2.2 数据格式要求
+ * <p>
+ * b) 签名类型为数字签名且签名算法使用SM2时，签名值数据应遵循 GB/T 35275
  *
  * @author 权观宇
- * @since 2020-04-20 12:26:33
+ * @since 2021-8-9 16:15:16
  */
-@Deprecated
-public class DigitalSignContainer implements ExtendSignatureContainer {
+public class GBT35275DSContainer implements ExtendSignatureContainer {
 
     /**
      * 签名私钥
      */
     private final PrivateKey prvKey;
 
-    public DigitalSignContainer(PrivateKey prvKey) {
+    /**
+     * 私钥对应公钥的证书
+     */
+    private final Certificate cert;
+
+    /**
+     * 创建数字签名容器
+     * <p>
+     * 签名值数据应遵循 GB/T 35275
+     *
+     * @param cert   SM2签名证书，应符合GB/T 20518
+     * @param prvKey 私钥
+     */
+    public GBT35275DSContainer(@NotNull Certificate cert, @NotNull PrivateKey prvKey) {
+        if (cert == null) {
+            throw new IllegalArgumentException("签名使用证书（cert）不能为空");
+        }
         if (prvKey == null) {
             throw new IllegalArgumentException("签名使用私钥（prvKey）不能为空");
         }
+        this.cert = cert;
         this.prvKey = prvKey;
     }
 
@@ -65,12 +89,21 @@ public class DigitalSignContainer implements ExtendSignatureContainer {
      */
     @Override
     public byte[] sign(InputStream inData, String propertyInfo) throws GeneralSecurityException, IOException {
+        // 计算原文摘要
+        MessageDigest md = new SM3.Digest();
+        // d) 调用杂凑算法计算签名文件的杂凑值
+        byte[] plaintext = md.digest(IOUtils.toByteArray(inData));
+
+        // e) 根据签名方案，使用操作人签名的私钥对杂凑值进行数字签名
         Signature signatureFnc = Signature.getInstance(
                 GMObjectIdentifiers.sm2sign_with_sm3.toString(),
                 new BouncyCastleProvider());
         signatureFnc.initSign(prvKey);
-        signatureFnc.update(IOUtils.toByteArray(inData));
-        return signatureFnc.sign();
+        signatureFnc.update(plaintext);
+        // 执行签名产生签名值
+        final byte[] signature = signatureFnc.sign();
+        final SignedData signedData = SignedDataBuilder.signedData(plaintext, signature, this.cert);
+        return signedData.getEncoded();
     }
 
     /**

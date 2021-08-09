@@ -92,7 +92,7 @@ public class SignerInfo extends ASN1Object {
         }
     }
 
-    public SignerInfo getInstance(Object o) {
+    public static SignerInfo getInstance(Object o) {
         if (o instanceof SignerInfo) {
             return (SignerInfo) o;
         } else if (o != null) {
@@ -100,6 +100,69 @@ public class SignerInfo extends ASN1Object {
         } else {
             return null;
         }
+    }
+
+    public ASN1Integer getVersion() {
+        return version;
+    }
+
+    public SignerInfo setVersion(ASN1Integer version) {
+        this.version = version;
+        return this;
+    }
+
+    public IssuerAndSerialNumber getIssuerAngSerialNumber() {
+        return issuerAngSerialNumber;
+    }
+
+    public SignerInfo setIssuerAngSerialNumber(IssuerAndSerialNumber issuerAngSerialNumber) {
+        this.issuerAngSerialNumber = issuerAngSerialNumber;
+        return this;
+    }
+
+    public AlgorithmIdentifier getDigestAlgorithm() {
+        return digestAlgorithm;
+    }
+
+    public SignerInfo setDigestAlgorithm(AlgorithmIdentifier digestAlgorithm) {
+        this.digestAlgorithm = digestAlgorithm;
+        return this;
+    }
+
+    public ASN1Set getAuthenticatedAttributes() {
+        return authenticatedAttributes;
+    }
+
+    public SignerInfo setAuthenticatedAttributes(ASN1Set authenticatedAttributes) {
+        this.authenticatedAttributes = authenticatedAttributes;
+        return this;
+    }
+
+    public AlgorithmIdentifier getDigestEncryptionAlgorithm() {
+        return digestEncryptionAlgorithm;
+    }
+
+    public SignerInfo setDigestEncryptionAlgorithm(AlgorithmIdentifier digestEncryptionAlgorithm) {
+        this.digestEncryptionAlgorithm = digestEncryptionAlgorithm;
+        return this;
+    }
+
+    public ASN1OctetString getEncryptedDigest() {
+        return encryptedDigest;
+    }
+
+    public SignerInfo setEncryptedDigest(ASN1OctetString encryptedDigest) {
+        this.encryptedDigest = encryptedDigest;
+        return this;
+    }
+
+    public ASN1Set getUnauthenticatedAttributes() {
+        return unauthenticatedAttributes;
+    }
+
+    public SignerInfo setUnauthenticatedAttributes(ASN1Set unauthenticatedAttributes) {
+        this.unauthenticatedAttributes = unauthenticatedAttributes;
+        return this;
     }
 
     @Override

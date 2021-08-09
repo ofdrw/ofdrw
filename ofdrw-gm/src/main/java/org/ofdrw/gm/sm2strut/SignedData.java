@@ -1,6 +1,7 @@
 package org.ofdrw.gm.sm2strut;
 
 import org.bouncycastle.asn1.*;
+import org.bouncycastle.asn1.x509.Certificate;
 
 import java.util.Enumeration;
 
@@ -157,13 +158,34 @@ public final class SignedData extends ASN1Object {
         return this;
     }
 
+    /**
+     * 获取签名证书
+     *
+     * @param iaSn 证书颁发者DN和序列号
+     * @return 证书实体，不存在返回null
+     */
+    public Certificate getSignCert(IssuerAndSerialNumber iaSn) {
+        if (iaSn == null) {
+            return null;
+        }
+        for (ASN1Encodable item : this.certificates) {
+            final Certificate c = Certificate.getInstance(item);
+            boolean snEq = c.getSerialNumber().equals(iaSn.getCertSerialNumber());
+            boolean dnEq = c.getIssuer().equals(iaSn.getName());
+            if (snEq && dnEq) {
+                return c;
+            }
+        }
+        return null;
+    }
+
     @Override
     public ASN1Primitive toASN1Primitive() {
         ASN1EncodableVector v = new ASN1EncodableVector(6);
         v.add(version);
         v.add(digestAlgorithms);
         v.add(contentInfo);
-        if (certificates != null){
+        if (certificates != null) {
             v.add(new DERTaggedObject(false, 0, certificates));
         }
         if (crls != null) {

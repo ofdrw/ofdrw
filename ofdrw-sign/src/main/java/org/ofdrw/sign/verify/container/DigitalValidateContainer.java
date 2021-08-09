@@ -2,6 +2,7 @@ package org.ofdrw.sign.verify.container;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.ofdrw.core.signatures.SigType;
+import org.ofdrw.sign.signContainer.GBT35275DSContainer;
 import org.ofdrw.sign.verify.SignedDataValidateContainer;
 import org.ofdrw.sign.verify.exceptions.InvalidSignedValueException;
 
@@ -12,10 +13,12 @@ import java.security.cert.Certificate;
 
 /**
  * 数字签名验证容器
+ *  @deprecated OFD的数字签名应符合 《GB/T 35275》  {@link GBT35275ValidateContainer}
  *
  * @author 权观宇
  * @since 2020-04-22 03:22:22
  */
+@Deprecated
 public class DigitalValidateContainer implements SignedDataValidateContainer {
     /**
      * 验证使用的公钥
