@@ -7,7 +7,7 @@ import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.reader.DeltaTool;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.util.List;
 
 /**
@@ -50,7 +50,8 @@ public class RegionTextExtractorFilter implements ExtractorFilter {
 
             double[] matrix = getMatrix(textObject.getCTM());
 
-            double sx = textCode.getX() == null ? 0 : textCode.getX(), sy = textCode.getY() == null ? 0 : textCode.getY();
+            double sx = textCode.getX() == null ? 0 : textCode.getX();
+            double sy = textCode.getY() == null ? 0 : textCode.getY();
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < content.length(); i++) {
                 char ch = content.charAt(i);

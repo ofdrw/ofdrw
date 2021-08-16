@@ -102,7 +102,7 @@ public class ContentExtractor {
                 for (TextCode code : textCodes) {
                     if (filter != null) {
                         String allowText = filter.getAllowText(text, code);
-                        if(allowText != null) {
+                        if(allowText != null && !"".equals(allowText)) {
                             txtContentList.add(allowText);
                         }
                     } else {
