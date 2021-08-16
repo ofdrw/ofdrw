@@ -6,6 +6,7 @@ import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.text.TextCode;
+import org.ofdrw.reader.extractor.ExtractorFilter;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -32,7 +33,14 @@ public class ContentExtractor {
         void process(int pageNum, List<String> contents);
     }
 
+    /**
+     * OFD解析器
+     */
     private OFDReader reader;
+    /**
+     * 文本抽取过滤器
+     */
+    private ExtractorFilter filter;
 
     private ContentExtractor() {
     }
@@ -44,6 +52,17 @@ public class ContentExtractor {
      */
     public ContentExtractor(OFDReader reader) {
         this.reader = reader;
+    }
+
+    /**
+     * 构造文字抽取器
+     *
+     * @param filter 文本抽取过滤器
+     * @param reader OFD解析器
+     */
+    public ContentExtractor(OFDReader reader, ExtractorFilter filter) {
+        this.reader = reader;
+        this.filter = filter;
     }
 
     /**
@@ -81,7 +100,14 @@ public class ContentExtractor {
                 TextObject text = (TextObject) block;
                 List<TextCode> textCodes = text.getTextCodes();
                 for (TextCode code : textCodes) {
-                    txtContentList.add(code.getContent());
+                    if (filter != null) {
+                        String allowText = filter.getAllowText(text, code);
+                        if(allowText != null) {
+                            txtContentList.add(allowText);
+                        }
+                    } else {
+                        txtContentList.add(code.getContent());
+                    }
                 }
             } else if (block instanceof CT_PageBlock) {
                 CT_PageBlock ctPageBlock = (CT_PageBlock) block;
