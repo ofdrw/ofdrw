@@ -6,7 +6,7 @@
     <parent>
         <artifactId>ofdrw</artifactId>
         <groupId>org.ofdrw</groupId>
-        <version>1.13.5</version>
+        <version>1.14.0</version>
     </parent>
     <artifactId>ofdrw-layout</artifactId>
 

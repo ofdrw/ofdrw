@@ -2,6 +2,21 @@
 
 ## 进展
 
+## Version 1.14.0 2021-8-16 19:29:22
+
+> Alias: SSSS.Gridman
+
+新增：
+
+- 通过矩形区域提取文本的接口 [见测试用例](ofdrw-reader/src/test/java/org/ofdrw/reader/ContentExtractorTest.java)
+- 新增《GM/T 0099》部分实现，[见测试用例](ofdrw-crypto/src/test/java/org/ofdrw/crypto/OFDEncryptorTest.java)
+  - 口令加密OFD文件
+  - 证书加密OFD文件
+- 新增了基于 《GB/T 35275》实现的数字签名和验证的容器
+  - [签名 测试用例](ofdrw-sign/src/test/java/org/ofdrw/sign/signContainer/GBT35275DSContainerTest.java)
+  - [验签 测试用例](ofdrw-sign/src/test/java/org/ofdrw/sign/verify/container/GBT35275ValidateContainerTest.java)
+- gm模块实现了 《GB/T 35276》 相关的数据结构和构造方法。
+
 ## Version 1.13.5 2021-7-27 20:21:41
 
 > Alias: Remake Our Life
