@@ -10,7 +10,10 @@ import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
-import org.ofdrw.core.crypto.encryt.UserInfo;
+import org.ofdrw.crypto.enryptor.UserCertEncryptor;
+import org.ofdrw.crypto.enryptor.UserFEKEncryptor;
+import org.ofdrw.crypto.enryptor.UserPasswordEncryptor;
+import org.ofdrw.gm.cert.PEMLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,9 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
-import java.util.Random;
-
-import static org.junit.jupiter.api.Assertions.*;
+import java.security.cert.Certificate;
 
 /**
  * @author 权观宇
@@ -65,32 +66,29 @@ class OFDEncryptorTest {
     }
 
     @Test
-    void encrypt() throws IOException, CryptoException {
+    void encryptPassword() throws IOException, CryptoException, GeneralSecurityException {
         Path src = Paths.get("src/test/resources/hello.ofd");
         Path out = Paths.get("target/hello-enc.ofd");
         try (OFDEncryptor ofdEncryptor = new OFDEncryptor(src, out)) {
-            ofdEncryptor.addUser(new UserFEKEncryptor() {
-                @Override
-                public UserInfo encrypt(@NotNull String username, @Nullable String userType, @NotNull String fek) throws GeneralSecurityException, IOException {
-                    return null;
-                }
-
-                @Override
-                public byte[] userCert() {
-                    return new byte[0];
-                }
-
-                @Override
-                public @NotNull String encryptCaseId() {
-                    return null;
-                }
-            });
-            ofdEncryptor.setContainerFileFilter((p, pp) -> {
-//                final Random rd = new Random();
-//                System.out.println(p);
-                return true;
-            });
+            final UserFEKEncryptor encryptor = new UserPasswordEncryptor("777", "12345678");
+            ofdEncryptor.addUser(encryptor);
             ofdEncryptor.encrypt();
         }
+        System.out.println(">> " + out.toAbsolutePath().toString());
+    }
+
+    @Test
+    void encryptCert() throws IOException, CryptoException, GeneralSecurityException {
+        Path src = Paths.get("src/test/resources/hello.ofd");
+        Path out = Paths.get("target/hello-enc.ofd");
+        Path certPath  =  Paths.get("src/test/resources", "sign_cert.pem");
+        final Certificate certificate = PEMLoader.loadCert(certPath);
+
+        try (OFDEncryptor ofdEncryptor = new OFDEncryptor(src, out)) {
+            final UserFEKEncryptor encryptor = new UserCertEncryptor("777", certificate);
+            ofdEncryptor.addUser(encryptor);
+            ofdEncryptor.encrypt();
+        }
+        System.out.println(">> " + out.toAbsolutePath());
     }
 }

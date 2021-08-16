@@ -13,11 +13,10 @@ import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.dom4j.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.ofdrw.core.crypto.encryt.CT_EncryptInfo;
-import org.ofdrw.core.crypto.encryt.EncryptEntries;
-import org.ofdrw.core.crypto.encryt.Encryptions;
-import org.ofdrw.core.crypto.encryt.Provider;
+import org.ofdrw.core.crypto.ProtectionCaseID;
+import org.ofdrw.core.crypto.encryt.*;
 import org.ofdrw.core.signatures.sig.Parameters;
+import org.ofdrw.crypto.enryptor.UserFEKEncryptor;
 import org.ofdrw.gv.GlobalVar;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.pkg.tool.ElemCup;
@@ -26,6 +25,7 @@ import org.ofdrw.reader.ZipUtil;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -170,10 +170,11 @@ public class OFDEncryptor implements Closeable {
      * 执行加密
      *
      * @return this
-     * @throws IOException     加密
-     * @throws CryptoException 加密异常
+     * @throws IOException              加密
+     * @throws CryptoException          加密异常
+     * @throws GeneralSecurityException 证书解析异常
      */
-    public OFDEncryptor encrypt() throws IOException, CryptoException {
+    public OFDEncryptor encrypt() throws IOException, CryptoException, GeneralSecurityException {
         if (this.userEncryptorList.isEmpty()) {
             throw new IllegalArgumentException("没有可用加密用户(UserFEKEncryptor)");
         }
@@ -206,11 +207,38 @@ public class OFDEncryptor implements Closeable {
         CT_EncryptInfo encryptInfo = newEncryptInfo(id);
         encryptions.addEncryptInfo(encryptInfo);
         encryptInfo.setEncryptScope("All");
-        //密钥描述文件位置配置
+        // 密钥描述文件位置配置
         final ContainerPath decryptseedCp = ContainerPath.newDatFile("decryptseed", this.workDir.toAbsolutePath());
         encryptInfo.setDecryptSeedLoc(decryptseedCp.getPath());
         // 明密文映射表或其加密后的文件存储的路径
         encryptInfo.setEntriesMapLoc(entriesMapCp.getPath());
+        // 创建密钥描述文件
+        DecyptSeed decyptSeedObj = new DecyptSeed()
+                .setID(id)
+                .setExtendParams(new ExtendParams());
+        // f) 根据加密方案，对文件加密对称密钥进行密钥包装或非对称加密生成文件对称加密的包装密钥；
+        String encryptCaseId = null;
+        for (UserFEKEncryptor fekEncryptor : userEncryptorList) {
+            if (encryptCaseId == null) {
+                encryptCaseId = fekEncryptor.encryptCaseId();
+            }
+            // 加密 文件加密对称密钥，生成
+            final UserInfo userInfo = fekEncryptor.encrypt(fek, iv);
+
+            // 如果是证书加密，需要获取证书
+            if (ProtectionCaseID.EncryptGMCert.getId().equals(fekEncryptor.encryptCaseId())) {
+                // 证书加密使用的证书
+                final byte[] certBin = fekEncryptor.userCert();
+                if (certBin == null || certBin.length == 0) {
+                    throw new CryptoException("无法获取加密证书");
+                }
+                userInfo.setUserCert(certBin);
+            }
+            decyptSeedObj.addUserInfo(userInfo);
+            // g) 如果电子文件访问者为多人，则重复 7.3.4 的步骤 e)；
+        }
+        // h) 组装密钥描述文件，并写入ZIP包。
+        ElemCup.dump(decyptSeedObj, decryptseedCp.getAbs());
 
         // 执行打包程序
         this.ofdDir.jar(dest);
