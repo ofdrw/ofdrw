@@ -16,12 +16,17 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * @author 权观宇
+ * 内容抽取测试用例
+ *
  * @since 2020-09-21 23:09:24
  */
 class ContentExtractorTest {
+
     private Path src = Paths.get("src/test/resources/helloworld.ofd");
 
+    /**
+     * 提取指定页面的文本
+     */
     @Test
     void getPageContent() throws IOException {
         try (OFDReader reader = new OFDReader(src)) {
@@ -34,6 +39,9 @@ class ContentExtractorTest {
         }
     }
 
+    /**
+     * 提取矩形区域内的文字
+     */
     @Test
     void extractByFilter() throws IOException {
         try (OFDReader reader = new OFDReader("src/test/resources/keyword.ofd")) {
@@ -48,6 +56,9 @@ class ContentExtractorTest {
         }
     }
 
+    /**
+     * 提取所有页面出现的文本
+     */
     @Test
     void extractAll() throws IOException {
         try (OFDReader reader = new OFDReader(src)) {
@@ -62,8 +73,6 @@ class ContentExtractorTest {
 
     /**
      * 含有PageBlock包裹的对象的文字提取测试
-     *
-     * @throws IOException
      */
     @Test
     void extractAllPageBlock() throws IOException {
@@ -78,7 +87,9 @@ class ContentExtractorTest {
         }
     }
 
-
+    /**
+     * 页面内容迭代器，通过迭代器可以实现对每一页的内容处理
+     */
     @Test
     void traverse() throws IOException {
         try (OFDReader reader = new OFDReader(src)) {

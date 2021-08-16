@@ -27,6 +27,13 @@ public class RegionTextExtractorFilter implements ExtractorFilter {
         this.rectangle = rectangle;
     }
 
+    /**
+     * 提取对象在矩形区域内的文本
+     *
+     * @param textObject 文本域对象
+     * @param textCode   文字定位对象
+     * @return 矩形区域内的文本
+     */
     @Override
     public String getAllowText(TextObject textObject, TextCode textCode) {
         String content = textCode.getContent();
