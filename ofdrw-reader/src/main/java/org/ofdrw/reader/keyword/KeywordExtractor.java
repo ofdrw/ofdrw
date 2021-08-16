@@ -621,7 +621,7 @@ public class KeywordExtractor {
 
         if (!deltaY.isEmpty()) {
             for (int i = 0; i < deltaY.size() && i < keywordLength - 1; i++) {
-                height -= deltaY.get(i);
+                height += deltaY.get(i);
             }
         }
 
