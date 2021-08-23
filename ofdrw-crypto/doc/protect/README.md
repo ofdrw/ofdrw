@@ -68,3 +68,8 @@ class HelloWorld {
 
 - [SM2证书 sign_cert.pem](../../src/test/resources/sign_cert.pem)
 - [SM2密钥 sign_key.pem](../../src/test/resources/sign_key.pem)
+
+> 示例中采用 GMProtectSigner 实现摘要和签名的计算过程，它实现了 `ProtectSigner` 接口
+>
+> 如果对签名和摘要计算有特殊需求请通过实现 [ProtectSigner](../../src/main/java/org/ofdrw/crypto/integrity/ProtectSigner.java) 接口 来实现个性化定制签名。
+
