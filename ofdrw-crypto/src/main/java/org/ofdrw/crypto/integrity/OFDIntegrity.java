@@ -68,6 +68,8 @@ public class OFDIntegrity implements Closeable {
 
     /**
      * 对文件实行完整性保护
+     * <p>
+     * 请在完成保护后务必调用{@link #close()} 以清除工作过程中的临时文件！
      *
      * @param signer 签名实现
      */
@@ -87,7 +89,7 @@ public class OFDIntegrity implements Closeable {
 
         Path ofdEntriesPath = this.workDir.resolve("OFDEntries.xml");
         Path signedValuePath = this.workDir.resolve("signedvalue.dat");
-
+        // a) 确认文件包内的所有文件
         // 文件系统中的容器Unix类型绝对路径，如："/home/root/tmp"
         String sysRoot = FilenameUtils.separatorsToUnix(this.workDir.toAbsolutePath().toString());
         Files.walkFileTree(this.workDir, new SimpleFileVisitor<Path>() {
@@ -98,14 +100,18 @@ public class OFDIntegrity implements Closeable {
                 // 替换文件系统的根路径，这样就为容器系统中的绝对路径
                 abxFilePath = abxFilePath.replace(sysRoot, "");
                 String id = String.valueOf(idProvider.incrementAndGet());
+                // b) 组装 签名完整性保护文件
                 fileList.addFile(id, abxFilePath);
                 return FileVisitResult.CONTINUE;
             }
         });
         // 把清单写入文件
         ElemCup.dump(ofdEntries, ofdEntriesPath);
+        // c) 根据签名方案，计算完整性保护文件的杂凑值；
+        // d) 根据签名方案，使用版式文件合成者的签名私钥对杂凑值进行数字签名；
         // 执行签名
-        final byte[] signature = signer.sign(ofdEntriesPath);
+        final byte[] signature = signer.digestThenSign(ofdEntriesPath);
+        // e) 将数字签名结果写入签名值文件
         // 把签名值写入文件
         Files.write(signedValuePath, signature);
         // 执行打包程序
@@ -113,12 +119,18 @@ public class OFDIntegrity implements Closeable {
     }
 
 
+    /**
+     * 请务必在程序结束时调用该方法释放
+     * <p>
+     * 工作过程中产生的临时文件
+     *
+     * @throws IOException 文件删除IO异常
+     */
     @Override
     public void close() throws IOException {
         if (closed) {
             return;
         }
-
         closed = true;
         if (workDir != null && Files.exists(workDir)) {
             try {

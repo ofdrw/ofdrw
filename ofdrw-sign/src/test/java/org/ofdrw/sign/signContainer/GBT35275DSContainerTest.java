@@ -7,6 +7,7 @@ import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.junit.jupiter.api.Test;
+import org.ofdrw.gm.cert.PEMLoader;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.sign.OFDSigner;
 
@@ -19,6 +20,7 @@ import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.Security;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
 /**
@@ -36,33 +38,22 @@ class GBT35275DSContainerTest {
 
         Path certPemFile = Paths.get("src/test/resources", "sign_cert.pem");
         Path keyPemFile = Paths.get("src/test/resources", "sign_key.pem");
-        try (final InputStream certOut = Files.newInputStream(certPemFile);
-             final InputStream keyOut = Files.newInputStream(keyPemFile);
-             final PEMParser certParser = new PEMParser(new InputStreamReader(certOut));
-             final PEMParser keyParser = new PEMParser(new InputStreamReader(keyOut))) {
+        final PrivateKey privateKey = PEMLoader.loadPrivateKey(keyPemFile);
+        final Certificate certificate = PEMLoader.loadCert(certPemFile);
 
-            // 解析证书
-            final X509CertificateHolder certificateHolder = (X509CertificateHolder) certParser.readObject();
-            final X509Certificate certificate = new JcaX509CertificateConverter().setProvider("BC").getCertificate(certificateHolder);
-            // 解析私钥
-            JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
-            final PEMKeyPair pemKeyPair = (PEMKeyPair) keyParser.readObject();
-            final PrivateKey privateKey = converter.getPrivateKey(pemKeyPair.getPrivateKeyInfo());
-
-            Path src = Paths.get("src/test/resources", "helloworld.ofd");
-            Path out = Paths.get("target/GB35275DigitalSign.ofd");
-
-            // 1. 构造签名引擎
-            try (OFDReader reader = new OFDReader(src);
-                 OFDSigner signer = new OFDSigner(reader, out)) {
-                GBT35275DSContainer signContainer = new GBT35275DSContainer(certificate, privateKey);
-                // 3. 设置签名使用的扩展签名容器
-                signer.setSignContainer(signContainer);
-                // 4. 执行签名
-                signer.exeSign();
-                // 5. 关闭签名引擎，生成文档。
-            }
-            System.out.println(">> 生成文件位置: " + out.toAbsolutePath().toAbsolutePath());
+        Path src = Paths.get("src/test/resources", "helloworld.ofd");
+        Path out = Paths.get("target/GB35275DigitalSign.ofd");
+        // 1. 构造签名引擎
+        try (OFDReader reader = new OFDReader(src);
+             OFDSigner signer = new OFDSigner(reader, out)) {
+            GBT35275DSContainer signContainer = new GBT35275DSContainer(certificate, privateKey);
+            // 3. 设置签名使用的扩展签名容器
+            signer.setSignContainer(signContainer);
+            // 4. 执行签名
+            signer.exeSign();
+            // 5. 关闭签名引擎，生成文档。
         }
+        System.out.println(">> 生成文件位置: " + out.toAbsolutePath().toAbsolutePath());
     }
+
 }
