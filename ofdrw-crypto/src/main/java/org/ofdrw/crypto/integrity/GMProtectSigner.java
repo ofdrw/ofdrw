@@ -84,6 +84,5 @@ public class GMProtectSigner implements ProtectSigner {
         final byte[] encoded = signedData.getEncoded();
         System.out.println(        Base64.toBase64String(encoded));
         return encoded;
-
     }
 }

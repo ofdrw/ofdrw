@@ -1,6 +1,7 @@
 package org.ofdrw.pkg.container;
 
 import net.lingala.zip4j.ZipFile;
+import org.apache.commons.io.FilenameUtils;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.jetbrains.annotations.Nullable;
@@ -10,8 +11,11 @@ import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.crypto.encryt.Encryptions;
 
 import java.io.*;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -35,6 +39,11 @@ public class OFDDir extends VirtualContainer {
      * 解密入口文件名称
      */
     public static final String EncryptionsFileName = "Encryptions.xml";
+
+    /**
+     * OFD防止夹带文件
+     */
+    public static final String OFDEntriesFileName = "OFDEntries.xml";
 
     /**
      * 最大文档索引 + 1
@@ -141,7 +150,7 @@ public class OFDDir extends VirtualContainer {
      * 获取 解密入口文件
      *
      * @return 解密入口文件 或 null（不存在）
-     * @throws DocumentException     解密入口文件无法解析
+     * @throws DocumentException 解密入口文件无法解析
      */
     @Nullable
     public Encryptions getEncryptions() throws DocumentException {
@@ -367,5 +376,32 @@ public class OFDDir extends VirtualContainer {
                 ofdFile.addFile(f);
             }
         }
+    }
+
+    /**
+     * 遍历OFD文件包内的所有文件
+     *
+     * @param iterator OFD包内文件迭代器
+     * @throws IOException 文件读写异常
+     */
+    public void walk(OFDPackageFileIterator iterator) throws IOException {
+        if (iterator == null) {
+            throw new IllegalArgumentException("包内文件迭代器(iterator)为空");
+        }
+        String sysRoot = FilenameUtils.separatorsToUnix(this.getSysAbsPath());
+        Files.walkFileTree(this.getContainerPath(), new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                // 路径转换为Unix类型的绝对路径
+                String abxFilePath = FilenameUtils.separatorsToUnix(file.toAbsolutePath().toString());
+                // 替换文件系统的根路径，这样就为容器系统中的绝对路径
+                abxFilePath = abxFilePath.replace(sysRoot, "");
+                final boolean continueIterator = iterator.visit(abxFilePath, file);
+                if (!continueIterator){
+                    return FileVisitResult.TERMINATE;
+                }
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 }
