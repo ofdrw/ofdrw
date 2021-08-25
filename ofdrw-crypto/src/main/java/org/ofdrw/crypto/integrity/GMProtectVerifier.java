@@ -1,20 +1,13 @@
 package org.ofdrw.crypto.integrity;
 
-import org.bouncycastle.jcajce.provider.digest.SM3;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.util.encoders.Base64;
 import org.jetbrains.annotations.NotNull;
-import org.ofdrw.core.signatures.SigType;
-import org.ofdrw.gm.sm2strut.SignedData;
-import org.ofdrw.gm.sm2strut.builder.SignedDataBuilder;
-import org.ofdrw.sign.verify.SignedDataValidateContainer;
+import org.ofdrw.gm.sm2strut.GBT35275Validate;
+import org.ofdrw.gm.sm2strut.VerifyInfo;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.security.Signature;
 
 /**
  * 基于国密算法SM2 和 SM3算法的完整性保护签名值验证
@@ -25,19 +18,10 @@ import java.security.Signature;
  * @since 2021-08-24 20:12:27
  */
 public class GMProtectVerifier implements ProtectVerifier {
-
-    public SignedDataValidateContainer verifyContainer;
-
     /**
      * 创建 国密算法SM2 和 SM3算法的完整性保护签名值验证者
-     *
-     * @param verifyContainer 能够验证 GM/T 0099-2020 signedData的容器，推荐使用 {@link org.ofdrw.sign.verify.container.GBT35275ValidateContainer}
      */
-    public GMProtectVerifier(@NotNull SignedDataValidateContainer verifyContainer) {
-        if (verifyContainer == null) {
-            throw new IllegalArgumentException("签名验证容器(verifyContainer)为空");
-        }
-        this.verifyContainer = verifyContainer;
+    public GMProtectVerifier() {
     }
 
     /**
@@ -53,11 +37,10 @@ public class GMProtectVerifier implements ProtectVerifier {
      * @throws IOException              IO读写异常
      */
     @Override
-    public boolean digestThenVerify(@NotNull Path ofdEntriesXmlPath, @NotNull byte[] signedValue) throws GeneralSecurityException, IOException {
+    public boolean digestThenVerify(Path ofdEntriesXmlPath, byte[] signedValue) throws GeneralSecurityException, IOException {
         final byte[] tbs = Files.readAllBytes(ofdEntriesXmlPath);
         // 验证签名
-        verifyContainer.validate(SigType.Sign, "SM3withSm2", tbs, signedValue);
-        // 如果没有抛出异常表示验证成功
-        return true;
+        final VerifyInfo verifyInfo = GBT35275Validate.validate("SM3withSm2", tbs, signedValue);
+        return verifyInfo.result;
     }
 }

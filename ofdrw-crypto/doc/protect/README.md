@@ -73,3 +73,33 @@ class HelloWorld {
 >
 > 如果对签名和摘要计算有特殊需求请通过实现 [ProtectSigner](../../src/main/java/org/ofdrw/crypto/integrity/ProtectSigner.java) 接口 来实现个性化定制签名。
 
+### 完整性验证
+
+进行OFD的完整性验证你需要进行下面步骤：
+
+1. 创建OFD完整性验证器。
+2. 创建用于验证签名值的验证器。
+3. 执行完整性验证，获取验证结果。
+
+```java
+class HelloWorld {
+    public static void main(String[] args) {
+        Path in = Paths.get("src/test/resources/hello-integrity.ofd");
+        // 1. 创建OFD完整性验证器。
+        OFDIntegrityVerifier ofdIntegrityVerifier = new OFDIntegrityVerifier();
+        // 2. 创建用于验证签名值的验证器。
+        GMProtectVerifier gmProtectVerifier = new GMProtectVerifier();
+        // 3. 执行完整性验证，获取验证结果。
+        final boolean integrity = ofdIntegrityVerifier.integrity(in, gmProtectVerifier);
+        System.out.println(">> OFD完整性校验: " + integrity);
+    }
+}
+```
+
+- 见源码 [OFDIntegrityVerifierTest.java](../../src/test/java/org/ofdrw/crypto/integrity/OFDIntegrityVerifierTest.java)
+
+> 示例中采用 GMProtectVerifier 实现摘要和签名的，它实现了 `ProtectVerifier` 接口
+>
+> 如果对签名和摘要计算有特殊需求请通过实现 [ProtectVerifier](../../src/main/java/org/ofdrw/crypto/integrity/ProtectVerifier.java) 接口 来实现个性化定制签名验证。
+
+

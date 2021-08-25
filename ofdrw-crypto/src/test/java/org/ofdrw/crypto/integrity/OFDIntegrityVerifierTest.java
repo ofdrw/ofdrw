@@ -2,7 +2,6 @@ package org.ofdrw.crypto.integrity;
 
 import org.dom4j.DocumentException;
 import org.junit.jupiter.api.Test;
-import org.ofdrw.sign.verify.container.GBT35275ValidateContainer;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -22,10 +21,14 @@ class OFDIntegrityVerifierTest {
     @Test
     void integrity() throws GeneralSecurityException, IOException, DocumentException {
         Path in = Paths.get("src/test/resources/hello-integrity.ofd");
-        final OFDIntegrityVerifier ofdIntegrityVerifier = new OFDIntegrityVerifier();
-        GMProtectVerifier gmProtectVerifier = new GMProtectVerifier(new GBT35275ValidateContainer());
+        // 1. 创建OFD完整性验证器。
+        OFDIntegrityVerifier ofdIntegrityVerifier = new OFDIntegrityVerifier();
+        // 2. 创建用于验证签名值的验证器。
+        GMProtectVerifier gmProtectVerifier = new GMProtectVerifier();
+        // 3. 执行完整性验证，获取验证结果。
         final boolean integrity = ofdIntegrityVerifier.integrity(in, gmProtectVerifier);
-        System.out.println(integrity);
+        System.out.println(">> OFD完整性校验: " + integrity);
+        assertTrue(integrity);
     }
 
 }

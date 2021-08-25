@@ -1,7 +1,6 @@
 package org.ofdrw.crypto.integrity;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.ofdrw.core.basicType.ST_Loc;
@@ -9,14 +8,15 @@ import org.ofdrw.core.integrity.FileList;
 import org.ofdrw.core.integrity.OFDEntries;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.pkg.tool.ElemCup;
-import org.ofdrw.reader.ResourceLocator;
 import org.ofdrw.reader.ZipUtil;
 
+import javax.xml.ws.Holder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.security.GeneralSecurityException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * OFD完整性协议校验
@@ -87,11 +87,40 @@ public class OFDIntegrityVerifier {
      */
     private boolean checkNoExtraFile(OFDDir ofdDir, OFDEntries ofdEntries) throws IOException {
         final FileList fileList = ofdEntries.getFileList();
-        // TODO: 建立文件MAP 用于检查映射情况
+        // 建立文件MAP 用于检查映射情况
+        Set<String> pkgFileSet = new HashSet<>();
+        fileList.getFiles().forEach((f) -> {
+            String loc = f.getFileLoc().toString();
+            if (loc.charAt(0) != '/') {
+                loc = String.format("/%s", loc);
+            }
+            pkgFileSet.add(loc);
+        });
+        // 签名值文件也加入 Set中用于检查
+        final ST_Loc signedValueLoc = ofdEntries.getSignedValueLoc();
+        String loc = signedValueLoc.toString();
+        if (loc.charAt(0) != '/') {
+            loc = String.format("/%s", loc);
+        }
+        pkgFileSet.add(loc);
+
+        Holder<String> invalidFileLocHolder = new Holder<>(null);
+        // 遍历包内出现的所有文件
         ofdDir.walk(((pkgAbsPath, path) -> {
-            System.out.println(pkgAbsPath + "\t\t " + path.toString());
+            // 忽略防止夹带文件本身
+            if ("/OFDEntries.xml".equals(pkgAbsPath)){
+                return true;
+            }
+             boolean exist = pkgFileSet.contains(pkgAbsPath);
+            if (!exist) {
+                // 文件不在 完整性保护文件列表中，那么认为是发生了文件的夹带
+                invalidFileLocHolder.value = pkgAbsPath;
+                // 停止文件的继续遍历
+                return false;
+            }
             return true;
         }));
-        return true;
+        // 如果非法文件路径为空表示没有出现夹带情况
+        return invalidFileLocHolder.value == null;
     }
 }
