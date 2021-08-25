@@ -25,6 +25,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class OFDIntegrityTest {
 
+    /**
+     * 完整性保护示例
+     */
     @Test
     void protect() throws IOException, GeneralSecurityException {
         Security.addProvider(new BouncyCastleProvider());

@@ -11,7 +11,7 @@
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-sign</artifactId>
-    <version>1.14.0</version>
+    <version> 1.15.0</version>
 </dependency>
 ```
 

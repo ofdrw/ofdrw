@@ -18,6 +18,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class OFDIntegrityVerifierTest {
 
+    /**
+     * 完整性验证测试用例
+     */
     @Test
     void integrity() throws GeneralSecurityException, IOException, DocumentException {
         Path in = Paths.get("src/test/resources/hello-integrity.ofd");

@@ -2,6 +2,17 @@
 
 ## 进展
 
+## Version 1.15.0 2021-8-25 19:54:45
+
+> Alias: Shokugeki no Soma
+
+新增：
+
+- OFD完整性协议
+  - 完整性保护 [见测试用例](ofdrw-crypto/src/test/java/org/ofdrw/crypto/integrity/OFDIntegrityTest.java)
+  - 完整性验证 [见测试用例](ofdrw-crypto/src/test/java/org/ofdrw/crypto/integrity/OFDIntegrityVerifierTest.java)
+
+
 ## Version 1.14.0 2021-8-16 19:29:22
 
 > Alias: SSSS.Gridman
