@@ -31,7 +31,7 @@ public class HelloWorld {
         FontLoader.setSimilarFontReplace(true);
 
         Path src = Paths.get("ofdrw-converter/src/test/resources/n.ofd");
-        Path dst = Paths.get("D:/ofd/n.pdf");
+        Path dst = Paths.get("target/n.pdf");
         try {
             ConvertHelper.toPdf(src, dst);
             logger.info("生成文档位置: " + dst.toAbsolutePath());

@@ -6,6 +6,7 @@ import com.itextpdf.io.font.FontProgramFactory;
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
+import org.apache.commons.io.IOUtils;
 import org.apache.fontbox.ttf.*;
 import org.ofdrw.converter.font.FontWrapper;
 import org.ofdrw.converter.utils.OSinfo;
@@ -18,7 +19,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -50,6 +53,8 @@ public final class FontLoader {
     private static final String DEFAULT_FONT_DIR_WINDOWS = "C:/Windows/Fonts";
     private static final String DEFAULT_FONT_DIR_LINUX = "/usr/share/fonts";
     private static TrueTypeFont defaultFont;
+    private static com.itextpdf.io.font.TrueTypeFont iTextDefaultFont;
+
     /**
      * 默认字体资源文件路径
      */
@@ -119,7 +124,9 @@ public final class FontLoader {
      * */
     public void init() {
         try (InputStream in = getClass().getResourceAsStream(DEFAULT_FONT_RESOURCE_PATH)) {
-            defaultFont = new TTFParser(true).parse(in);
+            final byte[] buf = IOUtils.toByteArray(in);
+            defaultFont = new TTFParser(true).parse(new ByteArrayInputStream(buf));
+            iTextDefaultFont = new com.itextpdf.io.font.TrueTypeFont(buf);
         } catch (IOException ignored) {
         }
         if (OSinfo.isWindows()) {
@@ -133,11 +140,11 @@ public final class FontLoader {
         }
         // 预置一些常用的字体别名
         this.addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
-            .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
-            .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-            .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
-            .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
-            .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体");
+                .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
+                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
+                .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
+                .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体");
     }
 
     /**
@@ -477,40 +484,27 @@ public final class FontLoader {
 
             boolean embedded = false;
             if (fontAbsPath == null) {
-                if (enableSimilarFontReplace) {
-                    InputStream stream = getClass().getResourceAsStream(DEFAULT_FONT_RESOURCE_PATH);
-                    if (stream != null) {
-                        embedded = true;
-                        fontAbsPath = DEFAULT_FONT_RESOURCE_PATH;
-                        log.info("使用默认字体替代 {} ,{}", ctFont.getFontName(), fontAbsPath);
-                    }
-                } else
-                    throw new FileNotFoundException("无法在OFD内找到字体");
+                // 在进行相似匹配后任然没有找到字体路径，那么默认使用宋体替换
+                return new FontWrapper<>(PdfFontFactory.createFont(iTextDefaultFont, PdfEncodings.IDENTITY_H, false), true);
             }
+
             FontProgram fontProgram = null;
-            if (fontAbsPath == null) {
-                throw new IllegalArgumentException("无法找到字体路径");
-            }
-            // 解决TTC无法加载问题
             final String fileName = fontAbsPath.toLowerCase();
+            // 统一读取到内存防止因为 FontProgram 解析异常关闭导致无法删除临时OFD文件的问题。
+            byte[] fontRaw = Files.readAllBytes(Paths.get(fontAbsPath));
             if (fileName.endsWith(".ttc")) {
-                fontAbsPath = fontAbsPath + ",0";
-                fontProgram = FontProgramFactory.createFont(fontAbsPath, false);
+                fontProgram = FontProgramFactory.createFont(fontRaw, 0, false);
             } else if (fileName.endsWith(".ttf") || fileName.endsWith(".otf")) {
-
-                fontProgram = new com.itextpdf.io.font.TrueTypeFont(fontAbsPath);
+                fontProgram = new com.itextpdf.io.font.TrueTypeFont(fontRaw);
             } else {
-                // 即便设置不缓存，任然会出现文件没有关闭的问题。
-                // 因此，读取到内存防止因为 FontProgram 的缓存导致无法删除临时OFD文件的问题。
-                fontProgram = FontProgramFactory.createFont(fontAbsPath, false);
+                fontProgram = FontProgramFactory.createFont(fontRaw);
             }
-
-            return new FontWrapper(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, embedded), hasReplace);
+            return new FontWrapper(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, false), hasReplace);
         } catch (Exception e) {
 //            e.printStackTrace();
             log.info("无法加载字体 {} {} {}，原因:{}",
-                ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
-                e.getMessage());
+                    ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
+                    e.getMessage());
             //如果是文件中的字体资源加载失败，使用系统中的字体: Type of font is not recognized.
             if (ctFont.getFontFile() != null) {
                 ctFont.setFontFile("");
