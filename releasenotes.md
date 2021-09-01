@@ -2,6 +2,14 @@
 
 ## 进展
 
+## Version 1.15.1 2021-9-1 20:44:57
+
+> Alias: Move On
+
+修复：
+
+- 转换OFD时，工作空间无法删除的BUG：字体加载器没有释放加载的字体文件导致。
+
 ## Version 1.15.0 2021-8-25 19:54:45
 
 > Alias: Shokugeki no Soma
