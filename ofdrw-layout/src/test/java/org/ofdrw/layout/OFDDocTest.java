@@ -2,14 +2,23 @@ package org.ofdrw.layout;
 
 import org.dom4j.DocumentException;
 import org.junit.jupiter.api.Test;
+import org.ofdrw.core.action.Actions;
+import org.ofdrw.core.action.CT_Action;
+import org.ofdrw.core.action.EventType;
+import org.ofdrw.core.action.actionType.URI;
 import org.ofdrw.core.annotation.Annotations;
 import org.ofdrw.core.annotation.pageannot.*;
 import org.ofdrw.core.basicStructure.doc.Document;
+import org.ofdrw.core.basicStructure.ofd.DocBody;
+import org.ofdrw.core.basicStructure.ofd.OFD;
+import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
+import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.basicType.ST_RefID;
+import org.ofdrw.core.graph.tight.CT_Region;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.font.Font;
 import org.ofdrw.font.FontName;
@@ -23,6 +32,7 @@ import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.pkg.container.PageDir;
 import org.ofdrw.reader.OFDReader;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,7 +47,49 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 2020-03-22 11:38:48
  */
 class OFDDocTest {
+    /**
+     * 在生成文档的过程中获取文档信息
+     */
+    @Test
+    void onRenderFinished()throws IOException {
+        Path path = Paths.get("target/AddInfoAfterRender.ofd").toAbsolutePath();
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            Paragraph p = new Paragraph("你好呀，OFD Reader&Writer！", 8d);
+            ofdDoc.add(p);
+            // 通过回调函数向文档加入一个点击动作
+            ofdDoc.onRenderFinish(((maxUnitID, ofdDir, index) -> {
+                try {
+                    final DocDir docDir = ofdDir.getDocByIndex(index);
+                    final Document document = docDir.getDocument();
+                    Actions actions = new Actions();
+                    CT_Action myAction = new CT_Action(EventType.DO, new URI("https://gitee.com/ofdrw/ofdrw"));
+                    myAction.setObjID(maxUnitID.incrementAndGet());
+                    actions.addAction(myAction);
+                    document.setActions(actions);
+                } catch (IOException | DocumentException e) {
+                    e.printStackTrace();
+                }
+            }));
+        }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+    }
 
+
+    /**
+     * 在生成文档的过程中获取文档信息
+     */
+    @Test
+    void genDocAndGetDocInfo()throws IOException {
+        Path path = Paths.get("target/doc-my-info.ofd").toAbsolutePath();
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            Paragraph p = new Paragraph("你好呀，OFD Reader&Writer！", 8d);
+            ofdDoc.add(p);
+            String boxSize = ofdDoc.getOfdDocument().getCommonData().getPageArea().getApplicationBox().toString();
+            p = new Paragraph(String.format("页面尺寸为 [%s]", boxSize), 5d);
+            ofdDoc.add(p);
+        }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+    }
 
     /**
      * 字体宽度溢出可用最大宽度测试

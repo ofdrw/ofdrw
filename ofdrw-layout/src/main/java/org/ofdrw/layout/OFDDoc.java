@@ -21,7 +21,7 @@ import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.engine.*;
 import org.ofdrw.layout.engine.render.RenderException;
 import org.ofdrw.layout.exception.DocReadException;
-import org.ofdrw.pkg.container.AnnotsDir;
+import org.ofdrw.layout.handler.RenderFinishHandler;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.reader.OFDReader;
@@ -133,6 +133,16 @@ public class OFDDoc implements Closeable {
      * OFD文档对象
      */
     private Document ofdDocument;
+
+    /**
+     * 正在操作的文档目录
+     */
+    private DocDir operateDocDir;
+
+    /**
+     * 渲染结束时回调函数（可选）
+     */
+    private RenderFinishHandler renderingEndHandler;
 
 
     /**
@@ -271,6 +281,7 @@ public class OFDDoc implements Closeable {
                 .setOfd(ofd);
         // 创建一个新的文档
         DocDir docDir = ofdDir.newDoc();
+        operateDocDir = docDir;
         docDir.setDocument(ofdDocument);
         prm = new ResManager(docDir, MaxUnitID);
     }
@@ -297,6 +308,7 @@ public class OFDDoc implements Closeable {
         ST_ID maxUnitID = cdata.getMaxUnitID();
         // 设置当前文档最大ID
         MaxUnitID = new AtomicInteger(maxUnitID.getId().intValue());
+        operateDocDir = ofdDir.obtainDocDefault();
         prm = new ResManager(ofdDir.obtainDocDefault(), MaxUnitID);
     }
 
@@ -366,7 +378,6 @@ public class OFDDoc implements Closeable {
     }
 
 
-
     /**
      * 向页面中增加注释对象
      *
@@ -396,7 +407,7 @@ public class OFDDoc implements Closeable {
 
     /**
      * 获取页面样式（只读）
-     *
+     * <p>
      * 如果需要重新设置默认的页面样式那么请使用 {@link #setDefaultPageLayout}
      *
      * @return 页面样式(只读)
@@ -441,6 +452,7 @@ public class OFDDoc implements Closeable {
         attachments.addAttachment(ctAttachment);
         return this;
     }
+
 
     /**
      * 清理已经存在的资源
@@ -500,6 +512,39 @@ public class OFDDoc implements Closeable {
         return attachments;
     }
 
+    /**
+     * 获取 OFD虚拟容器
+     * <p>
+     * 通过虚拟容器API就可以直接操作XML文件和目录结构
+     *
+     * @return OFD虚拟容器
+     */
+    public OFDDir getOfdDir() {
+        return ofdDir;
+    }
+
+    /**
+     * 获取 文档根节点
+     * <p>
+     * 根节点中包含了文档各类信息的入口
+     *
+     * @return 文档根节点
+     */
+    public Document getOfdDocument() {
+        return ofdDocument;
+    }
+
+    /**
+     * 当渲染结束时的回调函数
+     *
+     * @param renderFinishHandler OFD渲染结束时回调函数，可以为null，不调用
+     * @return this
+     */
+    public OFDDoc onRenderFinish(RenderFinishHandler renderFinishHandler) {
+        this.renderingEndHandler = renderFinishHandler;
+        return this;
+    }
+
     @Override
     public void close() throws IOException {
         if (this.closed) {
@@ -544,6 +589,10 @@ public class OFDDoc implements Closeable {
                 throw new IllegalStateException("OFD文档中没有页面，无法生成OFD文档");
             }
 
+            if (renderingEndHandler != null) {
+                // 执行渲染结束回调函数
+                renderingEndHandler.handle(MaxUnitID, ofdDir, operateDocDir.getIndex());
+            }
             // 设置最大对象ID
             cdata.setMaxUnitID(MaxUnitID.get());
             // final. 执行打包程序

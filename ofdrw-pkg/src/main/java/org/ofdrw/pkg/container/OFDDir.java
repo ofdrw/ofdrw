@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -207,6 +208,18 @@ public class OFDDir extends VirtualContainer {
     }
 
     /**
+     * 获取OFD文档中最新的文档目录
+     * <p>
+     * 一般来说序号最大的最新 Doc_N
+     *
+     * @return 文档目录
+     */
+    public DocDir getLatestDir() {
+        String name = DocDir.DocContainerPrefix + (maxDocIndex - 1);
+        return this.obtainContainer(name, DocDir::new);
+    }
+
+    /**
      * 通过文档索引获取文档容器
      *
      * @param index 文档索引
@@ -230,13 +243,14 @@ public class OFDDir extends VirtualContainer {
     public DocDir obtainDocDefault() {
         if (exit(OFDFileName)) {
             // 检查OFDFileName是否已经存在，如果存在那么大可能性是读取操作
-            // 在读模式下，通过OFD.xml 第一个DocBody节点中的DocRoot作为默认文档
+            // 在读模式下，通过OFD.xml 最后一个DocBody节点中的DocRoot作为默认文档
             // 如果获取失败那么，尝试获取Doc_0
             OFD ofd;
             try {
                 ofd = getOfd();
-                DocBody docBody = ofd.getDocBody();
-                if (docBody != null) {
+                final List<DocBody> docBodies = ofd.getDocBodies();
+                if (!docBodies.isEmpty()) {
+                    final DocBody docBody = docBodies.get(docBodies.size() - 1);
                     ST_Loc docRoot = docBody.getDocRoot();
                     return this.obtainContainer(docRoot.parent(), DocDir::new);
                 }
@@ -246,6 +260,7 @@ public class OFDDir extends VirtualContainer {
         }
         return obtainDoc(0);
     }
+
 
     /**
      * 打包成OFD并输出到流
@@ -397,7 +412,7 @@ public class OFDDir extends VirtualContainer {
                 // 替换文件系统的根路径，这样就为容器系统中的绝对路径
                 abxFilePath = abxFilePath.replace(sysRoot, "");
                 final boolean continueIterator = iterator.visit(abxFilePath, file);
-                if (!continueIterator){
+                if (!continueIterator) {
                     return FileVisitResult.TERMINATE;
                 }
                 return FileVisitResult.CONTINUE;
