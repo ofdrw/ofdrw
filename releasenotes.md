@@ -1,6 +1,23 @@
 # 发布记录和特性
 
-## 进展
+## Version 1.15.2 2021-9-15 20:46:07
+
+> Alias: Qiu2
+
+修复：
+
+- 对不规范OFD字体资源格式的解析NPE问题，采用默认字体替换
+- Span LineBreak无效问题
+
+新增：
+
+- 创建`OFDDoc`对象增加
+  - `#getOfdDir` 获取OFD虚拟容器。
+  - `#getOfdDocument` 获取文档根节点。
+  - `#onRenderFinish` 用于设置渲染完成的回调函数
+  - 各个方法见使用见 [测试用例](ofdrw-layout/src/test/java/org/ofdrw/layout/OFDDocTest.java) 
+    - `#onRenderFinished`
+    - `#genDocAndGetDocInfo`
 
 ## Version 1.15.1 2021-9-1 20:44:57
 
