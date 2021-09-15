@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.ofdrw.layout.Rectangle;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 
 public class SpanTest {
 
@@ -24,24 +25,43 @@ public class SpanTest {
                 .setFontSize(10d);
         Rectangle rectangle = span.blockSize();
         Assertions.assertEquals(rectangle.getHeight(), 10);
-        Assertions.assertEquals(rectangle.getWidth(), 20 + 7 * 6);
-        Assertions.assertEquals( span.blockSize().getWidth(), 20 + 7 * 6);
+        Assertions.assertEquals(rectangle.getWidth(), 20 + 7 * 5);
+        Assertions.assertEquals(span.blockSize().getWidth(), 20 + 7 * 5);
 
         span.setLetterSpacing(3d);
-        Assertions.assertEquals(span.blockSize().getWidth(), 20 + 7 * 6 + 9 * 3);
+        Assertions.assertEquals(span.blockSize().getWidth(), 20 + 7 * 5 + 9 * 3);
 
     }
 
     @Test
-    public void getDeltaX(){
+    public void getDeltaX() {
         Span span = new Span("你好OFD R&W")
                 .setFontSize(10d);
         Double[] deltaX = span.getDeltaX();
         System.out.println(Arrays.toString(deltaX));
         Double[] expect = new Double[]{
-                10d, 10d, 6d, 6d, 6d, 6d, 6d, 6d
+                10d, 10d, 5d, 5d, 5d, 5d, 5d, 5d
         };
 
         Assertions.assertArrayEquals(expect, deltaX);
+    }
+
+    @Test
+    public void splitLineBreak() {
+        Span span = new Span("line 1\n");
+        LinkedList<Span> spans = span.splitLineBreak();
+        Assertions.assertEquals(spans.size(), 1);
+
+        span = new Span("line 1\nline 2");
+        spans = span.splitLineBreak();
+        Assertions.assertEquals(spans.size(), 2);
+
+        span = new Span("line 1\n\nline 3");
+        spans = span.splitLineBreak();
+        Assertions.assertEquals(spans.size(), 3);
+        span = new Span("line 1\n\n\nline 4");
+        spans = span.splitLineBreak();
+        Assertions.assertEquals(spans.size(), 4);
+
     }
 }

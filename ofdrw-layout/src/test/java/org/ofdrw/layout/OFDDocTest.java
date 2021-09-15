@@ -513,7 +513,11 @@ class OFDDocTest {
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             Paragraph p = new Paragraph(plaintext);
             ofdDoc.add(p);
-            ofdDoc.add(new Paragraph("\nOFD R&W"));
+            final Paragraph item = new Paragraph()
+                    .add(new Span("\nOFD R&W").setLinebreak(true))
+                    .add(new Span("Nice Day!"));
+
+            ofdDoc.add(item);
         }
         System.out.println("生成文档位置: " + path.toAbsolutePath());
     }

@@ -283,7 +283,6 @@ public final class FontLoader {
     public String getReplaceSimilarFontPath(String familyName, String fontName) {
 
         for (String regexKey : similarFontReplaceRegexMapping.keySet()) {
-
             String[] regexps = regexKey.split(SeparatorRegex);
             boolean isMatchFamilyName = familyName != null && Pattern.matches(regexps[0], familyName);
             boolean isMatchFontName = fontName != null && Pattern.matches(regexps[1], fontName);
@@ -465,33 +464,68 @@ public final class FontLoader {
         if (ctFont == null) {
             return null;
         }
+
+        /**
+         * - 包含路径，尝试从OFD中加载字体
+         *      - 失败了 继续流程
+         *      - 成功就返还
+         * - 不含路径，尝试从操作系统中加载字体
+         */
+        final String fontName = ctFont.attributeValue("FontName");
+        final String familyName = ctFont.getFamilyName();
         try {
             ST_Loc fontFileLoc = ctFont.getFontFile();
-            String fontAbsPath = null;
-            boolean hasReplace = false;
-            if (fontFileLoc != null) {
-                // 通过资源加载器获取文件的绝对路径
-                fontAbsPath = rl.getFile(fontFileLoc).toAbsolutePath().toString();
-            } else {
-                fontAbsPath = getSystemFontPath(ctFont.getFamilyName(), ctFont.getFontName());
-                if (fontAbsPath == null && enableSimilarFontReplace) {
-                    fontAbsPath = getReplaceSimilarFontPath(ctFont.getFamilyName(), ctFont.getFontName());
-                    if (fontAbsPath != null) {
-                        hasReplace = true;
-                    }
-                }
-            }
-
-            boolean embedded = false;
-            if (fontAbsPath == null) {
-                // 在进行相似匹配后任然没有找到字体路径，那么默认使用宋体替换
-                return new FontWrapper<>(PdfFontFactory.createFont(iTextDefaultFont, PdfEncodings.IDENTITY_H, false), true);
-            }
-
             FontProgram fontProgram = null;
-            final String fileName = fontAbsPath.toLowerCase();
-            // 统一读取到内存防止因为 FontProgram 解析异常关闭导致无法删除临时OFD文件的问题。
-            byte[] fontRaw = Files.readAllBytes(Paths.get(fontAbsPath));
+            boolean hasReplace = false;
+            // 尝试加载内嵌字体
+            if (fontFileLoc != null) {
+                String fontAbsPath = rl.getFile(fontFileLoc).toAbsolutePath().toString();
+                fontProgram = getFontProgram(fontAbsPath);
+            }
+            // 尝试根据名字从操作系统加载字体
+            if (fontProgram == null) {
+                // 首先尝试从操作系统加兹安
+                String fontAbsPath = getSystemFontPath(familyName, fontName);
+                if (fontAbsPath == null && enableSimilarFontReplace) {
+                    // 操作系统中不存在，那么尝试使用近似的字体替换
+                    hasReplace = true;
+                    fontAbsPath = getReplaceSimilarFontPath(familyName, fontName);
+                }
+                fontProgram = getFontProgram(fontAbsPath);
+            }
+            // 前面两种加载机制都失效时，使用默认字体
+            if (fontProgram == null) {
+                log.info("无法内嵌加载字体 {} {} {}", familyName, fontName, ctFont.getFontFile());
+                fontProgram = iTextDefaultFont;
+                hasReplace = true;
+            }
+            return new FontWrapper<>(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, false), hasReplace);
+        } catch (Exception e) {
+            log.info("加载字体异常 {} {} {}，原因:{}", familyName, fontName, ctFont.getFontFile(), e.getMessage());
+            return new FontWrapper<>(PdfFontFactory.createFont(iTextDefaultFont, PdfEncodings.IDENTITY_H, false), true);
+        }
+
+    }
+
+    /**
+     * 加载字体
+     * <p>
+     * 如果无法加载则返回null
+     *
+     * @param fontAbsPath 字体路径
+     * @return 字体对象
+     */
+    private FontProgram getFontProgram(String fontAbsPath) {
+        if (fontAbsPath == null) {
+            return null;
+        }
+        FontProgram fontProgram = null;
+        final String fileName = fontAbsPath.toLowerCase();
+        // 统一读取到内存防止因为 FontProgram 解析异常关闭导致无法删除临时OFD文件的问题。
+        byte[] fontRaw = new byte[0];
+        try {
+            fontRaw = Files.readAllBytes(Paths.get(fontAbsPath));
+
             if (fileName.endsWith(".ttc")) {
                 fontProgram = FontProgramFactory.createFont(fontRaw, 0, false);
             } else if (fileName.endsWith(".ttf") || fileName.endsWith(".otf")) {
@@ -499,18 +533,9 @@ public final class FontLoader {
             } else {
                 fontProgram = FontProgramFactory.createFont(fontRaw);
             }
-            return new FontWrapper(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, false), hasReplace);
+            return fontProgram;
         } catch (Exception e) {
-//            e.printStackTrace();
-            log.info("无法加载字体 {} {} {}，原因:{}",
-                    ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(),
-                    e.getMessage());
-            //如果是文件中的字体资源加载失败，使用系统中的字体: Type of font is not recognized.
-            if (ctFont.getFontFile() != null) {
-                ctFont.setFontFile("");
-                return loadPDFFontSimilar(rl, ctFont);
-            }
-
+            log.info("字体加载失败 {} , {}", fontAbsPath, e.getMessage());
             return null;
         }
     }
@@ -567,28 +592,32 @@ public final class FontLoader {
      */
     public void loadFont(File file) {
         String fileName = file.getName().toLowerCase();
-        if (fileName.endsWith("ttc")) {
-            try {
-                TrueTypeCollection trueTypeCollection = new TrueTypeCollection(file);
-                trueTypeCollection.processAllFonts(trueTypeFont -> {
-                    NamingTable namingTable = trueTypeFont.getNaming();
-                    addSystemFontMapping(namingTable, file.getPath());
-                });
-            } catch (IOException e) {
-                log.info("无法加载字体：" + file.getAbsolutePath());
-            }
-            return;
-        }
-        if (!fileName.endsWith("otf") && !fileName.endsWith("ttf")) {
-            return;
-        }
+
+        int offset = fileName.lastIndexOf('.');
+        String suffix = offset == -1 ? ".ttf" : fileName.substring(offset);
         try {
-            OTFParser parser = new OTFParser(true);
-            OpenTypeFont openTypeFont = parser.parse(file);
-            NamingTable namingTable = openTypeFont.getNaming();
-            addSystemFontMapping(namingTable, file.getPath());
+            switch (suffix) {
+                case ".otf":
+                case ".ttf": {
+                    OTFParser parser = new OTFParser(true);
+                    OpenTypeFont openTypeFont = parser.parse(file);
+                    NamingTable namingTable = openTypeFont.getNaming();
+                    addSystemFontMapping(namingTable, file.getPath());
+                    break;
+                }
+                case ".ttc": {
+                    TrueTypeCollection trueTypeCollection = new TrueTypeCollection(file);
+                    trueTypeCollection.processAllFonts(trueTypeFont -> {
+                        NamingTable namingTable = trueTypeFont.getNaming();
+                        addSystemFontMapping(namingTable, file.getPath());
+                    });
+                    break;
+                }
+                default:
+                    break;
+            }
         } catch (Exception e) {
-            log.info("无法加载字体：" + file.getAbsolutePath());
+            log.info("字体无法解析，跳过 " + file.getAbsolutePath());
         }
     }
 

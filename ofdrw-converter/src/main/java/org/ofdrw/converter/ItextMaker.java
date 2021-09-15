@@ -731,14 +731,11 @@ public class ItextMaker {
      * @return 字体
      */
     private FontWrapper<PdfFont> getFont(ResourceLocator rl, CT_Font ctFont) {
-        String key = String.format("%s_%s_%s", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile());
+        String key = String.format("%s_%s_%s", ctFont.getFamilyName(), ctFont.attributeValue("FontName"), ctFont.getFontFile());
         if (fontCache.containsKey(key)) {
             return fontCache.get(key);
         }
         FontWrapper<PdfFont> font = FontLoader.getInstance().loadPDFFontSimilar(rl, ctFont);
-//        if (font == null) {
-//            font = DEFAULT_FONT;
-//        }
         fontCache.put(key, font);
         return font;
     }

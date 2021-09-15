@@ -317,6 +317,8 @@ public class Span implements TextFontInfo {
     /**
      * 设置Span为占满剩下行空间的元素
      *
+     * 等价于在字符串末尾增加\n，当字符串末尾存在\n 时该参数无效。
+     *
      * @param linebreak 是否占满剩下行空间 true 标识占满；false标识不占满
      * @return this
      */
@@ -345,15 +347,14 @@ public class Span implements TextFontInfo {
             res.add(this);
         } else {
             String[] split = this.text.split("\n");
-            for (String item : split) {
-                Span lineSpan = this.clone().setText(item)
-                        // 设置该元素为占满剩下行空间的Span
-                        .setLinebreak(true);
+            for (int i = 0; i < split.length; i++) {
+                Span lineSpan = this.clone().setText(split[i]);
+                if (i != split.length - 1) {
+                    lineSpan.setLinebreak(true);
+                } else if (this.text.endsWith("\n")) {
+                    lineSpan.setLinebreak(true);
+                }
                 res.add(lineSpan);
-            }
-            if (!this.text.endsWith("\n")) {
-                // 如果最后一个字符不是换行符，那么清除换行标志
-                res.getLast().setLinebreak(false);
             }
         }
         return res;
@@ -371,6 +372,7 @@ public class Span implements TextFontInfo {
         span.fill = fill;
         span.text = new String(text);
         span.integrity = integrity;
+        span.linebreak = linebreak;
         span.fillColor = fillColor == null ? null : fillColor.clone();
         return span;
     }

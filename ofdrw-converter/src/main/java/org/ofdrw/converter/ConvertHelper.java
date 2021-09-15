@@ -82,7 +82,7 @@ public class ConvertHelper {
                             start = System.currentTimeMillis();
                             pdfMaker.makePage(pdfDocument, pageInfo);
                             end = System.currentTimeMillis();
-                            logger.info(String.format("page %d speed time %d", pageNum++, end - start));
+                            logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
                         }
                     }
                     break;
