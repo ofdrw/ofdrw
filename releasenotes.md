@@ -622,22 +622,22 @@
 
 - 简化了`ofdrw-font`字体库以及相关API，移除了内嵌的几个noto字体，减少库体积。
 
-### Version 1.5.3 2020-8-24 21:02:49
+## Version 1.5.3 2020-8-24 21:02:49
 
 - OFDSigner 可以使用自己构造的签名ID提供器，而不是标准推荐的 "s'NNN'"格式
     
     需要手动实现 `org.ofdrw.sign.SignIDProvider`接口
 
-### Version 1.5.2 2020-6-20 10:04:37
+## Version 1.5.2 2020-6-20 10:04:37
 
 - 修复了注释对象参数无法添加多个的问题。
 
-### Version 1.5.1 2020-6-6 11:06:28
+## Version 1.5.1 2020-6-6 11:06:28
 
 - CVE-2020-10683 dom4j库可能造成XXE 攻击，升级该库至2.1.3。
 - 增加了替换附件的功能。
 
-### Version 1.5.0 2020-5-19 20:45:50
+## Version 1.5.0 2020-5-19 20:45:50
 
 - 首页加入了免责声明，以及咨询入口。
 - 修复了电子印章为非必选参数，签章容器不设置电子印章就无法进行签章操作的问题。
@@ -656,7 +656,7 @@ Canvas 测试用例见 [DrawContextTest](./ofdrw-layout/src/test/java/org/ofdrw/
 
 签章测试用用例见 [NoSealSignTest](./ofdrw-sign/src/test/java/org/ofdrw/sign/signContainer/NoSealSignTest.java)
 
-### Old
+## Old
 
 - *2020-05-15* 完成OFD的注释功能
 
