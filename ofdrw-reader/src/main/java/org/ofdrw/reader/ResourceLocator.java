@@ -494,4 +494,8 @@ public class ResourceLocator {
         }
     }
 
+    @Override
+    public String toString() {
+        return pwd();
+    }
 }

@@ -25,21 +25,27 @@ public interface PageBlockType extends Element {
         PageBlockType res = null;
         switch (qName) {
             case "ofd:TextObject":
+            case "TextObject":
                 res = new TextObject(element);
                 break;
             case "ofd:PathObject":
+            case "PathObject":
                 res = new PathObject(element);
                 break;
             case "ofd:ImageObject":
+            case "ImageObject":
                 res = new ImageObject(element);
                 break;
             case "ofd:CompositeObject":
+            case "CompositeObject":
                 res = new CompositeObject(element);
                 break;
             case "ofd:PageBlock":
+            case "PageBlock":
                 res = new CT_PageBlock(element);
                 break;
             case "ofd:Layer":
+            case "Layer":
                 res = new CT_Layer(element);
                 break;
             default:

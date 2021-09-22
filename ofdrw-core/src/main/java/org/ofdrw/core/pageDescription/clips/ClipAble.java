@@ -29,9 +29,11 @@ public interface ClipAble extends Element {
         ClipAble res = null;
         switch (qName) {
             case "ofd:Path":
+            case "Path":
                 res = new CT_Path(e);
                 break;
             case "ofd:Text":
+            case "Text":
                 res = new CT_Text(e);
                 break;
             default:

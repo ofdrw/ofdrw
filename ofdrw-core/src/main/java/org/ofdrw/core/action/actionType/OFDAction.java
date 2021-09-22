@@ -26,14 +26,19 @@ public interface OFDAction extends Element {
         String qName = element.getQualifiedName();
         switch (qName) {
             case "ofd:Goto":
+            case "Goto":
                 return new Goto(element);
             case "ofd:URI":
+            case "URI":
                 return new URI(element);
             case "ofd:GotoA":
+            case "GotoA":
                 return new GotoA(element);
             case "ofd:Sound":
+            case "Sound":
                 return new Sound(element);
             case "ofd:Movies":
+            case "Movies":
                 return new Movie(element);
             default:
                 throw new IllegalArgumentException("未知的动作类型：" + qName);
