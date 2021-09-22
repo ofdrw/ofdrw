@@ -96,7 +96,7 @@ public class SM2Cipher extends ASN1Object {
      * Convert ASN.1 Struct to C1C3C2 format
      *
      * @return C1C3C2
-     * @throws IOException
+     * @throws IOException IO操作异常
      */
     public byte[] convertC1C3C2() throws IOException {
         /*
@@ -131,7 +131,7 @@ public class SM2Cipher extends ASN1Object {
      *
      * @param c1c3c2 encrypted result
      * @return SM2Cipher
-     * @throws IOException
+     * @throws IOException IO操作异常
      */
     static public SM2Cipher fromC1C3C2(byte[] c1c3c2) throws IOException {
         /*

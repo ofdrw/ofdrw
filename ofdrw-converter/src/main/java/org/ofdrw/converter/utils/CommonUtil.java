@@ -403,6 +403,8 @@ public class CommonUtil {
 
     /**
      * @deprecated see {@link org.ofdrw.converter.ColorConvert#pdfRGB(ResourceManage, CT_Color)}
+     * @param colorArray 颜色数组
+     * @return PDF颜色对象
      */
     @Deprecated
     public static com.itextpdf.kernel.colors.Color convertOfdColor(ST_Array colorArray) {

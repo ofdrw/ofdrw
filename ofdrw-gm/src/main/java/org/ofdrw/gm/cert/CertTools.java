@@ -27,6 +27,8 @@ public final class CertTools {
      *
      * @param certificate JCE证书对象
      * @return ASN1证书结构
+     * @throws CertificateEncodingException 证书编码异常
+     * @throws IOException                  IO读写异常
      */
     public static Certificate asn1(java.security.cert.Certificate certificate) throws CertificateEncodingException, IOException {
         ASN1Primitive p = ASN1Primitive.fromByteArray(certificate.getEncoded());
@@ -41,6 +43,7 @@ public final class CertTools {
      *
      * @param certificate JCE证书对象
      * @return ASN1证书结构
+     * @throws CertificateException 证书解析异常
      */
     public static java.security.cert.Certificate obj(Certificate certificate) throws CertificateException {
         return new JcaX509CertificateConverter().setProvider("BC")

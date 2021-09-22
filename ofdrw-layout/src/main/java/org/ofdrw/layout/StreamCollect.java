@@ -69,6 +69,7 @@ public class StreamCollect {
      * 设置 插入页码
      *
      * @param pageNum 页码（从1开始）
+     * @return this
      */
     public StreamCollect setPageNum(Integer pageNum) {
         this.pageNum = pageNum;

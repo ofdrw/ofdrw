@@ -600,6 +600,7 @@ public class OFDSigner implements Closeable {
      * 通过过滤器来实现选择需要保护的文件
      *
      * @param filter 过滤器
+     * @return this
      */
     public OFDSigner setProtectFileFilter(ProtectFileFilter filter) {
         this.protectFileFilter = filter;
@@ -613,6 +614,7 @@ public class OFDSigner implements Closeable {
      * 一旦签名标注的该属性，则验证时应同时验证“基”签名
      *
      * @param id “基”签名ID
+     * @return this
      */
     public OFDSigner setRelative(String id) {
         this.relativeID = id;

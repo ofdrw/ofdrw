@@ -72,6 +72,8 @@ public class OFDIntegrity implements Closeable {
      * 请在完成保护后务必调用{@link #close()} 以清除工作过程中的临时文件！
      *
      * @param signer 签名实现
+     * @throws IOException IO操作异常
+     * @throws GeneralSecurityException 密码运算相关问题
      */
     public void protect(@NotNull ProtectSigner signer) throws IOException, GeneralSecurityException {
         if (signer == null) {
