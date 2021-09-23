@@ -129,9 +129,8 @@ public class ImageUtils {
      * 清除图片背景
      *
      * @param in   输入图片
-     * @param gray 灰度阈值
+     * @param gray 灰度阈值(0-255)，图像中大于该值的像素将会被删除。
      * @return 清空背景的图片
-     * @deprecated
      */
     public static BufferedImage clearWhiteBackground(BufferedImage in, int gray) {
         return renderMask(in, in, (r, g, b) -> gray(r, g, b) < gray);

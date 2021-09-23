@@ -53,7 +53,10 @@ import org.ofdrw.reader.ResourceLocator;
 import org.ofdrw.reader.ResourceManage;
 import org.ofdrw.reader.model.AnnotionEntity;
 import org.ofdrw.reader.model.StampAnnotEntity;
+import org.ofdrw.reader.tools.ImageUtils;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -542,7 +545,7 @@ public class ItextMaker {
         pdfCanvas.restoreState();
     }
 
-    private void writeSealImage(PdfDocument pdfDocument, PdfCanvas pdfCanvas, ST_Box box, byte[] image, ST_Box sealBox, ST_Box clipBox) {
+    private void writeSealImage(PdfDocument pdfDocument, PdfCanvas pdfCanvas, ST_Box box, byte[] image, ST_Box sealBox, ST_Box clipBox) throws IOException {
         if (image == null) {
             return;
         }
@@ -551,8 +554,10 @@ public class ItextMaker {
         float width = sealBox.getWidth().floatValue();
         float height = sealBox.getHeight().floatValue();
         Rectangle rect = new Rectangle((float) converterDpi(x), (float) converterDpi(y), (float) converterDpi(width), (float) converterDpi(height));
+        // 将背景设置为透明，抠图阈值为 244（实践得到最佳）
+        BufferedImage bImg = ImageUtils.clearWhiteBackground(ImageIO.read(new ByteArrayInputStream(image)), 244);
+        ImageData img = ImageDataFactory.create(bImg, null);
 
-        ImageData img = ImageDataFactory.create(image);
         PdfFormXObject xObject = new PdfFormXObject(new Rectangle(rect.getWidth(), rect.getHeight()));
         PdfCanvas xObjectCanvas = new PdfCanvas(xObject, pdfDocument);
         if (clipBox != null) {
