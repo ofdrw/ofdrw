@@ -93,6 +93,11 @@
             <artifactId>batik-transcoder</artifactId>
             <version>1.14</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>fontbox</artifactId>
+            <version>${pdfbox.version}</version>
+        </dependency>
     </dependencies>
 </project>
 
