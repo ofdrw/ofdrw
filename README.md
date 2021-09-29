@@ -80,6 +80,7 @@ public class HelloWorld {
 - [OFD R&W OFD转换图片](./ofdrw-converter/README.md)
 - [OFD R&W OFD转换SVG](./ofdrw-converter/README.md)
 - [OFD R&W OFD转换HTML](./ofdrw-converter/README.md)
+- [OFD R&W 字形数据解析](./ofdrw-converter/src/main/java/org/ofdrw/converter/font/README.md)
 
 OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwell.cn/)
 

@@ -16,7 +16,7 @@
    limitations under the License.
 
  */
-package font;
+package org.ofdrw.converter.font;
 
 
 

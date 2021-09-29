@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package font;
+package org.ofdrw.converter.font;
 
 import java.io.*;
 

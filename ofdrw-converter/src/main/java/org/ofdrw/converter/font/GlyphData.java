@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package font;
+package org.ofdrw.converter.font;
 
 import org.apache.fontbox.ttf.*;
 import org.apache.fontbox.util.BoundingBox;
@@ -24,11 +24,10 @@ import java.io.IOException;
 
 /**
  * A glyph data record in the glyf table.
- * 
+ *
  * @author Ben Litchfield
  */
-public class GlyphData
-{
+public class GlyphData {
     private short xMin;
     private short yMin;
     private short xMax;
@@ -36,17 +35,21 @@ public class GlyphData
     private BoundingBox boundingBox = null;
     private short numberOfContours;
     private GlyfDescript glyphDescription = null;
-    
+
+    public GlyphData() {
+        glyphDescription = new GlyfSimpleDescript();
+        boundingBox = new BoundingBox();
+    }
+
     /**
      * This will read the required data from the stream.
-     * 
-     * @param glyphTable The glyph table this glyph belongs to.
-     * @param data The stream to read the data from.
+     *
+     * @param data            The stream to read the data from.
      * @param leftSideBearing The left side bearing for this glyph.
+     * @param provider        字形数据提供器，用于在符合字形时工作。
      * @throws IOException If there is an error reading the data.
      */
-    void initData(GlyphTable glyphTable, TTFDataStream data, int leftSideBearing ) throws IOException
-    {
+    public void readData(TTFDataStream data, int leftSideBearing, GlyphDataProvider provider) throws IOException {
         numberOfContours = data.readSignedShort();
         xMin = data.readSignedShort();
         yMin = data.readSignedShort();
@@ -54,111 +57,95 @@ public class GlyphData
         yMax = data.readSignedShort();
         boundingBox = new BoundingBox(xMin, yMin, xMax, yMax);
 
-        if (numberOfContours >= 0) 
-        {
+        if (numberOfContours >= 0) {
             // create a simple glyph
             short x0 = (short) (leftSideBearing - xMin);
             glyphDescription = new GlyfSimpleDescript(numberOfContours, data, x0);
-        }
-        else 
-        {
+        } else {
             // create a composite glyph
-            glyphDescription = new GlyfCompositeDescript(data, glyphTable);
+            glyphDescription = new GlyfCompositeDescript(data, provider);
         }
-    }
-
-    /**
-     * Initialize an empty glyph record.
-     */
-    void initEmptyData()
-    {
-        glyphDescription = new GlyfSimpleDescript();
-        boundingBox = new BoundingBox();
     }
 
     /**
      * @return Returns the boundingBox.
      */
-    public BoundingBox getBoundingBox()
-    {
+    public BoundingBox getBoundingBox() {
         return boundingBox;
     }
 
     /**
      * @param boundingBoxValue The boundingBox to set.
      */
-    public void setBoundingBox(BoundingBox boundingBoxValue)
-    {
+    public void setBoundingBox(BoundingBox boundingBoxValue) {
         this.boundingBox = boundingBoxValue;
     }
 
     /**
      * @return Returns the numberOfContours.
      */
-    public short getNumberOfContours()
-    {
+    public short getNumberOfContours() {
         return numberOfContours;
     }
 
     /**
      * @param numberOfContoursValue The numberOfContours to set.
      */
-    public void setNumberOfContours(short numberOfContoursValue)
-    {
+    public void setNumberOfContours(short numberOfContoursValue) {
         this.numberOfContours = numberOfContoursValue;
     }
-   
+
     /**
      * Returns the description of the glyph.
+     *
      * @return the glyph description
      */
-    public GlyphDescription getDescription()
-    {
+    public GlyphDescription getDescription() {
         return glyphDescription;
     }
 
     /**
      * Returns the path of the glyph.
+     *
      * @return the path
      */
-    public GeneralPath getPath()
-    {
+    public GeneralPath getPath() {
         return new GlyphRenderer(glyphDescription).getPath();
     }
 
     /**
      * Returns the xMax value.
+     *
      * @return the XMax value
      */
-    public short getXMaximum() 
-    {
+    public short getXMaximum() {
         return xMax;
     }
 
     /**
      * Returns the xMin value.
+     *
      * @return the xMin value
      */
-    public short getXMinimum() 
-    {
+    public short getXMinimum() {
         return xMin;
     }
 
     /**
      * Returns the yMax value.
+     *
      * @return the yMax value
      */
-    public short getYMaximum() 
-    {
+    public short getYMaximum() {
         return yMax;
     }
 
     /**
      * Returns the yMin value.
+     *
      * @return the yMin value
      */
-    public short getYMinimum() 
-    {
+    public short getYMinimum() {
         return yMin;
     }
 }

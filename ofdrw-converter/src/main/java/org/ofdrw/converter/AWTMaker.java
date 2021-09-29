@@ -469,7 +469,7 @@ public abstract class AWTMaker {
                     char c = textCode.getContent().charAt(j);
                     logger.debug(String.format("编码索引 <%s> DeltaX:%s DeltaY:%s", c, x, y));
                     try {
-                        int gid = typeFont.getUnicodeCmap().getGlyphId((int) c);
+                        int gid = typeFont.getUnicodeCmapLookup().getGlyphId((int) c);
                         typeFont.getFontMatrix();
                         GlyphData glyphData = typeFont.getGlyph().getGlyph(gid);
                         if (glyphData == null) {

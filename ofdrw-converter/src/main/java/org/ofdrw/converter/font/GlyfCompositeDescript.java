@@ -16,12 +16,11 @@
    limitations under the License.
 
  */
-package font;
+package org.ofdrw.converter.font;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.fontbox.ttf.GlyphData;
-import org.apache.fontbox.ttf.*;
+import org.apache.fontbox.ttf.GlyphDescription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,11 +40,11 @@ public class GlyfCompositeDescript extends GlyfDescript {
     /**
      * Log instance.
      */
-    private static final Log LOG = LogFactory.getLog(GlyfCompositeDescript.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GlyfCompositeDescript.class);
 
     private final List<GlyfCompositeComp> components = new ArrayList<>();
     private final Map<Integer, GlyphDescription> descriptions = new HashMap<>();
-    private GlyphTable glyphTable = null;
+    private final GlyphDataProvider provider;
     private boolean beingResolved = false;
     private boolean resolved = false;
     private int pointCount = -1;
@@ -56,15 +55,13 @@ public class GlyfCompositeDescript extends GlyfDescript {
     /**
      * Constructor.
      *
-     * @param bais       the stream to be read
-     * @param glyphTable the Glyphtable containing all glyphs
+     * @param bais     the stream to be read
+     * @param provider 字形数据提供者用于提供符合字形的数据
      * @throws IOException is thrown if something went wrong
      */
-    GlyfCompositeDescript(TTFDataStream bais, GlyphTable glyphTable) throws IOException {
+    GlyfCompositeDescript(TTFDataStream bais, GlyphDataProvider provider) throws IOException {
         super((short) -1);
-
-        this.glyphTable = glyphTable;
-
+        this.provider = provider;
         // Get all of the composite components
         GlyfCompositeComp comp;
         do {
@@ -251,12 +248,12 @@ public class GlyfCompositeDescript extends GlyfDescript {
         for (GlyfCompositeComp component : components) {
             try {
                 int index = component.getGlyphIndex();
-                GlyphData glyph = glyphTable.getGlyph(index);
+                GlyphData glyph = provider.getGlyph(index);
                 if (glyph != null) {
                     descriptions.put(index, glyph.getDescription());
                 }
             } catch (IOException e) {
-                LOG.error(e);
+                LOG.debug("复合字形解析异常", e);
             }
         }
     }
