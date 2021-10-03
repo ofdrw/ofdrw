@@ -23,7 +23,7 @@ public class TTFPareProgram {
     @Test
     public  void testParse() throws IOException {
 
-        final Path path = Paths.get("C:\\Users\\pc\\Desktop\\zsbk\\Doc_0\\Res\\font_766.ttf");
+        final Path path = Paths.get("D:\\Project\\cliven\\ofdrw\\ofdrw-converter\\src\\test\\resources\\font_13132_0_edit.ttf");
         try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "r")) {
             // Version: 4 byte
             int v1 = raf.readUnsignedShort();
@@ -53,6 +53,8 @@ public class TTFPareProgram {
                 System.out.printf("Name: %s Offset: %d Length: %d\n", tag, offset, length);
                 tables.put(tag, new int[]{offset, length});
             }
+
+
 
 //            final int[] maxpsArr = tables.get("maxp");
 //            raf.seek(maxpsArr[0]);

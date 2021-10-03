@@ -26,9 +26,18 @@ import java.io.*;
  */
 public class MemoryTTFDataStream extends TTFDataStream
 {
+
     private byte[] data = null;
     private int currentPosition = 0;
-    
+
+    /**
+     * 构造内存字体随机读取流
+     * @param data 字体数据
+     */
+    public MemoryTTFDataStream(byte[] data) {
+        this.data = data;
+    }
+
     /**
      * Constructor from a stream. 
      * @param is The stream to read from. It will be closed by this method.

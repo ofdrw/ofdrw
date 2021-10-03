@@ -1,7 +1,15 @@
 package org.ofdrw.converter.font;
 
 
+import org.apache.commons.io.IOUtils;
+import org.apache.fontbox.ttf.CmapLookup;
+import org.apache.fontbox.ttf.CmapTable;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,6 +17,10 @@ import java.util.Map;
  * TrueType 字体解析器
  * <p>
  * https://docs.microsoft.com/zh-cn/typography/opentype/spec/otff
+ * <p>
+ * CMAP见
+ * <p>
+ * https://docs.microsoft.com/zh-cn/typography/opentype/spec/cmap
  *
  * @author 权观宇
  * @since 2021-09-28 21:05:09
@@ -35,9 +47,61 @@ public class TrueTypeFont implements GlyphDataProvider {
      */
     private TTFDataStream data;
 
+    /**
+     * 字符表偏移量
+     */
     private long[] glyOffset;
 
+    /**
+     * 字符编码到字形映射表
+     * <p>
+     * 不同字符集使用独立子表表述，数组中的每一个表都是一种类型字符集
+     */
+    private CmapSubtable[] cmaps;
+
+    /**
+     * 字体名称来资源有 name表
+     */
+    private String name = null;
+
     public TrueTypeFont() {
+    }
+
+    /**
+     * 创建TTF字体解析器
+     *
+     * @param in 流
+     * @return this
+     * @throws IOException IOE
+     */
+    public TrueTypeFont parse(InputStream in) throws IOException {
+        final byte[] buf = IOUtils.toByteArray(in);
+        TTFDataStream dataStream = new MemoryTTFDataStream(buf);
+        return new TrueTypeFont().parse(dataStream);
+    }
+
+    /**
+     * 创建TTF字体解析器
+     *
+     * @param buf 读取到内存的字体数据
+     * @return this
+     * @throws IOException IOE
+     */
+    public TrueTypeFont parse(byte[] buf) throws IOException {
+        TTFDataStream dataStream = new MemoryTTFDataStream(buf);
+        return new TrueTypeFont().parse(dataStream);
+    }
+
+    /**
+     * 创建TTF字体解析器
+     *
+     * @param inPath 字体文件路径
+     * @return this
+     * @throws IOException IOE
+     */
+    public TrueTypeFont parse(Path inPath) throws IOException {
+        TTFDataStream dataStream = new MemoryTTFDataStream(Files.newInputStream(inPath));
+        return new TrueTypeFont().parse(dataStream);
     }
 
     /**
@@ -103,6 +167,11 @@ public class TrueTypeFont implements GlyphDataProvider {
         }
         glyphs = new GlyphData[numGlyphs + 1];
         glyOffset = tables.get("glyf");
+        // =========> cmap
+        if (tables.containsKey("cmap")) {
+            // 读取cmap
+            this.cmaps = readCMap(tables.get("cmap")[0], raf);
+        }
         return this;
     }
 
@@ -173,4 +242,104 @@ public class TrueTypeFont implements GlyphDataProvider {
         }
         return glyph;
     }
+
+    /**
+     * 解析cmap
+     *
+     * @param cmapOffset cmap开始偏移量
+     * @param data       随机访问流
+     * @return cmap子表数组
+     * @throws IOException IOE
+     */
+    public CmapSubtable[] readCMap(long cmapOffset, TTFDataStream data) throws IOException {
+        // 定位到cmap
+        data.seek(cmapOffset);
+        int version = data.readUnsignedShort();
+        int numberOfTables = data.readUnsignedShort();
+        CmapSubtable[] cmaps = new CmapSubtable[numberOfTables];
+        // 依次子表信息数组
+        for (int i = 0; i < numberOfTables; i++) {
+            cmaps[i] = new CmapSubtable().initData(data);
+        }
+        for (int i = 0; i < numberOfTables; i++) {
+            // 依次解析子表
+            cmaps[i].initSubtable(cmapOffset, this.numGlyphs, data);
+        }
+        return cmaps;
+    }
+
+    /**
+     * 获取特定平台特定编码的字符映射子表
+     * <p>
+     * Returns the subtable, if any, for the given platform and encoding.
+     *
+     * @param platformId         平台ID
+     * @param platformEncodingId 平台编码ID
+     * @return 映射子表
+     */
+    public CmapSubtable getSubtable(int platformId, int platformEncodingId) {
+        if (cmaps == null || cmaps.length == 0) {
+            return null;
+        }
+        for (CmapSubtable cmap : cmaps) {
+            if (cmap.getPlatformId() == platformId &&
+                    cmap.getPlatformEncodingId() == platformEncodingId) {
+                return cmap;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 获取Unicode到字形的映射表
+     *
+     * @return 映射表
+     * @throws IllegalArgumentException 字体没有cmap表
+     */
+    public CmapLookup getUnicodeCmapLookup() {
+        if (cmaps == null || cmaps.length == 0) {
+            throw new IllegalArgumentException("字体中没有cmap");
+        }
+        CmapSubtable cmap = getSubtable(CmapTable.PLATFORM_UNICODE, CmapTable.ENCODING_UNICODE_2_0_FULL);
+        if (cmap == null) {
+            cmap = getSubtable(CmapTable.PLATFORM_WINDOWS, CmapTable.ENCODING_WIN_UNICODE_FULL);
+        }
+        if (cmap == null) {
+            cmap = getSubtable(CmapTable.PLATFORM_UNICODE, CmapTable.ENCODING_UNICODE_2_0_BMP);
+        }
+        if (cmap == null) {
+            cmap = getSubtable(CmapTable.PLATFORM_WINDOWS, CmapTable.ENCODING_WIN_UNICODE_BMP);
+        }
+        if (cmap == null) {
+            // Microsoft's "Recommendations for OpenType Fonts" says that "Symbol" encoding
+            // actually means "Unicode, non-standard character set"
+            cmap = getSubtable(CmapTable.PLATFORM_WINDOWS, CmapTable.ENCODING_WIN_SYMBOL);
+        }
+        if (cmap == null) {
+            // fallback to the first cmap (may not be Unicode, so may produce poor results)
+            cmap = cmaps[0];
+        }
+        return cmap;
+    }
+
+    /**
+     * 通过Unicode获取字形数据
+     * <p>
+     * 如果没有cmap那么返回空白字符
+     *
+     * @param code unicode
+     * @return 字符数据
+     * @throws IOException 字体文件解析异常
+     */
+    public GlyphData getUnicodeGlyph(int code) throws IOException {
+        int gid;
+        if (cmaps == null || cmaps.length == 0) {
+            // 没有cmap的情况直接返回第一个字符也就是空白字符
+            gid = 0;
+        } else {
+            gid = getUnicodeCmapLookup().getGlyphId(code);
+        }
+        return getGlyph(gid);
+    }
+
 }

@@ -39,4 +39,32 @@ class TrueTypeFontTest {
         assertEquals(16, count);
 
     }
+
+    @Test
+    void getUnicodeCmapLookup() throws IOException {
+        Path fontPath = Paths.get("src/test/resources/font_13132_0_edit.ttf");
+        TTFDataStream dataStream = new MemoryTTFDataStream(Files.newInputStream(fontPath));
+        final TrueTypeFont trueTypeFont = new TrueTypeFont().parse(dataStream);
+
+
+        final int gid = trueTypeFont.getUnicodeCmapLookup().getGlyphId('/');
+        assertEquals(402, gid);
+
+        final GlyphData glyph = trueTypeFont.getGlyph(gid);
+        GlyphDescription description = glyph.getDescription();
+        int count = description.getPointCount();
+        assertEquals(4, count);
+    }
+
+    @Test
+    void getUnicodeGlyph() throws IOException {
+        Path fontPath = Paths.get("src/test/resources/font_13132_0_edit.ttf");
+        TTFDataStream dataStream = new MemoryTTFDataStream(Files.newInputStream(fontPath));
+        final TrueTypeFont trueTypeFont = new TrueTypeFont().parse(dataStream);
+
+        final GlyphData glyph = trueTypeFont.getUnicodeGlyph('/');
+        GlyphDescription description = glyph.getDescription();
+        int count = description.getPointCount();
+        assertEquals(4, count);
+    }
 }
