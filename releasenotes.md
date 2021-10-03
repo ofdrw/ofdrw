@@ -1,8 +1,16 @@
 # 发布记录和特性
 
+## Version 1.15.5 2021-10-3 18:14:23
+
+> Alias: shuangjiang
+
+修复：
+
+- 裁剪了PDFBox的字体模块，解决了字体无法解析的大部分问题，字解析工具见 [./ofdrw-converter/src/main/java/org/ofdrw/converter/font/README.md]
+
 ## Version 1.15.4 2021-9-23 21:26:11
 
-> Alias: Shuanglu
+> Alias: hanlu
 
 修复：
 
