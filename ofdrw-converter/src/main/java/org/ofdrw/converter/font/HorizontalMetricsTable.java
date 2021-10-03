@@ -83,6 +83,7 @@ public class HorizontalMetricsTable {
      * Returns the advance width for the given GID.
      *
      * @param gid GID
+     * @return  advance width for the given GID.
      */
     public int getAdvanceWidth(int gid) {
         if (gid < numHMetrics) {
@@ -98,6 +99,7 @@ public class HorizontalMetricsTable {
      * Returns the left side bearing for the given GID.
      *
      * @param gid GID
+     * @return left side bearing for the given GID.
      */
     public int getLeftSideBearing(int gid) {
         if (gid < numHMetrics) {

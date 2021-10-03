@@ -56,6 +56,7 @@ public class HorizontalHeaderTable {
      *
      * @param data The stream to read the data from.
      * @throws IOException If there is an error reading the data.
+     * @return this
      */
     public HorizontalHeaderTable parse(TTFDataStream data) throws IOException {
         data.seek(offset[0]);

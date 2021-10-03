@@ -51,8 +51,8 @@ public class NamingTable {
      *
      * @param data The stream to read the data from.
      * @throws IOException If there is an error reading the data.
+     * @return this
      */
-
     public NamingTable read(TTFDataStream data) throws IOException {
         data.seek(getOffset());
         int formatSelector = data.readUnsignedShort();

@@ -45,6 +45,7 @@ public class TrueTypeCollection {
      *
      * @param stream The TTF file.
      * @throws IOException If the font could not be parsed.
+     * @return this
      */
     public TrueTypeCollection parse(TTFDataStream stream) throws IOException {
         this.stream = stream;

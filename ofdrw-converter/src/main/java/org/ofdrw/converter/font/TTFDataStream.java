@@ -223,6 +223,8 @@ public abstract class TTFDataStream implements Closeable
     /**
      * Reads a tag, an array of four uint8s used to identify a script, language system, feature,
      * or baseline.
+     * @return tag
+     * @throws IOException IOE
      */
     public String readTag() throws IOException
     {
@@ -298,7 +300,6 @@ public abstract class TTFDataStream implements Closeable
      * This will get the original data size that was used for this stream.
      * 
      * @return The size of the original data.
-     * @throws IOException If there is an issue reading the data.
      */
     public abstract long getOriginalDataSize();
 }
