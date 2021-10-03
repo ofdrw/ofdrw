@@ -43,7 +43,7 @@ public class MemoryTTFDataStream extends TTFDataStream
      * @param is The stream to read from. It will be closed by this method.
      * @throws IOException If an error occurs while reading from the stream.
      */
-    MemoryTTFDataStream(InputStream is) throws IOException
+    public MemoryTTFDataStream(InputStream is) throws IOException
     {
         try (ByteArrayOutputStream output = new ByteArrayOutputStream(is.available()))
         {

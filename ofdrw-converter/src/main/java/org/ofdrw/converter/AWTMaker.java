@@ -1,10 +1,10 @@
 package org.ofdrw.converter;
 
-import org.apache.fontbox.ttf.GlyphData;
-import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendComposite;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
 import org.ofdrw.converter.font.FontWrapper;
+import org.ofdrw.converter.font.GlyphData;
+import org.ofdrw.converter.font.TrueTypeFont;
 import org.ofdrw.converter.point.Tuple2;
 import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.converter.utils.MatrixUtils;
@@ -469,9 +469,7 @@ public abstract class AWTMaker {
                     char c = textCode.getContent().charAt(j);
                     logger.debug(String.format("编码索引 <%s> DeltaX:%s DeltaY:%s", c, x, y));
                     try {
-                        int gid = typeFont.getUnicodeCmapLookup().getGlyphId((int) c);
-                        typeFont.getFontMatrix();
-                        GlyphData glyphData = typeFont.getGlyph().getGlyph(gid);
+                        GlyphData glyphData = typeFont.getUnicodeGlyph(c);
                         if (glyphData == null) {
                             logger.debug(String.format("找不到字形 %s", c));
                         } else {
@@ -490,15 +488,15 @@ public abstract class AWTMaker {
                     List<String> glyphs = transform.getGlyphs().getArray();
                     logger.debug("字形变换：" + transform);
                     for (String glyphStr : glyphs) {
-                        Integer glyph = new Integer(glyphStr);
+                        Integer gid = new Integer(glyphStr);
                         if (deltaOffset != -1) {
                             x += (deltaX == null || deltaX.size() < 0) ? 0.0 : (deltaOffset < deltaX.size() ? deltaX.get(deltaOffset) : deltaX.get(deltaX.size() - 1));
                             y += (deltaY == null || deltaY.size() < 0) ? 0.0 : (deltaOffset < deltaY.size() ? deltaY.get(deltaOffset) : deltaY.get(deltaY.size() - 1));
                         }
-                        logger.debug(String.format("字形索引 <%s> DeltaX:%s DeltaY:%s", glyph, x, y));
+                        logger.debug(String.format("字形索引 <%s> DeltaX:%s DeltaY:%s", gid, x, y));
                         try {
 //                            typeFont.getGlyph().getGlyphs();
-                            GlyphData glyphData = typeFont.getGlyph().getGlyph(glyph);
+                            GlyphData glyphData = typeFont.getGlyph(gid);
                             if (glyphData != null) {
                                 Shape shape = glyphData.getPath();
                                 Matrix matrix = chatMatrix(textObject, x, y, textObject.getSize(), fontMatrix, baseMatrix);

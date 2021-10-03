@@ -4,13 +4,16 @@ package org.ofdrw.converter.font;
 import org.apache.commons.io.IOUtils;
 import org.apache.fontbox.ttf.CmapLookup;
 import org.apache.fontbox.ttf.CmapTable;
+import org.apache.fontbox.ttf.HeaderTable;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -60,9 +63,19 @@ public class TrueTypeFont implements GlyphDataProvider {
     private CmapSubtable[] cmaps;
 
     /**
+     * 字体的单位数，从header中获取
+     * <p>
+     * 默认0
+     */
+    private float unitsPerEm;
+
+
+    /**
      * 字体名称来资源有 name表
      */
-    private String name = null;
+    public String fontFamily = null;
+    public String fontSubFamily = null;
+    public String psName = null;
 
     public TrueTypeFont() {
     }
@@ -127,14 +140,19 @@ public class TrueTypeFont implements GlyphDataProvider {
             long length = raf.readUnsignedInt();     // 4 byte
             tables.put(tag, new long[]{offset, length});
         }
-        // head  头数据
-        // maxp  字形数量
-        // loca  配置参数
-        // glyf  字形数据
+
+        /*
+            head  头数据
+            maxp  字形数量
+            loca  配置参数
+            glyf  字形数据
+         */
         // =========> head
         if (!tables.containsKey("head")) {
             throw new IllegalArgumentException("没有 head 表");
         }
+        raf.seek(tables.get("head")[0] + 18);
+        unitsPerEm = data.readUnsignedShort();
         raf.seek(tables.get("head")[0] + 50);
         /*
          * 偏移量计算方式
@@ -171,6 +189,15 @@ public class TrueTypeFont implements GlyphDataProvider {
         if (tables.containsKey("cmap")) {
             // 读取cmap
             this.cmaps = readCMap(tables.get("cmap")[0], raf);
+        }
+        // =========> name
+        if (tables.containsKey("name")) {
+            NamingTable nt = new NamingTable(tables.get("name")).read(raf);
+            this.fontFamily = nt.getFontFamily();
+            this.fontSubFamily = nt.getFontSubFamily();
+            this.psName = nt.getPostScriptName();
+            // GC
+            nt = null;
         }
         return this;
     }
@@ -340,6 +367,12 @@ public class TrueTypeFont implements GlyphDataProvider {
             gid = getUnicodeCmapLookup().getGlyphId(code);
         }
         return getGlyph(gid);
+    }
+
+    public List<Number> getFontMatrix() throws IOException {
+
+        float scale = 1000f / unitsPerEm;
+        return Arrays.<Number>asList(0.001f * scale, 0, 0, 0.001f * scale, 0, 0);
     }
 
 }

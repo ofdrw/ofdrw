@@ -7,8 +7,10 @@ import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import org.apache.commons.io.IOUtils;
-import org.apache.fontbox.ttf.*;
-import org.ofdrw.converter.font.FontWrapper;
+import org.apache.fontbox.ttf.TTFParser;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.ofdrw.converter.font.*;
 import org.ofdrw.converter.utils.OSinfo;
 import org.ofdrw.converter.utils.StringUtils;
 import org.ofdrw.core.basicType.ST_Loc;
@@ -17,6 +19,7 @@ import org.ofdrw.reader.ResourceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.ws.Holder;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -124,8 +127,8 @@ public final class FontLoader {
      * */
     public void init() {
         try (InputStream in = getClass().getResourceAsStream(DEFAULT_FONT_RESOURCE_PATH)) {
-            final byte[] buf = IOUtils.toByteArray(in);
-            defaultFont = new TTFParser(true).parse(new ByteArrayInputStream(buf));
+            byte[] buf = IOUtils.toByteArray(in);
+            defaultFont = new TrueTypeFont().parse(buf);
             iTextDefaultFont = new com.itextpdf.io.font.TrueTypeFont(buf);
         } catch (IOException ignored) {
         }
@@ -281,7 +284,6 @@ public final class FontLoader {
      * @return 字体操作系统内绝对路径，如果不存在返还 null
      */
     public String getReplaceSimilarFontPath(String familyName, String fontName) {
-
         for (String regexKey : similarFontReplaceRegexMapping.keySet()) {
             String[] regexps = regexKey.split(SeparatorRegex);
             boolean isMatchFamilyName = familyName != null && Pattern.matches(regexps[0], familyName);
@@ -310,9 +312,6 @@ public final class FontLoader {
         String fontFilePath = getSystemFontPath(familyName, fontName);
         if (fontFilePath == null) {
             return null;
-            //如果直接切换为默认字体，字体映射可能会错误
-//            log.info("加载系统字体失败：[{} {}], 切换至默认字体(宋体)", familyName, fontName);
-//            return loadDefaultFont();
         }
         return loadExternalFont(fontFilePath, familyName, fontName);
     }
@@ -333,40 +332,33 @@ public final class FontLoader {
      * 加载外部字体
      *
      * @param absPath    字体操作系统绝对路径
-     * @param familyName 字族名
+     * @param familyName 字族名，因为是可选参数忽略
      * @param fontName   字体名
      * @return 字体
      */
-    public TrueTypeFont loadExternalFont(String absPath, String familyName, String fontName) {
-        try (InputStream in = new FileInputStream(absPath)) {
-            if (absPath.toLowerCase().endsWith(".ttf")) {
-                return new TTFParser(true).parse(in);
-            } else if (absPath.toLowerCase().endsWith(".otf")) {
-                return new OTFParser(true).parse(in);
-            } else if (absPath.toLowerCase().endsWith(".ttc")) {
-                TrueTypeCollection trueTypeCollection = new TrueTypeCollection(in);
-                TrueTypeFont res = trueTypeCollection.getFontByName(fontName);
-                if (res == null) {
-                    boolean[] flag = new boolean[]{false};
-                    // 使用第一个出现的字体
-                    TrueTypeFont[] ttfHolder = new TrueTypeFont[]{null};
-                    trueTypeCollection.processAllFonts((trueTypeFont) -> {
-                        if (flag[0]) {
-                            return;
+    public TrueTypeFont loadExternalFont(@NotNull String absPath, @Nullable String familyName, @Nullable String fontName) {
+        try {
+            // 内存中不用主动关闭
+            TTFDataStream raf = new MemoryTTFDataStream(new FileInputStream(absPath));
+            int offset = fontName.toLowerCase().lastIndexOf('.');
+            String suffix = offset == -1 ? ".ttf" : fontName.toLowerCase().substring(offset);
+            switch (suffix) {
+                case ".ttf":
+                case ".otf":
+                    return new TrueTypeFont().parse(raf);
+                case ".ttc":
+                    Holder<TrueTypeFont> holder = new Holder<>();
+                    TrueTypeCollection ttc = new TrueTypeCollection().parse(raf);
+
+                    ttc.foreach(font -> {
+                        if (font.psName.equals(fontName)) {
+                            holder.value = font;
                         }
-                        flag[0] = true;
-                        ttfHolder[0] = trueTypeFont;
                     });
-                    res = ttfHolder[0];
-                }
-                return res;
-            }
-//            else if (absPath.toUpperCase().endsWith(".CFF")) {
-//                CFFParser parser = new CFFParser();
-//                return parser.parse(in);
-//            }
-            else {
-                log.info("不支持的字体格式：" + absPath);
+                    if (holder.value == null) {
+                        holder.value = ttc.getFontAtIndex(0);
+                    }
+                    return holder.value;
             }
         } catch (IOException e) {
             log.info("字体 {},加载失败,原因:{}", absPath, e.getMessage());
@@ -400,43 +392,73 @@ public final class FontLoader {
         if (ctFont == null) {
             return null;
         }
+        boolean hasReplace = false;
+
+        TrueTypeFont trueTypeFont = null;
         try {
+            // 内嵌字体绝对路径
             ST_Loc fontFileLoc = ctFont.getFontFile();
-            TrueTypeFont trueTypeFont = null;
+
             if (fontFileLoc != null) {
                 // 通过资源加载器获取文件的绝对路径
                 String fontAbsPath = rl.getFile(ctFont.getFontFile()).toAbsolutePath().toString();
                 trueTypeFont = loadExternalFont(fontAbsPath, ctFont.getFamilyName(), ctFont.getFontName());
             }
-            CmapLookup cmapLookup = null;
-            try {
-                cmapLookup = trueTypeFont.getUnicodeCmapLookup();
-            } catch (Exception ignore) {
-            }
-            boolean hasReplace = false;
-            if (trueTypeFont == null || trueTypeFont.getName() == null || cmapLookup == null) {
-                trueTypeFont = loadSystemFont(ctFont.getFamilyName(), ctFont.getFontName());
-
-                if (trueTypeFont == null && enableSimilarFontReplace) {
-                    String similarFontPath = getReplaceSimilarFontPath(ctFont.getFamilyName(), ctFont.getFontName());
-                    if (similarFontPath != null) {
-                        trueTypeFont = loadExternalFont(similarFontPath, null, null);
-                    }
-                    if (trueTypeFont != null) {
-                        hasReplace = true;
-                    } else {
-                        trueTypeFont = defaultFont;
-                        hasReplace = true;
-                    }
+            if (trueTypeFont == null) {
+                // 无法从内部加载时，通过相似字体查找
+                String similarFontPath = getReplaceSimilarFontPath(ctFont.getFamilyName(), ctFont.getFontName());
+                if (similarFontPath != null) {
+                    trueTypeFont = loadExternalFont(similarFontPath, null, null);
                 }
-
+                hasReplace = true;
             }
-            return new FontWrapper<TrueTypeFont>(trueTypeFont, hasReplace);
         } catch (Exception e) {
             log.info("无法加载字体: {} {} {}" + ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile());
-            return null;
         }
+        if (trueTypeFont == null) {
+            trueTypeFont = defaultFont;
+            hasReplace = true;
+        }
+        return new FontWrapper<>(trueTypeFont, hasReplace);
     }
+
+
+    /**
+     * 加载相近字体流
+     *
+     * @param rl     资源加载器，用于从虚拟容器中取出文件
+     * @param ctFont 字体对象
+     * @return 字体流
+     */
+    public InputStream loadFontSimilarStream(ResourceLocator rl, CT_Font ctFont) {
+        if (ctFont == null) {
+            return getClass().getResourceAsStream(DEFAULT_FONT_RESOURCE_PATH);
+        }
+        byte[] buf = null;
+        try {
+            // 内嵌字体绝对路径
+            ST_Loc fontFileLoc = ctFont.getFontFile();
+            if (fontFileLoc != null) {
+                String fontAbsPath = rl.getFile(ctFont.getFontFile()).toAbsolutePath().toString();
+                buf = Files.readAllBytes(Paths.get(fontAbsPath));
+            } else {
+
+                // 无法从内部加载时，通过相似字体查找
+                String similarFontPath = getReplaceSimilarFontPath(ctFont.getFamilyName(), ctFont.getFontName());
+                if (similarFontPath != null) {
+                    buf = Files.readAllBytes(Paths.get(similarFontPath));
+                }
+            }
+
+        } catch (Exception e) {
+            log.info("无法加载字体: {} {} {}" + ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile());
+        }
+        if (buf == null || buf.length == 0) {
+            return getClass().getResourceAsStream(DEFAULT_FONT_RESOURCE_PATH);
+        }
+        return new ByteArrayInputStream(buf);
+    }
+
 
     /**
      * 加载字体
@@ -588,28 +610,26 @@ public final class FontLoader {
     /**
      * 加载字体到映射中
      *
-     * @param file 字体文件
+     * @param file 字体文件路径
      */
     public void loadFont(File file) {
-        String fileName = file.getName().toLowerCase();
-
+        String fileName = file.getName();
         int offset = fileName.lastIndexOf('.');
         String suffix = offset == -1 ? ".ttf" : fileName.substring(offset);
-        try {
+        try (TTFDataStream raf = new MemoryTTFDataStream(new FileInputStream(file))) {
             switch (suffix) {
                 case ".otf":
                 case ".ttf": {
-                    OTFParser parser = new OTFParser(true);
-                    OpenTypeFont openTypeFont = parser.parse(file);
-                    NamingTable namingTable = openTypeFont.getNaming();
-                    addSystemFontMapping(namingTable, file.getPath());
+                    TrueTypeFont font = new TrueTypeFont().parse(raf);
+                    addSystemFontMapping(font, file.getPath());
+                    font = null;
                     break;
                 }
                 case ".ttc": {
-                    TrueTypeCollection trueTypeCollection = new TrueTypeCollection(file);
-                    trueTypeCollection.processAllFonts(trueTypeFont -> {
-                        NamingTable namingTable = trueTypeFont.getNaming();
-                        addSystemFontMapping(namingTable, file.getPath());
+                    TrueTypeCollection trueTypeCollection = new TrueTypeCollection().parse(raf);
+                    trueTypeCollection.foreach(font -> {
+                        addSystemFontMapping(font, file.getPath());
+                        font = null;
                     });
                     break;
                 }
@@ -622,52 +642,16 @@ public final class FontLoader {
     }
 
     /**
-     * 根据OpenType 中的name表加载字体映射
+     * 添加字体映射
      *
-     * @param namingTable name表
-     * @param path        字体绝对路径
+     * @param font 字体
+     * @param path 字体绝对路径
      */
-    private void addSystemFontMapping(NamingTable namingTable, String path) {
-        String name = null;
-        Set<String> familyNames = new HashSet<>();
-        Set<String> fontNames = new HashSet<>();
-        familyNames.add(namingTable.getFontFamily());
-        fontNames.add(namingTable.getPostScriptName());
-        name = namingTable.getPostScriptName();
-        for (NameRecord record : namingTable.getNameRecords()) {
-            if (record.getNameId() == 1) {
-                familyNames.add(record.getString());
-            } else if (record.getNameId() == 4) {
-                fontNames.add(record.getString());
-            }
-            if (record.getLanguageId() == 0) {
-//                if (record.getNameId() == 1) {
-//                    family = record.getString();
-//                } else
-                if (record.getNameId() == 4) {
-                    name = record.getString();
-                }
-            }
-//            if (record.getLanguageId() == 2052) {
-//                if (record.getNameId() == 1) {
-//                    cnFamily = record.getString();
-//                } else if (record.getNameId() == 4) {
-//                    cnName = record.getString();
-//                }
-//            }
-
-        }
-        String finalName = name;
-        for (String familyName : familyNames) {
-            for (String fontName : fontNames) {
-                nameMapping.put(familyName + Separator + fontName, finalName);
-                nameMapping.put(Empty + Separator + fontName, finalName);
-//                log.debug(String.format("注册字体 %s,%s,%s", familyName, fontName, path));
-                addSystemFontMapping(familyName, fontName, path);
-                addSystemFontMapping(Empty, fontName, path);
-            }
-        }
-//        System.out.println(String.format("%s %s %s %s", family, name, cnFamily, cnName));
+    private void addSystemFontMapping(TrueTypeFont font, String path) {
+        nameMapping.put(font.fontFamily + Separator + font.psName, font.psName);
+        nameMapping.put(Empty + Separator + font.psName, font.psName);
+        addSystemFontMapping(font.fontFamily, font.psName, path);
+        addSystemFontMapping(Empty, font.psName, path);
     }
 
 

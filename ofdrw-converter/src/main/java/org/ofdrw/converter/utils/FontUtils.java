@@ -28,9 +28,9 @@ public class FontUtils {
         return FontLoader.getInstance().getSystemFontPath(familyName, fontName);
     }
 
-    public static TrueTypeFont loadSystemFont(String familyName, String fontName) {
-        return FontLoader.getInstance().loadSystemFont(familyName, fontName);
-    }
+//    public static TrueTypeFont loadSystemFont(String familyName, String fontName) {
+//        return FontLoader.getInstance().loadSystemFont(familyName, fontName);
+//    }
 
     public static void scanFontDir(File dir) {
         FontLoader.getInstance().scanFontDir(dir);

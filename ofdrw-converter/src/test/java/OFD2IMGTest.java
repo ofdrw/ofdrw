@@ -24,10 +24,10 @@ public class OFD2IMGTest {
 //                .addAliasMapping(null, "仿宋", null, "方正仿宋简体")
 //                .addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
 //                .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体");
-
+        FontLoader.getInstance();
         long start = System.currentTimeMillis();
 //        toPng("src/test/resources/999.ofd", "target/999.ofd");
-//        toPng("src/test/resources/zsbk.ofd", "target/zsbk.ofd");
+        toPng("src/test/resources/zsbk.ofd", "target/zsbk.ofd");
 //        toPng("src/test/resources/ano.ofd", "target/ano.ofd");
 //        toPng("src/test/resources/文字横向-数科.ofd", "target/文字横向-数科.ofd");
 //        toPng("src/test/resources/z.ofd", "target/z.ofd");
