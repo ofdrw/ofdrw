@@ -76,6 +76,10 @@ public class TrueTypeFont implements GlyphDataProvider {
     public String fontFamily = null;
     public String fontSubFamily = null;
     public String psName = null;
+    /**
+     * 用于分析字体宽度的表
+     */
+    private HorizontalMetricsTable hmt;
 
     public TrueTypeFont() {
     }
@@ -199,6 +203,14 @@ public class TrueTypeFont implements GlyphDataProvider {
             // GC
             nt = null;
         }
+        // =========> hhea || hmtx 字体宽度
+        if (tables.containsKey("hhea") && tables.containsKey("hmtx") ) {
+            final long[] hhOff = tables.get("hhea");
+            final long[] hmOff = tables.get("hmtx");
+            int numberOfHMetrics = new HorizontalHeaderTable(hhOff).parse(data).getNumberOfHMetrics();
+            hmt = new HorizontalMetricsTable(hmOff).parse(numberOfHMetrics, numGlyphs, data);
+        }
+
         return this;
     }
 
@@ -260,9 +272,8 @@ public class TrueTypeFont implements GlyphDataProvider {
      */
     private GlyphData getGlyphData(TTFDataStream raf, int gid) throws IOException {
         GlyphData glyph = new GlyphData();
-//        HorizontalMetricsTable hmt = font.getHorizontalMetrics();
-//        int leftSideBearing = hmt == null ? 0 : hmt.getLeftSideBearing(gid);
-        glyph.readData(raf, 0, this);
+        int leftSideBearing = hmt == null ? 0 : hmt.getLeftSideBearing(gid);
+        glyph.readData(raf, leftSideBearing, this);
         // resolve composite glyph
         if (glyph.getDescription().isComposite()) {
             glyph.getDescription().resolve();
@@ -369,7 +380,12 @@ public class TrueTypeFont implements GlyphDataProvider {
         return getGlyph(gid);
     }
 
-    public List<Number> getFontMatrix() throws IOException {
+    /**
+     * 获取变换矩阵
+     *
+     * @return 矩阵序列
+     */
+    public List<Number> getFontMatrix() {
 
         float scale = 1000f / unitsPerEm;
         return Arrays.<Number>asList(0.001f * scale, 0, 0, 0.001f * scale, 0, 0);
