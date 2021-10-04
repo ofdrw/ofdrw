@@ -127,7 +127,10 @@ public class OFDValidator implements Closeable {
                             // 获取电子印章 Seal.esl 文件路径
                             Path sealFilePath = rl.getFile(seal.getBaseLoc());
                             // 2. 检查印章匹配
-                            checkSealMatch(sealFilePath, signedValueFilePath);
+                             boolean sealMatch = checkSealMatch(sealFilePath, signedValueFilePath);
+                             if (!sealMatch){
+                                 throw new GeneralSecurityException("印章(Seal.esl)与电子签章数据(SignedValue.dat)中的印章不匹配");
+                             }
                         }
                     }
                     // 签名算法名称
