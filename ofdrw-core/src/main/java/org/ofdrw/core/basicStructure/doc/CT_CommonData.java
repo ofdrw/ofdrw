@@ -1,13 +1,13 @@
 package org.ofdrw.core.basicStructure.doc;
 
 import org.dom4j.Element;
+import org.ofdrw.core.DefaultElementProxy;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.pageObj.CT_TemplatePage;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.basicType.ST_RefID;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,6 +43,18 @@ public class CT_CommonData extends OFDElement {
         this.setOFDEntity("MaxUnitID", maxUnitID);
         return this;
     }
+
+    /**
+     * 【必选】
+     * 设置 当前文档中所有对象使用标识的最大值。
+     * 初始值为 0。MaxUnitID主要用于文档编辑，
+     * 在向文档增加一个新对象时，需要分配一个
+     * 新的标识符，新标识符取值宜为 MaxUnitID + 1，
+     * 同时需要修改此 MaxUnitID值。
+     *
+     * @param maxUnitID 对象标识符最大值
+     * @return this
+     */
     public CT_CommonData setMaxUnitID(long maxUnitID) {
         return setMaxUnitID(new ST_ID(maxUnitID));
     }
@@ -82,7 +94,7 @@ public class CT_CommonData extends OFDElement {
 
     /**
      * 【可选】
-     * 设置 公共资源序列 路径
+     * 设置 公共资源序列 路径 (如果已经存在PublicRes那么替换)
      * <p>
      * 公共资源序列，每个节点指向OFD包内的一个资源描述文件，
      * 源部分的描述键见 7.9，字形和颜色空间等宜在公共资源文件中描述
@@ -97,7 +109,7 @@ public class CT_CommonData extends OFDElement {
 
     /**
      * 【可选】
-     * 获取 公共资源序列
+     * 获取 公共资源序列(列表中的第一个PublicRes)
      * <p>
      * 公共资源序列，每个节点指向OFD包内的一个资源描述文件，
      * 源部分的描述键见 7.9，字形和颜色空间等宜在公共资源文件中描述
@@ -110,7 +122,44 @@ public class CT_CommonData extends OFDElement {
 
     /**
      * 【可选】
-     * 设置 文件资源序列 路径
+     * 添加 公共资源序列 路径
+     * <p>
+     * 公共资源序列，每个节点指向OFD包内的一个资源描述文件，
+     * 源部分的描述键见 7.9，字形和颜色空间等宜在公共资源文件中描述
+     *
+     * @param publicRes 公共资源序列
+     * @return this
+     */
+    public CT_CommonData addPublicRes(ST_Loc publicRes) {
+        if (publicRes == null || publicRes.getLoc() == null) {
+            return this;
+        }
+        this.addOFDEntity("PublicRes", publicRes);
+        return this;
+    }
+
+
+    /**
+     * 【可选】
+     * 获取 公共资源 序列
+     * <p>
+     * 公共资源序列，每个节点指向OFD包内的一个资源描述文件，
+     * 源部分的描述键见 7.9，字形和颜色空间等宜在公共资源文件中描述
+     * <p>
+     * PublicRes 数量为 0~n
+     *
+     * @return 公共资源序列路径
+     */
+    public List<ST_Loc> getPublicResList() {
+        return this.getOFDElements("PublicRes", OFDElement::new)
+                .stream()
+                .map(DefaultElementProxy::getText)
+                .map(ST_Loc::getInstance).collect(Collectors.toList());
+    }
+
+    /**
+     * 【可选】
+     * 设置 文件资源序列 路径（DocumentRes已经存在那么替换）
      * <p>
      * 公共资源序列，每个节点指向OFD包内的一个资源描述文件，
      * 源部分的描述键见 7.9，
@@ -126,6 +175,25 @@ public class CT_CommonData extends OFDElement {
 
     /**
      * 【可选】
+     * 添加 文件资源序列 路径
+     * <p>
+     * 公共资源序列，每个节点指向OFD包内的一个资源描述文件，
+     * 源部分的描述键见 7.9，
+     * 绘制参数、多媒体和矢量图像等宜在文件资源文件中描述
+     *
+     * @param documentRes 公共资源序列
+     * @return this
+     */
+    public CT_CommonData addDocumentRes(ST_Loc documentRes) {
+        if (documentRes == null || documentRes.getLoc() == null) {
+            return this;
+        }
+        this.addOFDEntity("DocumentRes", documentRes);
+        return this;
+    }
+
+    /**
+     * 【可选】
      * 获取 文件资源序列 路径
      * <p>
      * 公共资源序列，每个节点指向OFD包内的一个资源描述文件，
@@ -136,6 +204,25 @@ public class CT_CommonData extends OFDElement {
      */
     public ST_Loc getDocumentRes() {
         return ST_Loc.getInstance(this.getOFDElementText("DocumentRes"));
+    }
+
+    /**
+     * 【可选】
+     * 获取 文件资源序列
+     * <p>
+     * 公共资源序列，每个节点指向OFD包内的一个资源描述文件，
+     * 源部分的描述键见 7.9，
+     * 绘制参数、多媒体和矢量图像等宜在文件资源文件中描述
+     * <p>
+     * DocumentRes 数量为 0~n
+     *
+     * @return 文件资源序列 路径
+     */
+    public List<ST_Loc> getDocumentResList() {
+        return this.getOFDElements("DocumentRes", OFDElement::new)
+                .stream()
+                .map(DefaultElementProxy::getText)
+                .map(ST_Loc::getInstance).collect(Collectors.toList());
     }
 
     /**
@@ -161,7 +248,7 @@ public class CT_CommonData extends OFDElement {
      * @return 模板页序列 (可能为空容器)
      */
     public List<CT_TemplatePage> getTemplatePages() {
-        return this.getOFDElements("TemplatePage",CT_TemplatePage::new);
+        return this.getOFDElements("TemplatePage", CT_TemplatePage::new);
     }
 
     /**
