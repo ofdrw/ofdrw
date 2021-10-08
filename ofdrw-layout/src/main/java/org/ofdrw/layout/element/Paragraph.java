@@ -384,6 +384,8 @@ public class Paragraph extends Div<Paragraph> {
 
     /**
      * 预布局
+     * <p>
+     * 该方法主要有渲染器调用，请勿主动调用该方法，除非你知道你在做什么。
      *
      * @param widthLimit 宽度限制
      * @return 元素尺寸

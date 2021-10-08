@@ -439,10 +439,15 @@ public class ResourceManage {
             rl.cd(docRoot.parent());
 
             commonData = new CT_CommonData((Element) document.getCommonData().clone());
-            // 公共资源序列（PublicRes）
-            loadResFile(rl, commonData.getPublicRes());
+            // 公共资源（PublicRes）
+            for (ST_Loc pubResLoc : commonData.getPublicResList()) {
+                loadResFile(rl, pubResLoc);
+            }
+
             // 文档资源序列（DocumentRes）
-            loadResFile(rl, commonData.getDocumentRes());
+            for (ST_Loc docResLoc : commonData.getDocumentResList()) {
+                loadResFile(rl, docResLoc);
+            }
         } finally {
             rl.restore();
         }

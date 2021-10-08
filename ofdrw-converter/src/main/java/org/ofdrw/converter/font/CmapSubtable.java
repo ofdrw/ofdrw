@@ -315,7 +315,7 @@ public class CmapSubtable implements CmapLookup {
     void processSubtype14(TTFDataStream data, int numGlyphs) throws IOException {
         // Unicode Variation Sequences (UVS)
         // see http://blogs.adobe.com/CCJKType/2013/05/opentype-cmap-table-ramblings.html
-        LOG.warn("Format 14 cmap table is not supported and will be ignored");
+        LOG.debug("Format 14 cmap table is not supported and will be ignored");
     }
 
     /**
