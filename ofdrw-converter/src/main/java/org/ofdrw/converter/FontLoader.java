@@ -114,11 +114,28 @@ public final class FontLoader {
         return instance;
     }
 
+
+    /**
+     * 获取字体加载器实例并加载程序
+     *
+     * @return 字体加载器
+     */
     public static FontLoader getInstance() {
         if (instance == null) {
             syncInit();
         }
         return instance;
+    }
+
+    /**
+     * 预加载字体
+     * <p>
+     * 扫描操作系统内字体,功能与{@link #getInstance()} 一致
+     *
+     * @return 字体加载器
+     */
+    public static FontLoader Preloading() {
+        return getInstance();
     }
 
     /*
