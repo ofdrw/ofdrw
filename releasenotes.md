@@ -1,5 +1,21 @@
 # 发布记录和特性
 
+## Version 1.15.6 2021-10-8 20:09:35
+
+> Alias: Lidong
+
+修复：
+
+- 修复了没有印章验章没有检查印章与电子签章数据中印章的匹配性问题。
+- 修复了core模块`CT_CommonData` 对多`PublicRes`和`DocumentRes`的支持。
+- 修复了`PublicRes.xml`和`DocumentRes.xml`可能存在多个导致的渲染乱码。
+- 对`Paragraph`的预处理`doPrepare`方法标注了额外警告说明文字。
+- 关闭了字体加载对`type14`类型字体的警告日志。
+
+新增：
+
+- 字体加载器 `FontLoader`增加了语义化的预加载方法`Preload`。 
+
 ## Version 1.15.5 2021-10-3 18:14:23
 
 > Alias: shuangjiang

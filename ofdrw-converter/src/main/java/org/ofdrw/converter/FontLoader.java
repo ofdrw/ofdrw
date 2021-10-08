@@ -134,7 +134,7 @@ public final class FontLoader {
      *
      * @return 字体加载器
      */
-    public static FontLoader Preloading() {
+    public static FontLoader Preload() {
         return getInstance();
     }
 
