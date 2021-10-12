@@ -6,7 +6,7 @@
 在使用OFDRW前请务必悉知 [***《OFD Reader & Writer免责声明》***](免责声明.md)。
 
 
-> 如何clone和预览存在困难，请移步 [https://gitee.com/ofdrw/ofdrw](https://gitee.com/ofdrw/ofdrw)
+> 如果clone和预览存在困难，请移步 [https://gitee.com/ofdrw/ofdrw](https://gitee.com/ofdrw/ofdrw)
 
 
 **Talk is cheap,Show me the code. ——Linus Torvalds**
