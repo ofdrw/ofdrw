@@ -79,6 +79,10 @@ public class OFDSigner implements Closeable {
      */
     private SignMode signMode;
 
+    /**
+     * 签名扩展属性
+     */
+    private Parameters parameters;
 
     /**
      * 签名列表文件绝对路径
@@ -473,6 +477,8 @@ public class OFDSigner implements Closeable {
                 .setProvider(OFDRW_Provider())
                 // 设置签名方法
                 .setSignatureMethod(signContainer.getSignAlgOID())
+                // 设置签名扩展属性
+                .setParameters(parameters)
                 // 设置签名时间
                 .setSignatureDateTime(DF.format(LocalDateTime.now()));
 
@@ -618,6 +624,17 @@ public class OFDSigner implements Closeable {
      */
     public OFDSigner setRelative(String id) {
         this.relativeID = id;
+        return this;
+    }
+
+    /**
+     * 设置签名扩展属性
+     *
+     * @param parameters 扩展属性
+     * @return this
+     */
+    public OFDSigner setParameters(Parameters parameters){
+        this.parameters = parameters;
         return this;
     }
 }
