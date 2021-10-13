@@ -453,7 +453,7 @@ public abstract class AWTMaker {
                 CT_CGTransform tsfInfo = tsfMap.get(globalOffset);
                 // 不存在字形变换，使用字体cmap查找字形
                 if (tsfInfo == null) {
-                    char c = textCode.getContent().charAt(offset);
+                    char c = content.charAt(offset);
                     GlyphData glyphData = null;
                     try {
                         // 通过字符编码获取字形
