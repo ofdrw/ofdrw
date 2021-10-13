@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.ofdrw.converter.font.*;
 import org.ofdrw.converter.utils.OSinfo;
-import org.ofdrw.converter.utils.StringUtils;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.reader.ResourceLocator;
@@ -37,18 +36,14 @@ import java.util.regex.Pattern;
 public final class FontLoader {
     private static final Logger log = LoggerFactory.getLogger(FontLoader.class);
 
-    private final Map<String, String> pathMapping = new ConcurrentHashMap<>();
-    private final Map<String, String> nameMapping = new ConcurrentHashMap<>();
-    private final Map<String, String> aliasMapping = new ConcurrentHashMap<>();
+    private final Map<String, String> fontNamePathMapping = new ConcurrentHashMap<>();
+    private final Map<String, String> fontNameAliasMapping = new ConcurrentHashMap<>();
+
     /**
      * 使用正则匹配映射到系统或嵌入字体
      */
-    private final Map<String, String> similarFontReplaceRegexMapping = new ConcurrentHashMap<>();
+    private final Map<Pattern, String> similarFontReplaceRegexMapping = new ConcurrentHashMap<>();
 
-    public static final String Separator = "$$$$";
-    public static final String SeparatorRegex = "\\$\\$\\$\\$";
-
-    private static final String Empty = "null";
     private static final String DEFAULT_FONT_DIR_MAC = "/System/Library/Fonts";
     private static final String DEFAULT_FONT_DIR_WINDOWS = "C:/Windows/Fonts";
     private static final String DEFAULT_FONT_DIR_LINUX = "/usr/share/fonts";
@@ -155,13 +150,13 @@ public final class FontLoader {
         } else if (OSinfo.isLinux()) {
             scanFontDir(new File(DEFAULT_FONT_DIR_LINUX));
         }
-        // 预置一些常用的字体别名
-        this.addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
-                .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
-                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
-                .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
-                .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体");
+//        // 预置一些常用的字体别名
+//        this.addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
+//                .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
+//                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+//                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
+//                .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
+//                .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体");
     }
 
     /**
@@ -172,30 +167,35 @@ public final class FontLoader {
      * @param aliasFamilyName 字族别名
      * @param aliasFontName   字体别名
      * @return this
+     * @deprecated {@link #addAliasMapping(String, String)}
      */
-    public FontLoader addAliasMapping(String familyName, String fontName, String aliasFamilyName, String aliasFontName) {
-        if (familyName == null) {
-            familyName = Empty;
-        }
-        if (fontName == null) {
-            fontName = Empty;
-        }
-        if (aliasFamilyName == null) {
-            aliasFamilyName = Empty;
-        }
-        if (aliasFontName == null) {
-            aliasFontName = Empty;
-        }
-        String key1 = familyName + Separator + fontName;
-        String key2 = aliasFamilyName + Separator + aliasFontName;
-        if (nameMapping.get(key2) == null || pathMapping.get(key2) == null) {
-            log.info("字体别名 [{} {}] -> [{} {}] 不存在", familyName, fontName, aliasFamilyName, aliasFontName);
-            return this;
-        }
-        aliasMapping.put(key1, key2);
+    @Deprecated
+    public FontLoader addAliasMapping(@Nullable String familyName,
+                                      String fontName,
+                                      @Nullable String aliasFamilyName,
+                                      String aliasFontName) {
+        addAliasMapping(familyName, aliasFamilyName);
+        addAliasMapping(fontName, aliasFontName);
         return this;
     }
 
+    /**
+     * 添加字体映射
+     *
+     * @param fontName 字体名称
+     * @param alias    字体别名
+     * @return this
+     */
+    public FontLoader addAliasMapping(String fontName, String alias) {
+        if (fontName == null || fontName.length() == 0) {
+            return this;
+        }
+        if (alias == null || alias.length() == 0) {
+            return this;
+        }
+        fontNameAliasMapping.put(fontName, alias);
+        return this;
+    }
 
     /**
      * 追加相似字体正则匹配规则
@@ -205,28 +205,38 @@ public final class FontLoader {
      * @param aliasFamilyName 字族别名
      * @param aliasFontName   字体别名
      * @return this
+     * @deprecated {@link #addSimilarFontReplaceRegexMapping(String, String)}
      */
-    public FontLoader addSimilarFontReplaceRegexMapping(String familyNameRegex, String fontNameRegex, String aliasFamilyName, String aliasFontName) {
+    @Deprecated
+    public FontLoader addSimilarFontReplaceRegexMapping(@Nullable String familyNameRegex,
+                                                        String fontNameRegex,
+                                                        @Nullable String aliasFamilyName,
+                                                        String aliasFontName) {
+        addSimilarFontReplaceRegexMapping(familyNameRegex, aliasFamilyName);
+        addSimilarFontReplaceRegexMapping(fontNameRegex, aliasFontName);
+        return this;
+    }
 
-        if (familyNameRegex == null) {
-            familyNameRegex = Empty;
-        }
-        if (fontNameRegex == null) {
-            fontNameRegex = Empty;
-        }
-        if (aliasFamilyName == null) {
-            aliasFamilyName = Empty;
-        }
-        if (aliasFontName == null) {
-            aliasFontName = Empty;
-        }
-        String key1 = familyNameRegex + Separator + fontNameRegex;
-        String key2 = aliasFamilyName + Separator + aliasFontName;
-        if (pathMapping.get(key2) == null) {
-            log.info("字体别名 [{} {}] -> [{} {}] 不存在", familyNameRegex, fontNameRegex, aliasFamilyName, aliasFontName);
+    /**
+     * 追加相似字体正则匹配规则
+     *
+     * @param fontNameRegex 字体名匹配规则
+     * @param fontName      相近替换字体名
+     * @return this
+     */
+    public FontLoader addSimilarFontReplaceRegexMapping(String fontNameRegex, String fontName) {
+        if (fontNameRegex == null || fontNameRegex.length() == 0) {
             return this;
         }
-        similarFontReplaceRegexMapping.put(key1, key2);
+        if (fontName == null || fontName.length() == 0) {
+            return this;
+        }
+        try {
+            // 编译正则表达式，加速查询
+            final Pattern pattern = Pattern.compile(fontNameRegex);
+            similarFontReplaceRegexMapping.put(pattern, fontName);
+        } catch (Exception ignored) {
+        }
         return this;
     }
 
@@ -238,53 +248,78 @@ public final class FontLoader {
      * @param familyName   字族名
      * @param fontName     字体名
      * @param fontFilePath 字体位置
+     * @deprecated {@link #addSystemFontMapping(String, String)}
      */
-    public void addSystemFontMapping(String familyName, String fontName, String fontFilePath) {
-        if (StringUtils.isBlank(familyName) || StringUtils.isBlank(fontName) || StringUtils.isBlank(fontFilePath)) {
-            log.info("添加系统字体映射失败，FamilyName: {} FontName: {} 路径：{}", familyName, fontName, fontFilePath);
+    @Deprecated
+    public FontLoader addSystemFontMapping(@Nullable String familyName, String fontName, String fontFilePath) {
+        addSystemFontMapping(familyName, fontFilePath);
+        addSystemFontMapping(fontName, fontFilePath);
+        return this;
+    }
+
+    /**
+     * 增加字体映射
+     * <p>
+     * 用于解决部分字体不存在时的替代
+     *
+     * @param fontName     字体名
+     * @param fontFilePath 字体位置
+     */
+    public FontLoader addSystemFontMapping(String fontName, String fontFilePath) {
+        if (fontName == null || fontName.length() == 0) {
+            return this;
         }
         File file = new File(fontFilePath);
         if (!file.exists() || file.isDirectory()) {
-            log.info("添加系统字体映射失败，字体文件：{} 不存在", fontFilePath);
+            log.debug("字体映射添加失败，字体文件 {} 不存在", fontFilePath);
+            return this;
         }
-        if (!file.getName().toLowerCase().endsWith("otf") && !file.getName().toLowerCase().endsWith("ttf") && !file.getName().toLowerCase().endsWith("ttc")) {
-            log.info("添加系统字体映射失败，{} 不是一个OpenType字体文件", fontFilePath);
+
+        final String name = file.getName().toLowerCase();
+        if (!name.endsWith("otf") && !name.endsWith("ttf") && !name.endsWith("ttc")) {
+            log.debug("字体映射添加失败 {} 不是一个OpenType字体", fontFilePath);
+            return this;
         }
-        synchronized (pathMapping) {
-            pathMapping.put(familyName + Separator + fontName, fontFilePath);
+        synchronized (fontNamePathMapping) {
+            fontNamePathMapping.put(fontName, fontFilePath);
         }
+        return this;
     }
 
     /**
      * 从操作系统字体目下获取字体路径
      *
-     * @param familyName 字族名
+     * @param familyName 字族名（用于在字体不存在是替代字体，可为空）
      * @param fontName   字体名
      * @return 字体操作系统内绝对路径，如果不存在返还null
      */
-    public String getSystemFontPath(String familyName, String fontName) {
-        if (familyName == null) {
-            familyName = Empty;
-        }
-        String key = familyName + Separator + fontName;
-
-        if (pathMapping.get(key) != null) {
-            return pathMapping.get(key);
+    public String getSystemFontPath(@Nullable String familyName, String fontName) {
+        if (fontName == null && familyName == null) {
+            return null;
         }
 
-        if (aliasMapping.get(key) != null) {
-            // return aliasMapping.get(key);
-            String alias = aliasMapping.get(key);
-            if (pathMapping.get(alias) != null) {
-                String sysPath = pathMapping.get(alias);
-                log.info("映射字体 {} {} 为 {} , {}", familyName, fontName, alias.replace(Separator, " "), sysPath);
-                return sysPath;
-            }
+        String fontPath = null;
+        if (fontName != null) {
+            fontPath = fontNamePathMapping.get(fontName);
+        }
+        if (fontPath == null && familyName != null) {
+            // 通过字体名称找不到字体时，使用字族名替换字形名称查找
+            fontPath = fontNamePathMapping.get(familyName);
+        }
+        // 如果字体路径找到，那么返回
+        if (fontPath != null) {
+            return fontPath;
         }
 
-        // 尝试使用单独字体名，不含字族名
-        if (!Empty.equals(familyName))
-            return getSystemFontPath(Empty, fontName);
+        // 没有找到式，检查别名中是否存在
+        String name = fontNameAliasMapping.get(fontName);
+        if (name != null && fontNamePathMapping.containsKey(name)) {
+            return fontNamePathMapping.get(name);
+        }
+        name = fontNameAliasMapping.get(familyName);
+        if (name != null && fontNamePathMapping.containsKey(name)) {
+            return fontNamePathMapping.get(name);
+        }
 
         return null;
     }
@@ -293,24 +328,38 @@ public final class FontLoader {
     /**
      * 获取配置的 相似字体 对应的字体路径
      *
-     * @param familyName 字族名
+     * @param familyName 字族名（用于在字体不存在是替代字体，可为空）
      * @param fontName   字体名
      * @return 字体操作系统内绝对路径，如果不存在返还 null
      */
-    public String getReplaceSimilarFontPath(String familyName, String fontName) {
-        for (String regexKey : similarFontReplaceRegexMapping.keySet()) {
-            String[] regexps = regexKey.split(SeparatorRegex);
-            boolean isMatchFamilyName = familyName != null && Pattern.matches(regexps[0], familyName);
-            boolean isMatchFontName = fontName != null && Pattern.matches(regexps[1], fontName);
-            if (isMatchFamilyName || isMatchFontName) {
-                String s = similarFontReplaceRegexMapping.get(regexKey);
-                String sysPath = pathMapping.get(s);
-                log.info("替换字体 {} {} 为 {} , {}", familyName, fontName, s.replace(Separator, " "), sysPath);
-                return sysPath;
-            }
+    public String getReplaceSimilarFontPath(@Nullable String familyName, String fontName) {
+        if (fontName == null && familyName == null) {
+            return null;
+        }
+        // 首先尝试使用名称直接查找
+        String fontPath = getSystemFontPath(familyName, fontName);
+        if (fontPath != null) {
+            return fontPath;
         }
 
-        return null;
+        String name = null;
+        for (Map.Entry<Pattern, String> entry : similarFontReplaceRegexMapping.entrySet()) {
+            Pattern pattern = entry.getKey();
+            if (fontName != null && pattern.matcher(fontName).matches()) {
+                name = entry.getValue();
+                break;
+            }
+            if (familyName != null && pattern.matcher(familyName).matches()) {
+                // 通过字体名称无法找到时，使用字族名替换
+                name = entry.getValue();
+                break;
+            }
+        }
+        if (name != null) {
+            fontPath = getSystemFontPath(null, name);
+        }
+
+        return fontPath;
     }
 
 
@@ -354,8 +403,8 @@ public final class FontLoader {
         try {
             // 内存中不用主动关闭
             TTFDataStream raf = new MemoryTTFDataStream(new FileInputStream(absPath));
-            int offset = fontName.toLowerCase().lastIndexOf('.');
-            String suffix = offset == -1 ? ".ttf" : fontName.toLowerCase().substring(offset);
+            int offset = absPath.toLowerCase().lastIndexOf('.');
+            String suffix = offset == -1 ? ".ttf" : absPath.toLowerCase().substring(offset);
             switch (suffix) {
                 case ".ttf":
                 case ".otf":
@@ -635,14 +684,15 @@ public final class FontLoader {
                 case ".otf":
                 case ".ttf": {
                     TrueTypeFont font = new TrueTypeFont().parse(raf);
-                    addSystemFontMapping(font, file.getPath());
+                    addNormalFont(font, file.getPath());
+
                     font = null;
                     break;
                 }
                 case ".ttc": {
                     TrueTypeCollection trueTypeCollection = new TrueTypeCollection().parse(raf);
                     trueTypeCollection.foreach(font -> {
-                        addSystemFontMapping(font, file.getPath());
+                        addNormalFont(font, file.getPath());
                         font = null;
                     });
                     break;
@@ -655,19 +705,21 @@ public final class FontLoader {
         }
     }
 
-    /**
-     * 添加字体映射
-     *
-     * @param font 字体
-     * @param path 字体绝对路径
-     */
-    private void addSystemFontMapping(TrueTypeFont font, String path) {
-        nameMapping.put(font.fontFamily + Separator + font.psName, font.psName);
-        nameMapping.put(Empty + Separator + font.psName, font.psName);
-        addSystemFontMapping(font.fontFamily, font.psName, path);
-        addSystemFontMapping(Empty, font.psName, path);
-    }
+    private void addNormalFont(TrueTypeFont font, String path) {
 
+
+        if (!fontNamePathMapping.containsKey(font.fontFamily)) {
+            addSystemFontMapping(font.fontFamily, path);
+        } else {
+            // 只想映射中加入常规字体，特殊变形字体忽略如加粗、斜体等
+            if (font.fontSubFamily == null
+                    || font.fontSubFamily.length() == 0
+                    || font.fontSubFamily.equalsIgnoreCase("Regular")) {
+                addSystemFontMapping(font.fontFamily, path);
+            }
+        }
+        addSystemFontMapping(font.psName, path);
+    }
 
     /**
      * 修复了字体

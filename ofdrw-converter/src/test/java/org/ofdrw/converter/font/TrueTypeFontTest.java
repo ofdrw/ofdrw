@@ -23,6 +23,15 @@ class TrueTypeFontTest {
     }
 
     @Test
+    void parse2() throws IOException {
+        Path fontPath = Paths.get("C:\\Windows\\Fonts\\times.ttf");
+        TTFDataStream dataStream = new MemoryTTFDataStream(Files.newInputStream(fontPath));
+        final TrueTypeFont trueTypeFont = new TrueTypeFont().parse(dataStream);
+        System.out.println(trueTypeFont.psName);
+    }
+
+
+    @Test
     void getGlyph() throws IOException {
         Path fontPath = Paths.get("src/test/resources/font_10.ttf");
         TTFDataStream dataStream = new MemoryTTFDataStream(Files.newInputStream(fontPath));

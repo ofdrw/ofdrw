@@ -74,6 +74,7 @@ public class TrueTypeFont implements GlyphDataProvider {
      * 字体名称来资源有 name表
      */
     public String fontFamily = null;
+    // 字形样式，如 Regular - 常规；Bold - 加粗； Italic - 斜体
     public String fontSubFamily = null;
     public String psName = null;
     /**

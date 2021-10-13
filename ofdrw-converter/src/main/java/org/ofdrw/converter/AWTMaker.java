@@ -8,6 +8,7 @@ import org.ofdrw.converter.font.TrueTypeFont;
 import org.ofdrw.converter.point.Tuple2;
 import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.converter.utils.MatrixUtils;
+import org.ofdrw.converter.utils.StringUtils;
 import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.annotation.pageannot.Appearance;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
@@ -402,7 +403,7 @@ public abstract class AWTMaker {
 
     private void writeText(Graphics2D graphics, TextObject textObject, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
         logger.debug("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━TextObject━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓");
-
+        final Double fontSize = textObject.getSize();
         Color strokeColor = getStrokeColor(textObject.getStrokeColor(), null, drawParams);
         Color fillColor = getFillColor(textObject.getFillColor(), null, drawParams);
         if (fillColor == null) fillColor = Color.black;
@@ -421,7 +422,6 @@ public abstract class AWTMaker {
         if (typeFont == null) {
             logger.info("无法加载字体ID：" + textObject.getFont());
             typeFont = FontLoader.getInstance().loadDefaultFont();
-            return;
         } else {
             try {
                 fontMatrix = typeFont.getFontMatrix();
@@ -441,7 +441,8 @@ public abstract class AWTMaker {
         Double previousX = null;
         Double previousY = null;
         for (TextCode textCode : textObject.getTextCodes()) {
-            String content = textCode.getContent();
+            // 移除内容中包含的换行符
+            String content = StringUtils.removeNewline(textCode.getContent());
             // 该TextCode 字符编码数量
             int len = content.length();
             // 当前正在处理的字符编码 在 该字符编码中的偏移量
@@ -537,7 +538,7 @@ public abstract class AWTMaker {
                 // 结合变换矩阵绘制字形
                 Shape shape = glyphData.getPath();
 //                    logger.debug(String.format("字形Shape %s", shape));
-                Matrix matrix = chatMatrix(textObject, x, y, textObject.getSize(), fontMatrix, baseMatrix);
+                Matrix matrix = chatMatrix(textObject, x, y, fontSize, fontMatrix, baseMatrix);
                 renderChar(graphics, shape, matrix, strokeColor, fillColor);
             }
             // 更新上一个TextCode的X和Y，用于缺失 X或Y时准备
