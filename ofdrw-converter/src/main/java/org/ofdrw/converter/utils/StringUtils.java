@@ -15,7 +15,14 @@ public class StringUtils {
         if (str == null) {
             return "";
         }
-
-       return str.replace('\n', Character.MIN_VALUE);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            if (c == '\n' || c == '\u0000'){
+                continue;
+            }
+            sb.append(c);
+        }
+       return sb.toString();
     }
 }

@@ -150,13 +150,7 @@ public final class FontLoader {
         } else if (OSinfo.isLinux()) {
             scanFontDir(new File(DEFAULT_FONT_DIR_LINUX));
         }
-//        // 预置一些常用的字体别名
-//        this.addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
-//                .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
-//                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-//                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
-//                .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
-//                .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体");
+
     }
 
     /**
@@ -476,7 +470,7 @@ public final class FontLoader {
                 hasReplace = true;
             }
         } catch (Exception e) {
-            log.info("无法加载字体: {} {} {}" + ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile());
+            log.info("无法加载字体: {} {} {}, {}" + ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile(), e);
         }
         if (trueTypeFont == null) {
             trueTypeFont = defaultFont;
@@ -676,6 +670,7 @@ public final class FontLoader {
      * @param file 字体文件路径
      */
     public void loadFont(File file) {
+        System.out.println( ">> "+file.getName());
         String fileName = file.getName();
         int offset = fileName.lastIndexOf('.');
         String suffix = offset == -1 ? ".ttf" : fileName.substring(offset);
