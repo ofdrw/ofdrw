@@ -143,6 +143,9 @@ public final class FontLoader {
         }
         if (OSinfo.isWindows()) {
             scanFontDir(new File(DEFAULT_FONT_DIR_WINDOWS));
+            // 扫描用户字体目录
+            String username = System.getProperties().getProperty("user.name");
+            scanFontDir(new File(String.format("C:\\Users\\%s\\AppData\\Local\\Microsoft\\Windows\\Fonts", username)));
         } else if (OSinfo.isMacOS()) {
             scanFontDir(new File(DEFAULT_FONT_DIR_MAC));
         } else if (OSinfo.isMacOSX()) {
@@ -670,7 +673,6 @@ public final class FontLoader {
      * @param file 字体文件路径
      */
     public void loadFont(File file) {
-        System.out.println( ">> "+file.getName());
         String fileName = file.getName();
         int offset = fileName.lastIndexOf('.');
         String suffix = offset == -1 ? ".ttf" : fileName.substring(offset);
@@ -696,7 +698,7 @@ public final class FontLoader {
                     break;
             }
         } catch (Exception e) {
-            log.info("字体无法解析，跳过 " + file.getAbsolutePath());
+            log.info("{} 无法解析，忽略错误 {}", file.getAbsolutePath(),  e.getMessage());
         }
     }
 
