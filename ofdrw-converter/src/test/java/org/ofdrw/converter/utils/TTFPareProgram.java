@@ -20,15 +20,22 @@ import java.util.Map;
  * @since 2021-04-13 22:55:07
  */
 public class TTFPareProgram {
+
+
+
     @Test
     public  void testParse() throws IOException {
-
-        final Path path = Paths.get("D:\\Project\\cliven\\ofdrw\\ofdrw-converter\\src\\test\\resources\\font_13132_0_edit.ttf");
+//        final Path path = Paths.get("C:\\Users\\pc\\AppData\\Local\\Microsoft\\Windows\\Fonts\\Deleted\\NotoSerifCJKsc-Regular.otf");
+        final Path path = Paths.get("C:\\Users\\pc\\Desktop\\ks\\Doc_0\\Res\\font_110.otf");
         try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "r")) {
             // Version: 4 byte
-            int v1 = raf.readUnsignedShort();
-            int v2 = raf.readUnsignedShort();
-            System.out.printf("Version: %02X %02X\n", v1, v2);
+            byte[] v = new byte[4];
+            v[0] = raf.readByte();
+            v[1] = raf.readByte();
+            v[2] = raf.readByte();
+            v[3] = raf.readByte();
+
+            System.out.printf("Version: %02X %02X %02X %02X\n", v[0],v[1],v[2],v[3]);
             // Number of Tables: 2 byte
             int numberOfTables = raf.readUnsignedShort();
             System.out.printf("Number of Tables: %d\n", numberOfTables);

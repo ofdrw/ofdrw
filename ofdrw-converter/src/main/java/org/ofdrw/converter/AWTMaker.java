@@ -42,6 +42,7 @@ import org.ujmp.core.Matrix;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.GeneralPath;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -448,20 +449,20 @@ public abstract class AWTMaker {
             // 当前正在处理的字符编码 在 该字符编码中的偏移量
             int offset = 0;
             // 待绘制的字形数据序列
-            List<GlyphData> tbDrawChars = new ArrayList<>(5);
+            List<GeneralPath> tbDrawChars = new ArrayList<>(5);
             while (offset < len) {
                 CT_CGTransform tsfInfo = tsfMap.get(globalOffset);
                 // 不存在字形变换，使用字体cmap查找字形
                 if (tsfInfo == null) {
                     char c = content.charAt(offset);
-                    GlyphData glyphData = null;
                     try {
                         // 通过字符编码获取字形
-                        glyphData = typeFont.getUnicodeGlyph(c);
+                        GlyphData glyphData = typeFont.getUnicodeGlyph(c);
+                        tbDrawChars.add(glyphData.getPath());
                     } catch (IOException e) {
+                        tbDrawChars.add(null);
                         logger.debug(String.format("找不到字形 unicode: %c", c));
                     }
-                    tbDrawChars.add(glyphData);
                     globalOffset++;
                     offset++;
                 } else {
@@ -479,14 +480,15 @@ public abstract class AWTMaker {
                      * 用于处理字符偏移量。
                      */
                     for (int gid : glyphIndexArr) {
-                        GlyphData glyphData = null;
+
                         try {
                             // 通过字形索引到字体中找到字形数据
-                            glyphData = typeFont.getGlyph(gid);
+                            GeneralPath drawPath = typeFont.getPath(gid);
+                            tbDrawChars.add(drawPath);
                         } catch (IOException e) {
+                            tbDrawChars.add(null);
                             logger.debug(String.format("找不到字形 gid: %s", gid));
                         }
-                        tbDrawChars.add(glyphData);
                     }
                     // 根据变换信息处理全局偏移量和局部偏移量
                     globalOffset += codeCount;
@@ -530,14 +532,12 @@ public abstract class AWTMaker {
                         y += deltaY.get(deltaOffset);
                     }
                 }
-                GlyphData glyphData = tbDrawChars.get(drawOffset);
-                if (glyphData == null) {
+                GeneralPath shape = tbDrawChars.get(drawOffset);
+                if (shape == null) {
                     // 没有字形，那么忽略绘制
                     continue;
                 }
                 // 结合变换矩阵绘制字形
-                Shape shape = glyphData.getPath();
-//                    logger.debug(String.format("字形Shape %s", shape));
                 Matrix matrix = chatMatrix(textObject, x, y, fontSize, fontMatrix, baseMatrix);
                 renderChar(graphics, shape, matrix, strokeColor, fillColor);
             }

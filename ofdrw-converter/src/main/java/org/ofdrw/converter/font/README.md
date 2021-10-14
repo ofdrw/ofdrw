@@ -23,6 +23,11 @@ OpenType字体数据结构及文档见：
 
 - [微软 . The OpenType Font File . 2020.11 . https://docs.microsoft.com/zh-cn/typography/opentype/spec/otff](https://docs.microsoft.com/zh-cn/typography/opentype/spec/otff)
 
+
+CFF Adobe的压缩字体格式：
+
+- [Adobe . font-tech-notes CFF . https://adobe-type-tools.github.io/font-tech-notes/pdfs/5176.CFF.pdf](https://adobe-type-tools.github.io/font-tech-notes/pdfs/5176.CFF.pdf)
+
 ## API
 
 OFDRW 裁剪了PDFBox的`TrueTypeFont`，在OFDRW字体TTF解析为`org.ofdrw.converter.font.TrueTypeFont`。

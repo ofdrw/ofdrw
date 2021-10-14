@@ -2,11 +2,13 @@ package org.ofdrw.converter.font;
 
 
 import org.apache.commons.io.IOUtils;
+import org.apache.fontbox.cff.CFFFont;
+import org.apache.fontbox.cff.CFFParser;
 import org.apache.fontbox.ttf.CmapLookup;
 import org.apache.fontbox.ttf.CmapTable;
-import org.apache.fontbox.ttf.HeaderTable;
 
-import java.io.ByteArrayInputStream;
+import java.awt.*;
+import java.awt.geom.GeneralPath;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -28,7 +30,7 @@ import java.util.Map;
  * @author 权观宇
  * @since 2021-09-28 21:05:09
  */
-public class TrueTypeFont implements GlyphDataProvider {
+public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
 
     /**
      * 字形数量
@@ -82,6 +84,12 @@ public class TrueTypeFont implements GlyphDataProvider {
      */
     private HorizontalMetricsTable hmt;
 
+    /**
+     * Adobe Compact Font Format, 压缩字体格式
+     * 在无法使用TTF表格式解析时，尝试采用CFF格式解析。
+     */
+    private CFFFont cffFont;
+
     public TrueTypeFont() {
     }
 
@@ -132,7 +140,7 @@ public class TrueTypeFont implements GlyphDataProvider {
     public TrueTypeFont parse(TTFDataStream raf) throws IOException {
         this.data = raf;
         // Version
-        raf.read32Fixed();
+        String version = raf.readString(4);
         int numberOfTables = raf.readUnsignedShort();
         int searchRange = raf.readUnsignedShort();
         int entrySelector = raf.readUnsignedShort();
@@ -154,8 +162,17 @@ public class TrueTypeFont implements GlyphDataProvider {
          */
         // =========> head
         if (!tables.containsKey("head")) {
-            throw new IllegalArgumentException("没有 head 表");
+            InputStream originalData = raf.getOriginalData();
+            // head 表都不存在的情况，尝试使用CFF格式解析字体
+            List<CFFFont> fonts = new CFFParser().parse(IOUtils.toByteArray(originalData));
+            if (fonts != null && !fonts.isEmpty()) {
+                this.cffFont = fonts.get(0);
+                return this;
+            } else {
+                throw new IllegalArgumentException("没有 head 表");
+            }
         }
+
         raf.seek(tables.get("head")[0] + 18);
         unitsPerEm = data.readUnsignedShort();
         raf.seek(tables.get("head")[0] + 50);
@@ -205,7 +222,7 @@ public class TrueTypeFont implements GlyphDataProvider {
             nt = null;
         }
         // =========> hhea || hmtx 字体宽度
-        if (tables.containsKey("hhea") && tables.containsKey("hmtx") ) {
+        if (tables.containsKey("hhea") && tables.containsKey("hmtx")) {
             final long[] hhOff = tables.get("hhea");
             final long[] hmOff = tables.get("hmtx");
             int numberOfHMetrics = new HorizontalHeaderTable(hhOff).parse(data).getNumberOfHMetrics();
@@ -226,6 +243,12 @@ public class TrueTypeFont implements GlyphDataProvider {
         if (gid < 0 || gid >= numGlyphs) {
             return null;
         }
+
+        if (cffFont != null) {
+            // CFF 字体不含字形信息，只有路径，因此直接返回null
+            return null;
+        }
+
 
         if (glyphs != null && glyphs[gid] != null) {
             return glyphs[gid];
@@ -262,6 +285,23 @@ public class TrueTypeFont implements GlyphDataProvider {
             return glyph;
         }
     }
+
+    /**
+     * 通过字体索引号获取字形绘制路径
+     *
+     * @param gid 字形索引号
+     * @return 字形路径或null
+     * @throws IOException 字体解析异常
+     */
+    @Override
+    public GeneralPath getPath(int gid) throws IOException {
+        // 存在CFF的时候采用CFF直接获取字形
+        if (this.cffFont != null) {
+            return this.cffFont.getType2CharString(gid).getPath();
+        }
+        return getGlyph(gid).getPath();
+    }
+
 
     /**
      * 从但前偏移量位置读取字形
@@ -380,6 +420,7 @@ public class TrueTypeFont implements GlyphDataProvider {
         }
         return getGlyph(gid);
     }
+
 
     /**
      * 获取变换矩阵

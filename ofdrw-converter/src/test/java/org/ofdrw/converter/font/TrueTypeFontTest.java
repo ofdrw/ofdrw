@@ -1,5 +1,7 @@
 package org.ofdrw.converter.font;
 
+import org.apache.fontbox.cff.CFFFont;
+import org.apache.fontbox.cff.CFFParser;
 import org.apache.fontbox.ttf.GlyphDescription;
 import org.junit.jupiter.api.Test;
 
@@ -7,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,15 +19,26 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class TrueTypeFontTest {
     @Test
+    public void cffParse() throws Exception {
+        final Path path = Paths.get("C:\\Users\\pc\\Desktop\\ks\\Doc_0\\Res\\font_115.otf");
+        final byte[] fileData = Files.readAllBytes(path);
+
+        CFFParser cffParser = new CFFParser();
+        CFFFont cffFont = cffParser.parse(fileData).get(0);
+        System.out.println(cffFont);
+    }
+
+    @Test
     void parse() throws IOException {
-        Path fontPath = Paths.get("src/test/resources/font_10.ttf");
+        Path fontPath = Paths.get("C:\\Users\\pc\\Desktop\\ks\\Doc_0\\Res\\font_115.otf");
+//        Path fontPath = Paths.get("src/test/resources/font_10.ttf");
         TTFDataStream dataStream = new MemoryTTFDataStream(Files.newInputStream(fontPath));
         final TrueTypeFont trueTypeFont = new TrueTypeFont().parse(dataStream);
     }
 
     @Test
     void parse2() throws IOException {
-        Path fontPath = Paths.get("C:\\Windows\\Fonts\\times.ttf");
+        Path fontPath = Paths.get("C:\\Users\\pc\\Desktop\\Latha.ttf");
         TTFDataStream dataStream = new MemoryTTFDataStream(Files.newInputStream(fontPath));
         final TrueTypeFont trueTypeFont = new TrueTypeFont().parse(dataStream);
         System.out.println(trueTypeFont.psName);
