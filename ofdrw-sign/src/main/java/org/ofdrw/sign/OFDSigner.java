@@ -9,6 +9,7 @@ import org.ofdrw.core.signatures.Signatures;
 import org.ofdrw.core.signatures.appearance.Seal;
 import org.ofdrw.core.signatures.range.Reference;
 import org.ofdrw.core.signatures.range.References;
+import org.ofdrw.core.signatures.sig.Parameters;
 import org.ofdrw.core.signatures.sig.Provider;
 import org.ofdrw.core.signatures.sig.Signature;
 import org.ofdrw.core.signatures.sig.SignedInfo;

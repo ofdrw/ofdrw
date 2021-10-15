@@ -34,7 +34,7 @@ pom引入相关模块
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-converter</artifactId>
-    <version>1.15.6</version>
+    <version>1.16.0</version>
 </dependency>
 ```
 
