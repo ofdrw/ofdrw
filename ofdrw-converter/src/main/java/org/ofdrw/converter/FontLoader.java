@@ -245,6 +245,7 @@ public final class FontLoader {
      * @param familyName   字族名
      * @param fontName     字体名
      * @param fontFilePath 字体位置
+     * @return this
      * @deprecated {@link #addSystemFontMapping(String, String)}
      */
     @Deprecated
@@ -261,6 +262,7 @@ public final class FontLoader {
      *
      * @param fontName     字体名
      * @param fontFilePath 字体位置
+     * @return this
      */
     public FontLoader addSystemFontMapping(String fontName, String fontFilePath) {
         if (fontName == null || fontName.length() == 0) {

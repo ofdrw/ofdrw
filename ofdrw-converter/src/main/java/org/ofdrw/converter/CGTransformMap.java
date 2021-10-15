@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * <p>
  * 该映射用于处理一个TextObject的多个TextCode的映射关系。
  * <p>
- * 映射为： TextCode中字符处于整个TextObject的偏移量 -> 字形
+ * 映射为： TextCode中字符处于整个TextObject的偏移量 字形
  *
  * @author 权观宇
  * @since 2021-10-12 19:42:39
