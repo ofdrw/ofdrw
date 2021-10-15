@@ -428,7 +428,9 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
      * @return 矩阵序列
      */
     public List<Number> getFontMatrix() {
-
+        if (cffFont !=null){
+            return cffFont.getFontMatrix();
+        }
         float scale = 1000f / unitsPerEm;
         return Arrays.<Number>asList(0.001f * scale, 0, 0, 0.001f * scale, 0, 0);
     }
