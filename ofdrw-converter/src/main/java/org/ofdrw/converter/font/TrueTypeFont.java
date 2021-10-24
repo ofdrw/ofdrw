@@ -6,6 +6,8 @@ import org.apache.fontbox.cff.CFFFont;
 import org.apache.fontbox.cff.CFFParser;
 import org.apache.fontbox.ttf.CmapLookup;
 import org.apache.fontbox.ttf.CmapTable;
+import org.apache.fontbox.type1.Type1Font;
+import org.ofdrw.converter.font.type1.Type1SegSplitParser;
 
 import java.awt.*;
 import java.awt.geom.GeneralPath;
@@ -90,8 +92,16 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
      */
     private CFFFont cffFont;
 
+    /**
+     * Adobe Type1 字体
+     * 开头为 0x80 0x01 或 '%!' 的字体
+     */
+    private Type1Font type1Font;
+
     public TrueTypeFont() {
     }
+
+
 
     /**
      * 创建TTF字体解析器
@@ -140,7 +150,14 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
     public TrueTypeFont parse(TTFDataStream raf) throws IOException {
         this.data = raf;
         // Version
-        String version = raf.readString(4);
+        final byte[] version = raf.read(4);
+        // 检查是否是Type1 字体
+        if (Type1SegSplitParser.isType1(version)) {
+            this.type1Font = Type1SegSplitParser.parse(raf.getOriginalData());
+            return this;
+        }
+
+
         int numberOfTables = raf.readUnsignedShort();
         int searchRange = raf.readUnsignedShort();
         int entrySelector = raf.readUnsignedShort();

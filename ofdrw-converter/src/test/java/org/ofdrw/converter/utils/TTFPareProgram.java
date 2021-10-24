@@ -2,6 +2,7 @@ package org.ofdrw.converter.utils;
 
 import org.apache.fontbox.cff.CFFFont;
 import org.apache.fontbox.cff.CFFParser;
+import org.apache.fontbox.type1.Type1Font;
 import org.junit.jupiter.api.Test;
 
 
@@ -20,13 +21,19 @@ import java.util.Map;
  * @since 2021-04-13 22:55:07
  */
 public class TTFPareProgram {
+    @Test
+    public void type1() throws Exception {
+        final Path path = Paths.get("C:\\Users\\pc\\Desktop\\font_300_300.otf");
+        final byte[] bytes = Files.readAllBytes(path);
+        final Type1Font font = Type1Font.createWithPFB(bytes);
 
+    }
 
 
     @Test
     public  void testParse() throws IOException {
 //        final Path path = Paths.get("C:\\Users\\pc\\AppData\\Local\\Microsoft\\Windows\\Fonts\\Deleted\\NotoSerifCJKsc-Regular.otf");
-        final Path path = Paths.get("C:\\Users\\pc\\Desktop\\ks\\Doc_0\\Res\\font_110.otf");
+        final Path path = Paths.get("C:\\Users\\pc\\Desktop\\font_300_300.otf");
         try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "r")) {
             // Version: 4 byte
             byte[] v = new byte[4];

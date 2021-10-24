@@ -121,6 +121,26 @@ public class ST_Array extends STBase implements Cloneable {
     }
 
     /**
+     * 获取期待长度的字符串数组
+     * <p>
+     * 长度不足将会自动填充空白字符，长度不足则截取
+     *
+     * @param expectCount 期待长度
+     * @return 字符串数组
+     */
+    public String[] expectStrArr(int expectCount) {
+        String[] res = new String[expectCount];
+        for (int i = 0; i < expectCount; i++) {
+            if (i < array.size()) {
+                res[i] = (array.get(i));
+            } else {
+                res[i] = "";
+            }
+        }
+        return res;
+    }
+
+    /**
      * 获取浮点数组
      *
      * @return 浮点数组
