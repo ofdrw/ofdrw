@@ -28,6 +28,7 @@
         <module>ofdrw-gm</module>
         <module>ofdrw-converter</module>
         <module>ofdrw-crypto</module>
+        <module>ofdrw-tool</module>
     </modules>
 
     <developers>
