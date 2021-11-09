@@ -1,7 +1,5 @@
 package org.ofdrw.tool.merge;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
 
 /**
  * 页面项目
@@ -12,12 +10,18 @@ import java.util.ArrayList;
 public class PageEntry {
 
     /**
-     * OFD路径
+     * 关联文档上下文
      */
-    Path ofdPath;
+    public DocContext docCtx;
 
     /**
-     * 待合并的页面
+     * 页面索引号
      */
-    ArrayList<Integer> pageIndexes;
+    public Integer pageIndex;
+
+
+    public PageEntry(Integer pageIndex, DocContext docCtx) {
+        this.docCtx = docCtx;
+        this.pageIndex = pageIndex;
+    }
 }

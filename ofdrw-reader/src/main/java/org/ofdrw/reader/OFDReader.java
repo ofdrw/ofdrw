@@ -410,6 +410,26 @@ public class OFDReader implements Closeable {
     }
 
     /**
+     * 获取文档对象
+     *
+     * @param numOfDoc 文档序号
+     * @return 文档对象
+     * @throws DocumentException     文档解析异常
+     * @throws FileNotFoundException Document.xml文档不存在
+     */
+    public Document getDoc(int numOfDoc) throws DocumentException, FileNotFoundException {
+        rl.save();
+        try {
+            rl.cd("/");
+            DocBody docBody = ofdDir.getOfd().getDocBody(numOfDoc);
+            ST_Loc docRoot = docBody.getDocRoot();
+            return rl.get(docRoot, Document::new);
+        } finally {
+            rl.restore();
+        }
+    }
+
+    /**
      * 切换目录到默认的文档目录下下
      * <p>
      * 该操作将会导致资源加载器变更目录
@@ -477,7 +497,28 @@ public class OFDReader implements Closeable {
      * @return 页面对象
      */
     public Page getPage(int pageNum) {
-        return getPageInfo(pageNum).getObj();
+        if (pageNum <= 0) {
+            throw new NumberFormatException("页码(pageNum)不能小于0");
+        }
+        try {
+            rl.save();
+            int index = pageNum - 1;
+            // 路径解析对象获取并缓存虚拟容器
+            Document document = cdDefaultDoc();
+            Pages pages = document.getPages();
+            List<org.ofdrw.core.basicStructure.pageTree.Page> pageList = pages.getPages();
+            if (index >= pageList.size()) {
+                throw new NumberFormatException(pageNum + "超过最大页码:" + pageList.size());
+            }
+            // 获取页面的路径
+            ST_Loc pageLoc = pageList.get(index).getBaseLoc();
+            return rl.get(pageLoc, Page::new);
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
+        } finally {
+            // 还原原有工作区
+            rl.restore();
+        }
     }
 
     /**
@@ -613,7 +654,7 @@ public class OFDReader implements Closeable {
             rl.save();
             // 签名列表
             final Signatures sigFileList = getDefaultSignatures();
-            if (sigFileList == null){
+            if (sigFileList == null) {
                 return Collections.emptyList();
             }
             ST_Loc signaturesLoc = getDefaultDocSignaturesPath();
