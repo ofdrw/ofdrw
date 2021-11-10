@@ -69,12 +69,12 @@ public class BareOFDDoc implements Closeable {
     /**
      * OFD文档对象
      */
-    public final Document ofdDocument;
+    public final Document document;
 
     /**
      * 正在操作的文档目录
      */
-    public final DocDir operateDocDir;
+    public final DocDir docDir;
 
 
     /**
@@ -112,12 +112,12 @@ public class BareOFDDoc implements Closeable {
         OFD ofd = new OFD().addDocBody(docBody);
 
         // 创建一个低层次的文档对象
-        ofdDocument = new Document();
+        document = new Document();
         cdata = new CT_CommonData();
         // 默认使用RGB颜色空间所以此处不设置颜色空间
         // 设置页面属性
         cdata.setPageArea(PageLayout.A4().getPageArea());
-        ofdDocument.setCommonData(cdata)
+        document.setCommonData(cdata)
                 // 空的页面引用集合，该集合将会在解析虚拟页面时得到填充
                 .setPages(new Pages());
 
@@ -125,8 +125,8 @@ public class BareOFDDoc implements Closeable {
                 .setOfd(ofd);
         // 创建一个新的文档
         DocDir docDir = ofdDir.newDoc();
-        operateDocDir = docDir;
-        docDir.setDocument(ofdDocument);
+        this.docDir = docDir;
+        docDir.setDocument(document);
         prm = new ResManager(docDir, MaxUnitID);
     }
 

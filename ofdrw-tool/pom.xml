@@ -19,6 +19,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.ofdrw</groupId>
             <artifactId>ofdrw-reader</artifactId>
             <version>${project.version}</version>

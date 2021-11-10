@@ -5,6 +5,7 @@ import org.dom4j.DocumentException;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
+import org.ofdrw.core.basicStructure.res.OFDResource;
 import org.ofdrw.pkg.container.PageDir;
 import org.ofdrw.pkg.container.PagesDir;
 
@@ -34,6 +35,16 @@ public class OFDMerger implements Closeable {
      */
     private final Map<String, DocContext> docCtxMap;
 
+    /**
+     * 新旧映射表
+     * <p>
+     * | 原文档 ID | (新文档ID, 资源对象) |
+     * <p>
+     * Key: 旧ID
+     * Value: 资源对象（ID替换为新文档中的ID）
+     */
+    private final Map<String, OFDResource> resOldNewMap;
+
     private final Path dest;
 
 
@@ -47,6 +58,7 @@ public class OFDMerger implements Closeable {
         if (!Files.exists(dest.getParent())) {
             throw new IllegalArgumentException("OFD文件存储路径(dest)上级目录 [" + dest.getParent().toAbsolutePath() + "] 不存在");
         }
+        resOldNewMap = new HashMap<>();
 
     }
 
@@ -87,9 +99,9 @@ public class OFDMerger implements Closeable {
         }
         // 创建新文档
         try (final BareOFDDoc ofdDoc = new BareOFDDoc(dest)) {
-            final Pages pages = ofdDoc.ofdDocument.getPages();
+            final Pages pages = ofdDoc.document.getPages();
             // 如果存在Pages那么获取，不存在那么创建
-            final PagesDir pagesDir = ofdDoc.operateDocDir.obtainPages();
+            final PagesDir pagesDir = ofdDoc.docDir.obtainPages();
             for (final PageEntry pageEntry : pageArr) {
                 // 取0文档对象
                 final CT_PageArea docDefaultArea = pageEntry.docCtx.getDefaultArea(0);
@@ -101,7 +113,20 @@ public class OFDMerger implements Closeable {
                 if (page.getArea() == null) {
                     page.setArea(docDefaultArea);
                 }
-                // TODO: 查找页面资源进入映射表
+                // TODO: 页面模板的迁移的替换
+
+                // 通过XML 选中与资源有关对象
+
+                /**
+                 *
+                 * - Layer 的 DrawParam
+                 * - 每个图像对象都可能含有 DrawParam 引用
+                 * - Color 中 Pattern CellContent Thumbnail 引用
+                 * - Image 中 ResourceID、Substitution、ImageMask
+                 * - Text 中 Font
+                 * - Composite 复合对象 中 ResourceID
+                 * Res资源中的 CompositeGraphUnit CT_VectorG：Thumbnail、Substitution
+                 */
 
             }
 

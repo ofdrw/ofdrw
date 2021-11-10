@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ofd:Page xmlns:ofd="http://www.ofdspec.org/2016">
+    <ofd:Area>
+        <ofd:PhysicalBox>0 0 297 210</ofd:PhysicalBox>
+    </ofd:Area>
+    <ofd:Content>
+        <ofd:Layer ID="3">
+            <ofd:PathObject ID="4" Boundary="14.5 21.9 268 178">
+                <ofd:StrokeColor Value="207 206 206"/>
+                <ofd:AbbreviatedData>M 0 0 L 0 178 L 268 178 L 268 0 L 0 0 C </ofd:AbbreviatedData>
+            </ofd:PathObject>
+            <ofd:PathObject ID="5" Boundary="23.8 31.2 249.5 159.4" LineWidth="0.2">
+                <ofd:StrokeColor Value="190 143 0"/>
+                <ofd:AbbreviatedData>M 0 0 L 0 159.4 L 249.5 159.4 L 249.5 0 L 0 0 C </ofd:AbbreviatedData>
+            </ofd:PathObject>
+            <ofd:PathObject ID="6" Boundary="16.3 23.7 264.4 174.4" LineWidth="1.5">
+                <ofd:StrokeColor Value="190 143 0"/>
+                <ofd:AbbreviatedData>M 0 0 L 0 174.4 L 264.4 174.4 L 264.4 0 L 0 0 C </ofd:AbbreviatedData>
+            </ofd:PathObject>
+            <ofd:PathObject ID="7" Boundary="16.5 23.9 264 174" LineWidth="0.8" Fill="true" Rule="Even-Odd">
+                <ofd:FillColor Value="0 0 0">
+                    <ofd:Pattern Width="6" Height="6">
+                        <ofd:CellContent ID="8">
+                            <ofd:ImageObject ID="9" CTM="6 0 0 6 0 0" Boundary="0 0 6 6" ResourceID="10"/>
+                        </ofd:CellContent>
+                    </ofd:Pattern>
+                </ofd:FillColor>
+                <ofd:StrokeColor Value="190 143 0"/>
+                <ofd:AbbreviatedData>M 0 0 L 264 0 L 264 174 L 0 174 L 0 0 M 6 6 L 6 168 L 258 168 L 258 6 L 6 6 </ofd:AbbreviatedData>
+            </ofd:PathObject>
+            <ofd:ImageObject ID="11" CTM="34 0 0 36 0 0" Boundary="131.5 10 34 36" ResourceID="12"/>
+          
+            <ofd:TextObject ID="18" Boundary="172.6 85.2 7 5.5" Font="14" Size="5.6268">
+                <ofd:CGTransform CodePosition="0" CodeCount="1" GlyphCount="1">
+                    <ofd:Glyphs>13</ofd:Glyphs>
+                </ofd:CGTransform>
+                <ofd:TextCode X="0.844" Y="4.8331">字</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="19" Boundary="234.6 85.2 7 5.5" Font="14" Size="5.6268">
+                <ofd:CGTransform CodePosition="0" CodeCount="1" GlyphCount="1">
+                    <ofd:Glyphs>14</ofd:Glyphs>
+                </ofd:CGTransform>
+                <ofd:TextCode X="0.844" Y="4.8331">号</ofd:TextCode>
+            </ofd:TextObject>
+
+            <ofd:TextObject ID="21" Boundary="43 111.7 36 7.2" Font="14" Size="7.7435">
+                <ofd:CGTransform CodePosition="0" CodeCount="3" GlyphCount="3">
+                    <ofd:Glyphs>20 21 19</ofd:Glyphs>
+                </ofd:CGTransform>
+                <ofd:TextCode X="1.1615" Y="6.6499" DeltaX="24.5 7.7">地址：</ofd:TextCode>
+            </ofd:TextObject>
+        
+            <ofd:TextObject ID="23" Boundary="38 179.6 32.2 5.4" Font="14" Size="5.6268">
+                <ofd:CGTransform CodePosition="0" CodeCount="6" GlyphCount="6">
+                    <ofd:Glyphs>26 27 28 29 30 19</ofd:Glyphs>
+                </ofd:CGTransform>
+                <ofd:TextCode X="0.844" Y="4.8331" DeltaX="5.6301 5.6726 5.6301 5.6301 5.6726">证件有效期：</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="24" Boundary="87.2 179.6 6 5.4" Font="14" Size="5.6268">
+                <ofd:CGTransform CodePosition="0" CodeCount="1" GlyphCount="1">
+                    <ofd:Glyphs>31</ofd:Glyphs>
+                </ofd:CGTransform>
+                <ofd:TextCode X="0.844" Y="4.8331">年</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="25" Boundary="103.1 179.6 6 5.4" Font="14" Size="5.6268">
+                <ofd:CGTransform CodePosition="0" CodeCount="1" GlyphCount="1">
+                    <ofd:Glyphs>32</ofd:Glyphs>
+                </ofd:CGTransform>
+                <ofd:TextCode X="0.844" Y="4.8331">月</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="26" Boundary="118.9 179.6 12.5745 5.4" Font="14" Size="5.6268">
+                <ofd:CGTransform CodePosition="0" CodeCount="2" GlyphCount="2">
+                    <ofd:Glyphs>33 34</ofd:Glyphs>
+                </ofd:CGTransform>
+                <ofd:TextCode X="0.844" Y="4.8331" DeltaX="5.6301">日至</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="27" Boundary="147.2 179.6 6 5.4" Font="14" Size="5.6268">
+                <ofd:CGTransform CodePosition="0" CodeCount="1" GlyphCount="1">
+                    <ofd:Glyphs>31</ofd:Glyphs>
+                </ofd:CGTransform>
+                <ofd:TextCode X="0.844" Y="4.8331">年</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="28" Boundary="163 179.6 6 5.4" Font="14" Size="5.6268">
+                <ofd:CGTransform CodePosition="0" CodeCount="1" GlyphCount="1">
+                    <ofd:Glyphs>32</ofd:Glyphs>
+                </ofd:CGTransform>
+                <ofd:TextCode X="0.844" Y="4.5">月</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="29" Boundary="178.8 179.6 6 5.4" Font="14" Size="5.6268">
+                <ofd:CGTransform CodePosition="0" CodeCount="1" GlyphCount="1">
+                    <ofd:Glyphs>33</ofd:Glyphs>
+                </ofd:CGTransform>
+                <ofd:TextCode X="0.844" Y="4.8331">日</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="30" Boundary="222.5 179.6 6 5.4" Font="14" Size="5.6268">
+                <ofd:CGTransform CodePosition="0" CodeCount="1" GlyphCount="1">
+                    <ofd:Glyphs>31</ofd:Glyphs>
+                </ofd:CGTransform>
+                <ofd:TextCode X="0.844" Y="4.8331">年</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="31" Boundary="238 179.6 6 5.4" Font="14" Size="5.6268">
+                <ofd:CGTransform CodePosition="0" CodeCount="1" GlyphCount="1">
+                    <ofd:Glyphs>32</ofd:Glyphs>
+                </ofd:CGTransform>
+                <ofd:TextCode X="0.844" Y="4.8331">月</ofd:TextCode>
+            </ofd:TextObject>
+            <ofd:TextObject ID="32" Boundary="254.8 179.6 6 5.4" Font="14" Size="5.6268">
+                <ofd:CGTransform CodePosition="0" CodeCount="1" GlyphCount="1">
+                    <ofd:Glyphs>33</ofd:Glyphs>
+                </ofd:CGTransform>
+                <ofd:TextCode X="0.844" Y="4.8331">日</ofd:TextCode>
+            </ofd:TextObject>
+        </ofd:Layer>
+    </ofd:Content>
+</ofd:Page>
