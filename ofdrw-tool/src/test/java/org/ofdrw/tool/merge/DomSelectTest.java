@@ -1,8 +1,10 @@
 package org.ofdrw.tool.merge;
 
 import org.dom4j.Document;
+import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
+import org.dom4j.tree.DefaultElement;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 
@@ -30,7 +32,13 @@ public class DomSelectTest {
             List<Node> nodes = page.selectNodes("//*[@ResourceID]");
             assertEquals(2, nodes.size());
             nodes = page.selectNodes("//*[@Font]");
+            final Node node = nodes.get(0);
+            if (node instanceof Element) {
+                System.out.println(node);
+            }
             assertEquals(13, nodes.size());
+            nodes = page.selectNodes("//*[@DrawParam]");
+            assertEquals(0, nodes.size());
         }
 
     }

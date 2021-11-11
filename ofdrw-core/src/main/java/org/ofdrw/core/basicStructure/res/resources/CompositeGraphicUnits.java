@@ -23,9 +23,10 @@ public class CompositeGraphicUnits extends OFDElement implements OFDResource {
         super(proxy);
     }
 
-    public CompositeGraphicUnits(String name) {
-        super(name);
+    public CompositeGraphicUnits() {
+        super("CompositeGraphicUnits");
     }
+
 
     /**
      * 【必选】

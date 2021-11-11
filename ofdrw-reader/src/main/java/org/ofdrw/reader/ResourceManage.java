@@ -3,6 +3,7 @@ package org.ofdrw.reader;
 import org.apache.commons.io.IOUtils;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
@@ -35,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 资源管理器
+ * 资源管理器（只读）
  * <p>
  * 使用ID随机访问文档中出现的资源对象
  * <p>
@@ -68,6 +69,11 @@ public class ResourceManage {
      * 矢量图像
      */
     private final Map<String, CT_VectorG> compositeGraphicUnitMap = new HashMap<>();
+
+    /**
+     * 所有资源和ID的映射表
+     */
+    private final Map<String, OFDElement> allResMap = new HashMap<>();
 
     /**
      * 文档公共数据结构
@@ -449,6 +455,8 @@ public class ResourceManage {
             for (ST_Loc docResLoc : commonData.getDocumentResList()) {
                 loadResFile(rl, docResLoc);
             }
+
+            // 页面资源，暂时忽略
         } finally {
             rl.restore();
         }
@@ -487,6 +495,7 @@ public class ResourceManage {
                             item.setProfile(absProfile);
                         }
                         colorSpaceMap.put(item.getID().toString(), item);
+                        allResMap.put(item.getID().toString(), item);
                     }
                     continue;
                 }
@@ -494,8 +503,9 @@ public class ResourceManage {
                 if (ofdResource instanceof DrawParams) {
                     for (CT_DrawParam drawParam : ((DrawParams) ofdResource).getDrawParams()) {
                         // 复制副本，作为只读对象
-                        CT_DrawParam item = new CT_DrawParam((Element) drawParam.clone());
+                        CT_DrawParam item = new CT_DrawParam(drawParam.clone());
                         drawParamMap.put(item.getID().toString(), item);
+                        allResMap.put(item.getID().toString(), item);
                     }
                     continue;
                 }
@@ -512,6 +522,7 @@ public class ResourceManage {
                             item.setFontFile(absFontFile);
                         }
                         fontMap.put(item.getID().toString(), item);
+                        allResMap.put(item.getID().toString(), item);
                     }
                     continue;
                 }
@@ -527,6 +538,7 @@ public class ResourceManage {
                             item.setMediaFile(absMediaFile);
                         }
                         multiMediaMap.put(item.getID().toString(), item);
+                        allResMap.put(item.getID().toString(), item);
                     }
                     continue;
                 }
@@ -537,6 +549,7 @@ public class ResourceManage {
                         // 复制副本，作为只读对象
                         CT_VectorG item = new CT_VectorG((Element) ctVectorG.clone());
                         compositeGraphicUnitMap.put(item.getID().toString(), item);
+                        allResMap.put(item.getID().toString(), item);
                     }
                 }
             }
@@ -633,5 +646,17 @@ public class ResourceManage {
      */
     public OFDReader getOfdReader() {
         return ofdReader;
+    }
+
+    /**
+     * 通过ID获取资源
+     * <p>
+     * 如果资源不存在，那么返回null
+     *
+     * @param id 资源ID
+     * @return 资源对象，null
+     */
+    public OFDElement get(String id) {
+        return allResMap.get(id);
     }
 }

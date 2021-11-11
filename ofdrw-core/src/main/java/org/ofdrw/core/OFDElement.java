@@ -70,7 +70,7 @@ public class OFDElement extends DefaultElementProxy {
      * 设置OFD参数
      * <p>
      * 如果参数已经存在则修改参数
-     *
+     * <p>
      * 如果需要删除元素，请使用 {@link #removeOFDElemByNames}
      *
      * @param name  元素名称
@@ -108,7 +108,6 @@ public class OFDElement extends DefaultElementProxy {
 //        return this.element(new QName(name, Const.OFD_NAMESPACE));
         return this.element(new OFDCommonQName(name));
     }
-
 
 
     /**
@@ -179,6 +178,7 @@ public class OFDElement extends DefaultElementProxy {
      * 集合将会保持原有次序
      * qname匹配的时候不再验证namespace，兼容namespace为空的情况。
      * author daiwf
+     *
      * @param name   OFD元素名称
      * @param mapper 转换对象构造器引用
      * @param <R>    指定元素对象
@@ -193,6 +193,7 @@ public class OFDElement extends DefaultElementProxy {
                 .map(mapper)
                 .collect(Collectors.toList());
     }
+
     /**
      * 设置元素
      * <p>
@@ -264,6 +265,18 @@ public class OFDElement extends DefaultElementProxy {
         return this.setObjID(new ST_ID(objId));
     }
 
+    /**
+     * 【可选】
+     * <p>
+     * 设置 OFD对象标识，无符号整数，应在文档内唯一。
+     *
+     * @param id OFD对象标识，请确保id为数字字符串
+     * @return this
+     */
+    public OFDElement setObjID(String id) {
+        this.addAttribute("ID", id);
+        return this;
+    }
 
     /**
      * 移除元素中所有内容

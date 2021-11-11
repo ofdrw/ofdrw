@@ -6,12 +6,11 @@ import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicStructure.res.MediaType;
 import org.ofdrw.core.basicStructure.res.Res;
-import org.ofdrw.core.basicStructure.res.resources.DrawParams;
-import org.ofdrw.core.basicStructure.res.resources.Fonts;
-import org.ofdrw.core.basicStructure.res.resources.MultiMedias;
+import org.ofdrw.core.basicStructure.res.resources.*;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
-import org.ofdrw.core.graph.pathObj.CT_Path;
+import org.ofdrw.core.compositeObj.CT_VectorG;
+import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.font.Font;
@@ -57,6 +56,16 @@ public class ResManager {
      * 字体资源列表
      */
     private Fonts fonts;
+
+    /**
+     * 颜色空间的描述列表
+     */
+    private ColorSpaces colorSpaces;
+
+    /**
+     * 矢量图像列表
+     */
+    private CompositeGraphicUnits compositeGraphicUnits;
 
     /**
      * 资源缓存
@@ -306,5 +315,53 @@ public class ResManager {
         }
     }
 
+
+    /**
+     * 直接向资源列表中加入资源对象
+     * <p>
+     * 注意：该方法是一个原生方法，具有一定的资源重复风险。
+     *
+     * @param resObj 资源对象
+     * @return this
+     */
+    public ResManager addRaw(OFDElement resObj) {
+        if (resObj == null) {
+            return this;
+        }
+        Res resMenu = docRes();
+
+        if (resObj instanceof CT_ColorSpace) {
+            if (colorSpaces == null) {
+                this.colorSpaces = new ColorSpaces();
+                resMenu.addResource(colorSpaces);
+            }
+            colorSpaces.addColorSpace((CT_ColorSpace) resObj);
+        } else if (resObj instanceof CT_DrawParam) {
+            if (drawParams == null) {
+                this.drawParams = new DrawParams();
+                resMenu.addResource(drawParams);
+            }
+            drawParams.addDrawParam((CT_DrawParam) resObj);
+        } else if (resObj instanceof CT_Font) {
+            if (fonts == null) {
+                this.fonts = new Fonts();
+                resMenu.addResource(fonts);
+            }
+            fonts.addFont((CT_Font) resObj);
+        } else if (resObj instanceof CT_MultiMedia) {
+            if (medias == null) {
+                this.medias = new MultiMedias();
+                resMenu.addResource(medias);
+            }
+            medias.addMultiMedia((CT_MultiMedia) resObj);
+        } else if (resObj instanceof CT_VectorG) {
+            if (compositeGraphicUnits == null) {
+                this.compositeGraphicUnits = new CompositeGraphicUnits();
+                resMenu.addResource(compositeGraphicUnits);
+            }
+            compositeGraphicUnits.addCompositeGraphicUnit((CT_VectorG) resObj);
+        }
+        return this;
+    }
 
 }
