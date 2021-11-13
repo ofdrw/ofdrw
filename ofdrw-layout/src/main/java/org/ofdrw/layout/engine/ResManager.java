@@ -149,7 +149,7 @@ public class ResManager {
                     .setID(id);
             Path fontFile = font.getFontFile();
             if (fontFile != null) {
-                ctFont.setFontFile(font.getFontFileName());
+                ctFont.setFontFile(fontFile.getFileName().toString());
             }
             // 设置特殊字族属性
             if (familyName != null) {

@@ -1,6 +1,8 @@
 package org.ofdrw.tool.merge;
 
 
+import org.bouncycastle.jcajce.provider.digest.SM3;
+import org.bouncycastle.util.encoders.Hex;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.Node;
@@ -9,19 +11,23 @@ import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
+import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.compositeObj.CT_VectorG;
 import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.pkg.container.PageDir;
 import org.ofdrw.pkg.container.PagesDir;
+import org.ofdrw.pkg.container.ResDir;
+import org.ofdrw.reader.ResourceLocator;
 
 import java.io.Closeable;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 文档合并工具
@@ -62,6 +68,14 @@ public class OFDMerger implements Closeable {
      * 在合并完成后将会被打包存储
      */
     private BareOFDDoc ofdDoc;
+
+    /**
+     * 资源文件哈希表
+     * <p>
+     * Key: 文件SM3 Hash Hex
+     * Value: 文件在新文档中的文件名
+     */
+    private Map<String, ST_Loc> resFileHashTable;
 
 
     public OFDMerger(Path dest) {
@@ -154,8 +168,9 @@ public class OFDMerger implements Closeable {
      *
      * @param docCtx DOM相关的文档上下文
      * @param dom    待迁移DOM
+     * @throws IOException 文件读取或复制异常
      */
-    private void domMigrate(DocContext docCtx, Element dom) {
+    private void domMigrate(DocContext docCtx, Element dom) throws IOException {
         /*
          * - Layer 的 DrawParam
          * - 每个图像对象都可能含有 DrawParam 引用
@@ -206,12 +221,15 @@ public class OFDMerger implements Closeable {
      * @param docCtx   被迁移的页面文档上下文
      * @param oldResId 资源ID
      * @return 资源在新文档中的ID, 0标识没有找到资源
+     * @throws IOException 文件读取或复制错误
      */
-    private long resMigrate(DocContext docCtx, String oldResId) {
+    private long resMigrate(DocContext docCtx, String oldResId) throws IOException {
         final OFDElement resObj = docCtx.resMgt.get(oldResId);
         if (resObj == null) {
             return 0;
         }
+        final ResourceLocator rl = docCtx.reader.getResourceLocator();
+
         // 检查缓存，防止重复迁移
         final OFDElement cache = resOldNewMap.get(oldResId);
         if (cache != null) {
@@ -222,22 +240,40 @@ public class OFDMerger implements Closeable {
         if (resObj instanceof CT_ColorSpace) {
             CT_ColorSpace cs = (CT_ColorSpace) resObj;
             cs.setObjID(id);
-            // TODO:
+            ST_Loc profile = cs.getProfile();
+            if (profile != null) {
+                // 复制资源到新的文档中
+                Path filepath = rl.getFile(profile);
+                profile = copyResFile(filepath);
+                cs.setProfile(profile);
+            }
             ofdDoc.prm.addRaw(cs);
         } else if (resObj instanceof CT_DrawParam) {
             CT_DrawParam dp = (CT_DrawParam) resObj;
             dp.setObjID(id);
-            // TODO:
             ofdDoc.prm.addRaw(dp);
         } else if (resObj instanceof CT_Font) {
             CT_Font f = (CT_Font) resObj;
             f.setObjID(ofdDoc.MaxUnitID.incrementAndGet());
-            // TODO:
+            ST_Loc fontFileLoc = f.getFontFile();
+            if (fontFileLoc != null) {
+                // 复制资源到新的文档中
+                Path filepath = rl.getFile(fontFileLoc);
+                fontFileLoc = copyResFile(filepath);
+                f.setFontFile(fontFileLoc);
+            }
             ofdDoc.prm.addRaw(f);
         } else if (resObj instanceof CT_MultiMedia) {
             CT_MultiMedia mm = (CT_MultiMedia) resObj;
             mm.setObjID(id);
-            // TODO:
+            ST_Loc mediaFileLoc = mm.getMediaFile();
+            if (mediaFileLoc != null) {
+                // 复制资源到新的文档中
+                Path filepath = rl.getFile(mediaFileLoc);
+                mediaFileLoc = copyResFile(filepath);
+                mm.setMediaFile(mediaFileLoc);
+            }
+
             ofdDoc.prm.addRaw(mm);
         } else if (resObj instanceof CT_VectorG) {
             CT_VectorG vg = (CT_VectorG) resObj;
@@ -247,6 +283,55 @@ public class OFDMerger implements Closeable {
             ofdDoc.prm.addRaw(vg);
         }
         return id;
+    }
+
+    /**
+     * 复制资源到新文档
+     * <p>
+     * 复制前将会计算文档的Hash并缓存防止重复
+     * <p>
+     * 复制后的文档名称为文件的Hash值
+     *
+     * @param filepath 文件路径
+     * @return 复制后基于资源容器的相对路径
+     * @throws IOException 文件读取复制异常
+     */
+    private ST_Loc copyResFile(Path filepath) throws IOException {
+        // 计算文件的摘要值
+        SM3.Digest digest = new SM3.Digest();
+        byte[] buff = new byte[4096];
+        int n = 0;
+        try (final InputStream in = Files.newInputStream(filepath)) {
+            while ((n = in.read(buff)) != -1) {
+                digest.update(buff, 0, n);
+            }
+        }
+        String hash = Hex.toHexString(digest.digest());
+
+        // 检查该文件是否已经被迁移过
+        final ST_Loc resLoc = resFileHashTable.get(hash);
+        if (resLoc != null) {
+            return resLoc;
+        }
+
+        // 重命名文件为Hash值名称，保留后缀名
+        String fileName = filepath.getFileName().toString();
+        int off = fileName.lastIndexOf('.');
+        if (off != -1) {
+            fileName = hash + fileName.substring(off);
+        } else {
+            fileName = hash;
+        }
+
+        final ResDir resDir = ofdDoc.docDir.obtainRes();
+        // 复制文件到新文件容的资源容器中
+        try (final InputStream in = Files.newInputStream(filepath)) {
+            resDir.addRaw(fileName, in);
+        }
+        final ST_Loc res = new ST_Loc(fileName);
+        // 缓存，返回文件名称（基于Res容器的相对路径）
+        resFileHashTable.put(hash, res);
+        return res;
     }
 
     /**
