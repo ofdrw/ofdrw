@@ -8,10 +8,14 @@ import org.dom4j.Element;
 import org.dom4j.Node;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
+import org.ofdrw.core.basicStructure.pageObj.CT_TemplatePage;
+import org.ofdrw.core.basicStructure.pageObj.Template;
 import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
+import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
+import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.compositeObj.CT_VectorG;
 import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
@@ -20,6 +24,7 @@ import org.ofdrw.pkg.container.PageDir;
 import org.ofdrw.pkg.container.PagesDir;
 import org.ofdrw.pkg.container.ResDir;
 import org.ofdrw.reader.ResourceLocator;
+import org.ofdrw.reader.model.TemplatePageEntity;
 
 import java.io.Closeable;
 
@@ -78,6 +83,14 @@ public class OFDMerger implements Closeable {
     private Map<String, ST_Loc> resFileHashTable;
 
 
+    /**
+     * 模板页面映射表
+     * <p>
+     * Key: 模板页对象ID
+     * Value: 模板页面对象
+     */
+    private Map<String, CT_TemplatePage> tplPageMap;
+
     public OFDMerger(Path dest) {
         if (dest == null) {
             throw new IllegalArgumentException("合并结果路径(dest)为空");
@@ -89,7 +102,8 @@ public class OFDMerger implements Closeable {
             throw new IllegalArgumentException("OFD文件存储路径(dest)上级目录 [" + dest.getParent().toAbsolutePath() + "] 不存在");
         }
         resOldNewMap = new HashMap<>();
-
+        resFileHashTable = new HashMap<>(3);
+        tplPageMap = new HashMap<>(2);
     }
 
 
@@ -147,7 +161,14 @@ public class OFDMerger implements Closeable {
                 }
                 // 创建页面容器
                 final PageDir pageDir = newPage(pages, pagesDir);
-                // TODO: 页面模板的迁移的替换
+
+                // 页面模板的迁移的替换
+                final List<Template> pageTplArr = page.getTemplates();
+                for (Template tplObj : pageTplArr) {
+                    // 迁移页面
+                    ST_RefID tplNewId = pageTplMigrate(pageEntry.docCtx, tplObj);
+                    tplObj.setTemplateID(tplNewId);
+                }
 
                 // 通过XML 选中与资源有关对象，并实现资源迁移和引用替换
                 domMigrate(pageEntry.docCtx, page);
@@ -156,6 +177,45 @@ public class OFDMerger implements Closeable {
             }
 
         }
+    }
+
+    /**
+     * 页面模板迁移到新文档
+     * <p>
+     * 若模板已经迁移过，那么直接返回迁移后的页面ID
+     *
+     * @param docCtx 原文档上下文
+     * @param tplObj 页面模板信息对象
+     * @return 迁移后模板页面在新文档中的引用ID
+     * @throws IOException 文件复制异常
+     */
+    private ST_RefID pageTplMigrate(DocContext docCtx, Template tplObj) throws IOException {
+        final String oldId = tplObj.getTemplateID().toString();
+        CT_TemplatePage templatePage = tplPageMap.get(oldId);
+        if (templatePage != null) {
+            // 页面已经复制过
+            return templatePage.getID().ref();
+        }
+
+        // 从文档中加载模板页面实体
+        final TemplatePageEntity entity = docCtx.reader.getTemplate(oldId);
+        final org.ofdrw.core.basicStructure.pageObj.Page pageObj = entity.getPage();
+        templatePage = entity.getTplInfo();
+
+        // 迁移模板页面中相关的资源，并替换模板页面中ID
+        domMigrate(docCtx, pageObj);
+        // 写入到模板容器中，并更新模板信息对象
+        final ST_Loc tplPageLoc = ofdDoc.docDir.obtainTemps().add(pageObj);
+        templatePage.setBaseLoc(tplPageLoc);
+
+        // 分配新文档的ID，并添加到新文档中的CommonData
+        ST_ID newId = new ST_ID(ofdDoc.MaxUnitID.incrementAndGet());
+        templatePage.setID(newId);
+        ofdDoc.cdata.addTemplatePage(templatePage);
+
+        // 缓存并返回文件引用
+        tplPageMap.put(oldId, templatePage);
+        return newId.ref();
     }
 
     /**

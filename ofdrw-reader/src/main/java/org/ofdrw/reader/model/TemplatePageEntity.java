@@ -19,6 +19,7 @@ public class TemplatePageEntity {
      */
     private Page page;
 
+
     /**
      * 模板信息
      */
@@ -43,8 +44,9 @@ public class TemplatePageEntity {
 
     /**
      * 用于构造排序
+     *
      * @param order 顺序
-     * @param page 页面内容
+     * @param page  页面内容
      */
     public TemplatePageEntity(Type order, Page page) {
         this.page = page;
@@ -110,5 +112,14 @@ public class TemplatePageEntity {
      */
     public Page getPage() {
         return page;
+    }
+
+    /**
+     * 模板对象信息
+     *
+     * @return 模板信息
+     */
+    public CT_TemplatePage getTplInfo() {
+        return tplInfo;
     }
 }
