@@ -130,13 +130,10 @@ public class OFDMerger implements Closeable {
      * 向合并文件中添加页面
      *
      * @param filepath    待合并的OFD文件路径
-     * @param pageIndexes 页面序列
+     * @param pageIndexes 页面序序列，如果为空表示所有页面（页码从1开始）
      * @return this
      */
     public OFDMerger add(Path filepath, int... pageIndexes) throws IOException {
-        if (pageIndexes == null || pageIndexes.length == 0) {
-            return this;
-        }
         String key = filepath.toAbsolutePath().getFileName().toString();
         DocContext ctx = docCtxMap.get(key);
         // 缓存中没有该文件映射
@@ -144,6 +141,14 @@ public class OFDMerger implements Closeable {
             // 加载文件上下文
             ctx = new DocContext(filepath);
             docCtxMap.put(key, ctx);
+        }
+        // 没有传递页码时认为需要追加所有页面
+        if (pageIndexes == null || pageIndexes.length == 0) {
+            int numberOfPages = ctx.reader.getNumberOfPages();
+            pageIndexes = new int[numberOfPages];
+            for (int i = 0; i <pageIndexes.length; i++) {
+                pageIndexes[i] = i + 1;
+            }
         }
         // 追加内容到页面列表中
         for (int pageIndex : pageIndexes) {
@@ -173,7 +178,10 @@ public class OFDMerger implements Closeable {
                 org.ofdrw.core.basicStructure.pageObj.Page page = null;
                 // 解析原OFD页面的Content.xml 为Page对象
                 try {
-                    page = pageEntry.docCtx.reader.getPage(pageEntry.pageIndex);
+                    Element copy = (Element)pageEntry.docCtx.reader.getPage(pageEntry.pageIndex).clone();
+                    final Document document = DocumentHelper.createDocument();
+                    document.add(copy);
+                    page = new org.ofdrw.core.basicStructure.pageObj.Page( copy);
                 } catch (NumberFormatException e) {
                     // 忽略页码非法的页面复制
                     continue;
@@ -354,6 +362,9 @@ public class OFDMerger implements Closeable {
             ofdDoc.prm.addRaw(mm);
         } else if (resObj instanceof CT_VectorG) {
             CT_VectorG vg = (CT_VectorG) resObj;
+            final Document d = DocumentHelper.createDocument();
+            d.add(vg);
+
             // 矢量图像，等于一个DOM 运行迁移程序
             domMigrate(docCtx, vg);
             vg.setObjID(newId);
