@@ -1,5 +1,18 @@
 # 发布记录和特性
 
+## Version 1.17.0 2021-11-14 22:53:35
+
+> Alias: Daxue
+
+新增：
+
+- 增加文档操作工具模块[ofdrw-tool](./ofdrw-tool)
+  - 文档合并功能，见 [测试用用例](./ofdrw-tool/src/test/java/org/ofdrw/tool/merge/OFDMergerTest.java)
+
+修复：
+
+- 外部字体复制BUG。
+
 ## Version 1.16.0 2021-10-15 20:42:17
 
 > Alias: Xiaoxue
