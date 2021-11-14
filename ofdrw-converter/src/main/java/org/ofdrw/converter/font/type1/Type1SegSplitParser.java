@@ -10,9 +10,10 @@ import java.util.Arrays;
 
 /**
  * 将Type1 字体分段
+ * <p>
+ * https://adobe-type-tools.github.io/font-tech-notes/pdfs/T1_SPEC.pdf
  *
  * @author 权观宇
- * @see {https://adobe-type-tools.github.io/font-tech-notes/pdfs/T1_SPEC.pdf}
  * @since 2021-10-24 16:44:53
  */
 public class Type1SegSplitParser {
@@ -108,11 +109,13 @@ public class Type1SegSplitParser {
 
 
     /**
-     * copy from guava {@link com.google.common.primitives.Bytes}
+     * 查找目标字节串偏移量
+     * <p>
+     * copy from guava from com.google.common.primitives.Bytes
      *
-     * @param array
-     * @param target
-     * @return
+     * @param array  数组
+     * @param target 查找目标
+     * @return 偏移量
      */
     public static int indexOf(byte[] array, byte[] target) {
         if (target.length == 0) {
