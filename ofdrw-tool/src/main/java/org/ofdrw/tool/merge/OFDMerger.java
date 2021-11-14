@@ -3,9 +3,7 @@ package org.ofdrw.tool.merge;
 
 import org.bouncycastle.jcajce.provider.digest.SM3;
 import org.bouncycastle.util.encoders.Hex;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.Node;
+import org.dom4j.*;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.pageObj.CT_TemplatePage;
@@ -33,6 +31,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 文档合并工具
@@ -91,6 +90,25 @@ public class OFDMerger implements Closeable {
      */
     private Map<String, CT_TemplatePage> tplPageMap;
 
+    private final AtomicInteger resFileCounter;
+    /**
+     * - Layer 的 DrawParam
+     * - 每个图像对象都可能含有 DrawParam 引用
+     * - Color 中 Pattern CellContent Thumbnail 引用
+     * - Image 中 ResourceID、Substitution、ImageMask
+     * - Text 中 Font
+     * - Composite 复合对象 中 ResourceID
+     * Res资源中的 CompositeGraphUnit CT_VectorG：Thumbnail、Substitution
+     */
+    private static Map<String ,XPath> AttrQueries = new HashMap<String, XPath>() {{
+        this.put("Font", DocumentHelper.createXPath("//*[@Font]"));
+        this.put("ResourceID", DocumentHelper.createXPath("//*[@ResourceID]"));
+        this.put("Substitution", DocumentHelper.createXPath("//*[@Substitution]"));
+        this.put("ImageMask", DocumentHelper.createXPath("//*[@ImageMask]"));
+        this.put("Thumbnail", DocumentHelper.createXPath("//*[@Thumbnail]"));
+        this.put("DrawParam", DocumentHelper.createXPath("//*[@DrawParam]"));
+    }};
+
     public OFDMerger(Path dest) {
         if (dest == null) {
             throw new IllegalArgumentException("合并结果路径(dest)为空");
@@ -104,6 +122,7 @@ public class OFDMerger implements Closeable {
         resOldNewMap = new HashMap<>();
         resFileHashTable = new HashMap<>(3);
         tplPageMap = new HashMap<>(2);
+        resFileCounter = new AtomicInteger(0);
     }
 
 
@@ -151,10 +170,15 @@ public class OFDMerger implements Closeable {
             for (final PageEntry pageEntry : pageArr) {
                 // 取0文档对象
                 final CT_PageArea docDefaultArea = pageEntry.docCtx.getDefaultArea(0);
-
+                org.ofdrw.core.basicStructure.pageObj.Page page = null;
                 // 解析原OFD页面的Content.xml 为Page对象
-                final org.ofdrw.core.basicStructure.pageObj.Page page
-                        = pageEntry.docCtx.reader.getPage(pageEntry.pageIndex);
+                try {
+                    page = pageEntry.docCtx.reader.getPage(pageEntry.pageIndex);
+                } catch (NumberFormatException e) {
+                    // 忽略页码非法的页面复制
+                    continue;
+                }
+
                 // 若当前页面的页面区域的大小和位置为空，则使用文档默认的尺寸
                 if (page.getArea() == null) {
                     page.setArea(docDefaultArea);
@@ -201,6 +225,7 @@ public class OFDMerger implements Closeable {
         final TemplatePageEntity entity = docCtx.reader.getTemplate(oldId);
         final org.ofdrw.core.basicStructure.pageObj.Page pageObj = entity.getPage();
         templatePage = entity.getTplInfo();
+        templatePage.setParent(null);
 
         // 迁移模板页面中相关的资源，并替换模板页面中ID
         domMigrate(docCtx, pageObj);
@@ -218,6 +243,8 @@ public class OFDMerger implements Closeable {
         return newId.ref();
     }
 
+
+
     /**
      * DOM元素节点的资源迁移
      * <p>
@@ -231,27 +258,13 @@ public class OFDMerger implements Closeable {
      * @throws IOException 文件读取或复制异常
      */
     private void domMigrate(DocContext docCtx, Element dom) throws IOException {
-        /*
-         * - Layer 的 DrawParam
-         * - 每个图像对象都可能含有 DrawParam 引用
-         * - Color 中 Pattern CellContent Thumbnail 引用
-         * - Image 中 ResourceID、Substitution、ImageMask
-         * - Text 中 Font
-         * - Composite 复合对象 中 ResourceID
-         * Res资源中的 CompositeGraphUnit CT_VectorG：Thumbnail、Substitution
-         */
-        String[] attrNames = new String[]{
-                "Font",
-                "ResourceID",
-                "Substitution", "ImageMask", "Thumbnail",
-                "DrawParam"
-        };
         List<Node> nodes;
-        for (String attrName : attrNames) {
-            nodes = dom.selectNodes(String.format("//*[%s]", attrName));
+        for (Map.Entry<String, XPath> entry : AttrQueries.entrySet()) {
+            nodes = entry.getValue().selectNodes(dom);;
             if (nodes.isEmpty()) {
                 continue;
             }
+            String attrName = entry.getKey();
             for (Node node : nodes) {
                 if (node instanceof Element) {
                     Element element = (Element) node;
@@ -264,8 +277,9 @@ public class OFDMerger implements Closeable {
                 }
             }
         }
+
         // 修改DOM中原有的对象ID为新页面的对象ID
-        final List<Node> objArr = dom.selectNodes("//*[ID]");
+        final List<Node> objArr = dom.selectNodes("//*[@ID]");
         for (Node node : objArr) {
             if (node instanceof Element) {
                 Element element = (Element) node;
@@ -295,11 +309,14 @@ public class OFDMerger implements Closeable {
         if (cache != null) {
             return cache.getObjID().getId();
         }
+        // 缓存对象
+        resOldNewMap.put(oldResId, resObj);
+        resObj.setParent(null);
         // 给资源在新文档中分配ID
-        long id = ofdDoc.MaxUnitID.incrementAndGet();
+        long newId = ofdDoc.MaxUnitID.incrementAndGet();
         if (resObj instanceof CT_ColorSpace) {
             CT_ColorSpace cs = (CT_ColorSpace) resObj;
-            cs.setObjID(id);
+            cs.setObjID(newId);
             ST_Loc profile = cs.getProfile();
             if (profile != null) {
                 // 复制资源到新的文档中
@@ -310,11 +327,11 @@ public class OFDMerger implements Closeable {
             ofdDoc.prm.addRaw(cs);
         } else if (resObj instanceof CT_DrawParam) {
             CT_DrawParam dp = (CT_DrawParam) resObj;
-            dp.setObjID(id);
+            dp.setObjID(newId);
             ofdDoc.prm.addRaw(dp);
         } else if (resObj instanceof CT_Font) {
             CT_Font f = (CT_Font) resObj;
-            f.setObjID(ofdDoc.MaxUnitID.incrementAndGet());
+            f.setObjID(newId);
             ST_Loc fontFileLoc = f.getFontFile();
             if (fontFileLoc != null) {
                 // 复制资源到新的文档中
@@ -325,7 +342,7 @@ public class OFDMerger implements Closeable {
             ofdDoc.prm.addRaw(f);
         } else if (resObj instanceof CT_MultiMedia) {
             CT_MultiMedia mm = (CT_MultiMedia) resObj;
-            mm.setObjID(id);
+            mm.setObjID(newId);
             ST_Loc mediaFileLoc = mm.getMediaFile();
             if (mediaFileLoc != null) {
                 // 复制资源到新的文档中
@@ -337,12 +354,13 @@ public class OFDMerger implements Closeable {
             ofdDoc.prm.addRaw(mm);
         } else if (resObj instanceof CT_VectorG) {
             CT_VectorG vg = (CT_VectorG) resObj;
-            vg.setObjID(id);
             // 矢量图像，等于一个DOM 运行迁移程序
             domMigrate(docCtx, vg);
+            vg.setObjID(newId);
             ofdDoc.prm.addRaw(vg);
         }
-        return id;
+
+        return newId;
     }
 
     /**
@@ -374,13 +392,13 @@ public class OFDMerger implements Closeable {
             return resLoc;
         }
 
-        // 重命名文件为Hash值名称，保留后缀名
+        // 重命名文件为文件计数器，保留后缀名
         String fileName = filepath.getFileName().toString();
         int off = fileName.lastIndexOf('.');
         if (off != -1) {
-            fileName = hash + fileName.substring(off);
+            fileName = resFileCounter.incrementAndGet() + fileName.substring(off);
         } else {
-            fileName = hash;
+            fileName = Integer.toString(resFileCounter.incrementAndGet());
         }
 
         final ResDir resDir = ofdDoc.docDir.obtainRes();

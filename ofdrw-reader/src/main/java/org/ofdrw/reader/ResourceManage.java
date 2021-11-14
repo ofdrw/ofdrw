@@ -2,6 +2,7 @@ package org.ofdrw.reader;
 
 import org.apache.commons.io.IOUtils;
 import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
@@ -82,7 +83,6 @@ public class ResourceManage {
 
 
     private final OFDReader ofdReader;
-
 
     /**
      * 创建资源管理器
@@ -548,6 +548,9 @@ public class ResourceManage {
                     for (CT_VectorG ctVectorG : ((CompositeGraphicUnits) ofdResource).getCompositeGraphicUnits()) {
                         // 复制副本，作为只读对象
                         CT_VectorG item = new CT_VectorG((Element) ctVectorG.clone());
+                        // 添加父节点，使xpath 正常工作
+                        final org.dom4j.Document document = DocumentHelper.createDocument();
+                        document.add(item);
                         compositeGraphicUnitMap.put(item.getID().toString(), item);
                         allResMap.put(item.getID().toString(), item);
                     }
