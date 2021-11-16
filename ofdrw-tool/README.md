@@ -11,7 +11,17 @@
 </dependency>
 ```
 
+## 页编辑
+
+`OFDMerger` 提供了页面级别的多文档编辑功能，包括：
+
+- 多文档合并
+- 文档页裁剪
+- 多文档页重组
+
 ## 多文档合并
+
+以常见用的多文档合并举例，调用流程如下：
 
 1. 提供合并文件输出位置。
 2. 提供待合并文件。
@@ -31,6 +41,7 @@ public class HelloMerge {
         // 2. 提供待合并文件。
         Path d1Path = Paths.get("file1.ofd");
         Path d2Path = Paths.get("file2.ofd");
+        Path d3Path = Paths.get("file3.ofd");
         // 3. 创建合并对象
         try (OFDMerger ofdMerger = new OFDMerger(dst)) {
             // 4. 添加合并文档和页面。
@@ -42,18 +53,39 @@ public class HelloMerge {
 }
 ```
 
-为了更加灵活的合并文档，`OFDMerger#add`方法支持可选参数，指定需要合并的页面页码（从1开始）
+为了更加灵活的合并文档，`OFDMerger#add`方法支持可选参数，指定需要合并的页面页码（从1开始），通过灵活使用该API可以实现多文档页面级别编辑功能。
 
+### 裁剪
 
-例如：
-
-- 选取`file1.ofd`的第3、1页作为新文档的第1、2页。
-- 选择`file2.ofd`的第1页作为新文档的第3、4页内容。
+截取文档的部分页面生成新的文档。
 
 ```java
-// Path d1Path = Paths.get("file1.ofd");
-// Path d2Path = Paths.get("file2.ofd");
+public class Hello {
+    public static void main(String[] args) {
+        Path dst = Paths.get("dst.ofd");
+        Path d1Path = Paths.get("file1.ofd");
+        try (OFDMerger ofdMerger = new OFDMerger(dst)) {
+            ofdMerger.add(d1Path, 1, 2);
+        }
+    }
+}
+```
 
-ofdMerger.add(d1Path, 3, 1);
-ofdMerger.add(d2Path, 1, 1);
+### 多文档页重组
+
+将多个文档中的页面合并到同一份文档中，并可以可用页面在新文档中的顺序。
+
+```java
+public class Hello {
+    public static void main(String[] args) {
+        Path dst = Paths.get("dst.ofd");
+        Path d1Path = Paths.get("file1.ofd");
+        Path d2Path = Paths.get("file2.ofd");
+        try (OFDMerger ofdMerger = new OFDMerger(dst)) {
+            ofdMerger.add(d1Path, 1, 2);
+            ofdMerger.add(d2Path, 1);
+            ofdMerger.add(d1Path, 3);
+        }
+    }
+}
 ```
