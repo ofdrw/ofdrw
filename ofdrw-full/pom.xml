@@ -60,6 +60,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-tool</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
