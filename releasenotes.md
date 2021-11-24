@@ -1,5 +1,14 @@
 # 发布记录和特性
 
+## Version 1.17.1 2021-11-24 21:18:40
+
+> Alias: Dongzhi
+
+修复：
+
+- 电子印章解析兼容而外长度出现。
+- 合并`ofdrw-tool`到`ofdrw-full`中便于引入。 
+
 ## Version 1.17.0 2021-11-14 22:53:35
 
 > Alias: Daxue

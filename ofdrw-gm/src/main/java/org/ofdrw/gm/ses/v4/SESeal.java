@@ -2,6 +2,7 @@ package org.ofdrw.gm.ses.v4;
 
 import org.bouncycastle.asn1.*;
 
+import java.io.IOException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.util.Enumeration;
@@ -60,6 +61,14 @@ public class SESeal extends ASN1Object {
     public static SESeal getInstance(Object o) {
         if (o instanceof SESeal) {
             return (SESeal) o;
+        } else if (o instanceof byte[]) {
+            ASN1InputStream aIn = new ASN1InputStream((byte[]) o);
+            try {
+                final ASN1Primitive obj = aIn.readObject();
+                new SESeal(ASN1Sequence.getInstance(obj));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("电子印章数据v4 无法解析", e);
+            }
         } else if (o != null) {
             return new SESeal(ASN1Sequence.getInstance(o));
         }
@@ -83,6 +92,7 @@ public class SESeal extends ASN1Object {
         this.cert = cert;
         return this;
     }
+
     public SESeal setCert(Certificate cert) throws CertificateEncodingException {
         this.cert = new DEROctetString(cert.getEncoded());
         return this;

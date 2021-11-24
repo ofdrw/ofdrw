@@ -2,6 +2,7 @@ package org.ofdrw.gm.ses.v1;
 
 import org.bouncycastle.asn1.*;
 
+import java.io.IOException;
 import java.util.Enumeration;
 
 /**
@@ -42,6 +43,14 @@ public class SES_Signature extends ASN1Object {
     public static SES_Signature getInstance(Object o) {
         if (o instanceof SES_Signature) {
             return (SES_Signature) o;
+        } else if (o instanceof byte[]) {
+            ASN1InputStream aIn = new ASN1InputStream((byte[]) o);
+            try {
+                ASN1Primitive obj = aIn.readObject();
+                return new SES_Signature(ASN1Sequence.getInstance(obj));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("电子签章数据 格式错误", e);
+            }
         } else if (o != null) {
             return new SES_Signature(ASN1Sequence.getInstance(o));
         }

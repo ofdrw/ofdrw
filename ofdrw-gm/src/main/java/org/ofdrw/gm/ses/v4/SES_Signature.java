@@ -2,6 +2,7 @@ package org.ofdrw.gm.ses.v4;
 
 import org.bouncycastle.asn1.*;
 
+import java.io.IOException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.util.Enumeration;
@@ -72,6 +73,14 @@ public class SES_Signature extends ASN1Object {
     public static SES_Signature getInstance(Object o) {
         if (o instanceof SES_Signature) {
             return (SES_Signature) o;
+        } else if (o instanceof byte[]) {
+            ASN1InputStream aIn = new ASN1InputStream((byte[]) o);
+            try {
+                ASN1Primitive obj = aIn.readObject();
+                return new SES_Signature(ASN1Sequence.getInstance(obj));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("电子签章数据v4 无法解析",e );
+            }
         } else if (o != null) {
             return new SES_Signature(ASN1Sequence.getInstance(o));
         }
@@ -95,6 +104,7 @@ public class SES_Signature extends ASN1Object {
         this.cert = cert;
         return this;
     }
+
     public SES_Signature setCert(Certificate cert) throws CertificateEncodingException {
         this.cert = new DEROctetString(cert.getEncoded());
         return this;
