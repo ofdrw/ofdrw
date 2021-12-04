@@ -76,8 +76,27 @@ public class TBS_Sign extends ASN1Object {
         Enumeration<?> e = seq.getObjects();
         version = ASN1Integer.getInstance(e.nextElement());
         eseal = SESeal.getInstance(e.nextElement());
-        timeInfo = DERBitString.getInstance(e.nextElement());
-        dataHash = DERBitString.getInstance(e.nextElement());
+
+        /*
+         * 兼容非标签章
+         * */
+
+        Object timeInfoObj = e.nextElement();
+        if (timeInfoObj instanceof DEROctetString) {
+            timeInfo = new DERBitString(((DEROctetString) timeInfoObj).getOctets());
+        } else {
+            timeInfo = DERBitString.getInstance(timeInfoObj);
+        }
+//        timeInfo = DERBitString.getInstance(e.nextElement());
+
+        Object dataHashObj = e.nextElement();
+        if (dataHashObj instanceof DEROctetString) {
+            dataHash = new DERBitString(((DEROctetString) dataHashObj).getOctets());
+        } else {
+            dataHash = DERBitString.getInstance(dataHashObj);
+        }
+
+//        dataHash = DERBitString.getInstance(e.nextElement());
         propertyInfo = DERIA5String.getInstance(e.nextElement());
         cert = ASN1OctetString.getInstance(e.nextElement());
         signatureAlgorithm = ASN1ObjectIdentifier.getInstance(e.nextElement());

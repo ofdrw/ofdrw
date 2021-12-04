@@ -38,6 +38,8 @@ public class SES_SignInfo extends ASN1Object {
     public static SES_SignInfo getInstance(Object o) {
         if (o instanceof SES_SignInfo) {
             return (SES_SignInfo) o;
+        } else if (o instanceof DERBitString) {
+            return new SES_SignInfo(ASN1Sequence.getInstance(((DERBitString) o).getOctets()));
         } else if (o != null) {
             return new SES_SignInfo(ASN1Sequence.getInstance(o));
         }

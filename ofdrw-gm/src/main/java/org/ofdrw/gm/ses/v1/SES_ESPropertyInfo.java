@@ -63,9 +63,20 @@ public class SES_ESPropertyInfo extends ASN1Object {
         type = ASN1Integer.getInstance(e.nextElement());
         name = DERUTF8String.getInstance(e.nextElement());
         certList = ASN1Sequence.getInstance(e.nextElement());
-        createDate = ASN1UTCTime.getInstance(e.nextElement());
-        validStart = ASN1UTCTime.getInstance(e.nextElement());
-        validEnd = ASN1UTCTime.getInstance(e.nextElement());
+
+        /*
+        * 兼容非标签章
+        * */
+        createDate = getTimeInstance(e.nextElement());
+        validStart = getTimeInstance(e.nextElement());
+        validEnd = getTimeInstance(e.nextElement());
+    }
+
+    private static ASN1UTCTime getTimeInstance(Object o) {
+        if (o instanceof ASN1GeneralizedTime) {
+            return new ASN1UTCTime(((ASN1GeneralizedTime) o).getTimeString());
+        }
+        return ASN1UTCTime.getInstance(o);
     }
 
     public SES_ESPropertyInfo(ASN1Integer type, DERUTF8String name, ASN1Sequence certList, ASN1UTCTime createDate, ASN1UTCTime validStart, ASN1UTCTime validEnd) {

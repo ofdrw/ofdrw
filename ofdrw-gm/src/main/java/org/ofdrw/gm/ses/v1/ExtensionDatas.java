@@ -40,13 +40,21 @@ public class ExtensionDatas extends ASN1Object
     public ExtensionDatas(ASN1Sequence seq) {
         dataSequence = new ArrayList<>(seq.size());
         for (int i = 0; i != seq.size(); i++) {
-            add(ExtData.getInstance(seq.getObjectAt(i)));
+            /*
+             * 兼容非标签章，忽略自定义结构部分
+             * */
+            try {
+                add(ExtData.getInstance(seq.getObjectAt(i)));
+            } catch (Exception e) {
+            }
         }
     }
 
     public static ExtensionDatas getInstance(Object obj) {
         if (obj instanceof ExtensionDatas) {
             return (ExtensionDatas) obj;
+        } else if (obj instanceof DEROctetString) {
+            return new ExtensionDatas(ASN1Sequence.getInstance(((DEROctetString) obj).getOctets()));
         } else if (obj != null) {
             return new ExtensionDatas(ASN1Sequence.getInstance(obj));
         }
