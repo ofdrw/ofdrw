@@ -11,5 +11,5 @@ final public class GlobalVar {
     /**
      * OFD Reader and Writer 版本号
      */
-    public static final String Version = "1.17.3";
+    public static final String Version = "1.17.4";
 }

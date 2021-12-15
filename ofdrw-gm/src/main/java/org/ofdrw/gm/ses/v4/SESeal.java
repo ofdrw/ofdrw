@@ -65,7 +65,7 @@ public class SESeal extends ASN1Object {
             ASN1InputStream aIn = new ASN1InputStream((byte[]) o);
             try {
                 final ASN1Primitive obj = aIn.readObject();
-                new SESeal(ASN1Sequence.getInstance(obj));
+                return new SESeal(ASN1Sequence.getInstance(obj));
             } catch (IOException e) {
                 throw new IllegalArgumentException("电子印章数据v4 无法解析", e);
             }
