@@ -132,6 +132,7 @@ public class OFDMerger implements Closeable {
      * @param filepath    待合并的OFD文件路径
      * @param pageIndexes 页面序序列，如果为空表示所有页面（页码从1开始）
      * @return this
+     * @throws IOException 页面读写异常
      */
     public OFDMerger add(Path filepath, int... pageIndexes) throws IOException {
         String key = filepath.toAbsolutePath().getFileName().toString();
