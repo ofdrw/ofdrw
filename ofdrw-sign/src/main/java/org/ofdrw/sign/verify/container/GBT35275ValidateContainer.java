@@ -29,7 +29,7 @@ public class GBT35275ValidateContainer implements SignedDataValidateContainer {
             throw new IllegalArgumentException("签名类型(type)必须是 Sign，不支持电子印章验证");
         }
         final VerifyInfo verifyInfo = GBT35275Validate.validate(alg, tbsContent, signedValue);
-        if (verifyInfo.result) {
+        if (!verifyInfo.result) {
             throw new InvalidSignedValueException(verifyInfo.hit);
         }
     }
