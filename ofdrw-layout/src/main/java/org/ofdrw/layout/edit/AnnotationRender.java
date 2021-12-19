@@ -18,6 +18,7 @@ import org.ofdrw.pkg.container.AnnotsDir;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.PageDir;
 import org.ofdrw.reader.BadOFDException;
+import org.ofdrw.reader.ErrorPathException;
 import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.ResourceLocator;
 
@@ -85,7 +86,7 @@ public class AnnotationRender {
                 annotations = rl.get(annListFileLoc, Annotations::new);
                 String parent = annListFileLoc.parent();
                 if (parent.toLowerCase().endsWith(DocDir.AnnotsDir.toLowerCase())) {
-                    annotsDir = new AnnotsDir(rl.getFile(parent));
+                    annotsDir = new AnnotsDir(rl.getContainer(parent).getContainerPath());
                 } else {
                     // 如果目录不规范，那么创建新的目录
                     annotsDir = null;
@@ -139,7 +140,7 @@ public class AnnotationRender {
             try {
                 // 从文件中加载
                 pageAnnot = rl.get(annPageFileLoc, PageAnnot::new);
-            } catch (FileNotFoundException | DocumentException e) {
+            } catch (FileNotFoundException | ErrorPathException | DocumentException e) {
                 // 如果文件不存
                 pageAnnot = null;
             }
