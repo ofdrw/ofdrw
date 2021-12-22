@@ -125,6 +125,26 @@ SM4分组长度为16字节，IV向量长度：16字节，密钥长度：16字节
 
 加密后的“文件加密对称密钥”、IV，结合上加密用户的身份信息一起组成 用户信息（UserInfo），放入 密钥描述文件内。
 
+口令加密示例：
+
+```java
+class Main{
+    public static void main(String[] args) {
+        Path src = Paths.get("src/test/resources/hello.ofd");
+        Path out = Paths.get("target/hello-enc.ofd");
+        try (OFDEncryptor ofdEncryptor = new OFDEncryptor(src, out)) {
+            final UserFEKEncryptor encryptor = new UserPasswordEncryptor("777", "12345678");
+            ofdEncryptor.addUser(encryptor);
+            ofdEncryptor.encrypt();
+        }
+        System.out.println(">> " + out.toAbsolutePath().toString());
+    }
+}
+```
+
+- 见测试用例 [OFDEncryptorTest.java #encryptPassword](../../src/test/java/org/ofdrw/crypto/OFDEncryptorTest.java)
+
+
 ### 证书加密方案
 
 证书加密，也就是由加密者提供数字证书，从数字证书中取得用户的公钥，采用非对称密码算法，
@@ -133,3 +153,27 @@ SM4分组长度为16字节，IV向量长度：16字节，密钥长度：16字节
 ![口令加密](../img/证书加密.png)
 
 加密后的“文件加密对称密钥”、数字证书，结合上加密用户的身份信息一起组成 用户信息（UserInfo），放入 密钥描述文件内。
+
+
+证书加密示例：
+
+```java
+class Main{
+    public static void main(String[] args) {
+        Path src = Paths.get("src/test/resources/hello.ofd");
+        Path out = Paths.get("target/hello-enc.ofd");
+        Path certPath  =  Paths.get("src/test/resources", "sign_cert.pem");
+        final Certificate certificate = PEMLoader.loadCert(certPath);
+
+        try (OFDEncryptor ofdEncryptor = new OFDEncryptor(src, out)) {
+            final UserFEKEncryptor encryptor = new UserCertEncryptor("777", certificate);
+            ofdEncryptor.addUser(encryptor);
+            ofdEncryptor.encrypt();
+        }
+        System.out.println(">> " + out.toAbsolutePath());
+    }
+}
+```
+
+- 见测试用例 [OFDEncryptorTest.java #encryptCert](../../src/test/java/org/ofdrw/crypto/OFDEncryptorTest.java)
+
