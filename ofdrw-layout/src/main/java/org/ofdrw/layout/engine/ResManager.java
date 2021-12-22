@@ -278,7 +278,7 @@ public class ResManager {
             // 如果不存在那么创建一个公共资源清单，容器目录为文档根目录下的Res目录
             Res publicRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
             docDir.setPublicRes(publicRes);
-            document().getCommonData().setPublicRes(ST_Loc.getInstance("PublicRes.xml"));
+            document().getCommonData().addPublicRes(ST_Loc.getInstance("PublicRes.xml"));
             return publicRes;
         }
     }
@@ -310,7 +310,7 @@ public class ResManager {
             // 如果不存在那么创建一个公共资源清单，容器目录为文档根目录下的Res目录
             Res docRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
             docDir.setDocumentRes(docRes);
-            document().getCommonData().setDocumentRes(ST_Loc.getInstance("DocumentRes.xml"));
+            document().getCommonData().addDocumentRes(ST_Loc.getInstance("DocumentRes.xml"));
             return docRes;
         }
     }
