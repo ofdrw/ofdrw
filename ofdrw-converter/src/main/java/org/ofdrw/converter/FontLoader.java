@@ -671,13 +671,15 @@ public final class FontLoader {
 
     /**
      * 加载字体到映射中
+     * <p>
+     * 支持：otf、ttf、ttc格式
      *
      * @param file 字体文件路径
      */
     public void loadFont(File file) {
         String fileName = file.getName();
         int offset = fileName.lastIndexOf('.');
-        String suffix = offset == -1 ? ".ttf" : fileName.substring(offset);
+        String suffix = offset == -1 ? ".ttf" : fileName.substring(offset).toLowerCase();
         try (TTFDataStream raf = new MemoryTTFDataStream(new FileInputStream(file))) {
             switch (suffix) {
                 case ".otf":
@@ -700,7 +702,7 @@ public final class FontLoader {
                     break;
             }
         } catch (Exception e) {
-            log.info("{} 无法解析，忽略错误 {}", file.getAbsolutePath(),  e.getMessage());
+            log.info("{} 无法解析，忽略错误 {}", file.getAbsolutePath(), e.getMessage());
         }
     }
 
