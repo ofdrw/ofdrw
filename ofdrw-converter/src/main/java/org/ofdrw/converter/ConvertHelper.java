@@ -49,6 +49,8 @@ public class ConvertHelper {
     /**
      * OFD转换PDF
      *
+     * 不建议使用该方法，建议使用 {@link  #toPdf(Path, Path)} 系列明确参数方法。
+     *
      * @param input  OFD文件路径，支持OutputStream、Path、String（文件路径）
      * @param output PDF输出流，支持OutputStream、Path、File、String（文件路径）
      * @throws IllegalArgumentException 参数错误
@@ -105,13 +107,17 @@ public class ConvertHelper {
             if (output instanceof OutputStream) {
                 bos.writeTo((OutputStream) output);
             } else if (output instanceof File) {
-                FileOutputStream fileOutputStream = new FileOutputStream((File) output);
-                bos.writeTo(fileOutputStream);
+                try (FileOutputStream fileOutputStream = new FileOutputStream((File) output);) {
+                    bos.writeTo(fileOutputStream);
+                }
             } else if (output instanceof String) {
-                FileOutputStream fileOutputStream = new FileOutputStream(new File((String) output));
-                bos.writeTo(fileOutputStream);
+                try (FileOutputStream fileOutputStream = new FileOutputStream((String) output)) {
+                    bos.writeTo(fileOutputStream);
+                }
             } else if (output instanceof Path) {
-                bos.writeTo(Files.newOutputStream((Path) output));
+                try(OutputStream out = Files.newOutputStream((Path) output)){
+                    bos.writeTo(out);
+                }
             } else {
                 throw new IllegalArgumentException("不支持的输出格式(output)，仅支持OutputStream、Path、File、String");
             }
@@ -253,7 +259,7 @@ public class ConvertHelper {
 
     /**
      * 转HTML
-     *
+     * <p>
      * 需要手动关闭外部Reader
      *
      * @param ofdReader   OFD输入文件，OFDReader应该由外部关闭
@@ -269,12 +275,12 @@ public class ConvertHelper {
     /**
      * OFD转HTML
      *
-     * @param ofdIn OFD文件路径
-     * @param htmlOut HTML输出文件路径
+     * @param ofdIn       OFD文件路径
+     * @param htmlOut     HTML输出文件路径
      * @param screenWidth 页面宽度，或者屏幕宽度
      * @throws IOException 文件处理异常
      */
-    public static void toHtml(Path ofdIn, Path htmlOut, int screenWidth) throws IOException{
+    public static void toHtml(Path ofdIn, Path htmlOut, int screenWidth) throws IOException {
         try (OFDReader reader = new OFDReader(ofdIn)) {
             HtmlMaker htmlMaker = new HtmlMaker(reader, htmlOut.toAbsolutePath().toString(), screenWidth);
             htmlMaker.parse();
