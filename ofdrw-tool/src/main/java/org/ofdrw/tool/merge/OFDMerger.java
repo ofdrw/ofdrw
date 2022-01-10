@@ -52,15 +52,6 @@ public class OFDMerger implements Closeable {
      */
     private final Map<String, DocContext> docCtxMap;
 
-    /**
-     * 新旧映射表
-     * <p>
-     * | 原文档 ID | (新文档ID, 资源对象) |
-     * <p>
-     * Key: 旧ID
-     * Value: 资源对象（ID替换为新文档中的ID）
-     */
-    private final Map<String, OFDElement> resOldNewMap;
 
     /**
      * 合并后生成文档位置
@@ -79,7 +70,7 @@ public class OFDMerger implements Closeable {
      * Key: 文件SM3 Hash Hex
      * Value: 文件在新文档中的文件名
      */
-    private Map<String, ST_Loc> resFileHashTable;
+    private final Map<String, ST_Loc> resFileHashTable;
 
 
     /**
@@ -88,7 +79,7 @@ public class OFDMerger implements Closeable {
      * Key: 模板页对象ID
      * Value: 模板页面对象
      */
-    private Map<String, CT_TemplatePage> tplPageMap;
+    private final Map<String, CT_TemplatePage> tplPageMap;
 
     private final AtomicInteger resFileCounter;
     /**
@@ -100,7 +91,7 @@ public class OFDMerger implements Closeable {
      * - Composite 复合对象 中 ResourceID
      * Res资源中的 CompositeGraphUnit CT_VectorG：Thumbnail、Substitution
      */
-    private static Map<String ,XPath> AttrQueries = new HashMap<String, XPath>() {{
+    private static final Map<String ,XPath> AttrQueries = new HashMap<String, XPath>() {{
         this.put("Font", DocumentHelper.createXPath("//*[@Font]"));
         this.put("ResourceID", DocumentHelper.createXPath("//*[@ResourceID]"));
         this.put("Substitution", DocumentHelper.createXPath("//*[@Substitution]"));
@@ -119,7 +110,6 @@ public class OFDMerger implements Closeable {
         if (!Files.exists(dest.getParent())) {
             throw new IllegalArgumentException("OFD文件存储路径(dest)上级目录 [" + dest.getParent().toAbsolutePath() + "] 不存在");
         }
-        resOldNewMap = new HashMap<>();
         resFileHashTable = new HashMap<>(3);
         tplPageMap = new HashMap<>(2);
         resFileCounter = new AtomicInteger(0);
@@ -269,7 +259,7 @@ public class OFDMerger implements Closeable {
     private void domMigrate(DocContext docCtx, Element dom) throws IOException {
         List<Node> nodes;
         for (Map.Entry<String, XPath> entry : AttrQueries.entrySet()) {
-            nodes = entry.getValue().selectNodes(dom);;
+            nodes = entry.getValue().selectNodes(dom);
             if (nodes.isEmpty()) {
                 continue;
             }
@@ -314,12 +304,12 @@ public class OFDMerger implements Closeable {
         final ResourceLocator rl = docCtx.reader.getResourceLocator();
 
         // 检查缓存，防止重复迁移
-        final OFDElement cache = resOldNewMap.get(oldResId);
+        final OFDElement cache = docCtx.resOldNewMap.get(oldResId);
         if (cache != null) {
             return cache.getObjID().getId();
         }
         // 缓存对象
-        resOldNewMap.put(oldResId, resObj);
+        docCtx.resOldNewMap.put(oldResId, resObj);
         resObj.setParent(null);
         // 给资源在新文档中分配ID
         long newId = ofdDoc.MaxUnitID.incrementAndGet();
