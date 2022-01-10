@@ -36,8 +36,12 @@ public class ElemCup {
      */
     public static Element inject(Path file) throws DocumentException {
         SAXReader reader = new SAXReader();
-        Document document = reader.read(file.toFile());
-        return document.getRootElement();
+        try (InputStream in = Files.newInputStream(file)) {
+            Document document = reader.read(in);
+            return document.getRootElement();
+        } catch (IOException e) {
+            throw new DocumentException(e);
+        }
     }
 
     /**
