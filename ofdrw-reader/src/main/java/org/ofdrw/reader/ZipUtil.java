@@ -31,7 +31,6 @@ public class ZipUtil {
      * @param descDir 解压到目录
      * @throws IOException 文件操作IO异常
      */
-    @SuppressWarnings("rawtypes")
     public static void unZipFiles(InputStream src, String descDir) throws IOException {
         File pathFile = new File(descDir).getCanonicalFile();
         if (!pathFile.exists()) {
@@ -86,7 +85,6 @@ public class ZipUtil {
      * @param descDir 解压到目录
      * @throws IOException 文件操作IO异常
      */
-    @SuppressWarnings("rawtypes")
     public static void unZipFiles(File zipFile, String descDir) throws IOException {
 
         try (InputStream in = new FileInputStream(zipFile)) {

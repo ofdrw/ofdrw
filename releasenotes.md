@@ -1,8 +1,16 @@
 # 发布记录和特性
 
+## Version 1.17.8 2022-1-13 20:51:55
+
+> Alias: Qingming
+
+修复：
+
+- 修复某些精心构造的ZIP文件导致的解压文件特别巨大。
+
 ## Version 1.17.7 2022-1-10 21:21:35
 
-> Alias: Chunfe
+> Alias: Chunfen
 
 修复：
 
