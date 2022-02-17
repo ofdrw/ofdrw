@@ -249,7 +249,7 @@ public class ResourceLocator {
             fullPath = ofwTmp + path;
         } else {
             // 相对路径
-            fullPath = ofwTmp + pwd() + path;
+            fullPath = Paths.get(ofwTmp, pwd(), path).toAbsolutePath().toString();
         }
         return Files.exists(Paths.get(fullPath));
     }

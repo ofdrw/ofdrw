@@ -81,6 +81,16 @@ public class OFDReader implements Closeable {
         return workDir;
     }
 
+    /**
+     * 设置 OFD解压后最大占用文件大小
+     * <p>
+     * 默认值： 100MB
+     *
+     * @param size 解压文件大小，单位字节（Byte）
+     */
+    public static void setZipFileMaxSize(long size) {
+        ZipUtil.setMaxSize(size);
+    }
 
     /**
      * 构造一个 OFDReader

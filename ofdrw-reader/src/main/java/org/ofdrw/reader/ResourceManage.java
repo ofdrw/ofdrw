@@ -553,7 +553,7 @@ public class ResourceManage {
                 }
             }
         } catch (Exception e) {
-            System.err.println("无法解析资源描述文件 " + resLoc.toString() + " " + e.getMessage());
+           // System.out.println("[可忽略] 无法解析资源描述文件 " + resLoc.toString() + " " + e.getMessage());
         } finally {
             rl.restore();
         }

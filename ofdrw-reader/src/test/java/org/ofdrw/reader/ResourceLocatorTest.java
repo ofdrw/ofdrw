@@ -167,4 +167,13 @@ class ResourceLocatorTest {
     @Test
     void getFile() {
     }
+
+    @Test
+    void testExist() {
+        String ofwTmp = Paths.get("").toAbsolutePath().toString();
+        String pwd = "/print/working/directory";
+        String path = "path/to/attachment";
+        String fullPath = Paths.get(ofwTmp, pwd, path).toAbsolutePath().toString();
+        System.out.println(fullPath);
+    }
 }

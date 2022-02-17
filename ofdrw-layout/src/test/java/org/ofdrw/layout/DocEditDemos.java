@@ -1,6 +1,12 @@
 package org.ofdrw.layout;
 
 import org.junit.jupiter.api.Test;
+import org.ofdrw.core.action.actionType.actionGoto.CT_Dest;
+import org.ofdrw.core.action.actionType.actionGoto.DestType;
+import org.ofdrw.core.basicStructure.doc.Document;
+import org.ofdrw.core.basicStructure.doc.bookmark.Bookmark;
+import org.ofdrw.core.basicStructure.doc.bookmark.Bookmarks;
+import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.edit.Attachment;
 import org.ofdrw.layout.element.*;
@@ -227,4 +233,27 @@ public class DocEditDemos {
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
 
+
+    /**
+     * 添加书签
+     */
+    @Test
+    void addBookmarkTest() throws IOException {
+        Path srcP = Paths.get("src/test/resources/Page5.ofd");
+        Path outP = Paths.get("target/addBookmark.ofd");
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+            Document document = ofdDoc.getOfdDocument();
+            ST_ID pageID = document.getPages().getPageByIndex(3).getID();
+            CT_Dest dest = new CT_Dest()
+                    .setType(DestType.Fit)
+                    .setPageID(pageID.ref());
+            Bookmarks bookmarks = document.getBookmarks();
+            if (bookmarks == null) {
+                bookmarks = new Bookmarks();
+                document.setBookmarks(bookmarks);
+            }
+            bookmarks.addBookmark(new Bookmark("美好一天", dest));
+        }
+    }
 }

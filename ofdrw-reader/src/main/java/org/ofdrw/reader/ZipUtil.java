@@ -10,8 +10,25 @@ import java.util.zip.ZipInputStream;
 
 public class ZipUtil {
 
-    //最大字节数
-    private static final int MaxSize = 100 * 1024 * 1024;
+    /**
+     * 解压许可最大字节数，为了防止 ZIP炸弹攻击
+     *
+     * 默认值： 100M
+     */
+    private static long MaxSize = 100 * 1024 * 1024;
+
+
+    /**
+     * 设置 解压许可最大字节数
+     *
+     * @param size 压缩文件解压最大大小,默认值： 100M
+     */
+    public static void setMaxSize(long size) {
+        if (size <= 0) {
+            size = 100 * 1024 * 1024;
+        }
+        MaxSize = size;
+    }
 
     /**
      * 解压到指定目录
@@ -73,7 +90,7 @@ public class ZipUtil {
 
                     countByteNumber += num;
                 }
-                Files.write( Paths.get(file.getAbsolutePath()), bos.toByteArray());
+                Files.write(Paths.get(file.getAbsolutePath()), bos.toByteArray());
             }
         }
     }
