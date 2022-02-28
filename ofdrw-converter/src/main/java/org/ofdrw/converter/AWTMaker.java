@@ -78,7 +78,7 @@ public abstract class AWTMaker {
     protected boolean isStamp = false;
 
 
-    protected List<PageInfo> pages = null;
+    protected List<PageInfo> pages;
 
     private final ResourceManage resourceManage;
     /**
@@ -369,7 +369,7 @@ public abstract class AWTMaker {
         ST_Box boundary = imageObject.getBoundary();
         Matrix baseMatrix = renderBoundaryAndSetClip(graphics, boundary, parentMatrix);
 
-        BufferedImage image = null;
+        BufferedImage image;
         try {
             // 解析图片对象获取图片
             image = resourceManage.getImage(imageObject);
@@ -523,13 +523,22 @@ public abstract class AWTMaker {
                 int deltaOffset = drawOffset - 1;
                 if (deltaOffset >= 0) {
                     // 非第一个字符需要添加字符偏移量
-                    if (deltaX.size() > 0 && deltaOffset < deltaX.size()) {
+                    if (deltaX.size() > 0) {
                         // 计算X偏移量
-                        x += deltaX.get(deltaOffset);
+                        if (deltaOffset < deltaX.size()) {
+                            x += deltaX.get(deltaOffset);
+                        } else {
+                            // 如果deltaX 数组长度不及字符长度，使用deltaX数组的最后一个数值作为剩余字符的偏移量，防止其错位打印。
+                            x += deltaX.get(deltaX.size() - 1);
+                        }
                     }
-                    if (deltaY.size() > 0 && deltaOffset < deltaY.size()) {
+                    if (deltaY.size() > 0) {
                         // 计算Y偏移量
-                        y += deltaY.get(deltaOffset);
+                        if (deltaOffset < deltaY.size()) {
+                            y += deltaY.get(deltaOffset);
+                        } else {
+                            y += deltaY.get(deltaY.size() - 1);
+                        }
                     }
                 }
                 GeneralPath shape = tbDrawChars.get(drawOffset);
@@ -751,7 +760,7 @@ public abstract class AWTMaker {
                 if ("0.0".equals(s))
                     color[i] = 0;
                 else
-                    color[i] = Integer.valueOf(s);
+                    color[i] = Integer.parseInt(s);
             }
         }
         switch (type) {
