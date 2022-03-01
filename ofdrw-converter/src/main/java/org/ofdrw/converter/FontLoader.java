@@ -702,7 +702,7 @@ public final class FontLoader {
                     break;
             }
         } catch (Exception e) {
-            log.info("{} 无法解析，忽略错误 {}", file.getAbsolutePath(), e.getMessage());
+            log.debug("{} 无法解析，忽略错误 {}", file.getAbsolutePath(), e.getMessage());
         }
     }
 

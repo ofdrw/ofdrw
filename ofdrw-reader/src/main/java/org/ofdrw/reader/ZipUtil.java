@@ -131,7 +131,7 @@ public class ZipUtil {
     public static void unZipFileByApacheCommonCompress(File srcFile, String descDir) throws IOException {
         File pathFile = new File(descDir).getCanonicalFile();
         if (!pathFile.exists() && !pathFile.mkdirs()) {
-            throw new IOException("failed to create directory " + pathFile);
+            throw new IOException("解压目录创建失败: " + pathFile);
         }
         try (ZipFile zipFile = new ZipFile(srcFile)) {
             ZipEntry entry = null;

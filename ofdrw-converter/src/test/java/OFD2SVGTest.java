@@ -44,7 +44,6 @@ public class OFD2SVGTest {
 //        toSVG("src/test/resources/ano.ofd", "target/ano.ofd");
 //        toSVG("src/test/resources/文字横向-数科.ofd", "target/文字横向-数科.ofd");
 //        toSVG("src/test/resources/z.ofd", "target/z.ofd");
-//        toSVG("src/test/resources/金格信创自动盖章.ofd", "target/安证通手动盖章.ofd");
         toSVG("src/test/resources/发票示例.ofd", "target/发票示例.ofd");
 //        toSVG("src/test/resources/signout.ofd", "target/signout.ofd");
 //        toSVG("src/test/resources/n.ofd", "target/n.ofd");
