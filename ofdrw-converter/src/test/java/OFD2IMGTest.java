@@ -20,16 +20,16 @@ public class OFD2IMGTest {
 
         //为不规范的字体名创建映射
         FontLoader.getInstance()
-                .addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
-                .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
-                .addAliasMapping(null, "楷体", "KaiTi", "KaiTi")
+                .addAliasMapping("小标宋体", "方正小标宋简体")
+                .addAliasMapping("KaiTi_GB2312", "楷体")
+                .addAliasMapping("楷体", "KaiTi")
 
-                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
-                .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
-                .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
-                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
+                .addSimilarFontReplaceRegexMapping(".*Kai.*", "楷体")
+                .addSimilarFontReplaceRegexMapping(".*Kai.*", "楷体")
+                .addSimilarFontReplaceRegexMapping(".*MinionPro.*", "SimSun")
+                .addSimilarFontReplaceRegexMapping(".*SimSun.*", "SimSun")
+                .addSimilarFontReplaceRegexMapping(".*Song.*", "宋体")
+                .addSimilarFontReplaceRegexMapping(".*MinionPro.*", "SimSun");
 
         FontLoader.getInstance().scanFontDir(new File("src/main/resources/fonts"));
         FontLoader.setSimilarFontReplace(true);
