@@ -19,12 +19,20 @@ public class OFD2IMGTest {
     public void test() throws IOException {
 
         //为不规范的字体名创建映射
-//        FontLoader.getInstance()
-//                .addAliasMapping("仿宋简体", "方正仿宋简体")
-//                .addAliasMapping("仿宋", "方正仿宋简体")
-//                .addAliasMapping("小标宋体", "方正小标宋简体")
-//                .addAliasMapping("KaiTi_GB2312", "楷体");
-        FontLoader.getInstance();
+        FontLoader.getInstance()
+                .addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
+                .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
+                .addAliasMapping(null, "楷体", "KaiTi", "KaiTi")
+
+                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
+                .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
+                .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
+                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
+
+        FontLoader.getInstance().scanFontDir(new File("src/main/resources/fonts"));
+        FontLoader.setSimilarFontReplace(true);
         long start = System.currentTimeMillis();
 //        toPng("src/test/resources/helloworld.ofd", "target/helloworld.ofd");
 //        toPng("src/test/resources/999.ofd", "target/999.ofd");
@@ -33,7 +41,8 @@ public class OFD2IMGTest {
 //        toPng("src/test/resources/文字横向-数科.ofd", "target/文字横向-数科.ofd");
 //        toPng("src/test/resources/z.ofd", "target/z.ofd");
 //        toPng("src/test/resources/不规范资源路径.ofd", "target/不规范资源路径.ofd");
-//        toPng("src/test/resources/V4RideRight.ofd", "target/V4RideRight.ofd");
+        toPng("src/test/resources/安证通手动盖章.ofd", "target/安证通手动盖章.ofd");
+//        toPng("src/test/resources/金格信创自动盖章.ofd", "target/金格信创自动盖章.ofd");
 //        toPng("src/test/resources/发票示例.ofd", "target/发票示例.ofd");
         System.out.printf(">> 总计花费: %dms\n", System.currentTimeMillis() - start);
     }

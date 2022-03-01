@@ -3,6 +3,7 @@ import org.ofdrw.converter.FontLoader;
 import org.ofdrw.converter.SVGMaker;
 import org.ofdrw.reader.OFDReader;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -26,6 +27,7 @@ public class OFD2SVGTest {
         FontLoader.getInstance()
             .addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
             .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
+            .addAliasMapping(null, "楷体", "KaiTi", "KaiTi")
 
             .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
             .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
@@ -34,18 +36,18 @@ public class OFD2SVGTest {
             .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
             .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
 
+        FontLoader.getInstance().scanFontDir(new File("src/main/resources/fonts"));
         FontLoader.setSimilarFontReplace(true);
-
-
         long start = System.currentTimeMillis();
 //        toSVG("src/test/resources/999.ofd", "target/999.ofd");
 //        toSVG("src/test/resources/zsbk.ofd", "target/zsbk.ofd");
 //        toSVG("src/test/resources/ano.ofd", "target/ano.ofd");
 //        toSVG("src/test/resources/文字横向-数科.ofd", "target/文字横向-数科.ofd");
 //        toSVG("src/test/resources/z.ofd", "target/z.ofd");
-//        toSVG("src/test/resources/发票示例.ofd", "target/发票示例.ofd");
-        toSVG("src/test/resources/signout.ofd", "target/signout.ofd");
-        toSVG("src/test/resources/n.ofd", "target/n.ofd");
+//        toSVG("src/test/resources/金格信创自动盖章.ofd", "target/安证通手动盖章.ofd");
+        toSVG("src/test/resources/发票示例.ofd", "target/发票示例.ofd");
+//        toSVG("src/test/resources/signout.ofd", "target/signout.ofd");
+//        toSVG("src/test/resources/n.ofd", "target/n.ofd");
 
 //        toPng("src/test/resources/不规范资源路径.ofd", "target/不规范资源路径.ofd");
         System.out.printf(">> 总计花费: %dms\n", System.currentTimeMillis() - start);

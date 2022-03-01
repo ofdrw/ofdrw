@@ -3,6 +3,7 @@ import org.ofdrw.converter.ConvertHelper;
 import org.ofdrw.converter.FontLoader;
 import org.ofdrw.converter.GeneralConvertException;
 
+import java.io.File;
 import java.nio.file.Paths;
 
 public class OFD2PDFTest {
@@ -15,23 +16,30 @@ public class OFD2PDFTest {
 //        Path src = Paths.get("src/test/resources/zsbk.ofd");
 //        Path dst = Paths.get("target/zsbk.pdf");
 
+//为不规范的字体名创建映射
         FontLoader.getInstance()
-            .addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
-            .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
+                .addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
+                .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
+                .addAliasMapping(null, "楷体", "KaiTi", "KaiTi")
 
-            .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-            .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
-            .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
-            .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
+                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+                .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
+                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
+                .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
+                .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
+                .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
 
+        FontLoader.getInstance().scanFontDir(new File("src/main/resources/fonts"));
         FontLoader.setSimilarFontReplace(true);
-
+        long start = System.currentTimeMillis();
         try {
 //            ConvertHelper.toPdf(src, dst);
-//            ConvertHelper.toPdf(Paths.get("src/test/resources/signout.ofd"), Paths.get("target/signout.pdf"));
-            ConvertHelper.toPdf(Paths.get("src/test/resources/zsbk.ofd"), Paths.get("target/zsbk.pdf"));
-//            ConvertHelper.toPdf(Paths.get("src/test/resources/999.ofd"), Paths.get("target/999.pdf"));
+//            ConvertHelper.toPdf(Paths.get("src/test/resources/发票示例.ofd"), Paths.get("target/发票示例.pdf"));
+            ConvertHelper.toPdf(Paths.get("src/test/resources/金格信创自动盖章.ofd"), Paths.get("target/金格信创自动盖章.pdf"));
 
+//            ConvertHelper.toPdf(Paths.get("src/test/resources/zsbk.ofd"), Paths.get("target/zsbk.pdf"));
+//            ConvertHelper.toPdf(Paths.get("src/test/resources/999.ofd"), Paths.get("target/999.pdf"));
+            System.out.printf(">> 总计花费: %dms\n", System.currentTimeMillis() - start);
         } catch (GeneralConvertException e) {
             e.printStackTrace();
         }
