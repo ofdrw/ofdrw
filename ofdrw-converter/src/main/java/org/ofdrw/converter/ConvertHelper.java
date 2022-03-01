@@ -64,7 +64,7 @@ public class ConvertHelper {
             } else if (input instanceof Path) {
                 reader = new OFDReader((Path) input);
             } else if (input instanceof File) {
-                reader = new OFDReader(new FileInputStream((File) input));
+                reader = new OFDReader(((File) input).toPath());
             } else if (input instanceof String) {
                 reader = new OFDReader((String) input);
             } else {
