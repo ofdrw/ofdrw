@@ -20,10 +20,11 @@ import org.ofdrw.core.text.text.CT_Text;
 import org.ofdrw.reader.DeltaTool;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.ResourceLocator;
-import sun.font.FontDesignMetrics;
 
 import java.awt.*;
+import java.awt.font.FontRenderContext;
 import java.awt.font.TextAttribute;
+import java.awt.geom.AffineTransform;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -312,9 +313,9 @@ public class KeywordExtractor {
                 String content = textCode.getContent();
                 boolean hasNextKeyword = true;
 
-                while(hasNextKeyword) {
-                    FontMetrics fontMetrics = FontDesignMetrics.getMetrics(getFont(ctText, kr.getFont()));
-
+                while (hasNextKeyword) {
+//                    FontMetrics fontMetrics = FontDesignMetrics.getMetrics(getFont(ctText, kr.getFont()));
+                    double fHeight = strHeight(keyword, getFont(ctText, kr.getFont()));
                     List<Float> deltaX = DeltaTool.getDelta(textCode.getDeltaX(), textCode.getContent().length());
                     List<Float> deltaY = DeltaTool.getDelta(textCode.getDeltaY(), textCode.getContent().length());
 
@@ -322,9 +323,9 @@ public class KeywordExtractor {
                     ST_Array ctm = ctText.getCTM();
                     int keywordLength = keyword.length();
                     if (ctm != null) {
-                        position = getCtmKeywordPosition(textCode, textIndex, kr.getPage(), ctText, fontMetrics, ctm, deltaX, deltaY, keywordLength);
+                        position = getCtmKeywordPosition(textCode, textIndex, kr.getPage(), ctText, fHeight, ctm, deltaX, deltaY, keywordLength);
                     } else {
-                        position = getKeywordPosition(textCode, textIndex, kr.getPage(), ctText, fontMetrics, deltaX, deltaY, keywordLength);
+                        position = getKeywordPosition(textCode, textIndex, kr.getPage(), ctText, fHeight, deltaX, deltaY, keywordLength);
                     }
 
                     position.setKeyword(keyword);
@@ -344,16 +345,16 @@ public class KeywordExtractor {
      * @param textIndex     文本索引
      * @param page          文本资源
      * @param ctText        文字对象
-     * @param fontMetrics   字体属性
+     * @param height        字体高度
      * @param ctm           CTM对象
      * @param deltaX        X偏移
      * @param deltaY        Y偏移
      * @param keywordLength 文本长度
      * @return 关键字位置
      */
-    private static KeywordPosition getCtmKeywordPosition(TextCode textCode, int textIndex, int page, CT_Text ctText, FontMetrics fontMetrics,
+    private static KeywordPosition getCtmKeywordPosition(TextCode textCode, int textIndex, int page, CT_Text ctText, double height,
                                                          ST_Array ctm, List<Float> deltaX, List<Float> deltaY, int keywordLength) {
-        double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
+//        double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
 
         double[] matrix = getMatrix(ctm);
         double x = textCode.getX();
@@ -438,7 +439,7 @@ public class KeywordExtractor {
         List<String> ctmArray = ctm.getArray();
         double[] matrix = new double[ctmArray.size()];
         for (int i = 0; i < ctmArray.size(); i++) {
-            matrix[i] = Double.valueOf(ctmArray.get(i));
+            matrix[i] = Double.parseDouble(ctmArray.get(i));
         }
         return matrix;
     }
@@ -455,8 +456,8 @@ public class KeywordExtractor {
     private static void mergeKeywordPosition(String keyword, int firstStartIndex, List<KeywordPosition> positionList, List<TextCode> textCodeList,
                                              Map<TextCode, KeywordResource> boundaryMapping) {
         List<ST_Box> boxList = new ArrayList<>();
-        FontMetrics fontMetrics = null;
-        int page = 0, totalLength = 0, keywordLength = keyword.length(), fontSize = 0;
+//        FontMetrics fontMetrics = null;
+        int page = 0, totalLength = 0, keywordLength = keyword.length();
 
         for (int i = 0; i < textCodeList.size(); i++) {
             TextCode textCode = textCodeList.get(i);
@@ -492,12 +493,15 @@ public class KeywordExtractor {
                         width = kr.getText().getSize();
                     }
 
-                    int size = ctText.getSize().intValue();
-                    if (fontMetrics == null || fontSize != size) {
-                        fontMetrics = FontDesignMetrics.getMetrics(getFont(ctText, kr.getFont()));
-                        fontSize = size;
-                    }
-                    double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
+//                    int size = ctText.getSize().intValue();
+//                    if (fontMetrics == null || fontSize != size) {
+//                        fontMetrics = FontDesignMetrics.getMetrics(getFont(ctText, kr.getFont()));
+//                        fontSize = size;
+//                    }
+//                    double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
+
+                    double height = strHeight(keyword, getFont(ctText, kr.getFont()));
+
                     ST_Pos basePoint;
                     ST_Array ctm = ctText.getCTM();
                     if (ctm != null) {
@@ -608,16 +612,16 @@ public class KeywordExtractor {
      * @param textIndex     文本索引
      * @param page          页码
      * @param ctText        文字对象
-     * @param fontMetrics   字体属性
+     * @param height        字体高度
      * @param deltaX        X偏移
      * @param deltaY        Y偏移
      * @param keywordLength 文本长度
      * @return 关键字对象
      */
-    private static KeywordPosition getKeywordPosition(TextCode textCode, int textIndex, int page, CT_Text ctText, FontMetrics fontMetrics,
+    private static KeywordPosition getKeywordPosition(TextCode textCode, int textIndex, int page, CT_Text ctText, double height,
                                                       List<Float> deltaX, List<Float> deltaY, int keywordLength) {
         double width = getStringWidth(textIndex, keywordLength, deltaX, ctText.getSize());
-        double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
+//        double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
 
         if (!deltaY.isEmpty()) {
             for (int i = 0; i < deltaY.size() && i < keywordLength - 1; i++) {
@@ -629,6 +633,19 @@ public class KeywordExtractor {
         ST_Box box = new ST_Box(basePoint.getX(), basePoint.getY() - height, width, height);
 
         return new KeywordPosition(page, box);
+    }
+
+    /**
+     * 获取字体高度
+     *
+     * @param str  待测量文字
+     * @param font 字体
+     * @return 高度
+     */
+    private static Double strHeight(String str, Font font) {
+        FontRenderContext frc =
+                new FontRenderContext(new AffineTransform(), true, true);
+        return font.getStringBounds(str, frc).getHeight()/ POINT_PER_MM;
     }
 
     /**
