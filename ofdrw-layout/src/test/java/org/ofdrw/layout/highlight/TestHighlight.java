@@ -34,7 +34,7 @@ public class TestHighlight {
         // 签署输出路径
         Path out = Paths.get("target/put_rect.ofd");
 
-        String[] keyword = {"备注", "销售方", "价金", "项目名称"};
+        String[] keyword = {"销售方", "价金", "项目名称"};
         try (OFDReader reader = new OFDReader(src)) {
             List<KeywordPosition> positionList = KeywordExtractor.getKeyWordPositionList(reader, keyword);
             try (OFDDoc ofdDoc = new OFDDoc(reader, out)) {

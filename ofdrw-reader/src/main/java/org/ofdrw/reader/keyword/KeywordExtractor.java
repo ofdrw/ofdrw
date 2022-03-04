@@ -314,7 +314,6 @@ public class KeywordExtractor {
                 boolean hasNextKeyword = true;
 
                 while (hasNextKeyword) {
-//                    FontMetrics fontMetrics = FontDesignMetrics.getMetrics(getFont(ctText, kr.getFont()));
                     double fHeight = strHeight(keyword, getFont(ctText, kr.getFont()));
                     List<Float> deltaX = DeltaTool.getDelta(textCode.getDeltaX(), textCode.getContent().length());
                     List<Float> deltaY = DeltaTool.getDelta(textCode.getDeltaY(), textCode.getContent().length());
@@ -354,7 +353,6 @@ public class KeywordExtractor {
      */
     private static KeywordPosition getCtmKeywordPosition(TextCode textCode, int textIndex, int page, CT_Text ctText, double height,
                                                          ST_Array ctm, List<Float> deltaX, List<Float> deltaY, int keywordLength) {
-//        double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
 
         double[] matrix = getMatrix(ctm);
         double x = textCode.getX();
@@ -493,13 +491,6 @@ public class KeywordExtractor {
                         width = kr.getText().getSize();
                     }
 
-//                    int size = ctText.getSize().intValue();
-//                    if (fontMetrics == null || fontSize != size) {
-//                        fontMetrics = FontDesignMetrics.getMetrics(getFont(ctText, kr.getFont()));
-//                        fontSize = size;
-//                    }
-//                    double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
-
                     double height = strHeight(keyword, getFont(ctText, kr.getFont()));
 
                     ST_Pos basePoint;
@@ -612,27 +603,52 @@ public class KeywordExtractor {
      * @param textIndex     文本索引
      * @param page          页码
      * @param ctText        文字对象
-     * @param height        字体高度
+     * @param lineHeight    字体高度
      * @param deltaX        X偏移
      * @param deltaY        Y偏移
      * @param keywordLength 文本长度
      * @return 关键字对象
      */
-    private static KeywordPosition getKeywordPosition(TextCode textCode, int textIndex, int page, CT_Text ctText, double height,
+    private static KeywordPosition getKeywordPosition(TextCode textCode, int textIndex, int page, CT_Text ctText, double lineHeight,
                                                       List<Float> deltaX, List<Float> deltaY, int keywordLength) {
-        double width = getStringWidth(textIndex, keywordLength, deltaX, ctText.getSize());
-//        double height = (fontMetrics.getAscent() - fontMetrics.getDescent()) / POINT_PER_MM;
 
-        if (!deltaY.isEmpty()) {
-            for (int i = 0; i < deltaY.size() && i < keywordLength - 1; i++) {
-                height += deltaY.get(i);
+        ST_Pos position = ctText.getBoundary().getTopLeftPos();
+
+        double positionX = position.getX() == null ? 0 : position.getX();
+        double positionY = position.getY() == null ? 0 : position.getY();
+
+        double x = (textCode.getX() == null ? 0 : textCode.getX()) + positionX;
+        double y = (textCode.getY() == null ? 0 : textCode.getY()) + positionY;
+
+        double maxX = Double.MIN_VALUE;
+        double maxY = Double.MIN_VALUE;
+        double minX = Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        for (int i = 0; i < textIndex + keywordLength; i++) {
+            if (i >= textIndex) {
+                // 第一个有效字符开始
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, y);
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+            }
+
+            if (deltaX.size() > i) {
+                x += deltaX.get(i);
+            }
+            if (deltaY.size() > i) {
+                y += deltaY.get(i);
             }
         }
 
-        ST_Pos basePoint = getLeftBottomPos(ctText.getBoundary(), textCode, deltaX, deltaY, textIndex);
-        ST_Box box = new ST_Box(basePoint.getX(), basePoint.getY() - height, width, height);
+        double w = maxX - minX + ctText.getSize();
+        double h = maxY - minY + lineHeight;
+        // Top Left
+        double tlx = minX;
+        double tly = minY - lineHeight;
 
-        return new KeywordPosition(page, box);
+
+        return new KeywordPosition(page, new ST_Box(tlx, tly, w, h));
     }
 
     /**
@@ -645,7 +661,7 @@ public class KeywordExtractor {
     private static Double strHeight(String str, Font font) {
         FontRenderContext frc =
                 new FontRenderContext(new AffineTransform(), true, true);
-        return font.getStringBounds(str, frc).getHeight()/ POINT_PER_MM;
+        return font.getStringBounds(str, frc).getHeight() / POINT_PER_MM;
     }
 
     /**
