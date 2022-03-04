@@ -321,7 +321,7 @@ public class CT_DrawParam extends OFDElement {
             return this;
         }
         fillColor.setOFDName("FillColor");
-        this.set(fillColor);
+        this.set((Element) fillColor.clone());
         return this;
     }
 
@@ -356,7 +356,7 @@ public class CT_DrawParam extends OFDElement {
             return this;
         }
         strokeColor.setOFDName("StrokeColor");
-        this.set(strokeColor);
+        this.set((Element) strokeColor.clone());
         return this;
     }
 
