@@ -3,6 +3,7 @@ package org.ofdrw.crypto.integrity;
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.ofdrw.core.Holder;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.integrity.FileList;
 import org.ofdrw.core.integrity.OFDEntries;
@@ -10,7 +11,6 @@ import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.pkg.tool.ElemCup;
 import org.ofdrw.reader.ZipUtil;
 
-import javax.xml.ws.Holder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
