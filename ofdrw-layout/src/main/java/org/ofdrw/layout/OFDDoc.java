@@ -158,8 +158,9 @@ public class OFDDoc implements Closeable {
         if (Files.isDirectory(outPath)) {
             throw new IllegalArgumentException("OFD文件存储路径(outPath)不能是目录");
         }
-        if (!Files.exists(outPath.getParent())) {
-            throw new IllegalArgumentException("OFD文件存储路径(outPath)上级目录 [" + outPath.getParent().toAbsolutePath() + "] 不存在");
+        final Path parent = outPath.getParent();
+        if (parent == null || !Files.exists(parent)) {
+            throw new IllegalArgumentException("OFD文件存储路径(outPath)上级目录 [" + parent + "] 不存在");
         }
         this.outPath = outPath;
     }
