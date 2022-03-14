@@ -456,14 +456,14 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * <p>
      * 取值区间为 [0,255]
      * <p>
-     * 默认为 0
+     * 默认为 255
      *
      * @return 图元对象透明度，取值区间为 [0,255]
      */
     public Integer getAlpha() {
         String str = this.attributeValue("Alpha");
         if (str == null || str.trim().length() == 0) {
-            return 0;
+            return 255;
         }
         return Integer.parseInt(str);
     }
