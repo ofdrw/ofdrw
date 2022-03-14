@@ -91,7 +91,7 @@ public class OFDMerger implements Closeable {
      * - Composite 复合对象 中 ResourceID
      * Res资源中的 CompositeGraphUnit CT_VectorG：Thumbnail、Substitution
      */
-    private static final Map<String ,XPath> AttrQueries = new HashMap<String, XPath>() {{
+    private static final Map<String, XPath> AttrQueries = new HashMap<String, XPath>() {{
         this.put("Font", DocumentHelper.createXPath("//*[@Font]"));
         this.put("ResourceID", DocumentHelper.createXPath("//*[@ResourceID]"));
         this.put("Substitution", DocumentHelper.createXPath("//*[@Substitution]"));
@@ -107,8 +107,9 @@ public class OFDMerger implements Closeable {
         pageArr = new ArrayList<>(10);
         docCtxMap = new HashMap<>();
         this.dest = dest;
-        if (!Files.exists(dest.getParent())) {
-            throw new IllegalArgumentException("OFD文件存储路径(dest)上级目录 [" + dest.getParent().toAbsolutePath() + "] 不存在");
+        final Path parent = dest.getParent();
+        if (parent == null || !Files.exists(parent)) {
+            throw new IllegalArgumentException("OFD文件存储路径(dest)上级目录 [" + parent + "] 不存在");
         }
         resFileHashTable = new HashMap<>(3);
         tplPageMap = new HashMap<>(2);
@@ -137,7 +138,7 @@ public class OFDMerger implements Closeable {
         if (pageIndexes == null || pageIndexes.length == 0) {
             int numberOfPages = ctx.reader.getNumberOfPages();
             pageIndexes = new int[numberOfPages];
-            for (int i = 0; i <pageIndexes.length; i++) {
+            for (int i = 0; i < pageIndexes.length; i++) {
                 pageIndexes[i] = i + 1;
             }
         }
@@ -169,10 +170,10 @@ public class OFDMerger implements Closeable {
                 org.ofdrw.core.basicStructure.pageObj.Page page = null;
                 // 解析原OFD页面的Content.xml 为Page对象
                 try {
-                    Element copy = (Element)pageEntry.docCtx.reader.getPage(pageEntry.pageIndex).clone();
+                    Element copy = (Element) pageEntry.docCtx.reader.getPage(pageEntry.pageIndex).clone();
                     final Document document = DocumentHelper.createDocument();
                     document.add(copy);
-                    page = new org.ofdrw.core.basicStructure.pageObj.Page( copy);
+                    page = new org.ofdrw.core.basicStructure.pageObj.Page(copy);
                 } catch (NumberFormatException e) {
                     // 忽略页码非法的页面复制
                     continue;
@@ -241,7 +242,6 @@ public class OFDMerger implements Closeable {
         tplPageMap.put(oldId, templatePage);
         return newId.ref();
     }
-
 
 
     /**

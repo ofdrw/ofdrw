@@ -11,13 +11,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.ofdrw.converter.font.*;
 import org.ofdrw.converter.utils.OSinfo;
+import org.ofdrw.core.Holder;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.reader.ResourceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.xml.ws.Holder;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

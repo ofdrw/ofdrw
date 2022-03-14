@@ -1,5 +1,17 @@
 # 发布记录和特性
 
+## Version 1.17.11 2022-3-4 22:01:54
+
+> Alias: XiaoMan
+
+修复：
+
+- 转换时颜色参数复制导致异常。
+- 修复javax Holder兼容问题。
+- 关键自定位，修复sun包在高版本JDK NOT FOUND问题
+- 关键自定位，添加了 [高亮测试用例](./ofdrw-layout/src/test/java/org/ofdrw/layout/highlight/TestHighlight.java)，用于观察定位参数。
+- 修复了竖排字体关键自定位区域错误的问题。
+
 ## Version 1.17.10 2022-3-1 20:40:00
 
 > Alias: LiXia

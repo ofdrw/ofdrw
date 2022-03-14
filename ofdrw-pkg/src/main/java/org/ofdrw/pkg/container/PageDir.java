@@ -2,12 +2,12 @@ package org.ofdrw.pkg.container;
 
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.ofdrw.core.Holder;
 import org.ofdrw.core.annotation.pageannot.PageAnnot;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.res.Res;
 import org.ofdrw.core.basicType.ST_Loc;
 
-import javax.xml.ws.Holder;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;

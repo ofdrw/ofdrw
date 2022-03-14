@@ -1,9 +1,11 @@
 # OFD Reader & Writer
 
-![-](https://img.shields.io/badge/language-java-orange.svg) [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
+![-](https://img.shields.io/badge/language-java-orange.svg)
+
+[![license](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
 
 
-在使用OFDRW前请务必悉知 [***《OFD Reader & Writer免责声明》***](免责声明.md)。
+在使用OFDRW前，请务必悉知 [***《OFD Reader & Writer免责声明》***](免责声明.md)！
 
 
 > 如果clone和预览存在困难，请移步 [https://gitee.com/ofdrw/ofdrw](https://gitee.com/ofdrw/ofdrw)
@@ -37,7 +39,7 @@
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.17.10</version>
+  <version>1.17.11</version>
 </dependency>
 ```
 
@@ -122,7 +124,10 @@ OFD Reader and Writer 安卓平台解决方案： [DLTech21/ofdrw-aar . https://
 
 ## 源码安装
 
-在项目根目录下运行
+
+> 支持 ***JDK 1.8*** 及以上版本构建。
+
+在项目根目录下运行：
 
 ```bash
 mvn install
