@@ -1,5 +1,13 @@
 # 发布记录和特性
 
+## Version 1.17.13 2022-3-21 22:37:18
+
+> Alias: XiaZhi
+
+- GBT35275 格式签名和验签问题修复：
+  - 修复了GB35275格式签名生成和解析的结构解析错误。
+  - 兼容了文件Hash的BASE64格式编码作为签名原文，增加了`GBT35275DSContainer#setEnableFileHashBase64`开关来切换是否对文件Hash进行Base64编码。
+
 ## Version 1.17.12 2022-3-14 22:14:35
 
 > Alias: MangZhong
