@@ -24,7 +24,7 @@ class GBT35275ValidateContainerTest {
      */
     @Test
     void validate() throws IOException, GeneralSecurityException {
-        Path src = Paths.get("target", "GB35275DigitalSign.ofd");
+        Path src = Paths.get("C:\\Users\\pc\\Desktop\\", "trainTRAIN_ACC16424729782181642488468304.ofd");
         try (OFDReader reader = new OFDReader(src);
              OFDValidator validator = new OFDValidator(reader)) {
             validator.setValidator(new GBT35275ValidateContainer());
