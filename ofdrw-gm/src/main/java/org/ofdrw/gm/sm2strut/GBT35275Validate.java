@@ -38,10 +38,10 @@ public class GBT35275Validate {
     public static VerifyInfo validate(String alg, byte[] tbsContent, byte[] signedValue)
             throws GeneralSecurityException {
         ContentInfo contentInfo = ContentInfo.getInstance(signedValue);
-        if (contentInfo == null){
+        if (contentInfo == null) {
             throw new IllegalArgumentException("无法解析ContentInfo结构");
         }
-        if (!OIDs.signedData.equals(contentInfo.getContentType())){
+        if (!OIDs.signedData.equals(contentInfo.getContentType())) {
             throw new IllegalArgumentException("非法的签名数据类型，类型：" + contentInfo.getContentType());
         }
 
@@ -53,15 +53,19 @@ public class GBT35275Validate {
         MessageDigest md = new SM3.Digest();
         // a) 根据签名文件中的签名方案，调用杂凑算法计算签名文件的杂凑值。
         byte[] plaintextAct = md.digest(tbsContent);
-        byte[] plaintext = DEROctetString.getInstance(signedData.getContentInfo().getContent()).getOctets();
+        final ASN1Encodable dataContent = signedData.getContentInfo().getContent();
+        if (dataContent == null) {
+            throw new IllegalArgumentException("GBT35275 杂凑值为空");
+        }
+        byte[] plaintext = DEROctetString.getInstance(dataContent).getOctets();
         if (!Arrays.equals(plaintextAct, plaintext)) {
             try {
                 // [兼容非规范格式] 尝试通过Base64解码后比对
                 final byte[] decode = Base64.decode(new String(plaintext));
-                if (!Arrays.equals(plaintextAct, decode)){
+                if (!Arrays.equals(plaintextAct, decode)) {
                     return VerifyInfo.Err("待签名原文不符");
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 return VerifyInfo.Err("待签名原文不符");
             }
         }
