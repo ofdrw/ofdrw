@@ -6,6 +6,7 @@ import org.bouncycastle.asn1.x509.Certificate;
 import org.bouncycastle.jcajce.provider.digest.SM3;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Hex;
 import org.ofdrw.gm.cert.CertTools;
 
 import java.security.GeneralSecurityException;
@@ -53,20 +54,25 @@ public class GBT35275Validate {
         MessageDigest md = new SM3.Digest();
         // a) 根据签名文件中的签名方案，调用杂凑算法计算签名文件的杂凑值。
         byte[] plaintextAct = md.digest(tbsContent);
+        byte[] plaintext = null;
+        System.out.println(Hex.toHexString(plaintextAct));
+
         final ASN1Encodable dataContent = signedData.getContentInfo().getContent();
         if (dataContent == null) {
-            throw new IllegalArgumentException("GBT35275 杂凑值为空");
-        }
-        byte[] plaintext = DEROctetString.getInstance(dataContent).getOctets();
-        if (!Arrays.equals(plaintextAct, plaintext)) {
-            try {
-                // [兼容非规范格式] 尝试通过Base64解码后比对
-                final byte[] decode = Base64.decode(new String(plaintext));
-                if (!Arrays.equals(plaintextAct, decode)) {
+//            throw new IllegalArgumentException("GBT35275 杂凑值为空");
+            plaintext = plaintextAct;
+        } else {
+            plaintext = DEROctetString.getInstance(dataContent).getOctets();
+            if (!Arrays.equals(plaintextAct, plaintext)) {
+                try {
+                    // [兼容非规范格式] 尝试通过Base64解码后比对
+                    final byte[] decode = Base64.decode(new String(plaintext));
+                    if (!Arrays.equals(plaintextAct, decode)) {
+                        return VerifyInfo.Err("待签名原文不符");
+                    }
+                } catch (Exception e) {
                     return VerifyInfo.Err("待签名原文不符");
                 }
-            } catch (Exception e) {
-                return VerifyInfo.Err("待签名原文不符");
             }
         }
 
