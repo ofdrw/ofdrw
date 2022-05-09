@@ -138,7 +138,12 @@ public class ZipUtil {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements()) {
                 entry = entries.nextElement();
-                File f = new File(pathFile, entry.getName());
+
+                File f = new File(pathFile, entry.getName()).getCanonicalFile();
+
+                //校验路径合法性
+                pathValid(pathFile.getAbsolutePath(), f.getAbsolutePath());
+
                 if (entry.isDirectory()) {
                     if (!f.isDirectory() && !f.mkdirs()) {
                         throw new IOException("failed to create directory " + f);
