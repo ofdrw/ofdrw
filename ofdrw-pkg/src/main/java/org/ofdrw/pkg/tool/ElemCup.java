@@ -35,7 +35,7 @@ public class ElemCup {
      * @throws DocumentException 文件解析异常
      */
     public static Element inject(Path file) throws DocumentException {
-        SAXReader reader = new SAXReader();
+        SAXReader reader = SAXReaderFactory.create();
         try (InputStream in = Files.newInputStream(file)) {
             Document document = reader.read(in);
             return document.getRootElement();
