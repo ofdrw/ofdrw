@@ -1,5 +1,16 @@
 # 发布记录和特性
 
+## Version 1.17.16 2022-5-10 20:37:59
+
+> Alias: Liqiu
+
+修复：
+
+- 文件占用 reader无法关闭。
+- 修复XML4j XXE漏洞。
+- 编辑时虚拟页面Content NPE问题。
+- 移除log4j配置文件。
+
 ## Version 1.17.15 2022-4-24 20:26:52
 
 > Alias: Dashu
