@@ -126,7 +126,7 @@ public class ZipUtil {
      * 使用apache common compress库 解压zipFile，能支持更多zip包解压的特性
      * @param srcFile 带解压的源文件
      * @param descDir 解压到目录
-     * @throws IOException
+     * @throws IOException IO异常
      */
     public static void unZipFileByApacheCommonCompress(File srcFile, String descDir) throws IOException {
         File pathFile = new File(descDir).getCanonicalFile();
@@ -138,11 +138,7 @@ public class ZipUtil {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements()) {
                 entry = entries.nextElement();
-
                 File f = new File(pathFile, entry.getName()).getCanonicalFile();
-
-                //校验路径合法性
-                pathValid(pathFile.getAbsolutePath(), f.getAbsolutePath());
 
                 if (entry.isDirectory()) {
                     if (!f.isDirectory() && !f.mkdirs()) {
