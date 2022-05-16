@@ -1,5 +1,6 @@
 package org.ofdrw.font;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -36,13 +37,16 @@ public class Font {
      * @return 默认字体（Noto思源宋体）
      */
     public static Font getDefault() {
-//        return FontSet.get(FontName.NotoSerif);
         return FontName.SimSun.font();
     }
 
     public Font(String name, String familyName, Path fontFile) {
         this.name = name;
         this.familyName = familyName;
+        if (fontFile == null || Files.notExists(fontFile)){
+            throw new IllegalArgumentException("字体文件(fontFile)不存在");
+        }
+
         this.fontFile = fontFile;
     }
 
@@ -53,7 +57,11 @@ public class Font {
 
     public Font(String name, Path fontFile) {
         this.name = name;
+        if (fontFile == null || Files.notExists(fontFile)){
+            throw new IllegalArgumentException("字体文件(fontFile)不存在");
+        }
         this.fontFile = fontFile;
+
     }
 
     public Font(String name, String familyName, Path fontFile, double[] printableAsciiWidthMap) {
