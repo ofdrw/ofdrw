@@ -25,16 +25,15 @@ public class OFD2SVGTest {
 //                .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体");
 
         FontLoader.getInstance()
-            .addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
-            .addAliasMapping(null, "KaiTi_GB2312", "楷体", "楷体")
-            .addAliasMapping(null, "楷体", "KaiTi", "KaiTi")
-
-            .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-            .addSimilarFontReplaceRegexMapping(null, ".*Kai.*", null, "楷体")
-            .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun")
-            .addSimilarFontReplaceRegexMapping(null, ".*SimSun.*", null, "SimSun")
-            .addSimilarFontReplaceRegexMapping(null, ".*Song.*", null, "宋体")
-            .addSimilarFontReplaceRegexMapping(null, ".*MinionPro.*", null, "SimSun");
+                .addAliasMapping("小标宋体", "方正小标宋简体")
+                .addAliasMapping("KaiTi_GB2312", "楷体")
+                .addAliasMapping("楷体", "KaiTi")
+                .addSimilarFontReplaceRegexMapping(".*Kai.*", "楷体")
+                .addSimilarFontReplaceRegexMapping(".*Kai.*", "楷体")
+                .addSimilarFontReplaceRegexMapping(".*MinionPro.*", "SimSun")
+                .addSimilarFontReplaceRegexMapping(".*SimSun.*", "SimSun")
+                .addSimilarFontReplaceRegexMapping(".*Song.*", "宋体")
+                .addSimilarFontReplaceRegexMapping(".*MinionPro.*", "SimSun");
 
         FontLoader.getInstance().scanFontDir(new File("src/main/resources/fonts"));
         FontLoader.setSimilarFontReplace(true);
@@ -55,7 +54,7 @@ public class OFD2SVGTest {
     private static void toSVG(String filename, String dirPath) throws IOException {
         Files.createDirectories(Paths.get(dirPath));
         Path src = Paths.get(filename);
-        try(OFDReader reader = new OFDReader(src)){
+        try (OFDReader reader = new OFDReader(src)) {
             SVGMaker svgMaker = new SVGMaker(reader, 5d);
             svgMaker.config.setDrawBoundary(false);
             svgMaker.config.setClip(false);

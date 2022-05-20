@@ -89,12 +89,13 @@ public class ST_Loc extends STBase {
         }
         return loc.substring(0, indexOf);
     }
+
     /**
      * 获取父母路径
      *
      * @return 父母路径
      */
-    public ST_Loc parentLoc(){
+    public ST_Loc parentLoc() {
         return new ST_Loc(this.parent());
     }
 
@@ -157,10 +158,28 @@ public class ST_Loc extends STBase {
         return loc.endsWith(suffix);
     }
 
+    /**
+     * 是否以指定字符开头
+     *
+     * @param prefix 前缀
+     * @return true 指定字符开头；false 不以指定字符开头
+     */
+    public boolean startWith(String prefix) {
+        return loc.startsWith(prefix);
+    }
+
+    /**
+     * 是否为根路径（以"/"开头）
+     *
+     * @return true - 根路径
+     */
+    public boolean isRootPath() {
+        return loc.startsWith("/");
+    }
+
     @Override
     public String toString() {
         return loc;
     }
-
 
 }

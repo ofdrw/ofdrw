@@ -553,7 +553,7 @@ public class ResourceManage {
                 }
             }
         } catch (Exception e) {
-           // System.out.println("[可忽略] 无法解析资源描述文件 " + resLoc.toString() + " " + e.getMessage());
+            // System.out.println("[可忽略] 无法解析资源描述文件 " + resLoc.toString() + " " + e.getMessage());
         } finally {
             rl.restore();
         }
@@ -572,15 +572,20 @@ public class ResourceManage {
         if (target == null) {
             return null;
         }
+        if (target.isRootPath()) {
+            // 绝对路径
+            return target;
+        }
 
         ST_Loc absLoc;
         if (base != null) {
-            // 如果target是以rl开始的路径则认为不需要拼接rl
-            if (target.toString().startsWith(rl.toString())) {
-                return target;
+            if (base.isRootPath()) {
+                // 资源文件的通用存储路径 为根路径时直接在此基础上拼接
+                absLoc = base;
+            } else {
+                // 资源文件的通用存储路径 为相对路径时，以结合当前资源文件位置推断当前路径
+                absLoc = rl.getAbsTo(base);
             }
-            // 如果存在 资源文件的通用存储路径，那么以 通用存储路径 为基础拼接目标路径作为绝对路径
-            absLoc = rl.getAbsTo(base);
             absLoc = absLoc.cat(target);
         } else {
             // 不存在 通用存储路径 直接根据但前目录位置获取到绝对路径
