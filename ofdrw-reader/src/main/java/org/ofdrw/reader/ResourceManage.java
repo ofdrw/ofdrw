@@ -575,6 +575,10 @@ public class ResourceManage {
 
         ST_Loc absLoc;
         if (base != null) {
+            // 如果target是以rl开始的路径则认为不需要拼接rl
+            if (target.toString().startsWith(rl.toString())) {
+                return target;
+            }
             // 如果存在 资源文件的通用存储路径，那么以 通用存储路径 为基础拼接目标路径作为绝对路径
             absLoc = rl.getAbsTo(base);
             absLoc = absLoc.cat(target);
