@@ -14,9 +14,9 @@ import org.ofdrw.layout.element.canvas.DrawContext;
 import org.ofdrw.layout.element.canvas.Drawer;
 import org.ofdrw.layout.engine.ResManager;
 import org.ofdrw.layout.engine.render.RenderException;
-import org.ofdrw.pkg.container.AnnotsDir;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.PageDir;
+import org.ofdrw.pkg.container.VirtualContainer;
 import org.ofdrw.reader.BadOFDException;
 import org.ofdrw.reader.ErrorPathException;
 import org.ofdrw.reader.PageInfo;
@@ -46,7 +46,7 @@ public class AnnotationRender {
      * <p>
      * GMT0099 OFD 2.0
      */
-    private AnnotsDir annotsDir;
+    private VirtualContainer annotsDir;
 
     /**
      * 注释文件目录
@@ -54,8 +54,8 @@ public class AnnotationRender {
     private Annotations annotations = null;
 
     private ResourceLocator rl;
-    private ResManager prm;
-    private AtomicInteger maxUnitID;
+    private final ResManager prm;
+    private final AtomicInteger maxUnitID;
 
     public AnnotationRender(DocDir docDir, ResManager prm, AtomicInteger maxUnitID) {
         this.docDir = docDir;
@@ -65,6 +65,9 @@ public class AnnotationRender {
 
     /**
      * 初始化注释文件结构
+     * <p>
+     * - 如果 注释容器 存在，则切换路径至该容器中。
+     * - 如果 注释入口文件 不存在，则创建。
      */
     private void init() {
         if (annotations != null) {
@@ -77,16 +80,24 @@ public class AnnotationRender {
         } catch (FileNotFoundException | DocumentException e) {
             throw new BadOFDException("错误的OFD结构无法获取到Document.xml文件", e);
         }
-        // 注释列表的文件
-        ST_Loc annListFileLoc = document.getAnnotations();
+
         // 文件加载器
         rl = new ResourceLocator(this.docDir);
+
+        // 注释列表的文件
+        ST_Loc annListFileLoc = document.getAnnotations();
+        if (annListFileLoc != null && !rl.exist(annListFileLoc.toString())) {
+            // 文件不存在则置空
+            annListFileLoc = null;
+        }
+
+        // 文件不存在时创建注释列表文件。
         if (annListFileLoc != null) {
             try {
                 annotations = rl.get(annListFileLoc, Annotations::new);
                 String parent = annListFileLoc.parent();
                 if (parent.toLowerCase().endsWith(DocDir.AnnotsDir.toLowerCase())) {
-                    annotsDir = new AnnotsDir(rl.getContainer(parent).getContainerPath());
+                    annotsDir = rl.getContainer(parent);
                 } else {
                     // 如果目录不规范，那么创建新的目录
                     annotsDir = null;
@@ -126,13 +137,13 @@ public class AnnotationRender {
         init();
 
         ST_ID id = pageInfo.getId();
-        // 分页注释记录条目
+        // 查找已经存在的页面注释文件
         AnnPage record = annotations.getByPageId(id.toString());
         // 用于存放注解对象的容器
         PageAnnot pageAnnot = null;
         if (record == null) {
+            // 不存在该页的注释文件，创建新的页面注释条目
             record = new AnnPage().setPageID(pageInfo.getId());
-            // 创建新的页面注释条目
             annotations.addPage(record);
         } else {
             // 获取已经存在的 分页注释文件
@@ -146,15 +157,17 @@ public class AnnotationRender {
             }
         }
 
-        /*
-         * 获取页面所处容器
-         */
+        // 页面关联的分页注释文件不存在则创建
         if (pageAnnot == null) {
             if (annotsDir == null) {
-                // 创建目录
+                // 若不存在注释目录则创建
                 annotsDir = docDir.obtainAnnots();
             }
-            PageDir pageDir = annotsDir.obtainByIndex(pageInfo.getPageN());
+
+            // 获取注释容器
+            String containerName = PageDir.PageContainerPrefix + pageInfo.getPageN();
+            PageDir pageDir = annotsDir.obtainContainer(containerName, PageDir::new);
+
             // 创建 分页注释文件 PageAnnot
             pageAnnot = new PageAnnot();
             ST_Loc pageAnnotLoc = pageDir.addAnnot(pageAnnot);

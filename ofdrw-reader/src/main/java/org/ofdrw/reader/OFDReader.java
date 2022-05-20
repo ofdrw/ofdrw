@@ -769,7 +769,7 @@ public class OFDReader implements Closeable {
         closed = true;
         if (workDir != null && Files.exists(workDir)) {
             try {
-                FileUtils.deleteDirectory(workDir.toFile());
+                FileUtils.forceDelete(workDir.toFile());
             } catch (IOException e) {
                 throw new IOException("无法删除Reader的工作空间，原因：" + e.getMessage(), e);
             }

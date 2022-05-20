@@ -62,7 +62,8 @@ public class AdditionVPage extends VirtualPage {
             // 页面那种没有任何图层的情况下，创建一个新的图层加入到页面
             topLayer = new CT_Layer();
             topLayer.setObjID(maxUnitID.incrementAndGet());
-            pageObj.getContent().addLayer(topLayer);
+            content = new Content().addLayer(topLayer);
+            pageObj.setContent(content);
             return topLayer;
         }
         List<CT_Layer> layers = content.getLayers();

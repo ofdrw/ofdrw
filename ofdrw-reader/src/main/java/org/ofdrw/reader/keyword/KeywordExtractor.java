@@ -5,6 +5,7 @@ import org.ofdrw.core.Const;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.pageObj.CT_TemplatePage;
+import org.ofdrw.core.basicStructure.pageObj.Content;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.Template;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
@@ -757,8 +758,12 @@ public class KeywordExtractor {
     private static void preparedContextData(OFDReader reader, List<TextCode> textCodeList, Map<TextCode, KeywordResource> boundaryMapping,
                                             Map<ST_ID, CT_Font> fontMapping, Map<ST_ID, Page> templatePageMap, int pageNumber) {
         Page page = reader.getPage(pageNumber);
-        // 获取模板页正文层
-        List<CT_Layer> layers = page.getContent().getLayers();
+        List<CT_Layer> layers = new ArrayList<>(0);
+        Content content = page.getContent();
+        if (content != null) {
+            // 获取模板页正文层
+            layers = content.getLayers();
+        }
 
         for (Template tpl : page.getTemplates()) {
             //获取模板页
@@ -772,7 +777,10 @@ public class KeywordExtractor {
 
             //添加模板层
             if (templatePage != null) {
-                layers.addAll(templatePage.getContent().getLayers());
+                Content tplContent = templatePage.getContent();
+                if (tplContent != null) {
+                    layers.addAll(tplContent.getLayers());
+                }
             }
         }
         //创建字型映射关系

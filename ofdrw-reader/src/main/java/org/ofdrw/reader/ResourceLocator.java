@@ -468,6 +468,8 @@ public class ResourceLocator {
                 vc = vc.getContainer(item, PageDir::new);
             } else if (item.equals("Res")) {
                 vc = vc.getContainer(item, ResDir::new);
+            } else if (item.startsWith("Temp_")) {
+                vc = vc.getContainer(item, TempsDir::new);
             } else {
                 vc = vc.getContainer(item, VirtualContainer::new);
             }

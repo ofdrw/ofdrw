@@ -5,8 +5,11 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
 import org.bouncycastle.jcajce.provider.digest.SM3;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.util.encoders.Base64;
 import org.jetbrains.annotations.NotNull;
 import org.ofdrw.core.signatures.SigType;
+import org.ofdrw.gm.sm2strut.ContentInfo;
+import org.ofdrw.gm.sm2strut.OIDs;
 import org.ofdrw.gm.sm2strut.SignedData;
 import org.ofdrw.gm.sm2strut.builder.SignedDataBuilder;
 import org.ofdrw.sign.ExtendSignatureContainer;
@@ -40,6 +43,13 @@ public class GBT35275DSContainer implements ExtendSignatureContainer {
     private final Certificate cert;
 
     /**
+     * 是否需要将文件Hash值进行Base64编码
+     * <p>
+     * 该参数用于兼容非规范的签名原文被Base64编码的待签名原文
+     */
+    private boolean enableFileHashBase64;
+
+    /**
      * 创建数字签名容器
      * <p>
      * 签名值数据应遵循 GB/T 35275
@@ -56,6 +66,7 @@ public class GBT35275DSContainer implements ExtendSignatureContainer {
         }
         this.cert = cert;
         this.prvKey = prvKey;
+        this.enableFileHashBase64 = false;
     }
 
     /**
@@ -93,6 +104,9 @@ public class GBT35275DSContainer implements ExtendSignatureContainer {
         MessageDigest md = new SM3.Digest();
         // d) 调用杂凑算法计算签名文件的杂凑值
         byte[] plaintext = md.digest(IOUtils.toByteArray(inData));
+        if (this.enableFileHashBase64) {
+            plaintext = Base64.encode(plaintext);
+        }
 
         // e) 根据签名方案，使用操作人签名的私钥对杂凑值进行数字签名
         Signature signatureFnc = Signature.getInstance(
@@ -103,7 +117,8 @@ public class GBT35275DSContainer implements ExtendSignatureContainer {
         // 执行签名产生签名值
         final byte[] signature = signatureFnc.sign();
         final SignedData signedData = SignedDataBuilder.signedData(plaintext, signature, this.cert);
-        return signedData.getEncoded();
+        ContentInfo contentInfo = new ContentInfo(OIDs.signedData, signedData);
+        return contentInfo.getEncoded();
     }
 
     /**
@@ -125,5 +140,16 @@ public class GBT35275DSContainer implements ExtendSignatureContainer {
     @Override
     public SigType getSignType() {
         return SigType.Sign;
+    }
+
+    /**
+     * 是否对文件摘要值进行Base64编码
+     * <p>
+     * Base64编码后的内容将会为待签名原文被签名
+     * <p>
+     * 该开关用于兼容部分阅读器只支持签名原文的文件Hash的Base64的情况。
+     */
+    public void setEnableFileHashBase64(boolean state) {
+        this.enableFileHashBase64 = state;
     }
 }

@@ -166,7 +166,7 @@ public class OFDMerger implements Closeable {
             final PagesDir pagesDir = ofdDoc.docDir.obtainPages();
             for (final PageEntry pageEntry : pageArr) {
                 // 取0文档对象
-                final CT_PageArea docDefaultArea = pageEntry.docCtx.getDefaultArea(0);
+                final CT_PageArea docDefaultArea = new CT_PageArea((Element) pageEntry.docCtx.getDefaultArea(0).clone());
                 org.ofdrw.core.basicStructure.pageObj.Page page = null;
                 // 解析原OFD页面的Content.xml 为Page对象
                 try {
@@ -181,6 +181,7 @@ public class OFDMerger implements Closeable {
 
                 // 若当前页面的页面区域的大小和位置为空，则使用文档默认的尺寸
                 if (page.getArea() == null) {
+
                     page.setArea(docDefaultArea);
                 }
                 // 创建页面容器

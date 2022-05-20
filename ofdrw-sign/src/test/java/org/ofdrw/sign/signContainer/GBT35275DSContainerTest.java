@@ -47,6 +47,8 @@ class GBT35275DSContainerTest {
         try (OFDReader reader = new OFDReader(src);
              OFDSigner signer = new OFDSigner(reader, out)) {
             GBT35275DSContainer signContainer = new GBT35275DSContainer(certificate, privateKey);
+//            // 该参数用于兼容部分阅读只支持对Hash结果的Base64签名
+//            signContainer.setEnableFileHashBase64(true);
             // 3. 设置签名使用的扩展签名容器
             signer.setSignContainer(signContainer);
             // 4. 执行签名

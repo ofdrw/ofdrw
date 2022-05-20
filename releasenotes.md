@@ -1,5 +1,55 @@
 # 发布记录和特性
 
+## Version 1.17.17 2022-5-16 23:09:40
+
+> Alias: Chushu
+
+修复：
+
+- 重复添加水印异常问题。
+
+## Version 1.17.16 2022-5-10 20:37:59
+
+> Alias: Liqiu
+
+修复：
+
+- 文件占用 reader无法关闭。
+- 修复XML4j XXE漏洞。
+- 编辑时虚拟页面Content NPE问题。
+- 移除log4j配置文件。
+
+## Version 1.17.15 2022-4-24 20:26:52
+
+> Alias: Dashu
+
+修复：
+
+- 解析文字空页面NPE问题
+
+## Version 1.17.14 2022-4-7 20:48:40
+
+> Alias: XiaoShu
+
+修复：
+
+- 文档合并异常。 
+
+## Version 1.17.13 2022-3-21 22:37:18
+
+> Alias: XiaZhi
+
+- GBT35275 格式签名和验签问题修复：
+  - 修复了GB35275格式签名生成和解析的结构解析错误。
+  - 兼容了文件Hash的BASE64格式编码作为签名原文，增加了`GBT35275DSContainer#setEnableFileHashBase64`开关来切换是否对文件Hash进行Base64编码。
+
+## Version 1.17.12 2022-3-14 22:14:35
+
+> Alias: MangZhong
+
+- 修复图元参数错误的默认值标注
+
+
 ## Version 1.17.11 2022-3-4 22:01:54
 
 > Alias: XiaoMan

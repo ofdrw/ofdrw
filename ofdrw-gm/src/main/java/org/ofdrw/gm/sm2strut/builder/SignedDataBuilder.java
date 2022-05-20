@@ -75,7 +75,7 @@ public final class SignedDataBuilder {
             throw new IllegalArgumentException("证书、签名值列表(signature)为空");
         }
         // 消息摘要算法标识符的集合,固定值 SM3算法
-        ASN1Set digestAlgorithms = new DERSet(OIDs.sm3);
+        ASN1Set digestAlgorithms = new DERSet(new AlgorithmIdentifier(OIDs.sm3));
         // 待签名的 数据内容
         ContentInfo contentInfo = new ContentInfo(OIDs.data, new DEROctetString(plaintext));
 
@@ -122,7 +122,7 @@ public final class SignedDataBuilder {
         return new SignerInfo(
                 issuerAndSerialNumber,
                 new AlgorithmIdentifier(OIDs.sm3), // 固定SM3算法
-                new AlgorithmIdentifier(OIDs.sm2), // 固定 SM2椭圆曲线数字签名算法
+                new AlgorithmIdentifier(OIDs.sm2Sign), // 固定 SM2椭圆曲线数字签名算法
                 new DEROctetString(signature)
         );
     }
