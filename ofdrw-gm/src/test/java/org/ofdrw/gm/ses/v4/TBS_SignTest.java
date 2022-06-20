@@ -36,7 +36,7 @@ class TBS_SignTest {
                 .setDataHash(new byte[32])
                 .setPropertyInfo("/Doc_0/Signs/Sign_0/Signature.xml");
         ExtensionDatas eds = new ExtensionDatas();
-        ExtData ed1 = new ExtData(new ASN1ObjectIdentifier("1.17.187.777"), ASN1Boolean.TRUE, new DEROctetString(new byte[]{0x01}));
+        ExtData ed1 = new ExtData(new ASN1ObjectIdentifier("1.17.197.777"), ASN1Boolean.TRUE, new DEROctetString(new byte[]{0x01}));
         eds.add(ed1);
         toSign.setExtDatas(eds);
 

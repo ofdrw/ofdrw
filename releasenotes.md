@@ -1,5 +1,14 @@
 # 发布记录和特性
 
+## Version 1.17.19 2022-6-20 18:40:10
+
+> Alias: Qiufen
+
+修复：
+
+- 兼容了错误Tag的绘制参数。
+- 兼容了ImageObject对象没有ResourceID导致NPE。
+
 ## Version 1.17.18 2022-5-20 21:55:20
 
 > Alias: Bailu
