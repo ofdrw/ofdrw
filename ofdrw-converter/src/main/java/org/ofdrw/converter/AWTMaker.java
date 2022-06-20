@@ -376,6 +376,9 @@ public abstract class AWTMaker {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        if (image == null) {
+            return;
+        }
         Matrix m = MatrixUtils.base();
         // 把图片还原成1*1
         m = MatrixUtils.scale(m, Double.valueOf(1.0 / image.getWidth()).floatValue(), Double.valueOf(1.0 / image.getHeight()).floatValue());

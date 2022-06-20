@@ -476,7 +476,11 @@ public class PdfboxMaker {
 
     private void writeImage(ResourceManage resMgt, PDPageContentStream contentStream, ST_Box box, ImageObject imageObject, ST_Box annotBox) throws IOException {
         // 读取图片
-        BufferedImage bufferedImage = resMgt.getImage(imageObject.getResourceID().toString());
+        final ST_RefID resourceID = imageObject.getResourceID();
+        if (resourceID == null) {
+            return;
+        }
+        BufferedImage bufferedImage = resMgt.getImage(resourceID.toString());
         if (bufferedImage == null) {
             return;
         }

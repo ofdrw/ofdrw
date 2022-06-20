@@ -35,7 +35,7 @@ public class OFD2PDFTest {
         try {
 //            ConvertHelper.toPdf(src, dst);
             ConvertHelper.toPdf(Paths.get("src/test/resources/发票示例.ofd"), Paths.get("target/发票示例.pdf"));
-            ConvertHelper.toPdf(Paths.get("src/test/resources/zsbk.ofd"), Paths.get("target/zsbk.pdf"));
+//            ConvertHelper.toPdf(Paths.get("src/test/resources/zsbk.ofd"), Paths.get("target/zsbk.pdf"));
 //            ConvertHelper.toPdf(Paths.get("src/test/resources/999.ofd"), Paths.get("target/999.pdf"));
             System.out.printf(">> 总计花费: %dms\n", System.currentTimeMillis() - start);
         } catch (GeneralConvertException e) {

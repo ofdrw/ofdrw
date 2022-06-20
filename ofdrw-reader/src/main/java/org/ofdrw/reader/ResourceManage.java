@@ -329,7 +329,11 @@ public class ResourceManage {
      * @throws IOException 图片操作IO异常
      */
     public BufferedImage getImage(ImageObject imageObject) throws IOException {
-        BufferedImage image = getImage(imageObject.getResourceID().toString());
+        final ST_RefID resourceID = imageObject.getResourceID();
+        if (resourceID == null) {
+            return null;
+        }
+        BufferedImage image = getImage(resourceID.toString());
         if (image == null) return null;
         if (imageObject.getImageMask() != null) {
             BufferedImage mask = getImage(imageObject.getImageMask().toString());

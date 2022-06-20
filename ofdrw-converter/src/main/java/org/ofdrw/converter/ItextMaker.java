@@ -518,7 +518,11 @@ public class ItextMaker {
     }
 
     private void writeImage(ResourceManage resMgt, PdfCanvas pdfCanvas, ST_Box box, ImageObject imageObject, ST_Box annotBox, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
-        byte[] imageByteArray = resMgt.getImageByteArray(imageObject.getResourceID().toString());
+        final ST_RefID resourceID = imageObject.getResourceID();
+        if (resourceID == null){
+            return;
+        }
+        byte[] imageByteArray = resMgt.getImageByteArray(resourceID.toString());
         if (imageByteArray == null) {
             return;
         }

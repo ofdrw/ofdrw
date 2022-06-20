@@ -1,4 +1,5 @@
 import org.junit.jupiter.api.Test;
+import org.ofdrw.converter.ConvertHelper;
 import org.ofdrw.converter.FontLoader;
 import org.ofdrw.converter.ImageMaker;
 import org.ofdrw.reader.DLOFDReader;
@@ -34,6 +35,7 @@ public class OFD2IMGTest {
         FontLoader.getInstance().scanFontDir(new File("src/main/resources/fonts"));
         FontLoader.setSimilarFontReplace(true);
         long start = System.currentTimeMillis();
+
         toPng("src/test/resources/helloworld.ofd", "target/helloworld.ofd");
 //        toPng("src/test/resources/999.ofd", "target/999.ofd");
 //        toPng("src/test/resources/zsbk.ofd", "target/zsbk.ofd");
