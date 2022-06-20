@@ -45,7 +45,15 @@ public interface OFDResource extends Element {
                 res = new CompositeGraphicUnits(element);
                 break;
             default:
-                throw new IllegalArgumentException("不是 Res的子类，未知元素类型：" + qName);
+                if (qName.toLowerCase().contains("draw")) {
+                    res = new DrawParams(element);
+                } else if (qName.toLowerCase().contains("font")) {
+                    res = new Fonts(element);
+                } else if (qName.toLowerCase().contains("color")) {
+                    res = new ColorSpaces(element);
+                } else {
+                    throw new IllegalArgumentException("不是 Res的子类，未知元素类型：" + qName);
+                }
         }
         return res;
     }
