@@ -7,7 +7,9 @@ import java.util.regex.Pattern;
 /**
  * 数字格式的自增的签名ID
  * <p>
- * 格式为： "NNN"，例如：'001'
+ * 启用前缀格式为： "NNN"，例如：'001'
+ * <p>
+ * 关闭前缀格式为： "N"，例如：'1' （默认）
  *
  * @author 权观宇
  * @since 2020-04-17 04:20:15
@@ -18,8 +20,25 @@ public class NumberFormatAtomicSignID implements SignIDProvider {
      */
     private final AtomicInteger provider;
 
+    /**
+     * 是否增加0前缀
+     * <p>
+     * 默认关闭0前缀
+     */
+    private boolean enableZeroPrefix = false;
+
     public NumberFormatAtomicSignID() {
         provider = new AtomicInteger(0);
+    }
+
+    /**
+     * 创建数字构造器
+     *
+     * @param enableZeroPrefix 是否启用前缀0，启用后ID格式为'00N'
+     */
+    public NumberFormatAtomicSignID(boolean enableZeroPrefix) {
+        provider = new AtomicInteger(0);
+        this.enableZeroPrefix = enableZeroPrefix;
     }
 
     /**
@@ -54,7 +73,11 @@ public class NumberFormatAtomicSignID implements SignIDProvider {
     @Override
     public String incrementAndGet() {
         int newSignID = provider.incrementAndGet();
-        return String.format("%03d", newSignID);
+        if (enableZeroPrefix) {
+            return String.format("%03d", newSignID);
+        } else {
+            return String.valueOf(newSignID);
+        }
     }
 
     /**
@@ -65,7 +88,11 @@ public class NumberFormatAtomicSignID implements SignIDProvider {
     @Override
     public String get() {
         int maxSignId = provider.get();
-        return String.format("%03d", maxSignId);
+        if (enableZeroPrefix) {
+            return String.format("%03d", maxSignId);
+        } else {
+            return String.valueOf(maxSignId);
+        }
     }
 
     /**
@@ -76,7 +103,25 @@ public class NumberFormatAtomicSignID implements SignIDProvider {
      */
     @Override
     public int parse(String id) {
-        return SignIdParser.parseIndex(id);
+        return Integer.parseInt(id);
     }
 
+
+    /**
+     * 开关是否启用 0前缀
+     *
+     * @param enableZeroPrefix true - 启用0前缀； false - 关闭
+     */
+    public void setEnableZeroPrefix(boolean enableZeroPrefix) {
+        this.enableZeroPrefix = enableZeroPrefix;
+    }
+
+    /**
+     * 是否启用0前缀
+     *
+     * @return true - 启用0前缀
+     */
+    public boolean isEnableZeroPrefix() {
+        return enableZeroPrefix;
+    }
 }

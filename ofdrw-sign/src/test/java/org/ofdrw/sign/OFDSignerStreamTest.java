@@ -51,7 +51,7 @@ class OFDSignerStreamTest {
 
         // 1. 构造签名引擎
         try (OFDReader reader = new OFDReader(inputStream);
-             OFDSigner signer = new OFDSigner(reader, outputStream, new NumberFormatAtomicSignID())
+             OFDSigner signer = new OFDSigner(reader, outputStream)
         ) {
             SESV4Container signContainer = new SESV4Container(prvKey, seal, signCert);
             // 2. 设置签名模式
@@ -97,7 +97,7 @@ class OFDSignerStreamTest {
 
         // 1. 构造签名引擎
         try (OFDReader reader = new OFDReader(inputStream);
-             OFDSigner signer = new OFDSigner(reader, outputStream, new NumberFormatAtomicSignID())
+             OFDSigner signer = new OFDSigner(reader, outputStream)
         ) {
             SESV4Container signContainer = new SESV4Container(prvKey, seal, signCert);
             // 2. 设置签名模式
@@ -144,7 +144,7 @@ class OFDSignerStreamTest {
         Assertions.assertThrows(SignatureTerminateException.class, () -> {
             // 1. 构造签名引擎
             try (OFDReader reader = new OFDReader(inputStream);
-                 OFDSigner signer = new OFDSigner(reader, outputStream, new NumberFormatAtomicSignID())
+                 OFDSigner signer = new OFDSigner(reader, outputStream)
             ) {
                 SESV4Container signContainer = new SESV4Container(prvKey, seal, signCert);
                 // 2. 设置签名模式

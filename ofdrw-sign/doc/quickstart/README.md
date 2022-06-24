@@ -56,7 +56,8 @@ public static void main() throws Exception {
 - [GB/T 38540-2020 电子签章结构实现 SESV4Container](../../src/main/java/org/ofdrw/sign/signContainer/SESV4Container.java)
     - [测试用例](../../src/test/java/org/ofdrw/sign/signContainer/SESV4ContainerTest.java)
 - [GM/T 35275-2017 数字签名实现 GBT35275DSContainer](../../src/main/java/org/ofdrw/sign/signContainer/GBT35275DSContainer.java)
-    - [测试用例](../../src/test/java/org/ofdrw/sign/signContainer/GBT35275DSContainerTest.java)
+  - [测试用例](../../src/test/java/org/ofdrw/sign/signContainer/GBT35275DSContainerTest.java)
+  - [测试用例（数科可验证）](../../src/test/java/org/ofdrw/sign/signContainer/GBT35275PKCS9DSContainerTest.java)
 
 ## 实现自定义的扩展数字签名容器
 

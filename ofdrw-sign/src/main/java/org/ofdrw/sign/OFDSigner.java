@@ -142,6 +142,30 @@ public class OFDSigner implements Closeable {
 
     /**
      * 创建OFD签名对象
+     * <p>
+     * 默认使用数字类型的ID构造器提供电子签章的ID
+     *
+     * @param reader    OFD解析器
+     * @param outStream 电子签名后文件保存位置
+     * @throws SignatureTerminateException 签名终止异常
+     * @since 2022-6-24 23:21:18
+     */
+    public OFDSigner(OFDReader reader, OutputStream outStream) throws SignatureTerminateException {
+        if (reader == null) {
+            throw new IllegalArgumentException("OFD解析器（reader）为空");
+        }
+        if (outStream == null) {
+            throw new IllegalArgumentException("电子签名后文件输出流（outStream）为空");
+        }
+
+
+        this.outStream = outStream;
+        setProperty(reader, new NumberFormatAtomicSignID(false));
+    }
+
+
+    /**
+     * 创建OFD签名对象
      *
      * @param reader     OFD解析器
      * @param outStream  电子签名后文件保存位置
@@ -427,7 +451,7 @@ public class OFDSigner implements Closeable {
                 .setType(signContainer.getSignType())
                 // 设置签名文件位置
                 .setBaseLoc(signatureLoc);
-        if(this.relativeID != null && this.relativeID.trim().length() > 0){
+        if (this.relativeID != null && this.relativeID.trim().length() > 0) {
             signatureRecord.setRelative(this.relativeID);
         }
         // 放入签名列表中
@@ -634,7 +658,7 @@ public class OFDSigner implements Closeable {
      * @param parameters 扩展属性
      * @return this
      */
-    public OFDSigner setParameters(Parameters parameters){
+    public OFDSigner setParameters(Parameters parameters) {
         this.parameters = parameters;
         return this;
     }

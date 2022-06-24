@@ -24,7 +24,7 @@ class GBT35275ValidateContainerTest {
      */
     @Test
     void validate() throws IOException, GeneralSecurityException {
-        Path src = Paths.get("C:\\Users\\pc\\Documents\\Tencent Files\\1009020096\\FileRecv\\MobileFile", "退票样例.ofd");
+        Path src = Paths.get("target/GB35275PKCS9DigitalSign.ofd");
         try (OFDReader reader = new OFDReader(src);
              OFDValidator validator = new OFDValidator(reader)) {
             validator.setValidator(new GBT35275ValidateContainer());
