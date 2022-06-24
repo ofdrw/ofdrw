@@ -1,23 +1,22 @@
 # OFD Reader & Writer
 
-![-](https://img.shields.io/badge/language-java-orange.svg)
-
-[![license](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
+![-](https://img.shields.io/badge/java-%3E%3D1.8-blue) ![Maven Central](https://img.shields.io/maven-central/v/org.ofdrw/ofdrw) [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE) 
 
 
 在使用OFDRW前，请务必悉知 [***《OFD Reader & Writer免责声明》***](免责声明.md)！
 
 
-> 如果clone和预览存在困难，请移步 [https://gitee.com/ofdrw/ofdrw](https://gitee.com/ofdrw/ofdrw)
-
+> 若clone和文档预览存在困难，请移步 [https://gitee.com/ofdrw/ofdrw](https://gitee.com/ofdrw/ofdrw)
 
 **Talk is cheap,Show me the code. ——Linus Torvalds**
 
-**像写HTML和Word那样简单的编写OFD。**
+OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、文档保护、文档合并、转换等功能。
+
+本项目采用Apache 2.0许可，请尊重开源项目作者，在软件中附带OFDRW开源软件许可。
 
 根据[《GB/T 33190-2016 电子文件存储与交换格式版式文档》](./GBT_33190-2016_电子文件存储与交换格式版式文档.pdf)标准实现版式文档OFD库（含有书签）。
 
-项目结构：
+项目采用模块管理，各模块如下：
 
 - [**ofdrw-core**](./ofdrw-core) OFD核心API，参考[《GB/T 33190-2016 电子文件存储与交换格式版式文档》](./GBT_33190-2016_电子文件存储与交换格式版式文档.pdf)实现的基础数据结构。
 - [**ofdrw-font**](./ofdrw-font) 生成OFD字体相关。
@@ -29,8 +28,13 @@
 - [**ofrw-crypto**](./ofdrw-crypto) 用于实现《GM/T 0099-2020 开放版式文档密码应用技术规范》对OFD的密码相关功能。
 - [**ofdrw-gv**](./ofdrw-gv) OFDRW 所有模块所共用的全局变量。
 - [**ofdrw-converter**](./ofdrw-converter) OFD文档转换PDF、图片、SVG、HTML。
-- [**ofdrw-tool**](./ofdrw-tool) OFD文档工具，文档合并、裁剪、重组。 ***New***
+- [**ofdrw-tool**](./ofdrw-tool) OFD文档工具，文档合并、裁剪、重组。
 - [**ofdrw-full**](./ofdrw-full) 上述所有模块整合包，用于简化依赖引入。
+
+注：
+
+- 您可以根据需求裁剪模块优化程序体积。
+- 您可以仅引用`ofdrw-core`中定义的数据结来构件属于您自己的OFD库。
 
 ## QuickStart
 
@@ -43,9 +47,10 @@
 </dependency>
 ```
 
-如何生成一份OFD文档？
+> OFDRW 将持续保证API的向下兼容，您可以放心的升级OFDRW库至最新版本。
 
-> 如何把大象放入冰箱。
+如何生成一份OFD文档，如何把大象放入冰箱？
+
 
 ```java
 public class HelloWorld {
@@ -95,7 +100,7 @@ OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwe
 
 **DLTech21/ofd.js**
 
-![ofd.js](https://raw.githubusercontent.com/DLTech21/ofd.js/master/ofd.jpg)
+![ofd.js](https://github.com/DLTech21/ofd.js/raw/master/img.png)
 
 推荐开源的OFD在线预览解决方案： [DLTech21/ofd.js . https://github.com/DLTech21/ofd.js](https://github.com/DLTech21/ofd.js)
 
