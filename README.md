@@ -96,17 +96,6 @@ OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwe
 
 ### 推荐解决方案
 
-#### HTML预览
-
-**DLTech21/ofd.js**
-
-![ofd.js](https://github.com/DLTech21/ofd.js/raw/master/img.png)
-
-推荐开源的OFD在线预览解决方案： [DLTech21/ofd.js . https://github.com/DLTech21/ofd.js](https://github.com/DLTech21/ofd.js)
-
-- 将OFD渲染为SVG实现矢量的无失真的OFD预览体验。
-- 完全基于浏览器在前端完成所有渲染工作，不需要服务端支持和插件。
-
 #### 开源客户端
 
 推荐开源客户端预览解决方案： [roy19831015/OfdiumEx . https://github.com/roy19831015/OfdiumEx](https://github.com/roy19831015/OfdiumEx)
@@ -126,6 +115,10 @@ OFD Reader and Writer 安卓平台解决方案： [DLTech21/ofdrw-aar . https://
 
 - 支持OFD解析。
 - 基于java.awt解析OFD实现图片绘制。
+
+#### HTML预览
+
+> 暂时下架，期待新的解决方案...
 
 ## 源码安装
 

@@ -29,16 +29,6 @@ public class OFDElement extends DefaultElementProxy {
 
     public OFDElement(Element proxy) {
         super(proxy);
-//        /*
-//         * 判断 被代理的对象和子类的对象是否为同一个类型
-//         */
-//        String subObjsQName = this.getQualifiedName();
-//        String proxyObjQName = this.proxy.getQualifiedName();
-//        if (!subObjsQName.equals(proxyObjQName)) {
-//            throw new IllegalArgumentException("wrong proxy type: "
-//                    + this.proxy.getQualifiedName()
-//                    + " require: " + this.getQualifiedName());
-//        }
     }
 
     protected OFDElement(String name) {
@@ -100,13 +90,18 @@ public class OFDElement extends DefaultElementProxy {
 
     /**
      * 获取OFD的元素
+     * <p>
+     * 若无法在OFD命名空间下获取同名元素，则尝试从默认命名空间获取。
      *
      * @param name OFD元素名称
      * @return OFD元素或null
      */
     public Element getOFDElement(String name) {
-//        return this.element(new QName(name, Const.OFD_NAMESPACE));
-        return this.element(new OFDCommonQName(name));
+        Element res = this.element(new OFDCommonQName(name));
+        if (res == null) {
+            res = this.element(name);
+        }
+        return res;
     }
 
 
@@ -155,6 +150,8 @@ public class OFDElement extends DefaultElementProxy {
      * 获取 指定名称OFD元素集合
      * <p>
      * 集合将会保持原有次序
+     * <p>
+     * 若容器内的元素非OFD命名空间，但是名字相同也会被取到
      *
      * @param name   OFD元素名称
      * @param mapper 转换对象构造器引用
@@ -162,13 +159,22 @@ public class OFDElement extends DefaultElementProxy {
      * @return 指定名称OFD元素集合
      */
     public <R> List<R> getOFDElements(String name, Function<? super Element, ? extends R> mapper) {
+        LinkedList<Element> c = new LinkedList<>();
+
         List<Element> elements = this.elements(new OFDCommonQName(name));
-        if (elements == null || elements.isEmpty()) {
+        if (elements != null) {
+            c.addAll(elements);
+        }
+        // 兼容命名空间缺失情况
+        List<Element> noNameList = this.elements(name);
+        if (noNameList != null) {
+            c.addAll(noNameList);
+        }
+
+        if (c.isEmpty()) {
             return Collections.emptyList();
         }
-        return elements.stream()
-                .map(mapper)
-                .collect(Collectors.toList());
+        return c.stream().map(mapper).collect(Collectors.toList());
     }
 
 
@@ -177,21 +183,20 @@ public class OFDElement extends DefaultElementProxy {
      * <p>
      * 集合将会保持原有次序
      * qname匹配的时候不再验证namespace，兼容namespace为空的情况。
-     * author daiwf
      *
      * @param name   OFD元素名称
      * @param mapper 转换对象构造器引用
      * @param <R>    指定元素对象
      * @return 指定名称OFD元素集合
+     * @deprecated {@link #getOFDElements}已经兼容非标准命名空间
      */
+    @Deprecated
     public <R> List<R> getElements(String name, Function<? super Element, ? extends R> mapper) {
         List<Element> elements = this.elements(new QName(name));
         if (elements == null || elements.isEmpty()) {
             return Collections.emptyList();
         }
-        return elements.stream()
-                .map(mapper)
-                .collect(Collectors.toList());
+        return elements.stream().map(mapper).collect(Collectors.toList());
     }
 
     /**
