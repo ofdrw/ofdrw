@@ -28,18 +28,18 @@ try (OFDDoc ofdDoc = new OFDDoc(path)) {
 
 ## HTML Canvas模拟开发
 
-由于OFDRW中的Canvas实现了与HTML Canvas基本一致的API接口，因此可以使用HTML的Canvas来实现OFD固定布局模式快速可视化开发。
+由于OFDRW中的Canvas实现了与HTML Canvas基本一致的API接口，因此可以使用HTML的Canvas实现OFD固定布局模式的快速可视化开发。
 
 [在线调试入口](https://www.w3school.com.cn/tiy/t.asp?f=html5_canvas_transform)
 
-以下以水印为例，希望开发一个覆盖整页面的谁赢，进行首先在HTML Canvas中实现水印效果。
+以水印为例，目标为一个覆盖整页面的水印，首先在HTML Canvas中使用相关JS API实现水印效果。
 
-[1] 调整HTML Canvas的大小为A4纸页面大小（210x297），也就是设置Canvas元素的width和height，如果觉得比较小可以适当的等比例放大如：420x594。
+[1] 调整HTML Canvas的大小为A4纸页面大小（210x297），设置Canvas元素的width和height，如果觉得比较小可以适当的等比例放大如：420x594。
 ```html
 <canvas id="myCanvas" width="210" height="297">
 ```
 
-[2] 获取Canvas上下，调用API进行绘制
+[2] 获取Canvas上下文，调用JS API进行绘制
 ```js
 var c = document.getElementById("myCanvas");
 var ctx = c.getContext("2d");
@@ -47,7 +47,7 @@ var ctx = c.getContext("2d");
 // 下面使用 ctx 调用HTML Canvas API进行绘制
 ```
 
-```js
+```html
 <!DOCTYPE html>
 <html>
 <body>
@@ -80,7 +80,7 @@ for (var i = 0; i <= 8; i++) {
 </html>
 ```
 
-[3] 调整代码适应Java代码，注意：上面的字体配置和`rotate`的角度参数与js略有不同，调整后代码如下：
+[3] 调整JS代码适应OFDRW Canvas Java API接口，注意：上面的字体配置和`rotate`的角度参数与js略有不同，调整后代码如下：
 ```java
 public void main() throws IOException {
     Path out = Paths.get("target/ComplexTransformCase.ofd");
@@ -117,7 +117,7 @@ public void main() throws IOException {
 
 ## API列表
 
-**路径相关**
+### 路径相关
 
 | 方法名 | 意义 |
 | --- | --- |
@@ -133,9 +133,9 @@ public void main() throws IOException {
 | `stroke` | 描边路径 |
 | `fill` | 填充一个关闭的路径 |
 
-**矩形填充和描边**
+### 矩形填充和描边
 
-以下API会使当前图形绘制路径重置。图形的绘制不会
+以下API会使当前图形绘制路径重置。
 
 | 方法名 | 意义 |
 | --- | --- |
@@ -143,7 +143,7 @@ public void main() throws IOException {
 | `strokeRect` | 创建并描边矩形路径 |
 
 
-**图形变换**
+### 图形变换
 
 | 方法名 | 意义 |
 | --- | --- |
@@ -153,20 +153,20 @@ public void main() throws IOException {
 | `transform` | 在已有当前变换矩阵基础上，再变换矩阵 |
 | `setTransform` | 设置变换矩阵，替代当前的变换矩阵 |
 
-**文字**
+### 文字
 
 | 方法名 | 意义 |
 | --- | --- |
 | `fillText` | 填充文字 |
 | `measureText` | 测量文本的宽度或高度 |
 
-**图形图像**
+### 图形图像
 
 | 方法名 | 意义 |
 | --- | --- |
 | `drawImage` | 绘制图片 |
 
-**属性配置**
+### 属性配置
 
 | 方法名 | 意义 |
 | --- | --- |
@@ -181,7 +181,7 @@ public void main() throws IOException {
 | `MiterLimit` | 最大斜接长度，也就是结合点长度截断值(get/set) |
 | `LineDash` | 填充线时使用虚线模式，设置虚线间隔(get/set) |
 
-**FontSetting**
+### 字体设置 FontSetting
 
 | 方法名 | 意义 |
 | --- | --- |
@@ -193,7 +193,7 @@ public void main() throws IOException {
 | `charDirection` | 字符方向，可取值：0(默认)、90、180、270 |
 | `readDirection` | 阅读方向，可取值：0(默认)、90、180、270 |
 
-**工作区**
+### 工作区
 
 | 方法名 | 意义 |
 | --- | --- |

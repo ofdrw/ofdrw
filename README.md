@@ -34,7 +34,7 @@ OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、
 注：
 
 - 您可以根据需求裁剪模块优化程序体积。
-- 您可以仅引用`ofdrw-core`中定义的数据结来构件属于您自己的OFD库。
+- 您可以仅引用`ofdrw-core`中定义的数据结来构建属于您自己的OFD库。
 
 ## QuickStart
 
