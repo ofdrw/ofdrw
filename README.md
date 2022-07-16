@@ -94,7 +94,16 @@ public class HelloWorld {
 
 OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwell.cn/)
 
-### 推荐解决方案
+### 社区解决方案
+
+#### HTML5
+
+HTML5前端预览解决方案： [DLTech21/ofd.js . https://github.com/DLTech21/ofd.js](https://github.com/DLTech21/ofd.js)
+
+- `jszip`解压。
+- `fast-xml-parser`解析xml为json数据。
+- `svg`及`canvas`渲染实现。
+- 完全浏览器OFD页面渲染。
 
 #### 开源客户端
 
@@ -115,10 +124,6 @@ OFD Reader and Writer 安卓平台解决方案： [DLTech21/ofdrw-aar . https://
 
 - 支持OFD解析。
 - 基于java.awt解析OFD实现图片绘制。
-
-#### HTML预览
-
-> 暂时下架，期待新的解决方案...
 
 ## 源码安装
 
