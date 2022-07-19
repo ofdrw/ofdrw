@@ -145,20 +145,23 @@ mvn install
 
 ***Share and Communicate***
 
-为方便社区建设与交流，提供社区QQ群：
+<p align="center">
+  <img width="150" height="150" src="./img/comm.png">
+</p>
+为方便社区建设与交流，提供社区QQ群： 
 
 - 04群号： **690642037** *（新）*
 - 03群号： **717320255** *（满）*
 - 02群号： **745517934** *（满）*
 - 01群号： **577682453** *（满）*
 
+<p align="center">
+  <img  width="375" height="672" src="./img/QQLink.png">
+</p>
 
-> 如您遇到与OFD相关的技术问题，可以进入交流。
 
-
-![QQ群](./img/QQLink.jpg)
-
-如果各位对 OFD R&W 有 **问题** 或是 **建议** 可以提交issue和PullRequest，欢迎进群交流。
+> - 若您遇到与OFD相关的技术问题，欢迎进群交流!
+> - 若您对项目有建设性意见或方案欢迎提交**Issue**与**PR**。
 
 ## 参与贡献
 
