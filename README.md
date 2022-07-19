@@ -10,7 +10,7 @@
 **Talk is cheap,Show me the code. ——Linus Torvalds**
 
 <p align="center">
-  <img width="305" height="370" src="./img/icon.png">
+  <img width="275" height="275" src="./img/icon2.png">
 </p>
 
 OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、文档保护、文档合并、转换等功能。
