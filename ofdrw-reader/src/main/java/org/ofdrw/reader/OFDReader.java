@@ -499,6 +499,16 @@ public class OFDReader implements Closeable {
         return pageArea.getBox();
     }
 
+    /**
+     * 获取页面物理大小
+     *
+     * @param num 页码，从1起
+     * @return 页面物理尺寸
+     */
+    public ST_Box getPageSize(int num) {
+        final Page page = getPage(num);
+        return getPageSize(page);
+    }
 
     /**
      * 通过页面页码获取页面对象
