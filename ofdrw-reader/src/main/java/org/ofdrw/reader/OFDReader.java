@@ -2,6 +2,7 @@ package org.ofdrw.reader;
 
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
+import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.annotation.Annotations;
 import org.ofdrw.core.annotation.pageannot.AnnPage;
 import org.ofdrw.core.annotation.pageannot.PageAnnot;
@@ -763,6 +764,18 @@ public class OFDReader implements Closeable {
         return resMgt;
     }
 
+    /**
+     * 启用或关闭命名空间严格解析模式
+     * <p>
+     * 启用严格模式后将会忽略非ofd命名空间的元素。
+     * <p>
+     * 默认：关闭严格模式
+     *
+     * @param enable true - 启用; false - 兼容模式（默认），兼容ofd命名空间
+     */
+    public static void setNamespaceStrictMode(boolean enable) {
+        OFDElement.NSStrictMode = enable;
+    }
 
     /**
      * 关闭文档

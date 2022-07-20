@@ -3,7 +3,6 @@ package org.ofdrw.core;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.dom4j.QName;
-import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicType.ST_ID;
 
 import java.io.Serializable;
@@ -26,6 +25,15 @@ import java.util.stream.Collectors;
  * @since 2019-09-28 12:05:55
  */
 public class OFDElement extends DefaultElementProxy {
+
+    /**
+     * 命名空间严格模式
+     * <p>
+     * true - 严格使用OFD空间获取OFD元素
+     * <p>
+     * false - 只要元素名称相同则认为是OFD元素（默认值）
+     */
+    public static boolean NSStrictMode = false;
 
     public OFDElement(Element proxy) {
         super(proxy);
@@ -97,8 +105,10 @@ public class OFDElement extends DefaultElementProxy {
      * @return OFD元素或null
      */
     public Element getOFDElement(String name) {
-        Element res = this.element(new OFDCommonQName(name));
-        if (res == null) {
+        Element res;
+        if (NSStrictMode) {
+            res = this.element(new OFDCommonQName(name));
+        } else {
             res = this.element(name);
         }
         return res;
@@ -159,19 +169,15 @@ public class OFDElement extends DefaultElementProxy {
      * @return 指定名称OFD元素集合
      */
     public <R> List<R> getOFDElements(String name, Function<? super Element, ? extends R> mapper) {
-        LinkedList<Element> c = new LinkedList<>();
+        List<Element> c;
 
-        List<Element> elements = this.elements(new OFDCommonQName(name));
-        if (elements != null) {
-            c.addAll(elements);
-        }
-        // 兼容命名空间缺失情况
-        List<Element> noNameList = this.elements(name);
-        if (noNameList != null) {
-            c.addAll(noNameList);
+        if (NSStrictMode) {
+            c = this.elements(new OFDCommonQName(name));
+        } else {
+            c = this.elements(name);
         }
 
-        if (c.isEmpty()) {
+        if (c == null || c.isEmpty()) {
             return Collections.emptyList();
         }
         return c.stream().map(mapper).collect(Collectors.toList());
