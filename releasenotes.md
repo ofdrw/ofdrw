@@ -1,5 +1,20 @@
 # 发布记录和特性
 
+## Version 1.18.2 2022-7-20 19:58:24
+
+> Alias: Summer Time Rendering
+
+修复：
+
+- 增加了命名空间兼容模式的设置开关`OFDReader#setNamespaceStrictMode` 或 `OFDElement.NSStrictMode`设置。
+  - `true`：使用严格模式，只解析带有`<ofd:>`命名空间的元素。
+  - `false`：默认值，兼容模式只要元素名称相同就当做OFD元素解析。
+
+新增：
+
+- OFDReader简化了用于获取页面尺寸的方法，`ST_Box getPageSize(int num)`。
+
+
 ## Version 1.18.1 2022-7-13 22:01:44
 
 > Alias: Tomodachi Game

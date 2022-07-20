@@ -46,7 +46,7 @@ OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.18.1</version>
+  <version>1.18.2</version>
 </dependency>
 ```
 
