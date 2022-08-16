@@ -1,6 +1,7 @@
 package org.ofdrw.layout.element;
 
 
+import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.layout.RenderPrepare;
 import org.ofdrw.layout.Rectangle;
 import org.ofdrw.layout.engine.ElementSplit;
@@ -10,7 +11,7 @@ import java.util.Arrays;
 
 /**
  * 盒式模型基础
- *
+ * <p>
  * 每个继承Div的对象都不必须提供泛型参数T,用于简化链式调用。
  *
  * @param <T> 链式调用返还值，Div的子类
@@ -136,6 +137,11 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
      * 不参与渲染
      */
     private boolean placeholder = false;
+
+    /**
+     * 图层，默认为Body
+     */
+    private Type layer = Type.Body;
 
     public Div() {
     }
@@ -627,6 +633,26 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
         return new Rectangle(w, h);
     }
 
+    /**
+     * 返回 图层
+     * <p>
+     * 默认为Body
+     *
+     * @return 图层
+     */
+    public Type getLayer() {
+        return layer;
+    }
+
+    /**
+     * 设置 图层
+     *
+     * @param layer 图层
+     */
+    public T setLayer(Type layer) {
+        this.layer = layer;
+        return (T) this;
+    }
 
     /**
      * 判断是否为占位符
@@ -710,6 +736,7 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
         div.setPosition(position);
         div.setIntegrity(integrity);
         div.setPlaceholder(placeholder);
+        div.setLayer(layer);
         return div;
 
     }
@@ -881,9 +908,11 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
                 ", left=" + left +
                 ", right=" + right +
                 ", top=" + top +
+                ", opacity=" + opacity +
                 ", position=" + position +
                 ", integrity=" + integrity +
                 ", placeholder=" + placeholder +
+                ", layer=" + layer +
                 '}';
     }
 }

@@ -6,6 +6,8 @@ import org.ofdrw.core.action.actionType.actionGoto.DestType;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.doc.bookmark.Bookmark;
 import org.ofdrw.core.basicStructure.doc.bookmark.Bookmarks;
+import org.ofdrw.core.basicStructure.pageObj.layer.Type;
+import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.edit.Attachment;
@@ -23,6 +25,38 @@ import java.nio.file.Paths;
  * @since 2021-06-01 22:57:16
  */
 public class DocEditDemos {
+
+    /**
+     * 向文档中插入页面新的页面使用模板作为背景
+     */
+    @Test
+    void vPageUseTemplateTest() throws IOException {
+        Path srcP = Paths.get("src/test/resources", "fptpl.ofd");
+        Path outP = Paths.get("target/template_insert.ofd");
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+            final ST_Box box = reader.getPageSize(1);
+
+            final PageLayout pageBox = new PageLayout(box);
+            VirtualPage vPage2 = new VirtualPage(pageBox);
+
+            Path imgPath = Paths.get("src/test/resources", "eg_tulip.jpg");
+            Img img = new Img(80, 53, imgPath);
+            double x = (pageBox.getWidth() - img.getWidth()) / 2;
+            double y = (pageBox.getHeight() - img.getHeight()) / 2;
+            img.setPosition(Position.Absolute)
+                    .setX(x).setY(y);
+            img.setBorder(0.5d);
+            vPage2.add(img);
+            vPage2.addTemplate("9", null);
+
+            // 插入
+            ofdDoc.addVPage(vPage2);
+        }
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+
+    }
+
 
     /**
      * 向已有文档中 插入 流式布局的内容

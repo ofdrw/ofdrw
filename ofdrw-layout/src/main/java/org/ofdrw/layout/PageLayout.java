@@ -1,6 +1,7 @@
 package org.ofdrw.layout;
 
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
+import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.layout.element.ArrayParamTool;
 
 import java.util.Arrays;
@@ -81,6 +82,14 @@ public class PageLayout {
     public PageLayout(Double width, Double height) {
         this.width = width;
         this.height = height;
+    }
+
+    public PageLayout(ST_Box box) {
+        if (box == null) {
+            throw new IllegalArgumentException("box 为空");
+        }
+        this.width = box.getWidth();
+        this.height = box.getHeight();
     }
 
     public Double getWidth() {

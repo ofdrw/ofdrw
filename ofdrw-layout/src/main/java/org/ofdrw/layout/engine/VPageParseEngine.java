@@ -2,7 +2,9 @@ package org.ofdrw.layout.engine;
 
 import org.dom4j.DocumentException;
 import org.ofdrw.core.basicStructure.pageObj.Content;
+import org.ofdrw.core.basicStructure.pageObj.Template;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
+import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.layout.PageLayout;
@@ -108,9 +110,9 @@ public class VPageParseEngine {
             } else {
                 PageDir pageDir = null;
                 // 创建一个全新的页面容器对象
-                if (virtualPage.getPageNum() == null){
+                if (virtualPage.getPageNum() == null) {
                     pageDir = newPage();
-                }else{
+                } else {
                     pageDir = addNewPage(virtualPage.getPageNum() - 1);
                 }
                 // 解析虚拟页面，并加入到容器中
@@ -133,17 +135,37 @@ public class VPageParseEngine {
             // 如果与默认页面样式不一致，那么需要单独设置页面样式
             page.setArea(vPageStyle.getPageArea());
         }
+        // 如果存在，则设置页面模板
+        final List<Template> templates = vPage.getTemplates();
+        if (templates != null && !templates.isEmpty()){
+            for (Template tpl : templates) {
+                page.addTemplate(tpl);
+            }
+        }
+
         pageDir.setContent(page);
         if (vPage.getContent().isEmpty()) {
             return;
         }
-        // 新建一个正文层的图层用于容纳元素
-        CT_Layer layer = new CT_Layer();
-        layer.setObjID(maxUnitID.incrementAndGet());
-        // 添加一个页面的内容
-        page.setContent(new Content().addLayer(layer));
-        // 执行转换
-        convert2Layer(layer, vPage.getContent());
+        // 创建页面的内容
+        final Content content = new Content();
+        // 获取不同层的内容
+        List<List<Div>> layerArr = vPage.getLayerContent();
+        for (List<Div> layerContent : layerArr) {
+            if (layerContent.isEmpty()) {
+                continue;
+            }
+            // 若层内内容不为空，那么创建图层，并转换为图元
+            final Type type = layerContent.get(0).getLayer();
+            // 新建一个正文层的图层用于容纳元素
+            CT_Layer ctlayer = new CT_Layer();
+            ctlayer.setType(type);
+            ctlayer.setObjID(maxUnitID.incrementAndGet());
+            content.addLayer(ctlayer);
+            // 执行转换
+            convert2Layer(ctlayer, layerContent);
+        }
+        page.setContent(content);
     }
 
 

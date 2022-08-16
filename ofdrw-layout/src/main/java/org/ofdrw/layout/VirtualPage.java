@@ -1,11 +1,17 @@
 package org.ofdrw.layout;
 
+import org.ofdrw.core.basicStructure.pageObj.Template;
+import org.ofdrw.core.basicStructure.pageObj.layer.Type;
+import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.layout.element.AFloat;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.Position;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 虚拟页面
@@ -35,6 +41,11 @@ public class VirtualPage {
      * 仅在不为空时候表示需要将插入到指定页码位置。
      */
     private Integer pageNum = null;
+
+    /**
+     * 页面模板
+     */
+    private List<Template> templates = new ArrayList<>();
 
     protected VirtualPage() {
     }
@@ -110,6 +121,54 @@ public class VirtualPage {
     }
 
     /**
+     * 获取指定图层类型的Div
+     *
+     * @param layer 图层
+     * @return 该图层相关的所有Div
+     */
+    public List<Div> getContent(Type layer) {
+        List<Div> res = new LinkedList<>();
+        for (Div div : content) {
+            if (div.getLayer().equals(layer)) {
+                res.add(div);
+            }
+        }
+        return res;
+    }
+
+    /**
+     * 返回图层相关的内容
+     *
+     * @return 图层列表依次是：前景层、中文层、背景层
+     */
+    public List<List<Div>> getLayerContent() {
+        List<List<Div>> res = new ArrayList<>(3);
+        if (content.isEmpty()) {
+            return res;
+        }
+        List<Div> foreground = new ArrayList<>();
+        List<Div> body = new ArrayList<>();
+        List<Div> background = new ArrayList<>();
+        res.add(foreground);
+        res.add(body);
+        res.add(background);
+        for (Div div : content) {
+            switch (div.getLayer()) {
+                case Foreground:
+                    foreground.add(div);
+                    break;
+                case Body:
+                    body.add(div);
+                    break;
+                case Background:
+                    background.add(div);
+                    break;
+            }
+        }
+        return res;
+    }
+
+    /**
      * 替换 虚拟页面内的内容容器
      *
      * @return this
@@ -140,5 +199,31 @@ public class VirtualPage {
         }
         this.pageNum = pageNum;
         return this;
+    }
+
+    /**
+     * 返回 页面引用的模板序列
+     *
+     * @return 页面模板序列
+     */
+    public List<Template> getTemplates() {
+        return templates;
+    }
+
+    /**
+     * 添加页面模板
+     * <p>
+     * 图层默认为 背景层 {@link Type#Background}
+     *
+     * @param id    模板页面对象ID
+     * @param order 图层，null时为 背景层 {@link Type#Background}
+     */
+    public void addTemplate(String id, Type order) {
+        final Template tpl = new Template();
+        tpl.setTemplateID(ST_ID.getInstance(id).ref());
+        if (order != null) {
+            tpl.setZOrder(order);
+        }
+        templates.add(tpl);
     }
 }

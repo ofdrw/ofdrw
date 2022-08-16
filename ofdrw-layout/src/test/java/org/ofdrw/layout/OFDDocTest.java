@@ -12,6 +12,7 @@ import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
+import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicType.ST_Box;
@@ -47,11 +48,51 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 2020-03-22 11:38:48
  */
 class OFDDocTest {
+
+    /**
+     * 测试Div图层属性
+     */
+    @Test
+    void vPageLayerTest() throws IOException {
+        Path path = Paths.get("target/MutiLayer.ofd").toAbsolutePath();
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            PageLayout pageLayout = ofdDoc.getPageLayout();
+            VirtualPage vPage = new VirtualPage(pageLayout);
+
+            final Span span = new Span("你好")
+                    .setFontSize(15d)
+                    .setColor(255, 0, 0);
+            Paragraph p = new Paragraph().add(span);
+            p.setPosition(Position.Absolute)
+                    .setXY(pageLayout.getWidth() / 2, pageLayout.getHeight() / 2)
+                    .setWidth(40d)
+                    .setLayer(Type.Body);
+
+            Path imgPath = Paths.get("src/test/resources", "eg_tulip.jpg");
+            Img img = new Img(80, 53, imgPath);
+            double x = (pageLayout.getWidth() - img.getWidth()) / 2;
+            double y = (pageLayout.getHeight() - img.getHeight()) / 2;
+            img.setPosition(Position.Absolute)
+                    .setX(x).setY(y);
+            img.setBorder(0.1d);
+            img.setLayer(Type.Background);
+
+            // 先添加的文字
+            vPage.add(p);
+            // 后添加图片，由于图片处于背景层，不会覆盖文字
+            vPage.add(img);
+
+
+            ofdDoc.addVPage(vPage);
+            System.out.println(">> " + path.toAbsolutePath());
+        }
+    }
+
     /**
      * 在生成文档的过程中获取文档信息
      */
     @Test
-    void onRenderFinished()throws IOException {
+    void onRenderFinished() throws IOException {
         Path path = Paths.get("target/AddInfoAfterRender.ofd").toAbsolutePath();
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             Paragraph p = new Paragraph("你好呀，OFD Reader&Writer！", 8d);
@@ -79,7 +120,7 @@ class OFDDocTest {
      * 在生成文档的过程中获取文档信息
      */
     @Test
-    void genDocAndGetDocInfo()throws IOException {
+    void genDocAndGetDocInfo() throws IOException {
         Path path = Paths.get("target/doc-my-info.ofd").toAbsolutePath();
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             Paragraph p = new Paragraph("你好呀，OFD Reader&Writer！", 8d);
@@ -213,7 +254,6 @@ class OFDDocTest {
     }
 
 
-
     @Test
     void divBoxTest() throws IOException {
         Path path = Paths.get("target/VPage1.ofd").toAbsolutePath();
@@ -253,6 +293,9 @@ class OFDDocTest {
         System.out.println("生成文档位置: " + path.toAbsolutePath());
     }
 
+    /**
+     * 测试添加图片
+     */
     @Test
     void imgTest() throws IOException {
         Path path = Paths.get("target/VPageOfPNG.ofd").toAbsolutePath();
