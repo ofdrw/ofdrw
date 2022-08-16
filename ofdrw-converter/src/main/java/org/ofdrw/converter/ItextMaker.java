@@ -629,6 +629,12 @@ public class ItextMaker {
                     textObject.getBoundary().getWidth(),
                     textObject.getBoundary().getHeight());
         }
+        //start:roy19831015@gmail.com 修正线宽不受ctm影响的问题
+        double lineWidth = 0.0;
+        if (textObject.getLineWidth() != null) {
+            lineWidth = textObject.getLineWidth();
+        }
+        //end:roy19831015@gmail.com 修正线宽不受ctm影响的问题
         if (textObject.getCTM() != null) {
             Double[] ctm = textObject.getCTM().toDouble();
             double a = ctm[0].doubleValue();
@@ -641,6 +647,9 @@ public class ItextMaker {
             double angel = Math.atan2(-b, d);
             if (!(angel == 0 && a != 0 && d == 1)) {
                 fontSize = (float) (fontSize * sx);
+                //start:roy19831015@gmail.com 修正线宽不受ctm影响的问题
+                lineWidth = lineWidth * sx;
+                //end:roy19831015@gmail.com 修正线宽不受ctm影响的问题
             }
         }
         if (compositeObjectCTM != null) {
@@ -655,6 +664,9 @@ public class ItextMaker {
             double angel = Math.atan2(-b, d);
             if (!(angel == 0 && a != 0 && d == 1)) {
                 fontSize = (float) (fontSize * sx);
+                //start:roy19831015@gmail.com 修正线宽不受ctm影响的问题
+                lineWidth = lineWidth * sx;
+                //end:roy19831015@gmail.com 修正线宽不受ctm影响的问题
             }
         }
 
@@ -702,7 +714,9 @@ public class ItextMaker {
 
             if (textObject.getLineWidth() != null) {
 //                pdfCanvas.setLineWidth((float) converterDpi(textObject.getLineWidth()));
-                pdfCanvas.setLineWidth(new Float(textObject.getLineWidth()));
+                //start:roy19831015@gmail.com 修正线宽不受ctm影响的问题
+                pdfCanvas.setLineWidth((float) lineWidth);
+                //end:roy19831015@gmail.com 修正线宽不受ctm影响的问题
                 //处理加粗字体
                 pdfCanvas.setFillColor(ColorConstants.BLACK);
                 pdfCanvas.setTextRenderingMode(PdfCanvasConstants.TextRenderingMode.FILL_STROKE);
