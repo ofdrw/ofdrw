@@ -1,5 +1,20 @@
 # 发布记录和特性
 
+## Version 1.19.0 2022-8-16 21:50:33
+
+> Alias: OVERLORD Ⅳ
+
+修复：
+
+- OFD转换PDF转换后的线条与实际不符的问题。
+
+新增：
+
+- `Div`元素支持设置图层，使用`Div#setLayer`方法。
+  - 测试用例见 [OFDDocTest.java](ofdrw-layout/src/test/java/org/ofdrw/layout/OFDDocTest.java) 的 `vPageLayerTest` 用例。
+- `VirtualPage` 虚拟页面支持添加模板，使用`VirtualPage#addTemplate`方法。
+  - 测试用例见 [DocEditDemos.java](ofdrw-layout/src/test/java/org/ofdrw/layout/DocEditDemos.java) 的 `vPageUseTemplateTest` 用例。
+
 ## Version 1.18.2 2022-7-20 19:58:24
 
 > Alias: Summer Time Rendering
