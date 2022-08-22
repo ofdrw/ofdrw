@@ -2,7 +2,7 @@
 
 ## Version 1.19.1 2022-8-22 20:54:52
 
-> Alias: 
+> Alias: KuroNoShoukanshi
 
 新增：
 
