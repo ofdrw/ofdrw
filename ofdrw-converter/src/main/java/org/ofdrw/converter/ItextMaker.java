@@ -139,18 +139,20 @@ public class ItextMaker {
     /**
      * 添加附件
      *
-     * @param pdf
-     * @param ofdReader
-     * @throws IOException
+     * @param pdf       PDF文档对象
+     * @param ofdReader OFD解析器
+     * @throws IOException IO异常
      */
     public void addAttachments(PdfDocument pdf, OFDReader ofdReader) throws IOException {
+        // 获取OFD中所有附件
         List<CT_Attachment> attachmentList = ofdReader.getAttachmentList();
         for (CT_Attachment attachment : attachmentList) {
             Path attFile = ofdReader.getAttachmentFile(attachment);
             byte[] fileBytes = Files.readAllBytes(attFile);
             String fileName = attFile.getFileName().toString();
-            String displayFileName = StringUtils.isBlank(attachment.getAttachmentName()) ? fileName :
-                    attachment.getAttachmentName().concat(fileName.contains(".") ?
+            final String attachmentName = attachment.getAttachmentName();
+            String displayFileName = StringUtils.isBlank(attachmentName) ? fileName :
+                    attachmentName.concat(fileName.contains(".") ?
                             fileName.substring(fileName.lastIndexOf(".")) : "");
             PdfFileSpec fs = PdfFileSpec.createEmbeddedFileSpec(pdf, fileBytes, null, displayFileName,
                     null);
@@ -545,7 +547,7 @@ public class ItextMaker {
 
     private void writeImage(ResourceManage resMgt, PdfCanvas pdfCanvas, ST_Box box, ImageObject imageObject, ST_Box annotBox, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
         final ST_RefID resourceID = imageObject.getResourceID();
-        if (resourceID == null){
+        if (resourceID == null) {
             return;
         }
         byte[] imageByteArray = resMgt.getImageByteArray(resourceID.toString());

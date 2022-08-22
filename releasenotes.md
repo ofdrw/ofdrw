@@ -1,5 +1,14 @@
 # 发布记录和特性
 
+## Version 1.19.1 2022-8-22 20:54:52
+
+> Alias: 
+
+新增：
+
+- `OFDReader`新增获取所有附件的方法`getAttachmentList()`
+- OFD转换PDF时，附件也将复制到PDF中。
+
 ## Version 1.19.0 2022-8-16 21:50:33
 
 > Alias: OVERLORD Ⅳ
