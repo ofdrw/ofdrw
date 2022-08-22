@@ -1,5 +1,6 @@
 package org.ofdrw.reader;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.io.FileUtils;
 import org.dom4j.DocumentException;
 import org.ofdrw.core.OFDElement;
@@ -562,19 +563,42 @@ public class OFDReader implements Closeable {
     }
 
     /**
-     * 获取附件对象
+     * 获取所有附件对象
      *
-     * @param name 附件名称
      * @return 如果附件或附件记录不存在，那么返还null
      * @throws BadOFDException 文档结构损坏
      */
-    public CT_Attachment getAttachment(String name) {
-        if (name == null || name.trim().length() == 0) {
-            return null;
-        }
+    public List<CT_Attachment> getAttachmentList() {
         rl.save();
         try {
-            return getAttachment(name, rl);
+            DocDir docDir = ofdDir.obtainDocDefault();
+            rl.cd(docDir);
+            Document document = null;
+            Attachments attachments = null;
+            try {
+                document = docDir.getDocument();
+            } catch (FileNotFoundException | DocumentException e) {
+                throw new BadOFDException(e);
+            }
+            ST_Loc attachmentsLoc = document.getAttachments();
+            if (attachmentsLoc == null || (!rl.exist(attachmentsLoc.toString()))) {
+                // 文档中没有附件目录文件
+                return Lists.newArrayList();
+            }
+            try {
+                // 获取附件目录
+                attachments = rl.get(attachmentsLoc, Attachments::new);
+            } catch (FileNotFoundException | DocumentException e) {
+                System.err.println(">> 无法获取或解析Attachments.xml: " + e.getMessage());
+                return Lists.newArrayList();
+            }
+
+            String parent = attachmentsLoc.parent();
+            if (parent != null) {
+                rl.cd(parent);
+            }
+
+            return attachments.getAttachments();
         } finally {
             rl.restore();
         }
@@ -592,21 +616,27 @@ public class OFDReader implements Closeable {
         if (name == null || name.trim().length() == 0) {
             return null;
         }
-        rl.save();
+        CT_Attachment attachment = getAttachment(name);
+        return getAttachmentFile(attachment);
+    }
+
+    /**
+     * 获取附件文件
+     * <p>
+     * 注意：该文件会在Close Reader时候被删除，请在之前复制到其他地方
+     *
+     * @return 附件文件路径
+     */
+    public Path getAttachmentFile(CT_Attachment attachment) {
+        if (attachment == null) {
+            return null;
+        }
+        ST_Loc fileLoc = attachment.getFileLoc();
         try {
-            CT_Attachment attachment = getAttachment(name, rl);
-            if (attachment == null) {
-                return null;
-            }
-            ST_Loc fileLoc = attachment.getFileLoc();
-            try {
-                return rl.getFile(fileLoc);
-            } catch (FileNotFoundException e) {
-                System.err.println(">> 无法根据附件对象的描述获取到附件: " + fileLoc.toString());
-                return null;
-            }
-        } finally {
-            rl.restore();
+            return rl.getFile(fileLoc);
+        } catch (FileNotFoundException e) {
+            System.err.println(">> 无法根据附件对象的描述获取到附件: " + fileLoc.toString());
+            return null;
         }
     }
 
@@ -616,42 +646,16 @@ public class OFDReader implements Closeable {
      * 该方法不会恢复资源定位器
      *
      * @param name 附件名称
-     * @param rl   资源定位器
      * @return 附件对象
      */
-    private CT_Attachment getAttachment(String name, ResourceLocator rl) {
+    public CT_Attachment getAttachment(String name) {
         if (name == null || name.trim().length() == 0) {
             return null;
         }
 
-        DocDir docDir = ofdDir.obtainDocDefault();
-        rl.cd(docDir);
-        Document document = null;
-        Attachments attachments = null;
-        try {
-            document = docDir.getDocument();
-        } catch (FileNotFoundException | DocumentException e) {
-            throw new BadOFDException(e);
-        }
-        ST_Loc attachmentsLoc = document.getAttachments();
-        if (attachmentsLoc == null || (!rl.exist(attachmentsLoc.toString()))) {
-            // 文档中没有附件目录文件
-            return null;
-        }
-        try {
-            // 获取附件目录
-            attachments = rl.get(attachmentsLoc, Attachments::new);
-        } catch (FileNotFoundException | DocumentException e) {
-            System.err.println(">> 无法获取或解析Attachments.xml: " + e.getMessage());
-            return null;
-        }
+        List<CT_Attachment> attachmentList = this.getAttachmentList();
 
-        String parent = attachmentsLoc.parent();
-        if (parent != null) {
-            rl.cd(parent);
-        }
-
-        for (CT_Attachment attachment : attachments.getAttachments()) {
+        for (CT_Attachment attachment : attachmentList) {
             // 寻找匹配名称的附件
             if (attachment.getAttachmentName().equals(name)) {
                 return attachment;

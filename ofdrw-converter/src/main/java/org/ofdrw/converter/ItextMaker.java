@@ -20,6 +20,7 @@ import com.itextpdf.kernel.pdf.colorspace.PdfDeviceCs;
 import com.itextpdf.kernel.pdf.colorspace.PdfPattern;
 import com.itextpdf.kernel.pdf.colorspace.PdfShading;
 import com.itextpdf.kernel.pdf.extgstate.PdfExtGState;
+import com.itextpdf.kernel.pdf.filespec.PdfFileSpec;
 import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import com.itextpdf.kernel.pdf.xobject.PdfImageXObject;
 import com.itextpdf.layout.Canvas;
@@ -32,6 +33,7 @@ import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.converter.utils.PointUtil;
 import org.ofdrw.converter.utils.StringUtils;
 import org.ofdrw.core.annotation.pageannot.Annot;
+import org.ofdrw.core.attachment.CT_Attachment;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
@@ -59,6 +61,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -130,6 +134,28 @@ public class ItextMaker {
         // 绘制注释
         writeAnnoAppearance(resMgt, pdfCanvas, pageInfo, annotationEntities, pageBox);
         return pdfPage;
+    }
+
+    /**
+     * 添加附件
+     *
+     * @param pdf
+     * @param ofdReader
+     * @throws IOException
+     */
+    public void addAttachments(PdfDocument pdf, OFDReader ofdReader) throws IOException {
+        List<CT_Attachment> attachmentList = ofdReader.getAttachmentList();
+        for (CT_Attachment attachment : attachmentList) {
+            Path attFile = ofdReader.getAttachmentFile(attachment);
+            byte[] fileBytes = Files.readAllBytes(attFile);
+            String fileName = attFile.getFileName().toString();
+            String displayFileName = StringUtils.isBlank(attachment.getAttachmentName()) ? fileName :
+                    attachment.getAttachmentName().concat(fileName.contains(".") ?
+                            fileName.substring(fileName.lastIndexOf(".")) : "");
+            PdfFileSpec fs = PdfFileSpec.createEmbeddedFileSpec(pdf, fileBytes, null, displayFileName,
+                    null);
+            pdf.addFileAttachment(displayFileName, fs);
+        }
     }
 
     /**

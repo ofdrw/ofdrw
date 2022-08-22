@@ -80,12 +80,15 @@ public class ConvertHelper {
                         long end;
                         int pageNum = 1;
                         ItextMaker pdfMaker = new ItextMaker(reader);
+                        // 循环添加Page
                         for (PageInfo pageInfo : reader.getPageList()) {
                             start = System.currentTimeMillis();
                             pdfMaker.makePage(pdfDocument, pageInfo);
                             end = System.currentTimeMillis();
                             logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
                         }
+                        // 添加附件
+                        pdfMaker.addAttachments(pdfDocument, reader);
                     }
                     break;
                 }
