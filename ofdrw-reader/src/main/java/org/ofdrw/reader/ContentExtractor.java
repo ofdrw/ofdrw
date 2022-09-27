@@ -88,6 +88,28 @@ public class ContentExtractor {
     }
 
     /**
+     * 抽取指定页面内的所有文字Text对象
+     *
+     * @param pageNum 页码，从1开始
+     * @return 页面内容的所有文本内容序列
+     */
+    public List<TextObject> getPageTextObject(int pageNum) {
+        Content ofdContentObj = reader.getPage(pageNum).getContent();
+        if (ofdContentObj == null) {
+            return Collections.emptyList();
+        }
+
+        List<TextObject> txtContentList = new LinkedList<>();
+        List<CT_Layer> layers = ofdContentObj.getLayers();
+        // 如果页面含有多个层那么分层遍历
+        for (CT_Layer layer : layers) {
+            // 遍历所有页块
+            pageBlockTextObjectHandle(txtContentList, layer.getPageBlocks());
+        }
+        return txtContentList;
+    }
+
+    /**
      * 页块处理
      *
      * @param txtContentList 文本列表
@@ -117,6 +139,36 @@ public class ContentExtractor {
     }
 
     /**
+     * 页块处理
+     *
+     * @param textObjectList 文本对象列表
+     * @param pageBlocks     页块列表
+     */
+    private void pageBlockTextObjectHandle(List<TextObject> textObjectList, List<PageBlockType> pageBlocks) {
+        for (PageBlockType block : pageBlocks) {
+            // 找出所有的文字对象
+            if (block instanceof TextObject) {
+                TextObject text = (TextObject) block;
+                List<TextCode> textCodes = text.getTextCodes();
+                if (filter != null) {
+                    for (TextCode code : textCodes) {
+                        String allowText = filter.getAllowText(text, code);
+                        if(allowText != null && !"".equals(allowText.trim())) {
+                            textObjectList.add(text);
+                            break;
+                        }
+                    }
+                }else{
+                    textObjectList.add(text);
+                }
+            } else if (block instanceof CT_PageBlock) {
+                CT_PageBlock ctPageBlock = (CT_PageBlock) block;
+                pageBlockTextObjectHandle(textObjectList, ctPageBlock.getPageBlocks());
+            }
+        }
+    }
+
+    /**
      * 获取OFD内的所有文本内容
      *
      * @return OFD中所有文本内容
@@ -131,6 +183,23 @@ public class ContentExtractor {
             }
         }
         return txtContentList;
+    }
+
+    /**
+     * 获取OFD内的所有TextObject
+     *
+     * @return OFD中所有文本对象
+     */
+    public List<TextObject> extractAllTextObject() {
+        int numberOfPages = reader.getNumberOfPages();
+        List<TextObject> txtObjectList = new LinkedList<>();
+        for (int pageNum = 1; pageNum <= numberOfPages; pageNum++) {
+            List<TextObject> pageTextObject = getPageTextObject(pageNum);
+            if (pageTextObject != null && !pageTextObject.isEmpty()) {
+                txtObjectList.addAll(pageTextObject);
+            }
+        }
+        return txtObjectList;
     }
 
     /**

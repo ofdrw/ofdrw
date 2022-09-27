@@ -15,11 +15,9 @@ import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
 import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicStructure.pageTree.Page;
-import org.ofdrw.core.basicType.ST_Box;
-import org.ofdrw.core.basicType.ST_ID;
-import org.ofdrw.core.basicType.ST_Loc;
-import org.ofdrw.core.basicType.ST_RefID;
+import org.ofdrw.core.basicType.*;
 import org.ofdrw.core.graph.tight.CT_Region;
+import org.ofdrw.core.text.CT_CGTransform;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.font.Font;
 import org.ofdrw.font.FontName;
@@ -38,6 +36,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -679,4 +679,35 @@ class OFDDocTest {
         System.out.println("生成文档位置：" + path.toAbsolutePath().toString());
     }
 
+    /**
+     * 替换文字内容
+     *
+     * @author shanhy
+     */
+    @Test
+    void testReplaceText() throws IOException {
+        // 随便找一张电子发票，例如滴滴打车发票的ofd格式，即可测试
+        Path srcP = Paths.get("D:\\Downloads", "test.ofd");
+        Path outP = Paths.get("D:\\Downloads", "test-reaplaced.ofd");
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+            DocContentReplace docContentReplace = new DocContentReplace(ofdDoc);
+            docContentReplace.setReplaceTextCgTransformHandler((textObject, newText, fontFile) -> {
+                // 这里构造文字的CgTransform
+                if (newText.equals("杭州钧硕科技有限公司"))
+                    return new CT_CGTransform().setCodeCount(10).setCodePosition(0).setGlyphCount(10).setGlyphs(ST_Array.getInstance("25 26 27 28 29 30 31 32 33 34"));
+                return null;
+            });
+
+            Map<String, String> map = new HashMap<>();
+            map.put("Evaluation Warning", "Hi, Tom. Welcome to China.");
+            map.put("杭州钧硕科技有限公司", "红宇测试有限公司");
+            map.put("滴滴出行科技有限公司", "杭州钧硕科技有限公司");
+            map.put("滴滴信息服务有限公司", "红宇测试有限公司");
+            map.put("重庆呼我出行网络科技有限公司", "红宇测试有限公司");
+            map.put("赵笑林", "单红宇");
+            docContentReplace.replaceText(map);
+            System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+        }
+    }
 }

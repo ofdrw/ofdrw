@@ -116,6 +116,38 @@ public class Paragraph extends Div<Paragraph> {
     }
 
     /**
+     * 新建一个段落对象，并指定文字大小和字体
+     *
+     * @param text            文字内容
+     * @param defaultFontSize 默认字体大小
+     * @param defaultFont     默认字体
+     */
+    public Paragraph(String text, Double defaultFontSize, Font defaultFont) {
+        this();
+        if (text == null) {
+            throw new IllegalArgumentException("文字内容为null");
+        }
+        this.setFontSize(defaultFontSize);
+        this.setDefaultFont(defaultFont);
+        this.add(text);
+    }
+
+    /**
+     * 新建一个段落对象，并指定字体
+     *
+     * @param text            文字内容
+     * @param defaultFont     默认字体
+     */
+    public Paragraph(String text, Font defaultFont) {
+        this();
+        if (text == null) {
+            throw new IllegalArgumentException("文字内容为null");
+        }
+        this.setDefaultFont(defaultFont);
+        this.add(text);
+    }
+
+    /**
      * 增加段落中的文字
      * <p>
      * 文字样式使用span默认字体样式
@@ -169,6 +201,21 @@ public class Paragraph extends Div<Paragraph> {
         return this;
     }
 
+    /**
+     * 设置默认字体 <br/>
+     * 注意：在设置 defaultFont 之前被添加的内容，不会在调用 defaultFont 方法后而改变，除非指定 refreshBeforeAdd=true
+     *
+     * @param defaultFont        默认字体
+     * @param refreshBeforeAdd   是否对之前add的text内容应用这个字体
+     * @return
+     */
+    public Paragraph setDefaultFont(Font defaultFont, boolean refreshBeforeAdd) {
+        this.defaultFont = defaultFont;
+        if(refreshBeforeAdd)
+            this.contents.forEach(span -> span.setFont(defaultFont));
+        return this;
+    }
+
     public Double getFontSize() {
         return defaultFontSize;
     }
@@ -186,6 +233,26 @@ public class Paragraph extends Div<Paragraph> {
      */
     public Paragraph setFontSize(Double defaultFontSize) {
         this.defaultFontSize = defaultFontSize;
+        return this;
+    }
+
+    /**
+     * 设置段落内默认的字体大小
+     * <p>
+     * 如果加入的文字没有设置大小，那么默认使用该值。
+     * <p>
+     * 注意：该操作不会对段落内已经存在的文字生效，
+     * 因此在添加文字之后，在调用该方法，原有的文字大小不会变换。
+     * 你可以指定 refreshBeforeAdd=true 来使之前添加的内容也生效。
+     *
+     * @param defaultFontSize  默认字体大小
+     * @param refreshBeforeAdd 是否刷新之前添加的内容
+     * @return this
+     */
+    public Paragraph setFontSize(Double defaultFontSize, boolean refreshBeforeAdd) {
+        this.defaultFontSize = defaultFontSize;
+        if(refreshBeforeAdd)
+            this.contents.forEach(span -> span.setFontSize(defaultFontSize));
         return this;
     }
 

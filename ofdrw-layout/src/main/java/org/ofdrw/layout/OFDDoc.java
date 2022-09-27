@@ -546,6 +546,10 @@ public class OFDDoc implements Closeable {
         return this;
     }
 
+    public OFDReader getReader() {
+        return reader;
+    }
+
     @Override
     public void close() throws IOException {
         if (this.closed) {
