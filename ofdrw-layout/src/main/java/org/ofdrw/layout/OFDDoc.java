@@ -546,10 +546,25 @@ public class OFDDoc implements Closeable {
         return this;
     }
 
+    /**
+     * 返回正在编辑文档的Reader对象
+     * <p>
+     * 若为新建文档那么该方法将会返回null
+     *
+     * @return 正在编辑文档的Reader对象
+     */
     public OFDReader getReader() {
         return reader;
     }
 
+    /**
+     * 关闭文档，生成OFD
+     * <p>
+     * 注所有文档操作均在close方法执行完成后才会写入文件，打包生成OFD文档。
+     * 每个打开的文档都应该调用该方法。
+     *
+     * @throws IOException 文档操作异常
+     */
     @Override
     public void close() throws IOException {
         if (this.closed) {

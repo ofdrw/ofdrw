@@ -1,5 +1,16 @@
 # 发布记录和特性
 
+## Version 1.20.0 2022-9-27 23:04:31
+
+> OVERLORD IV
+
+新增：
+
+- `DocContentReplace` 实现文档内容替换。
+- `Paragraph`段落支持对已经添加到段落中的文字统一设置字体。
+- `ContentExtractor`支持了OFD TextObject的提取，用于支持文本替换。
+
+
 ## Version 1.19.1 2022-8-22 20:54:52
 
 > Alias: KuroNoShoukanshi
