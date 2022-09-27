@@ -10,6 +10,11 @@
 - `Paragraph`段落支持对已经添加到段落中的文字统一设置字体。
 - `ContentExtractor`支持了OFD TextObject的提取，用于支持文本替换。
 
+修复：
+
+- `Span` 在内容不足1时导致的OOR。
+
+
 
 ## Version 1.19.1 2022-8-22 20:54:52
 
