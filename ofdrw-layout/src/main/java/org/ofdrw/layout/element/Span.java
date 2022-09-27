@@ -269,7 +269,7 @@ public class Span implements TextFontInfo {
     public Double[] getDeltaX() {
         List<TxtGlyph> list = glyphList();
         int len = list.size();
-        if (len == 1) {
+        if (len <= 1) {
             // 只有一个字符时，不存在字符偏移所以返还空数组
             return new Double[]{};
         }
