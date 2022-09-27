@@ -616,6 +616,8 @@ public class OFDReader implements Closeable {
      * <p>
      * 注意：该文件会在Close Reader时候被删除，请在之前复制到其他地方
      *
+     * @param attachment 附件信息
+     *
      * @return 附件文件路径
      */
     public Path getAttachmentFile(CT_Attachment attachment) {

@@ -21,7 +21,7 @@ public class SAXReaderFactory {
     /**
      * 设置用户自定义的 SAXReader 生成器
      *
-     * @param SAXReaderProducer
+     * @param SAXReaderProducer 自定义工厂对象
      */
     public static synchronized void SetCustomizedProducer(Supplier<SAXReader> SAXReaderProducer) {
         if (null == CustomizeProducer) {

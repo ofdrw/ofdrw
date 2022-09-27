@@ -46,7 +46,8 @@ public class DocContentReplace {
     }
 
     /**
-     * 文档中的内容替换，对于OFD文档来说，替换的内容应为一行，如果是换行的内容，请以行为单位逐行替换 <br/>
+     * 文档中的内容替换，对于OFD文档来说，替换的内容应为一行，如果是换行的内容，请以行为单位逐行替换
+     * <p>
      * 替换范围：指定页码
      *
      * @param pageNum 页码，从1开始
@@ -57,7 +58,8 @@ public class DocContentReplace {
     }
 
     /**
-     * 文档中的内容替换，对于OFD文档来说，替换的内容应为一行，如果是换行的内容，请以行为单位逐行替换 <br/>
+     * 文档中的内容替换，对于OFD文档来说，替换的内容应为一行，如果是换行的内容，请以行为单位逐行替换
+     * <p>
      * 换范围：整个文档
      *
      * @param textMap 文本内容替换的映射关系 key为替换钱的文本，value是替换后的文本
@@ -67,11 +69,12 @@ public class DocContentReplace {
     }
 
     /**
-     * 文档中的内容替换，对于OFD文档来说，替换的内容应为一行，如果是换行的内容，请以行为单位逐行替换 <br/>
+     * 文档中的内容替换，对于OFD文档来说，替换的内容应为一行，如果是换行的内容，请以行为单位逐行替换
+     * <p>
      * 替换范围：指定页码
      *
-     * @param pageNum 页码，从1开始
-     * @param textMap 文本内容替换的映射关系 key为替换钱的文本，value是替换后的文本
+     * @param pageNum                页码，从1开始
+     * @param textMap                文本内容替换的映射关系 key为替换钱的文本，value是替换后的文本
      * @param contentExtractorFilter 内容抽取过滤器
      */
     public void replaceText(int pageNum, Map<String, String> textMap, ExtractorFilter contentExtractorFilter) {
@@ -81,7 +84,7 @@ public class DocContentReplace {
 
     /**
      * @param contentExtractorFilter 文本内容过滤器
-     * @param textMap 文本内容替换的映射关系 key为替换钱的文本，value是替换后的文本
+     * @param textMap                文本内容替换的映射关系 key为替换钱的文本，value是替换后的文本
      */
     public void replaceText(Map<String, String> textMap, ExtractorFilter contentExtractorFilter) {
         ContentExtractor contentExtractor = new ContentExtractor(this.getReader(), contentExtractorFilter);
@@ -92,7 +95,7 @@ public class DocContentReplace {
      * 文档中的内容替换，对于OFD文档来说，替换的内容应为一行，如果是换行的内容，请以行为单位逐行替换
      *
      * @param txtObjectList 要替换内容的 TextObject 集合
-     * @param textMap 文本内容替换的映射关系 key为替换钱的文本，value是替换后的文本
+     * @param textMap       文本内容替换的映射关系 key为替换钱的文本，value是替换后的文本
      */
     protected void replaceTextByTextObject(Map<String, String> textMap, List<TextObject> txtObjectList) {
         if (txtObjectList == null || txtObjectList.isEmpty())
@@ -163,8 +166,8 @@ public class DocContentReplace {
         /**
          * 扩展预留，为对应的文字构造CgTransform
          *
-         * @param textObject TextObject对象
-         * @param newText 替换后的文字
+         * @param textObject         TextObject对象
+         * @param newText            替换后的文字
          * @param beforeTextFontFile 元文字内容的字体文件
          */
         CT_CGTransform createCgTransformHandler(TextObject textObject, String newText, ST_Loc beforeTextFontFile);

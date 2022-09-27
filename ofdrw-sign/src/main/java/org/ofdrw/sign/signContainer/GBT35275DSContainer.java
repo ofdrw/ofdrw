@@ -148,6 +148,8 @@ public class GBT35275DSContainer implements ExtendSignatureContainer {
      * Base64编码后的内容将会为待签名原文被签名
      * <p>
      * 该开关用于兼容部分阅读器只支持签名原文的文件Hash的Base64的情况。
+     *
+     * @param state 开关，true - 开启、false - 关闭
      */
     public void setEnableFileHashBase64(boolean state) {
         this.enableFileHashBase64 = state;

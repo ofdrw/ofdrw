@@ -135,8 +135,8 @@ public class Paragraph extends Div<Paragraph> {
     /**
      * 新建一个段落对象，并指定字体
      *
-     * @param text            文字内容
-     * @param defaultFont     默认字体
+     * @param text        文字内容
+     * @param defaultFont 默认字体
      */
     public Paragraph(String text, Font defaultFont) {
         this();
@@ -202,16 +202,17 @@ public class Paragraph extends Div<Paragraph> {
     }
 
     /**
-     * 设置默认字体 <br/>
+     * 设置默认字体
+     * <p>
      * 注意：在设置 defaultFont 之前被添加的内容，不会在调用 defaultFont 方法后而改变，除非指定 refreshBeforeAdd=true
      *
-     * @param defaultFont        默认字体
-     * @param refreshBeforeAdd   是否对之前add的text内容应用这个字体
-     * @return
+     * @param defaultFont      默认字体
+     * @param refreshBeforeAdd 是否对之前add的text内容应用这个字体
+     * @return this
      */
     public Paragraph setDefaultFont(Font defaultFont, boolean refreshBeforeAdd) {
         this.defaultFont = defaultFont;
-        if(refreshBeforeAdd)
+        if (refreshBeforeAdd)
             this.contents.forEach(span -> span.setFont(defaultFont));
         return this;
     }
@@ -251,7 +252,7 @@ public class Paragraph extends Div<Paragraph> {
      */
     public Paragraph setFontSize(Double defaultFontSize, boolean refreshBeforeAdd) {
         this.defaultFontSize = defaultFontSize;
-        if(refreshBeforeAdd)
+        if (refreshBeforeAdd)
             this.contents.forEach(span -> span.setFontSize(defaultFontSize));
         return this;
     }

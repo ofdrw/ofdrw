@@ -99,6 +99,7 @@ public final class PKCS9SignedDataBuilder {
      * @param signFnc 签名实现
      * @param isn     签名者公钥证书序列号
      * @return 签名者信息
+     * @throws GeneralSecurityException 安全计算异常
      */
     public static SignerInfo sign(byte[] digest, Signature signFnc, IssuerAndSerialNumber isn) throws GeneralSecurityException {
         /*
