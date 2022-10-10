@@ -19,6 +19,7 @@ import org.ofdrw.core.basicType.*;
 import org.ofdrw.core.graph.tight.CT_Region;
 import org.ofdrw.core.text.CT_CGTransform;
 import org.ofdrw.core.text.TextCode;
+import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.font.Font;
 import org.ofdrw.font.FontName;
 import org.ofdrw.layout.edit.AdditionVPage;
@@ -687,16 +688,33 @@ class OFDDocTest {
     @Test
     void testReplaceText() throws IOException {
         // 随便找一张电子发票，例如滴滴打车发票的ofd格式，即可测试
-        Path srcP = Paths.get("D:\\Downloads", "test.ofd");
+        Path srcP = Paths.get("D:\\Downloads", "滴滴电子发票 (11).ofd");
         Path outP = Paths.get("D:\\Downloads", "test-reaplaced.ofd");
+        Path fontFile = Paths.get("src/test/resources", "simhei-cut1.ttf");
+
         try (OFDReader reader = new OFDReader(srcP);
              OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+
+            Font newFont = new Font("simsun-cut1","simsun-cut1",fontFile);
+            ST_ID newFontID = ofdDoc.getResManager().addFont(newFont);
+
             DocContentReplace docContentReplace = new DocContentReplace(ofdDoc);
-            docContentReplace.setReplaceTextCgTransformHandler((textObject, newText, fontFile) -> {
-                // 这里构造文字的CgTransform
-                if (newText.equals("杭州钧硕科技有限公司"))
-                    return new CT_CGTransform().setCodeCount(10).setCodePosition(0).setGlyphCount(10).setGlyphs(ST_Array.getInstance("25 26 27 28 29 30 31 32 33 34"));
-                return null;
+            docContentReplace.setReplaceTextHandler(new DocContentReplace.ReplaceTextHandler() {
+                @Override
+                public CT_CGTransform handleCgTransform(TextObject textObject, String newText, CT_Font beforeCtFont) {
+                    // 这里构造文字的CgTransform
+                    if (newText.equals("杭州钧硕科技有限公司"))
+                        return new CT_CGTransform().setCodeCount(10).setCodePosition(0).setGlyphCount(10).setGlyphs(ST_Array.getInstance("25 26 27 28 29 30 31 32 33 34"));
+                    return null;
+                }
+                @Override
+                public Font handleNewFont(TextObject textObject, String newText, CT_Font beforeCtFont){
+                    if (newText.equals("红宇测试有限公司")) {
+                        textObject.setFont(new ST_RefID(newFontID));
+                        return newFont;
+                    }
+                    return null;
+                }
             });
 
             Map<String, String> map = new HashMap<>();
@@ -709,5 +727,27 @@ class OFDDocTest {
             docContentReplace.replaceText(map);
             System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
         }
+    }
+
+    /**
+     * 添加字体
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testFont() throws IOException {
+        Path srcP = Paths.get("src/test/resources", "AddWatermarkAnnot.ofd");
+        Path outP = Paths.get("target/AddWatermarkAnnot-addfont.ofd");
+        Path fontFile = Paths.get("src/test/resources", "simhei-cut1.ttf");
+
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+            Font font = new Font("simsun-cut1","simsun-cut1",fontFile);
+            ofdDoc.getResManager().addFont(font);
+
+            Paragraph p = new Paragraph("国庆节普天同庆", 8d, font);
+            ofdDoc.add(p);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath());
     }
 }

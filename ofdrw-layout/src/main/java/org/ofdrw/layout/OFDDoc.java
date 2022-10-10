@@ -558,6 +558,17 @@ public class OFDDoc implements Closeable {
     }
 
     /**
+     * 获取 资源管理器对象
+     * <p>
+     * 通过资源管理器API就可以直接操作文档资源
+     *
+     * @return OFD虚拟容器
+     */
+    public ResManager getResManager() {
+        return prm;
+    }
+
+    /**
      * 关闭文档，生成OFD
      * <p>
      * 注所有文档操作均在close方法执行完成后才会写入文件，打包生成OFD文档。

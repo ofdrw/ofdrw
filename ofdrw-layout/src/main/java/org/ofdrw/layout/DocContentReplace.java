@@ -29,9 +29,15 @@ public class DocContentReplace {
     private OFDDoc ofdDoc;
 
     /**
-     * 扩展，为对应的文字构造CgTransform
+     * 过时接口，请使用 @ ReplaceTextHandler
      */
+    @Deprecated
     private ReplaceTextCgTransformHandler replaceTextCgTransformHandler;
+
+    /**
+     * 扩展，替换文字处理器
+     */
+    private ReplaceTextHandler replaceTextHandler;
 
     public DocContentReplace(OFDDoc ofdDoc) {
         this.ofdDoc = ofdDoc;
@@ -40,9 +46,9 @@ public class DocContentReplace {
         }
     }
 
-    public DocContentReplace(OFDDoc ofdDoc, ReplaceTextCgTransformHandler replaceTextCgTransformHandler) {
+    public DocContentReplace(OFDDoc ofdDoc, ReplaceTextHandler replaceTextHandler) {
         this.ofdDoc = ofdDoc;
-        this.replaceTextCgTransformHandler = replaceTextCgTransformHandler;
+        this.replaceTextHandler = replaceTextHandler;
     }
 
     /**
@@ -100,7 +106,6 @@ public class DocContentReplace {
     protected void replaceTextByTextObject(Map<String, String> textMap, List<TextObject> txtObjectList) {
         if (txtObjectList == null || txtObjectList.isEmpty())
             return;
-        Map<String, Font> fontMapCache = new HashMap<>();
         // 内容替换
         txtObjectList.forEach(txtObj -> txtObj.getTextCodes().forEach(txtCode -> {
             String oldText = txtCode.getContent();
@@ -117,22 +122,23 @@ public class DocContentReplace {
 
                     // 下面的font处理，是为了后面Paragraph中根据传入的font计算getDeltaX用途，其中Times New Roman是特殊的且仅适用英文
                     String fontRefId = txtObj.getFont().getRefId().toString();
-                    Font font = fontMapCache.get(fontRefId);
-                    if (font == null) {
-                        CT_Font ctFont = this.getReader().getResMgt().getFont(fontRefId);
+                    CT_Font ctFont = this.getReader().getResMgt().getFont(fontRefId);
+
+                    Font font = null;
+                    CT_CGTransform cgTransform = null;
+                    if (this.replaceTextHandler != null) {
+                        cgTransform = this.replaceTextHandler.handleCgTransform(txtObj, newText, ctFont);
+                        font = this.replaceTextHandler.handleNewFont(txtObj, newText, ctFont);
+                    }
+                    if (cgTransform != null)
+                        txtObj.addCGTransform(cgTransform);
+
+                    if(font == null){
                         String fontName = ctFont.getFontName();
                         font = new Font(fontName, ctFont.getFamilyName());
                         // 字体 Times New Roman 处理
                         if ("Times New Roman".equals(fontName))
                             font.setPrintableAsciiWidthMap(FontName.TIMES_NEW_ROMAN_PRINTABLE_ASCII_MAP);
-                        if (this.replaceTextCgTransformHandler != null) {
-                            CT_CGTransform cgTransform =
-                                    this.replaceTextCgTransformHandler.createCgTransformHandler(txtObj, newText,
-                                            ctFont.getFontFile());
-                            if (cgTransform != null)
-                                txtObj.addCGTransform(cgTransform);
-                        }
-                        fontMapCache.put(fontRefId, font);
                     }
 
                     // 使用Paragraph重新计算新内容的DeltaX数据
@@ -149,18 +155,22 @@ public class DocContentReplace {
         }));
     }
 
-    public ReplaceTextCgTransformHandler getReplaceTextCgTransformHandler() {
-        return replaceTextCgTransformHandler;
+    public ReplaceTextHandler getReplaceTextHandler() {
+        return replaceTextHandler;
     }
 
-    public void setReplaceTextCgTransformHandler(ReplaceTextCgTransformHandler replaceTextCgTransformHandler) {
-        this.replaceTextCgTransformHandler = replaceTextCgTransformHandler;
+    public void setReplaceTextHandler(ReplaceTextHandler replaceTextHandler) {
+        this.replaceTextHandler = replaceTextHandler;
     }
 
     public OFDReader getReader() {
         return this.ofdDoc.getReader();
     }
 
+    /**
+     * 请改用新的接口实现 ReplaceTextHandler
+     */
+    @Deprecated
     interface ReplaceTextCgTransformHandler {
 
         /**
@@ -171,6 +181,43 @@ public class DocContentReplace {
          * @param beforeTextFontFile 元文字内容的字体文件
          */
         CT_CGTransform createCgTransformHandler(TextObject textObject, String newText, ST_Loc beforeTextFontFile);
+    }
+
+    public ReplaceTextCgTransformHandler getReplaceTextCgTransformHandler() {
+        return replaceTextCgTransformHandler;
+    }
+
+    public void setReplaceTextCgTransformHandler(ReplaceTextCgTransformHandler replaceTextCgTransformHandler) {
+        this.replaceTextCgTransformHandler = replaceTextCgTransformHandler;
+    }
+
+    /**
+     * 内容替换处理器
+     */
+    interface ReplaceTextHandler {
+
+        /**
+         * 扩展预留，为对应的文字构造CgTransform
+         *
+         * @param textObject TextObject对象
+         * @param newText 替换后的文字
+         * @param beforeCtFont 原文字内容的字体文件
+         */
+        default CT_CGTransform handleCgTransform(TextObject textObject, String newText, CT_Font beforeCtFont){
+            return null;
+        }
+
+        /**
+         * 创建新的字体
+         *
+         * @param textObject
+         * @param newText
+         * @param beforeCtFont
+         * @return
+         */
+        default Font handleNewFont(TextObject textObject, String newText, CT_Font beforeCtFont){
+            return null;
+        }
 
     }
 
