@@ -6,37 +6,24 @@ import org.ofdrw.core.action.Actions;
 import org.ofdrw.core.action.CT_Action;
 import org.ofdrw.core.action.EventType;
 import org.ofdrw.core.action.actionType.URI;
-import org.ofdrw.core.annotation.Annotations;
 import org.ofdrw.core.annotation.pageannot.*;
 import org.ofdrw.core.basicStructure.doc.Document;
-import org.ofdrw.core.basicStructure.ofd.DocBody;
-import org.ofdrw.core.basicStructure.ofd.OFD;
-import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
 import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
-import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicType.*;
-import org.ofdrw.core.graph.tight.CT_Region;
 import org.ofdrw.core.text.CT_CGTransform;
-import org.ofdrw.core.text.TextCode;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.font.Font;
 import org.ofdrw.font.FontName;
-import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.edit.Annotation;
-import org.ofdrw.layout.edit.Attachment;
 import org.ofdrw.layout.element.*;
 import org.ofdrw.layout.element.canvas.Canvas;
 import org.ofdrw.pkg.container.DocDir;
-import org.ofdrw.pkg.container.OFDDir;
-import org.ofdrw.pkg.container.PageDir;
 import org.ofdrw.reader.OFDReader;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -147,14 +134,14 @@ class OFDDocTest {
             ofdDoc.add(p);
             // Expect: 只显示 "l"
         }
-        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+        System.out.println("生成文档位置：" + outP.toAbsolutePath());
     }
 
     /**
      * 加入印章类型注释对象
      */
     @Test
-    void addAnnotationStamp() throws IOException, DocumentException {
+    void addAnnotationStamp() throws IOException {
         Path srcP = Paths.get("src/test/resources", "AddWatermarkAnnot.ofd");
         Path outP = Paths.get("target/AddAnnotationStamp.ofd");
         Path imgPath = Paths.get("src/test/resources", "StampImg.png");
@@ -168,7 +155,7 @@ class OFDDocTest {
             ofdDoc.addAnnotation(1, annotation);
 
         }
-        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+        System.out.println("生成文档位置：" + outP.toAbsolutePath());
     }
 
 
@@ -194,7 +181,7 @@ class OFDDocTest {
             ofdDoc.addAnnotation(2, annotation);
 
         }
-        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+        System.out.println("生成文档位置：" + outP.toAbsolutePath());
     }
 
     /**
@@ -217,7 +204,7 @@ class OFDDocTest {
             ofdDoc.addAnnotation(2, annotation);
 
         }
-        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+        System.out.println("生成文档位置：" + outP.toAbsolutePath());
     }
 
     /**
@@ -251,7 +238,7 @@ class OFDDocTest {
                     .add("Font Name: Time New Roman");
             doc.add(p);
         }
-        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+        System.out.println("生成文档位置：" + outP.toAbsolutePath());
     }
 
 
@@ -677,7 +664,7 @@ class OFDDocTest {
             // 往ofd中添加页面一
             ofdDoc.addVPage(vPage);
         }
-        System.out.println("生成文档位置：" + path.toAbsolutePath().toString());
+        System.out.println("生成文档位置：" + path.toAbsolutePath());
     }
 
     /**
@@ -688,8 +675,8 @@ class OFDDocTest {
     @Test
     void testReplaceText() throws IOException {
         // 随便找一张电子发票，例如滴滴打车发票的ofd格式，即可测试
-        Path srcP = Paths.get("D:\\Downloads", "滴滴电子发票 (11).ofd");
-        Path outP = Paths.get("D:\\Downloads", "test-reaplaced.ofd");
+        Path srcP = Paths.get("src/test/resources", "滴滴电子发票 (11).ofd");
+        Path outP = Paths.get("target", "test-reaplaced.ofd");
         Path fontFile = Paths.get("src/test/resources", "simhei-cut1.ttf");
 
         try (OFDReader reader = new OFDReader(srcP);
@@ -725,14 +712,12 @@ class OFDDocTest {
             map.put("重庆呼我出行网络科技有限公司", "红宇测试有限公司");
             map.put("赵笑林", "单红宇");
             docContentReplace.replaceText(map);
-            System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+            System.out.println("生成文档位置：" + outP.toAbsolutePath());
         }
     }
 
     /**
      * 添加字体
-     *
-     * @throws IOException
      */
     @Test
     public void testFont() throws IOException {

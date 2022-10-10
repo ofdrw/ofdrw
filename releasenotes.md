@@ -1,8 +1,17 @@
 # 发布记录和特性
 
+## Version 1.20.1 2022-10-10 19:17:17
+
+> Alias: Ougonkyou
+
+新增：
+
+- 文档内容替换支持CGTransform类型文字内容替换。
+
+
 ## Version 1.20.0 2022-9-27 23:04:31
 
-> OVERLORD IV
+> Alias: OVERLORD IV
 
 新增：
 

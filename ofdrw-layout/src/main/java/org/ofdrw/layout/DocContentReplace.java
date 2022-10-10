@@ -11,7 +11,6 @@ import org.ofdrw.reader.ContentExtractor;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.extractor.ExtractorFilter;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +28,7 @@ public class DocContentReplace {
     private OFDDoc ofdDoc;
 
     /**
-     * 过时接口，请使用 @ ReplaceTextHandler
+     * @deprecated 过时接口，请使用 {@link ReplaceTextHandler}
      */
     @Deprecated
     private ReplaceTextCgTransformHandler replaceTextCgTransformHandler;
@@ -39,6 +38,11 @@ public class DocContentReplace {
      */
     private ReplaceTextHandler replaceTextHandler;
 
+    /**
+     * 创建文档内容替换对象
+     *
+     * @param ofdDoc 替换的原文档
+     */
     public DocContentReplace(OFDDoc ofdDoc) {
         this.ofdDoc = ofdDoc;
         if (ofdDoc == null) {
@@ -46,6 +50,12 @@ public class DocContentReplace {
         }
     }
 
+    /**
+     * 创建文档内容替换对象
+     *
+     * @param ofdDoc             替换的原文档
+     * @param replaceTextHandler 内容替换处理器，替换实现。
+     */
     public DocContentReplace(OFDDoc ofdDoc, ReplaceTextHandler replaceTextHandler) {
         this.ofdDoc = ofdDoc;
         this.replaceTextHandler = replaceTextHandler;
@@ -89,6 +99,8 @@ public class DocContentReplace {
     }
 
     /**
+     * 扫描提取关键字相关的字体对象，并替换映射中文字
+     *
      * @param contentExtractorFilter 文本内容过滤器
      * @param textMap                文本内容替换的映射关系 key为替换钱的文本，value是替换后的文本
      */
@@ -117,8 +129,9 @@ public class DocContentReplace {
                     // 如果获取不到才会显示 TextCode 中的内容，这样在使用特殊字体时，能保证在不同操作系统和环境中看到和打印的字体的统一，
                     // 因为我们这里要替换的内容未知，为了保证替换的可靠性，这里删除掉 ofd:CGTransform，让文档显示 textCode 中的内容。
                     List<CT_CGTransform> ctCgTransformList = txtObj.getCGTransforms();
-                    if (ctCgTransformList != null && ctCgTransformList.size() > 0)
+                    if (ctCgTransformList != null && ctCgTransformList.size() > 0) {
                         txtObj.removeOFDElemByNames(ctCgTransformList.get(0).getName());
+                    }
 
                     // 下面的font处理，是为了后面Paragraph中根据传入的font计算getDeltaX用途，其中Times New Roman是特殊的且仅适用英文
                     String fontRefId = txtObj.getFont().getRefId().toString();
@@ -129,11 +142,18 @@ public class DocContentReplace {
                     if (this.replaceTextHandler != null) {
                         cgTransform = this.replaceTextHandler.handleCgTransform(txtObj, newText, ctFont);
                         font = this.replaceTextHandler.handleNewFont(txtObj, newText, ctFont);
+                    } else if (this.replaceTextCgTransformHandler != null) {
+                        // 过时接口，兼容性保留
+                        cgTransform = this.replaceTextCgTransformHandler.createCgTransformHandler(txtObj, newText,
+                                ctFont.getFontFile());
                     }
-                    if (cgTransform != null)
-                        txtObj.addCGTransform(cgTransform);
 
-                    if(font == null){
+                    if (cgTransform != null) {
+                        txtObj.addCGTransform(cgTransform);
+                    }
+
+
+                    if (font == null) {
                         String fontName = ctFont.getFontName();
                         font = new Font(fontName, ctFont.getFamilyName());
                         // 字体 Times New Roman 处理
@@ -155,20 +175,36 @@ public class DocContentReplace {
         }));
     }
 
+    /**
+     * 获取当前的内容替换处理器
+     *
+     * @return 内容替换处理器
+     */
     public ReplaceTextHandler getReplaceTextHandler() {
         return replaceTextHandler;
     }
 
+    /**
+     * 设置 内容替换处理器
+     *
+     * @param replaceTextHandler 内容替换处理器
+     */
     public void setReplaceTextHandler(ReplaceTextHandler replaceTextHandler) {
         this.replaceTextHandler = replaceTextHandler;
     }
 
+    /**
+     * 获取 OFD解析器
+     *
+     * @return OFD解析器
+     */
     public OFDReader getReader() {
         return this.ofdDoc.getReader();
     }
 
+
     /**
-     * 请改用新的接口实现 ReplaceTextHandler
+     * @deprecated 请改用新的接口实现 {@link ReplaceTextHandler}
      */
     @Deprecated
     interface ReplaceTextCgTransformHandler {
@@ -183,10 +219,20 @@ public class DocContentReplace {
         CT_CGTransform createCgTransformHandler(TextObject textObject, String newText, ST_Loc beforeTextFontFile);
     }
 
+    /**
+     * 获取 字体变换类型的替换处理器
+     *
+     * @return 字体变换类型的替换处理器
+     */
     public ReplaceTextCgTransformHandler getReplaceTextCgTransformHandler() {
         return replaceTextCgTransformHandler;
     }
 
+    /**
+     * 设置 字体变换类型的替换处理器
+     *
+     * @param replaceTextCgTransformHandler 字体变换类型的替换处理器
+     */
     public void setReplaceTextCgTransformHandler(ReplaceTextCgTransformHandler replaceTextCgTransformHandler) {
         this.replaceTextCgTransformHandler = replaceTextCgTransformHandler;
     }
@@ -199,23 +245,24 @@ public class DocContentReplace {
         /**
          * 扩展预留，为对应的文字构造CgTransform
          *
-         * @param textObject TextObject对象
-         * @param newText 替换后的文字
+         * @param textObject   TextObject对象
+         * @param newText      替换后的文字
          * @param beforeCtFont 原文字内容的字体文件
+         * @return 替换后的字体形变对象
          */
-        default CT_CGTransform handleCgTransform(TextObject textObject, String newText, CT_Font beforeCtFont){
+        default CT_CGTransform handleCgTransform(TextObject textObject, String newText, CT_Font beforeCtFont) {
             return null;
         }
 
         /**
          * 创建新的字体
          *
-         * @param textObject
-         * @param newText
-         * @param beforeCtFont
-         * @return
+         * @param textObject   TextObject对象
+         * @param newText      替换后的文字
+         * @param beforeCtFont 原文字内容的字体文件
+         * @return 替换文字使用的字体对象
          */
-        default Font handleNewFont(TextObject textObject, String newText, CT_Font beforeCtFont){
+        default Font handleNewFont(TextObject textObject, String newText, CT_Font beforeCtFont) {
             return null;
         }
 
