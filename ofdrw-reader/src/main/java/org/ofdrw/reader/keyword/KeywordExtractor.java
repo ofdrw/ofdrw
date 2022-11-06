@@ -538,7 +538,9 @@ public class KeywordExtractor {
             }
         }
         if (boxList.size() > 0) {
-            positionList.add(new KeywordPosition(page, mergeBox(boxList)));
+            KeywordPosition position = new KeywordPosition(page, mergeBox(boxList));
+            position.setKeyword(keyword);
+            positionList.add(position);
         }
     }
 

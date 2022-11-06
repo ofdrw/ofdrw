@@ -73,4 +73,18 @@ class KeywordExtractorTest {
             }
         }
     }
+
+    @Test
+    void testKeyword2() throws IOException, DocumentException {
+        Path src = Paths.get("src/test/resources/keyword2.ofd");
+        String keyword = "马上融";
+
+        try (OFDReader reader = new OFDReader(src)) {
+            List<KeywordPosition> positionList = KeywordExtractor.getKeyWordPositionList(reader, keyword);
+
+            for (KeywordPosition keywordPosition : positionList) {
+                assertEquals(keyword, keywordPosition.getKeyword());
+            }
+        }
+    }
 }
