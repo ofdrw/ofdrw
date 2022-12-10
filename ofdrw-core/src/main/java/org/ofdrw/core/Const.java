@@ -40,7 +40,7 @@ public class Const {
     /**
      * xs:dateTime 类型时间日期格式化
      */
-    public static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'hh:mm:ss");
+    public static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     /**
      * OFD索引文件
