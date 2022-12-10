@@ -67,6 +67,7 @@ public class AbbreviatedData extends OFDElement implements Cloneable {
                 case "B":
                 case "A":
                 case "C":
+                case "CM":
                     if (opt != null) {
                         res.add(new OptVal(opt, values));
                         values.clear();
