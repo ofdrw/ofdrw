@@ -9,7 +9,7 @@
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-tool</artifactId>
-    <version>1.20.1</version>
+    <version>1.20.2</version>
 </dependency>
 ```
 

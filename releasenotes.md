@@ -1,5 +1,15 @@
 # 发布记录和特性
 
+## Version 1.20.2 2022-12-12 18:29:38
+
+> Alias: Chainsaw Man
+
+修复：
+
+- 关键字查询时返回结构中`Keyword`属性为空。
+- 修复了静态变量`DATETIME_FORMATTER` 错误的时间序列化格式。
+- 兼容了图元绘制关键字`CM`连接在一起的情况。
+
 ## Version 1.20.1 2022-10-10 19:17:17
 
 > Alias: Ougonkyou
