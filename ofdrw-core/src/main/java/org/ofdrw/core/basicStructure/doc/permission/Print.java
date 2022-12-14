@@ -53,7 +53,7 @@ public class Print extends OFDElement {
      * @return true - 允许被打印； false - 不允许被打印
      */
     public Boolean getPrintable() {
-        String str = this.getOFDElementText("Printable");
+        String str = this.attributeValue("Printable");
         if (str == null || str.trim().length() == 0) {
             return true;
         }
