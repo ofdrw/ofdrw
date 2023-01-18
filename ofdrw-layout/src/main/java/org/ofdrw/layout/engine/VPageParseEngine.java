@@ -175,10 +175,21 @@ public class VPageParseEngine {
      * @param virtualPage 专用于编辑的虚拟页面
      */
     private void pageEdit(AdditionVPage virtualPage) {
-        CT_Layer layer = virtualPage.obtainTopLayer(maxUnitID);
-        List<Div> content = virtualPage.getContent();
-        // 像图层中些转化的元素对象
-        convert2Layer(layer, content);
+        // 获取不同层的内容
+        List<List<Div>> layerArr = virtualPage.getLayerContent();
+        for (List<Div> layerContent : layerArr) {
+            if (layerContent.isEmpty()) {
+                continue;
+            }
+            // 若层内内容不为空，那么创建图层，并转换为图元
+            final Type type = layerContent.get(0).getLayer();
+            // 新建一个图层用于容纳元素
+            CT_Layer ctlayer = virtualPage.newLayer(maxUnitID);
+            ctlayer.setType(type);
+            ctlayer.setObjID(maxUnitID.incrementAndGet());
+            // 像图层中些转化的元素对象
+            convert2Layer(ctlayer, layerContent);
+        }
     }
 
 

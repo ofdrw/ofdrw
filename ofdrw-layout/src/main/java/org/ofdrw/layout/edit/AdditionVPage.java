@@ -34,7 +34,7 @@ public class AdditionVPage extends VirtualPage {
         this.pageObj = pageObj;
     }
 
-    private AdditionVPage(){}
+    private AdditionVPage() {}
 
     public Page getPageObj() {
         return pageObj;
@@ -81,5 +81,25 @@ public class AdditionVPage extends VirtualPage {
             }
         }
         return topLayer;
+    }
+
+    /**
+     * 创建新的层
+     *
+     * @param maxUnitID 如果需要创建图层，那么给与图层对象ID
+     * @return 新的图层
+     */
+    public CT_Layer newLayer(AtomicInteger maxUnitID) {
+        CT_Layer res = null;
+        Content content = pageObj.getContent();
+        if (content == null) {
+            content = new Content();
+            pageObj.setContent(content);
+            return res;
+        }
+        res = new CT_Layer();
+        res.setObjID(maxUnitID.incrementAndGet());
+        content.addLayer(res);
+        return res;
     }
 }
