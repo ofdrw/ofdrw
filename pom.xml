@@ -29,6 +29,7 @@
         <module>ofdrw-converter</module>
         <module>ofdrw-crypto</module>
         <module>ofdrw-tool</module>
+        <module>ofdrw-graphics2d</module>
     </modules>
 
     <developers>
