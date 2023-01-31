@@ -6,13 +6,9 @@ import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
-import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.graph.pathObj.CT_Path;
-import org.ofdrw.core.pageDescription.CT_GraphicUnit;
-import org.ofdrw.core.pageDescription.drawParam.LineCapType;
-import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 import org.ofdrw.pkg.container.PageDir;
 
 import java.awt.*;
@@ -59,15 +55,15 @@ public class PageGraphics2D extends Graphics2D {
      */
     private final CT_PageBlock container;
 
-    /**
-     * 描边参数
-     */
-    private BasicStroke stroke;
-    /**
-     * 绘制参数
-     */
-    private Paint paint;
 
+    /**
+     * 绘制属性
+     * <p>
+     * 对 paint 与 stroke 都会反映到 DrawParam
+     * <p>
+     * stroke、fill 或 drawString 时，如果DrawParam与上次的不一样，则添加
+     */
+    private DrawParam drawParam;
 
     /**
      * 创建2D图形对象
@@ -80,6 +76,7 @@ public class PageGraphics2D extends Graphics2D {
         this.doc = doc;
         this.pageDir = pageDir;
         this.pageObj = pageObj;
+        this.drawParam = new DrawParam();
 
         // 页面内容
         final Content content = new Content();
@@ -100,6 +97,20 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
+     * 复制当前绘制上下文，并创建新的绘制上下文
+     *
+     * @param parent 复制对象
+     */
+    private PageGraphics2D(PageGraphics2D parent) {
+        this.doc = parent.doc;
+        this.pageDir = parent.pageDir;
+        this.pageObj = parent.pageObj;
+        this.container = parent.container;
+        this.drawParam = new DrawParam(parent.drawParam);
+    }
+
+
+    /**
      * 绘制图形
      *
      * @param s 图形
@@ -116,79 +127,6 @@ public class PageGraphics2D extends Graphics2D {
         pathObj.setStroke(true);
         pathObj.setAbbreviatedData(pData);
         container.addPageBlock(pathObj.toObj(doc.newID()));
-    }
-
-    /**
-     * 设置绘制参数
-     *
-     * @param gUnit 图元
-     */
-    private void setDrawParameters(CT_GraphicUnit<?> gUnit) {
-
-        // 设置路径描边参数
-        if (stroke != null) {
-            // 线条连接样式
-            switch (stroke.getLineJoin()) {
-                case BasicStroke.JOIN_BEVEL:
-                    gUnit.setJoin(LineJoinType.Bevel);
-                    break;
-                case BasicStroke.JOIN_MITER:
-                    gUnit.setJoin(LineJoinType.Miter);
-                    break;
-                case BasicStroke.JOIN_ROUND:
-                    gUnit.setJoin(LineJoinType.Round);
-                    break;
-                default:
-                    gUnit.setJoin(null);
-                    break;
-            }
-
-            // 线宽度
-            if (stroke.getLineWidth() > 0) {
-                gUnit.setLineWidth((double) stroke.getLineWidth());
-            } else {
-                gUnit.setLineWidth(0.353);
-            }
-
-            // 线条虚线重复样式
-            final float[] dashArray = stroke.getDashArray();
-            if (dashArray != null && dashArray.length > 0) {
-                final ST_Array pattern = new ST_Array();
-                for (float v : dashArray) {
-                    pattern.add(Float.toString(v));
-                }
-                gUnit.setDashPattern(pattern);
-            } else {
-                gUnit.setDashPattern(null);
-            }
-
-            // 线端点样式
-            switch (stroke.getEndCap()) {
-                case BasicStroke.CAP_BUTT:
-                    gUnit.setCap(LineCapType.Butt);
-                    break;
-                case BasicStroke.CAP_ROUND:
-                    gUnit.setCap(LineCapType.Round);
-                    break;
-                case BasicStroke.CAP_SQUARE:
-                    gUnit.setCap(LineCapType.Square);
-                    break;
-                default:
-                    gUnit.setCap(null);
-            }
-
-            // Join的截断值
-            final float miterLimit = stroke.getMiterLimit();
-            if (miterLimit > 0) {
-                gUnit.setMiterLimit((double) miterLimit);
-            } else {
-                gUnit.setMiterLimit(null);
-            }
-        }
-
-        if (paint != null) {
-            // TODO 完成绘制参数设置
-        }
     }
 
     /**
@@ -214,7 +152,7 @@ public class PageGraphics2D extends Graphics2D {
         // 设置路径的区域
         ctPath.setBoundary(box);
         // 设置绘制参数
-        setDrawParameters(ctPath);
+        this.drawParam.apply(ctPath);
         return ctPath;
     }
 
@@ -425,7 +363,7 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     *
+     * 销毁绘制上下文
      */
     @Override
     public void dispose() {
@@ -508,27 +446,21 @@ public class PageGraphics2D extends Graphics2D {
     /**
      * 设置绘制参数
      *
-     * @param paint the <code>Paint</code> object to be used to generate
-     *              color during the rendering process, or <code>null</code>
+     * @param paint 设置画笔颜色，用于填充和描边
      */
     @Override
     public void setPaint(Paint paint) {
-        this.paint = paint;
+        this.drawParam.setColor(paint);
     }
 
     /**
-     * @param s the <code>Stroke</code> object to be used to stroke a
-     *          <code>Shape</code> during the rendering process
+     * 设置描边属性
+     *
+     * @param s 描边属性参数
      */
     @Override
     public void setStroke(Stroke s) {
-        if (s == null) {
-            this.stroke = null;
-            return;
-        }
-        if (s instanceof BasicStroke) {
-            this.stroke = (BasicStroke) s;
-        }
+        this.drawParam.setStroke(s);
     }
 
     /**
@@ -575,11 +507,13 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @return
+     * 复制当前绘制上下文为新的上下文
+     *
+     * @return 复制的绘制上下文对象
      */
     @Override
     public Graphics create() {
-        return null;
+        return new PageGraphics2D(this);
     }
 
     /**
@@ -687,11 +621,13 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @param clip the <code>Shape</code> to use to set the clip
+     * 设置裁剪区域
+     *
+     * @param clip 裁剪区域
      */
     @Override
     public void setClip(Shape clip) {
-
+        this.drawParam.gClip = clip;
     }
 
     /**
@@ -947,7 +883,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public Paint getPaint() {
-        return paint;
+        return this.drawParam.gColor;
     }
 
     /**
@@ -959,20 +895,23 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @param color the background color that is used in
-     *              subsequent calls to <code>clearRect</code>
+     * 设置背景颜色
+     *
+     * @param color 该颜色将用于 <code>clearRect</code> 清空区域
      */
     @Override
     public void setBackground(Color color) {
-
+        this.drawParam.gBackground = color;
     }
 
     /**
-     * @return
+     * 获取背景颜色
+     *
+     * @return 背景颜色
      */
     @Override
     public Color getBackground() {
-        return null;
+        return this.drawParam.gBackground;
     }
 
     /**
@@ -982,17 +921,17 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public Stroke getStroke() {
-        return stroke;
+        return this.drawParam.gStroke;
     }
 
     /**
-     * @param s the <code>Shape</code> to be intersected with the current
-     *          <code>Clip</code>.  If <code>s</code> is <code>null</code>,
-     *          this method clears the current <code>Clip</code>.
+     * 设置裁剪区域
+     *
+     * @param s 裁剪区域，如果为 null 则清除裁剪区域
      */
     @Override
     public void clip(Shape s) {
-
+        this.drawParam.gClip = s;
     }
 
     /**

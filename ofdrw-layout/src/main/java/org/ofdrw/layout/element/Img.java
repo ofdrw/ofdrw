@@ -35,16 +35,22 @@ public class Img extends Div<Img> {
 
     /**
      * 构造图片对象
+     * <p>
+     * 该构造器不会输入图片进行解析，直接将图片作为资源使用。
      *
      * @param width  图片在页面内的宽度，单位毫米（mm）
      * @param height 图片在页面内的高度，单位毫米（mm）
-     * @param src    图片路径
+     * @param src    图片路径（该构造器不会解析图片大小）
      * @throws IOException 读取异常
      */
     public Img(double width, double height, Path src) throws IOException {
-        this(src);
-        this.setWidth(width)
-                .setHeight(height);
+        this();
+        if (src == null || Files.notExists(src)) {
+            throw new IllegalArgumentException("图片文件为空或不存在");
+        }
+        this.src = src;
+        this.setWidth(width);
+        this.setHeight(height);
     }
 
     /**
