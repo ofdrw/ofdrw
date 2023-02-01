@@ -12,10 +12,12 @@ import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicStructure.res.MediaType;
 import org.ofdrw.core.basicStructure.res.Res;
+import org.ofdrw.core.basicStructure.res.resources.DrawParams;
 import org.ofdrw.core.basicStructure.res.resources.MultiMedias;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 
+import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.gv.GlobalVar;
 import org.ofdrw.pkg.container.*;
 
@@ -56,10 +58,20 @@ public class GraphicsDocument implements Closeable {
      * 所有图形图像都将存储于公共资源中
      */
     public final Res publicRes;
+
     /**
      * 多媒体清单，用于记录添加到文档的资源信息
+     * <p>
+     * 请不要直接使该参数，应通过 {@link GraphicsDocument#obtainMedias()}
      */
-    private final MultiMedias medias;
+    private MultiMedias medias;
+
+    /**
+     * 绘制参数清单
+     * <p>
+     * 请不要直接使该参数，应通过 {@link GraphicsDocument#obtainDrawParam()}
+     */
+    private DrawParams drawParams;
 
     /**
      * OFD 打包
@@ -153,8 +165,32 @@ public class GraphicsDocument implements Closeable {
         publicRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
         docDir.setPublicRes(publicRes);
         cdata.addPublicRes(ST_Loc.getInstance("PublicRes.xml"));
-        medias = new MultiMedias();
-        publicRes.addResource(this.medias);
+    }
+
+    /**
+     * 获取媒体清单，如果存在则创建
+     *
+     * @return 媒体清单
+     */
+    private MultiMedias obtainMedias() {
+        if (this.medias == null) {
+            this.medias = new MultiMedias();
+            publicRes.addResource(this.medias);
+        }
+        return this.medias;
+    }
+
+    /**
+     * 获取绘制参数清单，如果存在则创建
+     *
+     * @return 绘制参数清单
+     */
+    private DrawParams obtainDrawParam() {
+        if (this.drawParams == null) {
+            this.drawParams = new DrawParams();
+            publicRes.addResource(this.drawParams);
+        }
+        return this.drawParams;
     }
 
     /**
@@ -223,7 +259,23 @@ public class GraphicsDocument implements Closeable {
                 .setMediaFile(resDir.getAbsLoc().cat(imgFile.getName()))
                 .setID(id);
         // 加入媒体类型清单
-        medias.addMultiMedia(multiMedia);
+        obtainMedias().addMultiMedia(multiMedia);
+        return id;
+    }
+
+    /**
+     * 添加绘制参数至资源文件中
+     *
+     * @param drawParam 绘制参数
+     * @return 资源对象ID
+     */
+    public ST_ID addDrawParam(CT_DrawParam drawParam) {
+        if (drawParam == null) {
+            return null;
+        }
+        ST_ID id = new ST_ID(MaxUnitID.incrementAndGet());
+        drawParam.setObjID(id);
+        obtainDrawParam().addDrawParam(drawParam);
         return id;
     }
 

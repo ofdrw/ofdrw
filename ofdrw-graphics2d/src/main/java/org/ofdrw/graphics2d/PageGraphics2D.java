@@ -76,7 +76,7 @@ public class PageGraphics2D extends Graphics2D {
         this.doc = doc;
         this.pageDir = pageDir;
         this.pageObj = pageObj;
-        this.drawParam = new DrawParam();
+        this.drawParam = new DrawParam(doc);
 
         // 页面内容
         final Content content = new Content();

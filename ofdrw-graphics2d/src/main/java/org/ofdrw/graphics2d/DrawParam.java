@@ -1,9 +1,13 @@
 package org.ofdrw.graphics2d;
 
 import org.ofdrw.core.basicType.ST_Array;
+import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
+import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.pageDescription.color.color.MapType;
+import org.ofdrw.core.pageDescription.color.color.Segment;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
@@ -12,22 +16,13 @@ import java.awt.*;
 
 
 /**
- * 绘制参数缓存属性是 {@link CT_DrawParam} 复制属性
+ * 绘制参数上下文
  *
  * @author 权观宇
  * @since 2023-1-30 21:37:36
  */
 public class DrawParam {
-
-    Double lineWidth;
-    LineJoinType join;
-    LineCapType cap;
-    Double dashOffset;
-    ST_Array dashPattern;
-    Double miterLimit;
-    CT_Color fillColor;
-    CT_Color strokeColor;
-
+    private final GraphicsDocument ctx;
     /**
      * 缓存
      */
@@ -59,9 +54,9 @@ public class DrawParam {
     Color gBackground;
 
 
-    public DrawParam() {
+    public DrawParam(GraphicsDocument ctx) {
+        this.ctx = ctx;
         this.pCache = new CT_DrawParam();
-
         this.pCache.setLineWidth(0.353d);
         this.gStroke = new BasicStroke(0.353f);
 
@@ -77,23 +72,16 @@ public class DrawParam {
     /**
      * 复制绘制参数
      *
-     * @param parent
+     * @param parent 复制对象
      */
     DrawParam(DrawParam parent) {
-        this();
-        this.lineWidth = parent.lineWidth;
-        this.join = parent.join;
-        this.cap = parent.cap;
-        this.dashOffset = parent.dashOffset;
-        this.dashPattern = parent.dashPattern;
-        this.miterLimit = parent.miterLimit;
-        this.fillColor = parent.fillColor;
-        this.strokeColor = parent.strokeColor;
-
+        this.ctx = parent.ctx;
+        this.pCache = parent.pCache.clone();
         this.gColor = parent.gColor;
         this.gStroke = parent.gStroke;
         this.gClip = parent.gClip;
         this.gBackground = parent.gBackground;
+        this.ref = parent.ref;
     }
 
     /**
@@ -186,8 +174,86 @@ public class DrawParam {
             paint = new Color(0, 0, 0);
         }
         this.gColor = paint;
+        CT_Color ctColor = null;
+        if (paint instanceof Color) {
+            final Color c = (Color) paint;
+            ctColor = CT_Color.rgb(c.getRed(), c.getGreen(), c.getBlue());
+            ctColor.setAlpha(c.getAlpha());
 
-        // TODO 颜色对象
+        } else if (paint instanceof LinearGradientPaint) {
+            final LinearGradientPaint lgp = (LinearGradientPaint) paint;
+
+            ctColor = new CT_Color();
+            CT_AxialShd axialShd = new CT_AxialShd();
+
+            // 轴线起点
+            axialShd.setStartPoint(ST_Pos.getInstance(lgp.getStartPoint().getX(), lgp.getStartPoint().getY()));
+            // 轴线终点
+            axialShd.setEndPoint(ST_Pos.getInstance(lgp.getEndPoint().getX(), lgp.getEndPoint().getY()));
+
+            // 设置颜色段以及分布
+            Color[] colors = lgp.getColors();
+            float[] fractions = lgp.getFractions();
+            for (int i = 0; i < colors.length; i++) {
+                CT_Color cc = CT_Color.rgb(colors[i].getRed(), colors[i].getGreen(), colors[i].getBlue());
+                cc.setAlpha(colors[i].getAlpha());
+                axialShd.addSegment(new Segment((double) fractions[i], cc));
+            }
+
+            // 设置 渐变绘制的方式
+            switch (lgp.getCycleMethod()) {
+                case NO_CYCLE:
+                    axialShd.setMapType(MapType.Direct);
+                    break;
+                case REPEAT:
+                    axialShd.setMapType(MapType.Repeat);
+                    break;
+                case REFLECT:
+                    axialShd.setMapType(MapType.Reflect);
+                    break;
+            }
+
+            ctColor.setColor(axialShd);
+        } else if (paint instanceof RadialGradientPaint) {
+//            final RadialGradientPaint rgp = (RadialGradientPaint) paint;
+//            float x = (float) rgp.getCenterPoint().getX();
+//            float y = (float) rgp.getCenterPoint().getY();
+//
+//            final int[] colors = new int[rgp.getColors().length];
+//            for (int i = 0; i < rgp.getColors().length; i++) {
+//                colors[i] = rgp.getColors()[i].getRGB();
+//            }
+//            final GradientStyle gs = GradientStyle.DEFAULT.withTileMode(awtCycleMethodToSkijaFilterTileMode(rgp.getCycleMethod()));
+//            float fx = (float) rgp.getFocusPoint().getX();
+//            float fy = (float) rgp.getFocusPoint().getY();
+//
+//            final Shader shader;
+//            if (rgp.getFocusPoint().equals(rgp.getCenterPoint())) {
+//                shader = Shader.makeRadialGradient(x, y, rgp.getRadius(), colors, rgp.getFractions(), gs);
+//            } else {
+//                shader = Shader.makeTwoPointConicalGradient(fx, fy, 0, x, y, rgp.getRadius(), colors, rgp.getFractions(), gs);
+//            }
+//            this.skijaPaint.setShader(shader);
+        } else if (paint instanceof GradientPaint) {
+//            final GradientPaint gp = (GradientPaint) paint;
+//            float x1 = (float) gp.getPoint1().getX();
+//            float y1 = (float) gp.getPoint1().getY();
+//            float x2 = (float) gp.getPoint2().getX();
+//            float y2 = (float) gp.getPoint2().getY();
+//
+//            final int[] colors = new int[]{gp.getColor1().getRGB(), gp.getColor2().getRGB()};
+//            final GradientStyle gs = (gp.isCyclic())
+//                    ? GradientStyle.DEFAULT.withTileMode(FilterTileMode.MIRROR)
+//                    : GradientStyle.DEFAULT;
+//
+//            this.skijaPaint.setShader(Shader.makeLinearGradient(x1, y1, x2, y2, colors, (float[]) null, gs));
+        }
+
+        if (ctColor != null) {
+            // 同时设置填充颜色和描边颜色
+            this.pCache.setFillColor(ctColor);
+            this.pCache.setStrokeColor(ctColor);
+        }
     }
 
 
@@ -195,19 +261,15 @@ public class DrawParam {
      * 应用绘制参数的配置
      */
     public void apply(CT_GraphicUnit<?> target) {
-        if (ref != null) {
-            target.setDrawParam(ref);
-        } else {
-            // TODO 创建添加到资源中，资源管理器，创建ID
+        if (ref == null) {
+            // 添加绘制参数至文档资源中，并保存绘制参数在文档对象ID引用
+            ref = ctx.addDrawParam(this.pCache).ref();
         }
+        target.setDrawParam(ref);
 
         if (gClip != null) {
-//            target.setClips()
             // TODO 设置裁剪区
         }
-
-        return;
     }
-
 
 }
