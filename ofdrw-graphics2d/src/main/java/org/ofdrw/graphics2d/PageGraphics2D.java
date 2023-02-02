@@ -14,9 +14,7 @@ import org.ofdrw.pkg.container.PageDir;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Line2D;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.ImageObserver;
@@ -63,7 +61,7 @@ public class PageGraphics2D extends Graphics2D {
      * <p>
      * stroke、fill 或 drawString 时，如果DrawParam与上次的不一样，则添加
      */
-    private DrawParam drawParam;
+    private final DrawParam drawParam;
 
     /**
      * 创建2D图形对象
@@ -526,19 +524,26 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @return
+     * 返回前景色
+     *
+     * @return 颜色，可能为null
      */
     @Override
     public Color getColor() {
-        return null;
+        return this.drawParam.gForeground;
     }
 
     /**
-     * @param c the new rendering color.
+     * 设置前景色
+     *
+     * @param c 颜色
      */
     @Override
     public void setColor(Color c) {
-
+        if (c == null) {
+            return;
+        }
+        this.drawParam.setForeground(c);
     }
 
     /**
@@ -657,27 +662,35 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @param x      the <i>x</i> coordinate
-     *               of the rectangle to be filled.
-     * @param y      the <i>y</i> coordinate
-     *               of the rectangle to be filled.
-     * @param width  the width of the rectangle to be filled.
-     * @param height the height of the rectangle to be filled.
+     * 填充矩形区域
+     *
+     * @param x      矩形区域左上角坐标X
+     * @param y      矩形区域左上角坐标Y
+     * @param width  矩形宽度
+     * @param height 矩形高度
      */
     @Override
     public void fillRect(int x, int y, int width, int height) {
-
+        fill(new Rectangle2D.Double(x, y, width, height));
     }
 
     /**
-     * @param x      the <i>x</i> coordinate of the rectangle to clear.
-     * @param y      the <i>y</i> coordinate of the rectangle to clear.
-     * @param width  the width of the rectangle to clear.
-     * @param height the height of the rectangle to clear.
+     * 使用背景色填充矩形区域
+     *
+     * @param x      填充区域矩形左上角 X 坐标
+     * @param y      填充区域矩形左上角 X 坐标
+     * @param width  矩形宽度
+     * @param height 矩形高度
      */
     @Override
     public void clearRect(int x, int y, int width, int height) {
-
+        if (this.drawParam.gBackground == null) {
+            return;
+        }
+        Paint saved = getPaint();
+        setPaint(this.drawParam.gBackground);
+        fillRect(x, y, width, height);
+        setPaint(saved);
     }
 
     /**
@@ -738,35 +751,39 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @param x          the <i>x</i> coordinate of the
-     *                   upper-left corner of the arc to be drawn.
-     * @param y          the <i>y</i>  coordinate of the
-     *                   upper-left corner of the arc to be drawn.
-     * @param width      the width of the arc to be drawn.
-     * @param height     the height of the arc to be drawn.
-     * @param startAngle the beginning angle.
-     * @param arcAngle   the angular extent of the arc,
-     *                   relative to the start angle.
+     * 在矩形区域内绘制圆弧
+     * <p>
+     * 注意：0度位于时钟3点钟位置，正数角度表示顺时针旋转，负数为逆时针，圆形位于矩形中心。
+     *
+     * @param x          矩形区域左上角 X 坐标
+     * @param y          矩形区域左上角 Y 坐标
+     * @param width      矩形区域宽度
+     * @param height     矩形区域高度
+     * @param startAngle 圆弧开始角度
+     * @param arcAngle   圆弧结束角度
      */
     @Override
     public void drawArc(int x, int y, int width, int height, int startAngle, int arcAngle) {
-
+        draw(new Arc2D.Double(x, y, width, height, startAngle, arcAngle, Arc2D.OPEN));
     }
 
     /**
-     * @param x          the <i>x</i> coordinate of the
-     *                   upper-left corner of the arc to be filled.
-     * @param y          the <i>y</i>  coordinate of the
-     *                   upper-left corner of the arc to be filled.
-     * @param width      the width of the arc to be filled.
-     * @param height     the height of the arc to be filled.
-     * @param startAngle the beginning angle.
-     * @param arcAngle   the angular extent of the arc,
-     *                   relative to the start angle.
+     * 在矩形区域内填充圆弧
+     * <p>
+     * 注意：0度位于时钟3点钟位置，正数角度表示顺时针旋转，负数为逆时针，圆形位于矩形中心。
+     * <p>
+     * 圆弧起点和终点为圆心
+     *
+     * @param x          矩形区域左上角 X 坐标
+     * @param y          矩形区域左上角 Y 坐标
+     * @param width      矩形区域宽度
+     * @param height     矩形区域高度
+     * @param startAngle 圆弧开始角度
+     * @param arcAngle   圆弧结束角度
      */
     @Override
     public void fillArc(int x, int y, int width, int height, int startAngle, int arcAngle) {
-
+        fill(new Arc2D.Double(x, y, width, height, startAngle, arcAngle, Arc2D.PIE));
     }
 
     /**
@@ -941,6 +958,5 @@ public class PageGraphics2D extends Graphics2D {
     public FontRenderContext getFontRenderContext() {
         return null;
     }
-
 
 }

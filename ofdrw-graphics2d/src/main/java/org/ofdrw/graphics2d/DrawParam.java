@@ -14,7 +14,6 @@ import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 
 import java.awt.*;
 
-
 /**
  * 绘制参数上下文
  *
@@ -49,9 +48,14 @@ public class DrawParam {
     Shape gClip;
 
     /**
-     * 背景颜色
+     * 背景色
      */
     Color gBackground;
+
+    /**
+     * 前景色
+     */
+    Color gForeground;
 
 
     public DrawParam(GraphicsDocument ctx) {
@@ -64,6 +68,7 @@ public class DrawParam {
         this.pCache.setStrokeColor(CT_Color.rgb(0, 0, 0));
         this.gColor = new Color(0, 0, 0);
         this.gBackground = new Color(255, 255, 255);
+        this.gForeground = new Color(0, 0, 0);
 
         this.ref = null;
         this.gClip = null;
@@ -90,6 +95,10 @@ public class DrawParam {
      * @param s 属性参数
      */
     public void setStroke(Stroke s) {
+        if (this.ref != null) {
+            // 防止同一引用重复添加
+            this.pCache = this.pCache.clone();
+        }
         // 清空引用缓存
         this.ref = null;
         if (s == null) {
@@ -167,6 +176,11 @@ public class DrawParam {
      * @param paint 颜色对象
      */
     public void setColor(Paint paint) {
+        if (this.ref != null) {
+            // 防止同一引用重复添加
+            this.pCache = this.pCache.clone();
+        }
+
         // 清空引用缓存
         this.ref = null;
         if (paint == null) {
@@ -179,7 +193,6 @@ public class DrawParam {
             final Color c = (Color) paint;
             ctColor = CT_Color.rgb(c.getRed(), c.getGreen(), c.getBlue());
             ctColor.setAlpha(c.getAlpha());
-
         } else if (paint instanceof LinearGradientPaint) {
             final LinearGradientPaint lgp = (LinearGradientPaint) paint;
 
@@ -215,6 +228,7 @@ public class DrawParam {
 
             ctColor.setColor(axialShd);
         } else if (paint instanceof RadialGradientPaint) {
+            // TODO 径向渐变
 //            final RadialGradientPaint rgp = (RadialGradientPaint) paint;
 //            float x = (float) rgp.getCenterPoint().getX();
 //            float y = (float) rgp.getCenterPoint().getY();
@@ -235,6 +249,7 @@ public class DrawParam {
 //            }
 //            this.skijaPaint.setShader(shader);
         } else if (paint instanceof GradientPaint) {
+            // TODO 高思德渐变
 //            final GradientPaint gp = (GradientPaint) paint;
 //            float x1 = (float) gp.getPoint1().getX();
 //            float y1 = (float) gp.getPoint1().getY();
@@ -256,6 +271,14 @@ public class DrawParam {
         }
     }
 
+    /**
+     * 设置前景色
+     * @param c 前景色
+     */
+    public void setForeground(Color c) {
+        this.gForeground = c;
+        setColor(c);
+    }
 
     /**
      * 应用绘制参数的配置

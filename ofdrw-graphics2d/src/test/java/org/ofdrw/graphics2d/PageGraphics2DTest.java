@@ -30,7 +30,7 @@ class PageGraphics2DTest {
             LinearGradientPaint p =
                     new LinearGradientPaint(start, end, dist, colors);
             g.setPaint(p);
-            g.fillRect(10, 10, 60, 60);
+            g.fillRect(0, 0, 50, 50);
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }
@@ -86,6 +86,49 @@ class PageGraphics2DTest {
                             10.0f, new float[]{10.0f}, 0.0f);
             g2.setStroke(dashed);
             g2.draw(new RoundRectangle2D.Double(10, 10, 400, 100, 10, 10));
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 圆弧填充
+     */
+    @Test
+    void drawArc() throws Exception {
+        final Path dst = Paths.get("target/drawArc.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(500, 500);
+            g.setPaint(Color.RED);
+            g.fillArc(20, 20, 200, 200, 200, 200);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 绘制圆弧
+     */
+    @Test
+    void fillArc() throws Exception {
+        final Path dst = Paths.get("target/fillArc.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(null);
+            g.setPaint(Color.RED);
+            g.drawArc(10, 10, 200, 200, 50, 50);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 清空指定区域
+     */
+    @Test
+    void clearRect() throws Exception {
+        final Path dst = Paths.get("target/clearRect.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(null);
+            g.setPaint(Color.RED);
+            g.fillArc(0, 0, 100, 100, 0, 360);
+            g.clearRect(30, 30, 10, 10);
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }

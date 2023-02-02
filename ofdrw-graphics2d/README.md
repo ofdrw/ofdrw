@@ -1,9 +1,15 @@
 # OFD Reader And Writer Graphics 2D 图形绘制API
 
 
+[github . jfree . https://github.com/jfree/skijagraphics2d](https://github.com/jfree/skijagraphics2d)
 
 `java.awt.Graphics2D` 参考文献：
 
 - [Oracle . Java 2D API Overview . https://docs.oracle.com/javase/8/docs/technotes/guides/2d/spec/j2d-intro.html](https://docs.oracle.com/javase/8/docs/technotes/guides/2d/spec/j2d-intro.html)
 - [Oracle . The Java™ Tutorials Trail: 2D Graphics . https://docs.oracle.com/javase/tutorial/2d/index.html](https://docs.oracle.com/javase/tutorial/2d/index.html)
 - [Oracle . Class Graphics2D API . https://docs.oracle.com/javase/8/docs/api/java/awt/Graphics2D.html](https://docs.oracle.com/javase/8/docs/api/java/awt/Graphics2D.html)
+
+Graphics2D API测试用例参考：
+
+- [http://www.java2s.com/Tutorial/Java/0261__2D-Graphics/Catalog0261__2D-Graphics.htm](http://www.java2s.com/Tutorial/Java/0261__2D-Graphics/Catalog0261__2D-Graphics.htm)
+
