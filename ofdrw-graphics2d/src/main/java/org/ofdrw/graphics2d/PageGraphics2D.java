@@ -725,29 +725,29 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @param x      the <i>x</i> coordinate of the upper left
-     *               corner of the oval to be drawn.
-     * @param y      the <i>y</i> coordinate of the upper left
-     *               corner of the oval to be drawn.
-     * @param width  the width of the oval to be drawn.
-     * @param height the height of the oval to be drawn.
+     * 使用当前颜色在矩形区域内描边椭圆形
+     *
+     * @param x      矩形区域左上角 X 坐标
+     * @param y      矩形区域左上角 Y 坐标
+     * @param width  矩形区域宽度
+     * @param height 矩形区域高度
      */
     @Override
     public void drawOval(int x, int y, int width, int height) {
-
+        draw(new Ellipse2D.Double(x, y, width, height));
     }
 
     /**
-     * @param x      the <i>x</i> coordinate of the upper left corner
-     *               of the oval to be filled.
-     * @param y      the <i>y</i> coordinate of the upper left corner
-     *               of the oval to be filled.
-     * @param width  the width of the oval to be filled.
-     * @param height the height of the oval to be filled.
+     * 使用当前颜色在矩形区域内填充椭圆形
+     *
+     * @param x      矩形区域左上角 X 坐标
+     * @param y      矩形区域左上角 Y 坐标
+     * @param width  矩形区域宽度
+     * @param height 矩形区域高度
      */
     @Override
     public void fillOval(int x, int y, int width, int height) {
-
+        fill(new Ellipse2D.Double(x, y, width, height));
     }
 
     /**
@@ -768,7 +768,7 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * 在矩形区域内填充圆弧
+     * 在矩形区域内填充扇形
      * <p>
      * 注意：0度位于时钟3点钟位置，正数角度表示顺时针旋转，负数为逆时针，圆形位于矩形中心。
      * <p>
@@ -787,33 +787,58 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @param xPoints an array of <i>x</i> points
-     * @param yPoints an array of <i>y</i> points
-     * @param nPoints the total number of points
+     * 绘制折线
+     * <p>
+     * 注意绘制的折线是一个不闭合的图形
+     *
+     * @param xPoints 折点 X坐标 序列
+     * @param yPoints 折点 Y坐标 序列
+     * @param nPoints 折点总数
      */
     @Override
     public void drawPolyline(int[] xPoints, int[] yPoints, int nPoints) {
-
+        GeneralPath p = new GeneralPath();
+        p.moveTo(xPoints[0], yPoints[0]);
+        for (int i = 1; i < nPoints; i++) {
+            p.lineTo(xPoints[i], yPoints[i]);
+        }
+        draw(p);
     }
 
     /**
-     * @param xPoints a an array of <code>x</code> coordinates.
-     * @param yPoints a an array of <code>y</code> coordinates.
-     * @param nPoints a the total number of points.
+     * 使用当前颜色和描边属性描边多边形
+     *
+     * @param xPoints 多边形 X坐标 序列
+     * @param yPoints 多边形 Y坐标 序列
+     * @param nPoints 多边形点数量
      */
     @Override
     public void drawPolygon(int[] xPoints, int[] yPoints, int nPoints) {
-
+        GeneralPath p = new GeneralPath();
+        p.moveTo(xPoints[0], yPoints[0]);
+        for (int i = 1; i < nPoints; i++) {
+            p.lineTo(xPoints[i], yPoints[i]);
+        }
+        p.closePath();
+        draw(p);
     }
 
     /**
-     * @param xPoints a an array of <code>x</code> coordinates.
-     * @param yPoints a an array of <code>y</code> coordinates.
-     * @param nPoints a the total number of points.
+     * 使用当前颜色填充多边形
+     *
+     * @param xPoints 多边形 X坐标 序列
+     * @param yPoints 多边形 Y坐标 序列
+     * @param nPoints 多边形点数量
      */
     @Override
     public void fillPolygon(int[] xPoints, int[] yPoints, int nPoints) {
-
+        GeneralPath p = new GeneralPath();
+        p.moveTo(xPoints[0], yPoints[0]);
+        for (int i = 1; i < nPoints; i++) {
+            p.lineTo(xPoints[i], yPoints[i]);
+        }
+        p.closePath();
+        fill(p);
     }
 
     /**

@@ -11,7 +11,12 @@ public class TestG2dAPI {
         BufferedImage image = new BufferedImage(500, 500, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
         g.setPaint(Color.RED);
-        g.drawArc (10, 10, 200, 200,50,50);
+
+
+        int[] xpoints = {25, 145, 25, 145, 25};
+        int[] ypoints = {25, 25, 145, 145, 25};
+        int npoints = 5;
+        g.fillPolygon(xpoints, ypoints, npoints);
 
 
         ImageIO.write(image, "png", new File("test.png"));

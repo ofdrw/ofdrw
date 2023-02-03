@@ -132,4 +132,82 @@ class PageGraphics2DTest {
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }
+    /**
+     * 填充椭圆
+     */
+    @Test
+    void fillOval() throws Exception {
+        final Path dst = Paths.get("target/fillOval.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(null);
+            g.setPaint(Color.RED);
+            g.fillOval(25, 25, 120, 60);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+    /**
+     * 描边椭圆
+     */
+    @Test
+    void drawOval() throws Exception {
+        final Path dst = Paths.get("target/drawOval.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(null);
+            g.setPaint(Color.RED);
+            g.drawOval(25, 25, 120, 60);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 折线
+     */
+    @Test
+    void drawPolyline() throws Exception {
+        final Path dst = Paths.get("target/drawPolyline.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(null);
+            g.setPaint(Color.RED);
+            int[] xs = {25, 75, 125, 85, 125, 75, 25, 65};
+            int[] ys = {50, 90, 50, 100, 150, 110, 150, 100};
+            g.drawPolyline(xs, ys, 8);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 自定义多边形描边
+     */
+    @Test
+    void drawPolygon() throws Exception {
+        final Path dst = Paths.get("target/drawPolygon.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(null);
+            g.setPaint(Color.RED);
+            int[] xpoints = {25, 145, 25, 145, 25};
+            int[] ypoints = {25, 25, 145, 145, 25};
+            int npoints = 5;
+
+            g.drawPolygon(xpoints, ypoints, npoints);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 自定义多边形填充
+     */
+    @Test
+    void fillPolygon() throws Exception {
+        final Path dst = Paths.get("target/fillPolygon.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(null);
+            g.setPaint(Color.RED);
+            int[] xpoints = {25, 145, 25, 145, 25};
+            int[] ypoints = {25, 25, 145, 145, 25};
+            int npoints = 5;
+
+            g.fillPolygon(xpoints, ypoints, npoints);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
 }

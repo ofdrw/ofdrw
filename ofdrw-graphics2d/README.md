@@ -1,5 +1,11 @@
 # OFD Reader And Writer Graphics 2D 图形绘制API
 
+**该模块仍处于开发中...**
+
+该模块实现了 AWT Graphics2D API，该模块提供了一种全新的方式生成OFD文件。
+
+由于实现了Graphics2D标准JDK中AWT接口，借助该特性可以复用现有的转换图片的库实现其他类型文件或格式转换为OFD的功能。
+
 
 [github . jfree . https://github.com/jfree/skijagraphics2d](https://github.com/jfree/skijagraphics2d)
 
