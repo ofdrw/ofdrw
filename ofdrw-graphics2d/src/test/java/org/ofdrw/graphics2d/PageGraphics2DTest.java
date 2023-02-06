@@ -2,11 +2,13 @@ package org.ofdrw.graphics2d;
 
 import org.junit.jupiter.api.Test;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.image.BufferedImage;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -132,6 +134,7 @@ class PageGraphics2DTest {
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }
+
     /**
      * 填充椭圆
      */
@@ -145,6 +148,7 @@ class PageGraphics2DTest {
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }
+
     /**
      * 描边椭圆
      */
@@ -207,6 +211,22 @@ class PageGraphics2DTest {
             int npoints = 5;
 
             g.fillPolygon(xpoints, ypoints, npoints);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+
+    @Test
+    void drawImage() throws Exception {
+        final Path dst = Paths.get("target/drawImage.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(500, 500);
+            Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
+            BufferedImage img1 = ImageIO.read(file.toFile());
+
+            int width = img1.getWidth(null);
+            int height = img1.getHeight(null);
+            g.drawImage(img1, 10, 10, width, height, null);
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }

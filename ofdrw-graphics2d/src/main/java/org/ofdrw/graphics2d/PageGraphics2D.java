@@ -6,7 +6,10 @@ import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
+import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
+import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.pkg.container.PageDir;
@@ -64,16 +67,23 @@ public class PageGraphics2D extends Graphics2D {
     private final DrawParam drawParam;
 
     /**
+     * 绘制空间大小
+     */
+    private final ST_Box size;
+
+    /**
      * 创建2D图形对象
      *
      * @param doc     文档上下文
      * @param pageDir 页面目录
      * @param pageObj 页面对象
+     * @param box     绘制空间大小
      */
-    PageGraphics2D(GraphicsDocument doc, PageDir pageDir, Page pageObj) {
+    PageGraphics2D(GraphicsDocument doc, PageDir pageDir, Page pageObj, ST_Box box) {
         this.doc = doc;
         this.pageDir = pageDir;
         this.pageObj = pageObj;
+        this.size = box;
         this.drawParam = new DrawParam(doc);
 
         // 页面内容
@@ -104,6 +114,7 @@ public class PageGraphics2D extends Graphics2D {
         this.pageDir = parent.pageDir;
         this.pageObj = parent.pageObj;
         this.container = parent.container;
+        this.size = parent.size.clone();
         this.drawParam = new DrawParam(parent.drawParam);
     }
 
@@ -253,19 +264,35 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @param img      the specified image to be drawn. This method does
-     *                 nothing if <code>img</code> is null.
-     * @param x        the <i>x</i> coordinate.
-     * @param y        the <i>y</i> coordinate.
-     * @param width    the width of the rectangle.
-     * @param height   the height of the rectangle.
-     * @param observer object to be notified as more of
-     *                 the image is converted.
-     * @return
+     * 将图片绘制于指定矩形区域内
+     *
+     * @param img      待绘制的图片
+     * @param x        矩形左上角 X坐标
+     * @param y        矩形左上角 Y坐标
+     * @param width    矩形宽度
+     * @param height   矩形高度
+     * @param observer 忽略
+     * @return 固定值 true
      */
     @Override
     public boolean drawImage(Image img, int x, int y, int width, int height, ImageObserver observer) {
-        return false;
+        if (img == null) {
+            return true;
+        }
+
+        ST_ID objId = this.doc.addResImg(img);
+        ImageObject imgObj = new ImageObject(doc.newID());
+        imgObj.setResourceID(objId.ref());
+        imgObj.setBoundary(this.size.clone());
+        ST_Array ctm = trans(this.drawParam.ctm);
+        ctm = new ST_Array(width, 0, 0, height, x, y).mtxMul(ctm);
+        imgObj.setCTM(ctm);
+        // 透明度
+        if (this.drawParam.gColor instanceof Color) {
+            imgObj.setAlpha(((Color) this.drawParam.gColor).getAlpha());
+        }
+        container.addPageBlock(imgObj);
+        return true;
     }
 
     /**
@@ -893,12 +920,19 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @param Tx the <code>AffineTransform</code> object to be composed with
-     *           the current <code>Transform</code>
+     * 图形变换
+     *
+     * @param tx 变换矩阵
      */
     @Override
-    public void transform(AffineTransform Tx) {
-
+    public void transform(AffineTransform tx) {
+        if (tx == null) {
+            this.drawParam.ctm = new AffineTransform();
+            return;
+        }
+        AffineTransform ctm = (AffineTransform) tx.clone();
+        ctm.concatenate(this.drawParam.ctm);
+        this.drawParam.ctm = ctm;
     }
 
     /**
@@ -982,6 +1016,25 @@ public class PageGraphics2D extends Graphics2D {
     @Override
     public FontRenderContext getFontRenderContext() {
         return null;
+    }
+
+    /**
+     * 转为AWT 变换矩阵为 OFD ST_Array
+     *
+     * @param tx AWT变换矩阵
+     * @return OFD ST_Array
+     */
+    private ST_Array trans(AffineTransform tx) {
+      /*
+      m00 m10 0    a b 0
+      m01 m11 0  = c d 0
+      m02 m12 1    e f 1
+       */
+        return new ST_Array(
+                tx.getScaleX(), tx.getShearY(),
+                tx.getShearX(), tx.getScaleY(),
+                tx.getTranslateX(), tx.getTranslateY()
+        );
     }
 
 }

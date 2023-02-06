@@ -13,6 +13,7 @@ import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 
 /**
  * 绘制参数上下文
@@ -57,6 +58,10 @@ public class DrawParam {
      */
     Color gForeground;
 
+    /**
+     * 变换矩阵
+     */
+    AffineTransform ctm;
 
     public DrawParam(GraphicsDocument ctx) {
         this.ctx = ctx;
@@ -69,6 +74,7 @@ public class DrawParam {
         this.gColor = new Color(0, 0, 0);
         this.gBackground = new Color(255, 255, 255);
         this.gForeground = new Color(0, 0, 0);
+        this.ctm = new AffineTransform();;
 
         this.ref = null;
         this.gClip = null;
@@ -273,6 +279,7 @@ public class DrawParam {
 
     /**
      * 设置前景色
+     *
      * @param c 前景色
      */
     public void setForeground(Color c) {

@@ -22,6 +22,8 @@ import org.ofdrw.gv.GlobalVar;
 import org.ofdrw.pkg.container.*;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.Closeable;
 import java.io.File;
@@ -39,8 +41,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 2023-1-18 09:45:18
  */
 public class GraphicsDocument implements Closeable {
-
-
     /**
      * 打包后OFD文档存放路径
      */
@@ -228,27 +228,39 @@ public class GraphicsDocument implements Closeable {
         org.ofdrw.core.basicStructure.pageObj.Page pageObj = new org.ofdrw.core.basicStructure.pageObj.Page();
         if (pageSize != null) {
             pageObj.setArea(pageSize);
+        }else{
+            pageSize = this.cdata.getPageArea();
         }
         pageDir.setContent(pageObj);
 
-        return new PageGraphics2D(this, pageDir, pageObj);
+        return new PageGraphics2D(this, pageDir, pageObj,pageSize.getBox() );
     }
 
     /**
      * 添加图片资源
      *
-     * @param ri 图片渲染对象
+     * @param img 图片渲染对象
      * @return 资源ID
-     * @throws IOException 图片转写IO异常
+     * @throws RuntimeException 图片转写IO异常
      */
-    public ST_ID addResImg(RenderedImage ri) throws IOException {
-        if (ri == null) {
+    public ST_ID addResImg(Image img) {
+        if (img == null) {
             return null;
         }
         final ResDir resDir = docDir.obtainRes();
         final Path resDirPath = resDir.getContainerPath();
-        final File imgFile = File.createTempFile("", ".png", resDirPath.toFile());
-        ImageIO.write(ri, "png", imgFile);
+        final File imgFile;
+        try {
+            imgFile = File.createTempFile("res", ".png", resDirPath.toFile());
+
+            BufferedImage bi = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_RGB);
+            Graphics g2 = bi.getGraphics();
+            g2.drawImage(img, 0, 0, null);
+            g2.dispose();
+            ImageIO.write(bi, "png", imgFile);
+        } catch (IOException e) {
+            throw new RuntimeException("graphics2d 图片写入IO异常",e);
+        }
         // 生成加入资源的ID
         ST_ID id = new ST_ID(MaxUnitID.incrementAndGet());
         // 将文件加入资源容器中
