@@ -74,8 +74,8 @@ public class DrawParam {
         this.gColor = new Color(0, 0, 0);
         this.gBackground = new Color(255, 255, 255);
         this.gForeground = new Color(0, 0, 0);
-        this.ctm = new AffineTransform();;
 
+        this.ctm = new AffineTransform();;
         this.ref = null;
         this.gClip = null;
     }
@@ -90,8 +90,11 @@ public class DrawParam {
         this.pCache = parent.pCache.clone();
         this.gColor = parent.gColor;
         this.gStroke = parent.gStroke;
-        this.gClip = parent.gClip;
         this.gBackground = parent.gBackground;
+        this.gForeground = parent.gForeground;
+
+        this.ctm = (AffineTransform) parent.ctm.clone();
+        this.gClip = parent.gClip;
         this.ref = parent.ref;
     }
 
