@@ -290,6 +290,7 @@ public class DrawParam {
         setColor(c);
     }
 
+    private final static AffineTransform ONE = new AffineTransform();
     /**
      * 应用绘制参数的配置
      */
@@ -299,10 +300,32 @@ public class DrawParam {
             ref = ctx.addDrawParam(this.pCache).ref();
         }
         target.setDrawParam(ref);
-
+        // 变换矩阵
+        if (!this.ctm.equals(ONE)){
+            target.setCTM(trans(this.ctm));
+        }
         if (gClip != null) {
             // TODO 设置裁剪区
         }
+
+    }
+    /**
+     * 转为AWT 变换矩阵为 OFD ST_Array
+     *
+     * @param tx AWT变换矩阵
+     * @return OFD ST_Array
+     */
+    public ST_Array trans(AffineTransform tx) {
+      /*
+      m00 m10 0    a b 0
+      m01 m11 0  = c d 0
+      m02 m12 1    e f 1
+       */
+        return new ST_Array(
+                tx.getScaleX(), tx.getShearY(),
+                tx.getShearX(), tx.getScaleY(),
+                tx.getTranslateX(), tx.getTranslateY()
+        );
     }
 
 }

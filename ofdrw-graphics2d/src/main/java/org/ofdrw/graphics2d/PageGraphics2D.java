@@ -250,17 +250,30 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @param img      the specified image to be drawn. This method does
-     *                 nothing if <code>img</code> is null.
-     * @param x        the <i>x</i> coordinate.
-     * @param y        the <i>y</i> coordinate.
-     * @param observer object to be notified as more of
-     *                 the image is converted.
-     * @return
+     * 在指定坐标位置上绘制图片
+     * <p>
+     * 绘制的图片大小为图元原始大小
+     *
+     * @param img      待绘制图片
+     * @param x        图片左上角 X坐标
+     * @param y        图片左上角 Y坐标
+     * @param observer 不使用
+     * @return 固定值 true
      */
     @Override
     public boolean drawImage(Image img, int x, int y, ImageObserver observer) {
-        return false;
+        if (img == null) {
+            return true;
+        }
+        int w = img.getWidth(observer);
+        if (w < 0) {
+            return false;
+        }
+        int h = img.getHeight(observer);
+        if (h < 0) {
+            return false;
+        }
+        return drawImage(img, x, y, w, h, observer);
     }
 
     /**
@@ -284,7 +297,7 @@ public class PageGraphics2D extends Graphics2D {
         ImageObject imgObj = new ImageObject(doc.newID());
         imgObj.setResourceID(objId.ref());
         imgObj.setBoundary(this.size.clone());
-        ST_Array ctm = trans(this.drawParam.ctm);
+        ST_Array ctm = this.drawParam.trans(this.drawParam.ctm);
         ctm = new ST_Array(width, 0, 0, height, x, y).mtxMul(ctm);
         imgObj.setCTM(ctm);
         // 透明度
@@ -296,95 +309,107 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @param img      the specified image to be drawn. This method does
-     *                 nothing if <code>img</code> is null.
-     * @param x        the <i>x</i> coordinate.
-     * @param y        the <i>y</i> coordinate.
-     * @param bgcolor  the background color to paint under the
-     *                 non-opaque portions of the image.
-     * @param observer object to be notified as more of
-     *                 the image is converted.
-     * @return
+     * 在指定位置绘制图片
+     * <p>
+     * 图片保持原有大小，图片的透明部分将会使用指定颜色填充
+     *
+     * @param img      待绘制的图片
+     * @param x        矩形左上角 X坐标
+     * @param y        矩形左上角 Y坐标
+     * @param bgcolor  背景颜色，用于填充图片透明部分
+     * @param observer 忽略
+     * @return 固定值 true
      */
     @Override
     public boolean drawImage(Image img, int x, int y, Color bgcolor, ImageObserver observer) {
-        return false;
+        if (img == null) {
+            return true;
+        }
+        int w = img.getWidth(null);
+        if (w < 0) {
+            return false;
+        }
+        int h = img.getHeight(null);
+        if (h < 0) {
+            return false;
+        }
+        return drawImage(img, x, y, w, h, bgcolor, observer);
     }
 
     /**
-     * @param img      the specified image to be drawn. This method does
-     *                 nothing if <code>img</code> is null.
-     * @param x        the <i>x</i> coordinate.
-     * @param y        the <i>y</i> coordinate.
-     * @param width    the width of the rectangle.
-     * @param height   the height of the rectangle.
-     * @param bgcolor  the background color to paint under the
-     *                 non-opaque portions of the image.
-     * @param observer object to be notified as more of
-     *                 the image is converted.
-     * @return
+     * 在指定矩形区域内绘制图片
+     * <p>
+     * 图片将伸缩至矩形区域大小，图片的透明部分将会使用指定颜色填充
+     *
+     * @param img      待绘制的图片
+     * @param x        矩形左上角 X坐标
+     * @param y        矩形左上角 Y坐标
+     * @param width    矩形宽度
+     * @param height   矩形高度
+     * @param bgcolor  背景颜色，用于填充图片透明部分
+     * @param observer 忽略
+     * @return 固定值 true
      */
     @Override
     public boolean drawImage(Image img, int x, int y, int width, int height, Color bgcolor, ImageObserver observer) {
-        return false;
+        Paint saved = getPaint();
+        setPaint(bgcolor);
+        fillRect(x, y, width, height);
+        setPaint(saved);
+        return drawImage(img, x, y, width, height, observer);
     }
 
     /**
-     * @param img      the specified image to be drawn. This method does
-     *                 nothing if <code>img</code> is null.
-     * @param dx1      the <i>x</i> coordinate of the first corner of the
-     *                 destination rectangle.
-     * @param dy1      the <i>y</i> coordinate of the first corner of the
-     *                 destination rectangle.
-     * @param dx2      the <i>x</i> coordinate of the second corner of the
-     *                 destination rectangle.
-     * @param dy2      the <i>y</i> coordinate of the second corner of the
-     *                 destination rectangle.
-     * @param sx1      the <i>x</i> coordinate of the first corner of the
-     *                 source rectangle.
-     * @param sy1      the <i>y</i> coordinate of the first corner of the
-     *                 source rectangle.
-     * @param sx2      the <i>x</i> coordinate of the second corner of the
-     *                 source rectangle.
-     * @param sy2      the <i>y</i> coordinate of the second corner of the
-     *                 source rectangle.
-     * @param observer object to be notified as more of the image is
-     *                 scaled and converted.
-     * @return
+     * 绘制图片内某个矩形区域 到 画布的某个指定矩形区域，图片将会缩放适应目标区域
+     *
+     * @param img      待绘制图片
+     * @param dx1      画布内 矩形左上角 X坐标（目的坐标）
+     * @param dy1      画布内 矩形左上角 Y坐标（目的坐标）
+     * @param dx2      画布内 矩形右下角 X坐标（目的坐标）
+     * @param dy2      画布内 矩形右下角 Y坐标（目的坐标）
+     * @param sx1      图片内 矩形左上角 X坐标（源坐标）
+     * @param sy1      图片内 矩形左上角 Y坐标（源坐标）
+     * @param sx2      图片内 矩形右下角 X坐标（源坐标）
+     * @param sy2      图片内 矩形右下角 Y坐标（源坐标）
+     * @param observer 忽略
+     * @return 固定值 true
      */
     @Override
     public boolean drawImage(Image img, int dx1, int dy1, int dx2, int dy2, int sx1, int sy1, int sx2, int sy2, ImageObserver observer) {
-        return false;
+        int w = dx2 - dx1;
+        int h = dy2 - dy1;
+        BufferedImage img2 = new BufferedImage(w, h,
+                BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = img2.createGraphics();
+        g2.drawImage(img, 0, 0, w, h, sx1, sy1, sx2, sy2, null);
+        return drawImage(img2, dx1, dy1, null);
     }
 
     /**
-     * @param img      the specified image to be drawn. This method does
-     *                 nothing if <code>img</code> is null.
-     * @param dx1      the <i>x</i> coordinate of the first corner of the
-     *                 destination rectangle.
-     * @param dy1      the <i>y</i> coordinate of the first corner of the
-     *                 destination rectangle.
-     * @param dx2      the <i>x</i> coordinate of the second corner of the
-     *                 destination rectangle.
-     * @param dy2      the <i>y</i> coordinate of the second corner of the
-     *                 destination rectangle.
-     * @param sx1      the <i>x</i> coordinate of the first corner of the
-     *                 source rectangle.
-     * @param sy1      the <i>y</i> coordinate of the first corner of the
-     *                 source rectangle.
-     * @param sx2      the <i>x</i> coordinate of the second corner of the
-     *                 source rectangle.
-     * @param sy2      the <i>y</i> coordinate of the second corner of the
-     *                 source rectangle.
-     * @param bgcolor  the background color to paint under the
-     *                 non-opaque portions of the image.
-     * @param observer object to be notified as more of the image is
-     *                 scaled and converted.
-     * @return
+     * 绘制图片内某个矩形区域 到 画布的某个指定矩形区域
+     * <p>
+     * 图片将会缩放适应目标区域，图片的透明部分将会使用指定颜色填充
+     *
+     * @param img      待绘制图片
+     * @param dx1      画布内 矩形左上角 X坐标（目的坐标）
+     * @param dy1      画布内 矩形左上角 Y坐标（目的坐标）
+     * @param dx2      画布内 矩形右下角 X坐标（目的坐标）
+     * @param dy2      画布内 矩形右下角 Y坐标（目的坐标）
+     * @param sx1      图片内 矩形左上角 X坐标（源坐标）
+     * @param sy1      图片内 矩形左上角 Y坐标（源坐标）
+     * @param sx2      图片内 矩形右下角 X坐标（源坐标）
+     * @param sy2      图片内 矩形右下角 Y坐标（源坐标）
+     * @param bgcolor  背景颜色，用于填充透明部分
+     * @param observer 忽略
+     * @return 固定值 true
      */
     @Override
     public boolean drawImage(Image img, int dx1, int dy1, int dx2, int dy2, int sx1, int sy1, int sx2, int sy2, Color bgcolor, ImageObserver observer) {
-        return false;
+        Paint saved = getPaint();
+        setPaint(bgcolor);
+        fillRect(dx1, dy1, dx2 - dx1, dy2 - dy1);
+        setPaint(saved);
+        return drawImage(img, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, observer);
     }
 
     /**
@@ -539,15 +564,6 @@ public class PageGraphics2D extends Graphics2D {
     @Override
     public Graphics create() {
         return new PageGraphics2D(this);
-    }
-
-    /**
-     * @param x the specified x coordinate
-     * @param y the specified y coordinate
-     */
-    @Override
-    public void translate(int x, int y) {
-
     }
 
     /**
@@ -869,12 +885,31 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @param tx the distance to translate along the x-axis
-     * @param ty the distance to translate along the y-axis
+     * 平移原点坐标
+     *
+     * @param x x方向的平移距离
+     * @param y y方向的平移距离
+     */
+    @Override
+    public void translate(int x, int y) {
+        translate((double) x, (double) y);
+    }
+
+    /**
+     * 平移原点
+     *
+     * @param tx x方向的平移距离
+     * @param ty y方向的平移距离
      */
     @Override
     public void translate(double tx, double ty) {
-
+        AffineTransform t = new AffineTransform(
+                1, 0,
+                0, 1,
+                tx, ty
+        );
+        t.concatenate(this.drawParam.ctm);
+        this.drawParam.ctm = t;
     }
 
     /**
@@ -1018,23 +1053,5 @@ public class PageGraphics2D extends Graphics2D {
         return null;
     }
 
-    /**
-     * 转为AWT 变换矩阵为 OFD ST_Array
-     *
-     * @param tx AWT变换矩阵
-     * @return OFD ST_Array
-     */
-    private ST_Array trans(AffineTransform tx) {
-      /*
-      m00 m10 0    a b 0
-      m01 m11 0  = c d 0
-      m02 m12 1    e f 1
-       */
-        return new ST_Array(
-                tx.getScaleX(), tx.getShearY(),
-                tx.getShearX(), tx.getScaleY(),
-                tx.getTranslateX(), tx.getTranslateY()
-        );
-    }
 
 }

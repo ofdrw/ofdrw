@@ -253,7 +253,7 @@ public class GraphicsDocument implements Closeable {
         try {
             imgFile = File.createTempFile("res", ".png", resDirPath.toFile());
 
-            BufferedImage bi = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_RGB);
+            BufferedImage bi = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
             Graphics g2 = bi.getGraphics();
             g2.drawImage(img, 0, 0, null);
             g2.dispose();

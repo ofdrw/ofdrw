@@ -230,4 +230,91 @@ class PageGraphics2DTest {
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }
+
+    @Test
+    void drawImage2() throws Exception {
+        final Path dst = Paths.get("target/drawImage2.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(500, 500);
+            Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
+            BufferedImage img1 = ImageIO.read(file.toFile());
+
+            g.drawImage(img1, 10, 10, null);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 背景颜色填充透明图片
+     */
+    @Test
+    void drawImageBackground() throws Exception {
+        final Path dst = Paths.get("target/drawImageBackground.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(500, 500);
+            Path file = Paths.get("src/test/resources", "empty.png");
+            BufferedImage img1 = ImageIO.read(file.toFile());
+
+            g.drawImage(img1, 10, 10, 400, 400, Color.red, null);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    @Test
+    void drawImageBackground2() throws Exception {
+        final Path dst = Paths.get("target/drawImageBackground2.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(500, 500);
+            Path file = Paths.get("src/test/resources", "empty.png");
+            BufferedImage img1 = ImageIO.read(file.toFile());
+
+            g.drawImage(img1, 10, 10, Color.red, null);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 绘制部分图片到页面
+     */
+    @Test
+    void drawImagePiece() throws Exception {
+        final Path dst = Paths.get("target/drawImagePiece.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(500, 500);
+            Path file = Paths.get("src/test/resources", "empty.png");
+            BufferedImage img1 = ImageIO.read(file.toFile());
+
+            g.drawImage(img1, 0, 0, 200, 200, 200, 200, 400, 400, null);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    @Test
+    void drawImagePieceColor() throws Exception {
+        final Path dst = Paths.get("target/drawImagePieceColor.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(500, 500);
+            Path file = Paths.get("src/test/resources", "empty.png");
+            BufferedImage img1 = ImageIO.read(file.toFile());
+
+            g.drawImage(img1, 0, 0, 200, 200, 200, 200, 400, 400, Color.RED, null);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 平移
+     */
+    @Test
+    void translate() throws Exception {
+        final Path dst = Paths.get("target/translate.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(200, 200);
+            g.translate(50, 50);
+            g.setColor(Color.red);
+            g.fillRect(0, 0, 20, 20);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
 }
