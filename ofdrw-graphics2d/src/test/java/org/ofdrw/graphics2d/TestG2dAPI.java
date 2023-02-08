@@ -29,12 +29,20 @@ public class TestG2dAPI {
 //
 //
 
-        g.translate(50, 50);
-        g.setColor(Color.red);
-        g.fillRect(0, 0, 20, 20);
+        g.setColor(Color.blue);
+        g.fillRect(0, 0, 200, 200);
 
+        g.setColor(Color.RED);
+//        g.scale(2, 2);
+//        g.drawRect(0, 0, 10, 10);
+//        g.scale(2, 2);
+//        g.drawRect(0, 0, 10, 10);
+//        g.fillRoundRect(150, 50, 100, 100, 50, 25);
+        g.shear(45 * Math.PI / 180d, 45 * Math.PI / 180d);
+        g.fillRect(0, 0, 50, 50);
 
-        ImageIO.write(image, "png", new File("test.png"));
-        System.out.println(">> "+ Paths.get("test.png").toAbsolutePath());
+        Path path = Paths.get("ofdrw-graphics2d/target/test.png");
+        ImageIO.write(image, "png", path.toFile());
+        System.out.println(">> " + path.toAbsolutePath());
     }
 }

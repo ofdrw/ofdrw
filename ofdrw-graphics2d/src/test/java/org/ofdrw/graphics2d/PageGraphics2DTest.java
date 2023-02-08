@@ -52,6 +52,21 @@ class PageGraphics2DTest {
     }
 
     /**
+     * 填充圆角矩形
+     */
+    @Test
+    void fillRoundRect() throws Exception {
+        final Path dst = Paths.get("target/fillRoundRect.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(200, 200);
+            g.setColor(Color.red);
+            g.fillRoundRect(150, 50, 100, 100, 50, 25);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+
+    /**
      * 自定义图形和描边样式
      */
     @Test
@@ -317,4 +332,80 @@ class PageGraphics2DTest {
         System.out.println(">> " + dst.toAbsolutePath());
     }
 
+    /**
+     * 旋转
+     */
+    @Test
+    void rotate() throws Exception {
+        final Path dst = Paths.get("target/rotate.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(200, 200);
+            g.setColor(Color.red);
+            g.rotate(45 * Math.PI / 180d);
+            g.fillRect(0, 0, 20, 20);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 饶某点旋转画布
+     */
+    @Test
+    void rotate2() throws Exception {
+        final Path dst = Paths.get("target/rotate2.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(200, 200);
+            g.setColor(Color.red);
+            g.rotate(45 * Math.PI / 180d, 100, 100);
+            g.fillRect(100, 100, 50, 50);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    @Test
+    void translateRotate() throws Exception {
+        final Path dst = Paths.get("target/translateRotate.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(200, 200);
+            g.setColor(Color.red);
+            g.translate(100, 100);
+            g.rotate(45 * Math.PI / 180d);
+            g.fillRect(0, 0, 50, 50);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 缩放
+     */
+    @Test
+    void scale() throws Exception {
+        final Path dst = Paths.get("target/scale.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(200, 200);
+            g.setColor(Color.red);
+            g.scale(2, 2);
+            g.drawRect(0, 0, 10, 10);
+            g.scale(2, 2);
+            g.drawRect(0, 0, 10, 10);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+
+
+    /**
+     * 切变
+     */
+    @Test
+    void shear() throws Exception {
+        final Path dst = Paths.get("target/shear.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(200, 200);
+            g.setColor(Color.red);
+            g.shear(45 * Math.PI / 180d, 45 * Math.PI / 180d);
+            g.fillRect(0, 0, 50, 50);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
 }

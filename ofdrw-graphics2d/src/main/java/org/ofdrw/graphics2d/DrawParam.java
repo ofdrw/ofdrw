@@ -61,7 +61,7 @@ public class DrawParam {
     /**
      * 变换矩阵
      */
-    AffineTransform ctm;
+    ST_Array ctm;
 
     public DrawParam(GraphicsDocument ctx) {
         this.ctx = ctx;
@@ -75,7 +75,7 @@ public class DrawParam {
         this.gBackground = new Color(255, 255, 255);
         this.gForeground = new Color(0, 0, 0);
 
-        this.ctm = new AffineTransform();;
+        this.ctm = ST_Array.unitCTM();
         this.ref = null;
         this.gClip = null;
     }
@@ -93,7 +93,7 @@ public class DrawParam {
         this.gBackground = parent.gBackground;
         this.gForeground = parent.gForeground;
 
-        this.ctm = (AffineTransform) parent.ctm.clone();
+        this.ctm = parent.ctm.clone();
         this.gClip = parent.gClip;
         this.ref = parent.ref;
     }
@@ -290,7 +290,8 @@ public class DrawParam {
         setColor(c);
     }
 
-    private final static AffineTransform ONE = new AffineTransform();
+    private final static ST_Array ONE = ST_Array.unitCTM();
+
     /**
      * 应用绘制参数的配置
      */
@@ -301,31 +302,15 @@ public class DrawParam {
         }
         target.setDrawParam(ref);
         // 变换矩阵
-        if (!this.ctm.equals(ONE)){
-            target.setCTM(trans(this.ctm));
+        if (!this.ctm.equals(ONE)) {
+            target.setCTM(this.ctm);
         }
         if (gClip != null) {
             // TODO 设置裁剪区
         }
 
     }
-    /**
-     * 转为AWT 变换矩阵为 OFD ST_Array
-     *
-     * @param tx AWT变换矩阵
-     * @return OFD ST_Array
-     */
-    public ST_Array trans(AffineTransform tx) {
-      /*
-      m00 m10 0    a b 0
-      m01 m11 0  = c d 0
-      m02 m12 1    e f 1
-       */
-        return new ST_Array(
-                tx.getScaleX(), tx.getShearY(),
-                tx.getShearX(), tx.getScaleY(),
-                tx.getTranslateX(), tx.getTranslateY()
-        );
-    }
+
+
 
 }

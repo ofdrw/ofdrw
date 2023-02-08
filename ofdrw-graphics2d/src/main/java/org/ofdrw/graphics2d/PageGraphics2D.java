@@ -297,8 +297,7 @@ public class PageGraphics2D extends Graphics2D {
         ImageObject imgObj = new ImageObject(doc.newID());
         imgObj.setResourceID(objId.ref());
         imgObj.setBoundary(this.size.clone());
-        ST_Array ctm = this.drawParam.trans(this.drawParam.ctm);
-        ctm = new ST_Array(width, 0, 0, height, x, y).mtxMul(ctm);
+        ST_Array ctm = new ST_Array(width, 0, 0, height, x, y).mtxMul(this.drawParam.ctm);
         imgObj.setCTM(ctm);
         // 透明度
         if (this.drawParam.gColor instanceof Color) {
@@ -718,6 +717,22 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
+     * 描边矩形
+     *
+     * @param x      矩形区域左上角坐标X
+     * @param y      矩形区域左上角坐标Y
+     * @param width  矩形宽度
+     * @param height 矩形高度
+     */
+    @Override
+    public void drawRect(int x, int y, int width, int height) {
+        if ((width <= 0) || (height <= 0)) {
+            return;
+        }
+        draw(new Rectangle2D.Double(x, y, width, height));
+    }
+
+    /**
      * 使用背景色填充矩形区域
      *
      * @param x      填充区域矩形左上角 X 坐标
@@ -748,23 +763,22 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void drawRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
-        final RoundRectangle2D shape = Shapes.roundRect(x, y, width, height, arcWidth, arcHeight);
-        draw(shape);
+        draw(new RoundRectangle2D.Double(x, y, width, height, arcWidth, arcHeight));
     }
 
     /**
-     * @param x         the <i>x</i> coordinate of the rectangle to be filled.
-     * @param y         the <i>y</i> coordinate of the rectangle to be filled.
-     * @param width     the width of the rectangle to be filled.
-     * @param height    the height of the rectangle to be filled.
-     * @param arcWidth  the horizontal diameter
-     *                  of the arc at the four corners.
-     * @param arcHeight the vertical diameter
-     *                  of the arc at the four corners.
+     * 填充圆角矩形
+     *
+     * @param x         矩形左上角X坐标
+     * @param y         矩形左上角Y坐标
+     * @param width     矩形宽度
+     * @param height    矩形高度
+     * @param arcWidth  水平圆角半径
+     * @param arcHeight 垂直圆角半径
      */
     @Override
     public void fillRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
-
+        fill(new RoundRectangle2D.Double(x, y, width, height, arcWidth, arcHeight));
     }
 
     /**
@@ -903,55 +917,76 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void translate(double tx, double ty) {
-        AffineTransform t = new AffineTransform(
+        ST_Array r = new ST_Array(
                 1, 0,
                 0, 1,
-                tx, ty
-        );
-        t.concatenate(this.drawParam.ctm);
-        this.drawParam.ctm = t;
+                tx, ty);
+        this.drawParam.ctm = r.mtxMul(this.drawParam.ctm);
     }
 
     /**
-     * @param theta the angle of rotation in radians
+     * 绕原点旋转画布
+     *
+     * @param theta 旋转角度，计算方式为 {@code theta = angle * Math.PI / 180 }，负数表示逆时针。
      */
     @Override
     public void rotate(double theta) {
-
+        ST_Array r = new ST_Array(
+                Math.cos(theta), Math.sin(theta),
+                -Math.sin(theta), Math.cos(theta),
+                0, 0);
+        this.drawParam.ctm = r.mtxMul(this.drawParam.ctm);
     }
 
     /**
-     * @param theta the angle of rotation in radians
-     * @param x     the x coordinate of the origin of the rotation
-     * @param y     the y coordinate of the origin of the rotation
+     * 绕指定点旋转画布
+     * <p>
+     * 等价于
+     * <pre>
+     *          translate(x, y);
+     *          rotate(theta);
+     *          translate(-x, -y);
+     * </pre>
+     *
+     * @param theta 旋转角度，计算方式为 {@code theta = angle * Math.PI / 180 }，负数表示逆时针。
+     * @param x     旋转点X坐标
+     * @param y     旋转点Y坐标
      */
     @Override
     public void rotate(double theta, double x, double y) {
-
+        translate(x, y);
+        rotate(theta);
+        translate(-x, -y);
     }
 
     /**
-     * @param sx the amount by which X coordinates in subsequent
-     *           rendering operations are multiplied relative to previous
-     *           rendering operations.
-     * @param sy the amount by which Y coordinates in subsequent
-     *           rendering operations are multiplied relative to previous
-     *           rendering operations.
+     * 坐标缩放
+     *
+     * @param sx 缩放当前绘图的宽度 (1=100%, 0.5=50%, 2=200%, 依次类推)
+     * @param sy 缩放当前绘图的高度 (1=100%, 0.5=50%, 2=200%, 依次类推)
      */
     @Override
     public void scale(double sx, double sy) {
-
+        ST_Array scale = new ST_Array(
+                sx, 0,
+                0, sy,
+                0, 0);
+        this.drawParam.ctm = scale.mtxMul(this.drawParam.ctm);
     }
 
     /**
-     * @param shx the multiplier by which coordinates are shifted in
-     *            the positive X axis direction as a function of their Y coordinate
-     * @param shy the multiplier by which coordinates are shifted in
-     *            the positive Y axis direction as a function of their X coordinate
+     * 切变
+     *
+     * @param shx X方向切变角度
+     * @param shy Y方向切变角度
      */
     @Override
     public void shear(double shx, double shy) {
-
+        ST_Array shear = new ST_Array(
+                1, Math.tan(shx),
+                Math.tan(shy), 1,
+                0, 0);
+        this.drawParam.ctm = shear.mtxMul(this.drawParam.ctm);
     }
 
     /**
@@ -962,29 +997,40 @@ public class PageGraphics2D extends Graphics2D {
     @Override
     public void transform(AffineTransform tx) {
         if (tx == null) {
-            this.drawParam.ctm = new AffineTransform();
+            this.drawParam.ctm = ST_Array.unitCTM();
             return;
         }
-        AffineTransform ctm = (AffineTransform) tx.clone();
-        ctm.concatenate(this.drawParam.ctm);
-        this.drawParam.ctm = ctm;
+        ST_Array ctm = trans(tx);
+        this.drawParam.ctm = ctm.mtxMul(this.drawParam.ctm);
     }
 
     /**
-     * @param Tx the <code>AffineTransform</code> that was retrieved
-     *           from the <code>getTransform</code> method
+     * 设置变换矩阵
+     *
+     * @param tx 变换矩阵
      */
     @Override
-    public void setTransform(AffineTransform Tx) {
-
+    public void setTransform(AffineTransform tx) {
+        if (tx == null) {
+            this.drawParam.ctm = ST_Array.unitCTM();
+            return;
+        }
+        this.drawParam.ctm = trans(tx);
     }
 
     /**
-     * @return
+     * 返回当前的变换矩阵
+     *
+     * @return 变换矩阵
      */
     @Override
     public AffineTransform getTransform() {
-        return null;
+        Double[] arr = this.drawParam.ctm.toDouble();
+        return new AffineTransform(
+                arr[0], arr[1],
+                arr[2], arr[3],
+                arr[4], arr[5]
+        );
     }
 
     /**
@@ -1054,4 +1100,22 @@ public class PageGraphics2D extends Graphics2D {
     }
 
 
+    /**
+     * 转为AWT 变换矩阵为 OFD ST_Array
+     *
+     * @param tx AWT变换矩阵
+     * @return OFD ST_Array
+     */
+    ST_Array trans(AffineTransform tx) {
+      /*
+      m00 m10 0    a b 0
+      m01 m11 0  = c d 0
+      m02 m12 1    e f 1
+       */
+        return new ST_Array(
+                tx.getScaleX(), tx.getShearY(),
+                tx.getShearX(), tx.getScaleY(),
+                tx.getTranslateX(), tx.getTranslateY()
+        );
+    }
 }
