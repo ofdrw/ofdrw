@@ -403,7 +403,7 @@ class PageGraphics2DTest {
         try (GraphicsDocument doc = new GraphicsDocument(dst)) {
             PageGraphics2D g = doc.newPage(200, 200);
             g.setColor(Color.red);
-            g.shear(45 * Math.PI / 180d, 45 * Math.PI / 180d);
+            g.shear(10 * Math.PI / 180d, 10 * Math.PI / 180d);
             g.fillRect(0, 0, 50, 50);
         }
         System.out.println(">> " + dst.toAbsolutePath());

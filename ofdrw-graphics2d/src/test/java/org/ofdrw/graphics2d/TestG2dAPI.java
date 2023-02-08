@@ -38,7 +38,7 @@ public class TestG2dAPI {
 //        g.scale(2, 2);
 //        g.drawRect(0, 0, 10, 10);
 //        g.fillRoundRect(150, 50, 100, 100, 50, 25);
-        g.shear(45 * Math.PI / 180d, 45 * Math.PI / 180d);
+        g.shear(10 * Math.PI / 180d, 10 * Math.PI / 180d);
         g.fillRect(0, 0, 50, 50);
 
         Path path = Paths.get("ofdrw-graphics2d/target/test.png");
