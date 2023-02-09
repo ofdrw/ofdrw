@@ -24,7 +24,6 @@ import org.ofdrw.pkg.container.*;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -252,11 +251,15 @@ public class GraphicsDocument implements Closeable {
         final File imgFile;
         try {
             imgFile = File.createTempFile("res", ".png", resDirPath.toFile());
-
-            BufferedImage bi = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-            Graphics g2 = bi.getGraphics();
-            g2.drawImage(img, 0, 0, null);
-            g2.dispose();
+            BufferedImage bi;
+            if (img instanceof BufferedImage) {
+                bi = (BufferedImage) img;
+            }else{
+                bi   = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+                Graphics g2 = bi.getGraphics();
+                g2.drawImage(img, 0, 0, null);
+                g2.dispose();
+            }
             ImageIO.write(bi, "png", imgFile);
         } catch (IOException e) {
             throw new RuntimeException("graphics2d 图片写入IO异常",e);

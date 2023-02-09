@@ -18,12 +18,10 @@ import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.awt.geom.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.BufferedImageOp;
-import java.awt.image.ImageObserver;
-import java.awt.image.RenderedImage;
+import java.awt.image.*;
 import java.awt.image.renderable.RenderableImage;
 import java.text.AttributedCharacterIterator;
+import java.util.Hashtable;
 import java.util.Map;
 
 /**
@@ -165,53 +163,6 @@ public class PageGraphics2D extends Graphics2D {
         return ctPath;
     }
 
-    /**
-     * @param img   the specified image to be rendered.
-     *              This method does nothing if <code>img</code> is null.
-     * @param xform the transformation from image space into user space
-     * @param obs   the {@link ImageObserver}
-     *              to be notified as more of the <code>Image</code>
-     *              is converted
-     * @return
-     */
-    @Override
-    public boolean drawImage(Image img, AffineTransform xform, ImageObserver obs) {
-        return false;
-    }
-
-    /**
-     * @param img the specified <code>BufferedImage</code> to be rendered.
-     *            This method does nothing if <code>img</code> is null.
-     * @param op  the filter to be applied to the image before rendering
-     * @param x   the x coordinate of the location in user space where
-     *            the upper left corner of the image is rendered
-     * @param y   the y coordinate of the location in user space where
-     *            the upper left corner of the image is rendered
-     */
-    @Override
-    public void drawImage(BufferedImage img, BufferedImageOp op, int x, int y) {
-
-    }
-
-    /**
-     * @param img   the image to be rendered. This method does
-     *              nothing if <code>img</code> is null.
-     * @param xform the transformation from image space into user space
-     */
-    @Override
-    public void drawRenderedImage(RenderedImage img, AffineTransform xform) {
-
-    }
-
-    /**
-     * @param img   the image to be rendered. This method does
-     *              nothing if <code>img</code> is null.
-     * @param xform the transformation from image space into user space
-     */
-    @Override
-    public void drawRenderableImage(RenderableImage img, AffineTransform xform) {
-
-    }
 
     /**
      * @param str the string to be rendered
@@ -246,6 +197,30 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void drawString(AttributedCharacterIterator iterator, int x, int y) {
+
+    }
+
+    /**
+     * @param iterator the iterator whose text is to be rendered
+     * @param x        the x coordinate where the iterator's text is to be
+     *                 rendered
+     * @param y        the y coordinate where the iterator's text is to be
+     *                 rendered
+     */
+    @Override
+    public void drawString(AttributedCharacterIterator iterator, float x, float y) {
+
+    }
+
+    /**
+     * @param g the <code>GlyphVector</code> to be rendered
+     * @param x the x position in User Space where the glyphs should
+     *          be rendered
+     * @param y the y position in User Space where the glyphs should
+     *          be rendered
+     */
+    @Override
+    public void drawGlyphVector(GlyphVector g, float x, float y) {
 
     }
 
@@ -411,37 +386,81 @@ public class PageGraphics2D extends Graphics2D {
         return drawImage(img, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, observer);
     }
 
+
     /**
-     * 销毁绘制上下文
+     * 通过变换矩阵在指定位置绘制图像
+     *
+     * @param img   待绘制的图像（可渲染图像接口）
+     * @param xform 变换矩阵，指定图像绘制方式
+     * @param obs   忽略
+     * @return true
      */
     @Override
-    public void dispose() {
-
+    public boolean drawImage(Image img, AffineTransform xform, ImageObserver obs) {
+        AffineTransform old = this.getTransform();
+        if (xform != null) {
+            this.transform(xform);
+        }
+        boolean res = drawImage(img, 0, 0, obs);
+        if (xform != null) {
+            this.setTransform(old);
+        }
+        return res;
     }
 
     /**
-     * @param iterator the iterator whose text is to be rendered
-     * @param x        the x coordinate where the iterator's text is to be
-     *                 rendered
-     * @param y        the y coordinate where the iterator's text is to be
-     *                 rendered
+     * 在画布指定位置绘制图像，在绘制前将会使用 {@link BufferedImageOp} 过滤图像
+     * <p>
+     * 等价于
+     * <pre>
+     *       img1 = op.filter(img, null);
+     *       drawImage(img1, new AffineTransform(1f,0f,0f,1f,x,y), null);
+     * </pre>
+     *
+     * @param img 待绘制图像
+     * @param op  图片渲染前的过滤器
+     * @param x   图片左上角X坐标
+     * @param y   图片左上角Y坐标
      */
     @Override
-    public void drawString(AttributedCharacterIterator iterator, float x, float y) {
-
+    public void drawImage(BufferedImage img, BufferedImageOp op, int x, int y) {
+        BufferedImage img1 = img;
+        if (op != null) {
+            img1 = op.filter(img, null);
+        }
+        drawImage(img1, new AffineTransform(1f, 0f, 0f, 1f, x, y), null);
     }
 
     /**
-     * @param g the <code>GlyphVector</code> to be rendered
-     * @param x the x position in User Space where the glyphs should
-     *          be rendered
-     * @param y the y position in User Space where the glyphs should
-     *          be rendered
+     * 通过变换矩阵在指定位置绘制图像
+     *
+     * @param img   待绘制的图像（可渲染图像接口）
+     * @param xform 变换矩阵，指定图像绘制方式
      */
     @Override
-    public void drawGlyphVector(GlyphVector g, float x, float y) {
-
+    public void drawRenderedImage(RenderedImage img, AffineTransform xform) {
+        if (img == null) {
+            return;
+        }
+        BufferedImage bufferedImage = convert2Img(img);
+        drawImage(bufferedImage, xform, null);
     }
+
+    /**
+     * 通过变换矩阵在指定位置绘制图像
+     *
+     * @param img   待绘制的图像（可渲染图像接口）
+     * @param xform 变换矩阵，指定图像绘制方式
+     */
+    @Override
+    public void drawRenderableImage(RenderableImage img, AffineTransform xform) {
+        if (img == null) {
+            return;
+        }
+        RenderedImage rImg = img.createDefaultRendering();
+        drawRenderedImage(rImg, xform);
+    }
+
 
     /**
      * 填充图形
@@ -1099,6 +1118,14 @@ public class PageGraphics2D extends Graphics2D {
 
 
     /**
+     * 销毁绘制上下文
+     */
+    @Override
+    public void dispose() {
+
+    }
+
+    /**
      * 转为AWT变换矩阵 {@link AffineTransform} 为 OFD 类型变换矩阵{@link ST_Array}
      *
      * @param tx AWT变换矩阵
@@ -1115,5 +1142,34 @@ public class PageGraphics2D extends Graphics2D {
                 tx.getShearX(), tx.getScaleY(),
                 tx.getTranslateX(), tx.getTranslateY()
         );
+    }
+
+    /**
+     * 将可渲染对象转换为缓存图像
+     *
+     * @param img 可渲染对象
+     * @return 缓存图像
+     */
+    private BufferedImage convert2Img(RenderedImage img) {
+        if (img instanceof BufferedImage) {
+            return (BufferedImage) img;
+        }
+        final int width = img.getWidth();
+        final int height = img.getHeight();
+        final ColorModel cm = img.getColorModel();
+        final boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+
+        final WritableRaster raster = cm.createCompatibleWritableRaster(width, height);
+
+        final Hashtable<String, Object> properties = new Hashtable<>();
+        String[] keys = img.getPropertyNames();
+        if (keys != null) {
+            for (String key : keys) {
+                properties.put(key, img.getProperty(key));
+            }
+        }
+        final BufferedImage result = new BufferedImage(cm, raster, isAlphaPremultiplied, properties);
+        img.copyData(raster);
+        return result;
     }
 }

@@ -256,6 +256,22 @@ class PageGraphics2DTest {
         System.out.println(">> " + dst.toAbsolutePath());
     }
 
+    @Test
+    void drawImageAffineTransform() throws Exception {
+        final Path dst = Paths.get("target/drawImageAffineTransform.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(500, 500);
+            Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
+            BufferedImage img1 = ImageIO.read(file.toFile());
+
+            g.drawImage(img1, null, 10, 10);
+            g.setPaint(Color.RED);
+            g.fillRect(0, 0, 30,30);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+
     /**
      * 背景颜色填充透明图片
      */
@@ -390,7 +406,6 @@ class PageGraphics2DTest {
     }
 
 
-
     /**
      * 切变
      */
@@ -410,7 +425,7 @@ class PageGraphics2DTest {
      * 获取但前变换矩阵
      */
     @Test
-    void getTransform()throws Exception{
+    void getTransform() throws Exception {
         final Path dst = Paths.get("target/getTransform.ofd");
         try (GraphicsDocument doc = new GraphicsDocument(dst)) {
             PageGraphics2D g = doc.newPage(200, 200);
@@ -429,7 +444,7 @@ class PageGraphics2DTest {
             );
             String expect = "0.83 0.83 -0.58 0.58 117.45 117.45";
             System.out.println(actual);
-            assertEquals(expect,actual);
+            assertEquals(expect, actual);
         }
     }
 
@@ -437,12 +452,12 @@ class PageGraphics2DTest {
      * 应用变换矩阵
      */
     @Test
-    void transform()throws Exception{
+    void transform() throws Exception {
         final Path dst = Paths.get("target/transform.ofd");
         try (GraphicsDocument doc = new GraphicsDocument(dst)) {
             PageGraphics2D g = doc.newPage(200, 200);
 
-            g.translate(10,10);
+            g.translate(10, 10);
             g.transform(new AffineTransform(
                     0.83, 0.83,
                     -0.58, 0.58,
@@ -455,7 +470,7 @@ class PageGraphics2DTest {
             );
             String expect = "0.83 0.83 -0.58 0.58 127.45 127.45";
             System.out.println(actual);
-            assertEquals(expect,actual);
+            assertEquals(expect, actual);
         }
     }
 }
