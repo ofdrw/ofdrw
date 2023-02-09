@@ -4,10 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.Line2D;
-import java.awt.geom.Point2D;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -407,5 +404,58 @@ class PageGraphics2DTest {
             g.fillRect(0, 0, 50, 50);
         }
         System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 获取但前变换矩阵
+     */
+    @Test
+    void getTransform()throws Exception{
+        final Path dst = Paths.get("target/getTransform.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(200, 200);
+            g.setColor(Color.RED);
+
+            g.shear(10 * Math.PI / 180d, 10 * Math.PI / 180d);
+            g.translate(100, 100);
+            g.rotate(45 * Math.PI / 180d);
+            g.fillRect(0, 0, 50, 50);
+
+            AffineTransform tx = g.getTransform();
+            String actual = String.format("%.2f %.2f %.2f %.2f %.2f %.2f",
+                    tx.getScaleX(), tx.getShearY(),
+                    tx.getShearX(), tx.getScaleY(),
+                    tx.getTranslateX(), tx.getTranslateY()
+            );
+            String expect = "0.83 0.83 -0.58 0.58 117.45 117.45";
+            System.out.println(actual);
+            assertEquals(expect,actual);
+        }
+    }
+
+    /**
+     * 应用变换矩阵
+     */
+    @Test
+    void transform()throws Exception{
+        final Path dst = Paths.get("target/transform.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(200, 200);
+
+            g.translate(10,10);
+            g.transform(new AffineTransform(
+                    0.83, 0.83,
+                    -0.58, 0.58,
+                    117.45, 117.45));
+            AffineTransform tx = g.getTransform();
+            String actual = String.format("%.2f %.2f %.2f %.2f %.2f %.2f",
+                    tx.getScaleX(), tx.getShearY(),
+                    tx.getShearX(), tx.getScaleY(),
+                    tx.getTranslateX(), tx.getTranslateY()
+            );
+            String expect = "0.83 0.83 -0.58 0.58 127.45 127.45";
+            System.out.println(actual);
+            assertEquals(expect,actual);
+        }
     }
 }

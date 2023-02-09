@@ -922,6 +922,7 @@ public class PageGraphics2D extends Graphics2D {
                 0, 1,
                 tx, ty);
         this.drawParam.ctm = r.mtxMul(this.drawParam.ctm);
+        this.drawParam.jCtm.translate(tx, ty);
     }
 
     /**
@@ -936,6 +937,7 @@ public class PageGraphics2D extends Graphics2D {
                 -Math.sin(theta), Math.cos(theta),
                 0, 0);
         this.drawParam.ctm = r.mtxMul(this.drawParam.ctm);
+        this.drawParam.jCtm.rotate(theta);
     }
 
     /**
@@ -972,6 +974,7 @@ public class PageGraphics2D extends Graphics2D {
                 0, sy,
                 0, 0);
         this.drawParam.ctm = scale.mtxMul(this.drawParam.ctm);
+        this.drawParam.jCtm.scale(sx, sy);
     }
 
     /**
@@ -987,6 +990,7 @@ public class PageGraphics2D extends Graphics2D {
                 Math.tan(shy), 1,
                 0, 0);
         this.drawParam.ctm = shear.mtxMul(this.drawParam.ctm);
+        this.drawParam.jCtm.shear(shx, shy);
     }
 
     /**
@@ -997,11 +1001,11 @@ public class PageGraphics2D extends Graphics2D {
     @Override
     public void transform(AffineTransform tx) {
         if (tx == null) {
-            this.drawParam.ctm = ST_Array.unitCTM();
-            return;
+            throw new IllegalArgumentException("变换矩阵为空");
         }
         ST_Array ctm = trans(tx);
         this.drawParam.ctm = ctm.mtxMul(this.drawParam.ctm);
+        this.drawParam.jCtm.concatenate(tx);
     }
 
     /**
@@ -1012,8 +1016,7 @@ public class PageGraphics2D extends Graphics2D {
     @Override
     public void setTransform(AffineTransform tx) {
         if (tx == null) {
-            this.drawParam.ctm = ST_Array.unitCTM();
-            return;
+            throw new IllegalArgumentException("变换矩阵为空");
         }
         this.drawParam.ctm = trans(tx);
     }
@@ -1025,12 +1028,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public AffineTransform getTransform() {
-        Double[] arr = this.drawParam.ctm.toDouble();
-        return new AffineTransform(
-                arr[0], arr[1],
-                arr[2], arr[3],
-                arr[4], arr[5]
-        );
+        return new AffineTransform(this.drawParam.jCtm);
     }
 
     /**
@@ -1101,12 +1099,12 @@ public class PageGraphics2D extends Graphics2D {
 
 
     /**
-     * 转为AWT 变换矩阵为 OFD ST_Array
+     * 转为AWT变换矩阵 {@link AffineTransform} 为 OFD 类型变换矩阵{@link ST_Array}
      *
      * @param tx AWT变换矩阵
      * @return OFD ST_Array
      */
-    ST_Array trans(AffineTransform tx) {
+    public ST_Array trans(AffineTransform tx) {
       /*
       m00 m10 0    a b 0
       m01 m11 0  = c d 0

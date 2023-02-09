@@ -62,6 +62,12 @@ public class DrawParam {
      * 变换矩阵
      */
     ST_Array ctm;
+    /**
+     * AWT变换矩阵
+     * <p>
+     * 由于OFD变换矩阵需要左乘于AWT相反，所以使用该副本来存储变换矩阵
+     */
+    AffineTransform jCtm;
 
     public DrawParam(GraphicsDocument ctx) {
         this.ctx = ctx;
@@ -76,6 +82,7 @@ public class DrawParam {
         this.gForeground = new Color(0, 0, 0);
 
         this.ctm = ST_Array.unitCTM();
+        this.jCtm = new AffineTransform();
         this.ref = null;
         this.gClip = null;
     }
@@ -94,6 +101,7 @@ public class DrawParam {
         this.gForeground = parent.gForeground;
 
         this.ctm = parent.ctm.clone();
+        this.jCtm = new AffineTransform(this.jCtm);
         this.gClip = parent.gClip;
         this.ref = parent.ref;
     }
@@ -310,7 +318,6 @@ public class DrawParam {
         }
 
     }
-
 
 
 }
