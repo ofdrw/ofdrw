@@ -88,27 +88,27 @@ public class CT_Area extends OFDElement {
             switch (qName) {
                 case "ofd:Move":
                 case "Move":
-                    elementList.add(new Move(item));
+                    res.add(new Move(item));
                     break;
                 case "ofd:Line":
                 case "Line":
-                    elementList.add(new Line(item));
+                    res.add(new Line(item));
                     break;
                 case "ofd:QuadraticBezier":
                 case "QuadraticBezier":
-                    elementList.add(new QuadraticBezier(item));
+                    res.add(new QuadraticBezier(item));
                     break;
                 case "ofd:CubicBezier":
                 case "CubicBezier":
-                    elementList.add(new CubicBezier(item));
+                    res.add(new CubicBezier(item));
                     break;
                 case "ofd:Arc":
                 case "Arc":
-                    elementList.add(new Arc(item));
+                    res.add(new Arc(item));
                     break;
                 case "ofd:Close":
                 case "Close":
-                    elementList.add(new Close(item));
+                    res.add(new Close(item));
                     break;
                 default:
                     throw new IllegalArgumentException("未知类型：" + qName);
