@@ -26,8 +26,8 @@ public abstract class STBase implements Serializable {
 
     /**
      * 如果浮点数为整数，则省略小数
-     *
-     * 浮点数含有小数，那么对保留2位小数，并且四舍五入
+     * <p>
+     * 浮点数含有小数，那么对保留3位小数，并且四舍五入
      *
      * @param d 浮点数
      * @return 数字字符串
@@ -36,7 +36,7 @@ public abstract class STBase implements Serializable {
         if (d == (long) d) {
             return String.format("%d", (long) d);
         } else {
-            return String.format("%.2f", d);
+            return String.format("%.3f", d);
         }
     }
 

@@ -32,10 +32,13 @@ public class DrawParamCache {
     private Double dashOffset;
     private ST_Array dashPattern;
     private Double miterLimit;
-    private CT_Color fillColor;
-    private CT_Color strokeColor;
+    private int[] fillColor;
+    private int[] strokeColor;
 
     public DrawParamCache() {
+        // 默认黑色
+        fillColor = new int[]{0, 0, 0};
+        strokeColor = new int[]{0, 0, 0};
     }
 
 
@@ -131,24 +134,24 @@ public class DrawParamCache {
     }
 
 
-    public DrawParamCache setFillColor(CT_Color fillColor) {
+    public DrawParamCache setFillColor(int[] fillColor) {
         cache = null;
         this.fillColor = fillColor;
         return this;
     }
 
 
-    public CT_Color getFillColor() {
+    public int[] getFillColor() {
         return fillColor;
     }
 
-    public DrawParamCache setStrokeColor(CT_Color strokeColor) {
+    public DrawParamCache setStrokeColor(int[] strokeColor) {
         cache = null;
         this.strokeColor = strokeColor;
         return this;
     }
 
-    public CT_Color getStrokeColor() {
+    public int[] getStrokeColor() {
         return strokeColor;
     }
 
@@ -186,10 +189,10 @@ public class DrawParamCache {
                 cache.setMiterLimit(miterLimit);
             }
             if (fillColor != null) {
-                cache.setFillColor(fillColor);
+                cache.setFillColor(CT_Color.rgb(fillColor));
             }
             if (strokeColor != null) {
-                cache.setStrokeColor(strokeColor);
+                cache.setStrokeColor(CT_Color.rgb(strokeColor));
             }
             // 加入到资源问价中并且返还对象ID
             return resManager.addDrawParam(cache);
@@ -209,8 +212,8 @@ public class DrawParamCache {
         that.dashOffset = dashOffset;
         that.dashPattern = dashPattern;
         that.miterLimit = miterLimit;
-        that.fillColor = fillColor;
-        that.strokeColor = strokeColor;
+        that.fillColor = fillColor.clone();
+        that.strokeColor = strokeColor.clone();
         return that;
     }
 }

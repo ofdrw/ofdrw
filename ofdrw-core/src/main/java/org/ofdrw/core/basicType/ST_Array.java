@@ -94,12 +94,12 @@ public class ST_Array extends STBase implements Cloneable {
         array = new ArrayList<>(arr.length);
 
         for (Serializable item : arr) {
-            if (item instanceof String || item == null) {
+            if (item == null) {
+                continue;
+            } else if (item instanceof String) {
                 String str = (String) item;
-                if (item == null || str.trim().length() == 0) {
+                if (str.trim().length() == 0) {
                     continue;
-                } else {
-                    item = str;
                 }
             } else if (item instanceof Double) {
                 item = STBase.fmt((Double) item);
@@ -309,5 +309,17 @@ public class ST_Array extends STBase implements Cloneable {
             sb.append(' ').append(item);
         }
         return sb.toString().trim();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof ST_Array)) {
+            return false;
+        }
+        ST_Array that = (ST_Array) obj;
+        return that.array.equals(this.array);
     }
 }

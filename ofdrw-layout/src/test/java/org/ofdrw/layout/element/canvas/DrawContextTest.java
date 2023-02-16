@@ -74,6 +74,80 @@ class DrawContextTest {
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
 
+    @Test
+    void stroke2() throws IOException {
+        Path outP = Paths.get("target/stroke2.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.rect(20,20, 40,20);
+                ctx.setStrokeColor(255, 0, 0);
+                ctx.stroke();
+                ctx.rect(30,30, 50,30);
+                ctx.setStrokeColor(0, 0, 255);
+                ctx.stroke();
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+    @Test
+    void strokeRect2()throws IOException {
+        Path outP = Paths.get("target/strokeRect2.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.rect(20,20, 40,20);
+                ctx.setStrokeColor(255,0,0);
+                ctx.strokeRect(30,30, 50,30);
+                ctx.setStrokeColor(0,255,0);
+                ctx.stroke();
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    @Test
+    void fillRect2()throws IOException {
+        Path outP = Paths.get("target/fillRect2.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.rect(20,20, 40,20);
+                ctx.setFillColor(255,0,0);
+                ctx.fillRect(30,30, 50,30);
+                ctx.setFillColor(0,255,0);
+                ctx.fill();
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
 
     @Test
     void fill() throws IOException {
@@ -148,12 +222,13 @@ class DrawContextTest {
 
             canvas.setDrawer(ctx -> {
                 // 剪切矩形区域
-                ctx.rect(50, 20, 200, 120);
-                ctx.stroke();
+                ctx.rect(20,20, 40,20);
+                ctx.setFillColor(255, 0, 0);
+                ctx.fill();
                 ctx.clip();
                 // 在 clip() 之后绘制绿色矩形
                 ctx.setFillColor(0, 255, 0);
-                ctx.fillRect(0, 0, 150, 100);
+                ctx.fillRect(30,30, 50,30);
             });
             vPage.add(canvas);
 

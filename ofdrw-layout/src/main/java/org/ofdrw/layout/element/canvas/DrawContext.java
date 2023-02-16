@@ -7,10 +7,8 @@ import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
-import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
-import org.ofdrw.core.graph.pathObj.CT_Path;
-import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 import org.ofdrw.core.text.TextCode;
@@ -18,7 +16,6 @@ import org.ofdrw.core.text.text.CT_Text;
 import org.ofdrw.core.text.text.Direction;
 import org.ofdrw.core.text.text.Weight;
 import org.ofdrw.font.Font;
-import org.ofdrw.font.FontName;
 import org.ofdrw.layout.engine.ResManager;
 
 import java.io.Closeable;
@@ -35,6 +32,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>
  * 一个路径对象只允许出现一种描边和填充颜色
  * 重复设置，取最后一次设置的颜色。
+ * <p>
+ * 关于路径：
+ * 1. beginPath 清空路径。
+ * 2. 所有路径在 fill 和 stroke 是才应用图元效果。
+ * 3. 路径数据 与 绘图数据分开。
+ * 4. 除了 beginPath 之外所有数据均认为是 向已经存在的路径追加新的路径。
  *
  * @author 权观宇
  * @since 2020-05-01 11:29:20
@@ -56,17 +59,6 @@ public class DrawContext implements Closeable {
      */
     private ResManager resManager;
 
-    /**
-     * 路径对象
-     */
-    private CT_Path workPathObj = null;
-
-    /**
-     * 路径数据
-     * <p>
-     * 他与workPathObj 成对出现和存在
-     */
-    private AbbreviatedData pathData = null;
 
     /**
      * 边框位置，也就是画布大小以及位置
@@ -103,46 +95,15 @@ public class DrawContext implements Closeable {
         this.stack = new LinkedList<>();
     }
 
-
-    /**
-     * 根据上下文属性创建一个Path对象
-     *
-     * @return 路径对象
-     */
-    private CT_Path newPathWithCtx() {
-        CT_Path path = new CT_Path()
-                .setBoundary(this.boundary.clone());
-        // 变换矩阵
-        if (this.state.ctm != null) {
-            path.setCTM(this.state.ctm);
-        }
-        // 裁剪区域
-        if (this.state.clipFactory != null) {
-            path.setClips(state.clipFactory.clips());
-        }
-        // 透明度
-        if (this.state.globalAlpha != null) {
-            path.setAlpha((int) (255 * this.state.globalAlpha));
-        }
-
-        return path;
-    }
-
     /**
      * 开启一段新的路径
      * <p>
-     * 如果已经存在路径，那么将会关闭已经存在的路径
+     * 如果已经存在路径，那么将会清除已经存在的所有路径。
      *
      * @return this
      */
     public DrawContext beginPath() {
-        if (this.workPathObj != null) {
-            // 如果已经存在路径，将上一个路径更新到画板中
-            flush2Canvas();
-            this.workPathObj = null;
-        }
-        this.workPathObj = newPathWithCtx();
-        this.pathData = new AbbreviatedData();
+        this.state.path = new AbbreviatedData();
         return this;
     }
 
@@ -157,11 +118,10 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext closePath() {
-        if (this.workPathObj == null) {
+        if (this.state.path == null) {
             return this;
         }
-        // 创建路径对象，放入图形容器中
-        pathData.close();
+        this.state.path.close();
         return this;
     }
 
@@ -175,9 +135,10 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext clip() {
-        if (this.workPathObj == null) {
+        if (this.state.path == null) {
             return this;
         }
+
         if (state.clipFactory == null) {
             state.clipFactory = new ClipFactory();
         }
@@ -185,7 +146,7 @@ public class DrawContext implements Closeable {
         if (this.state.ctm != null) {
             state.clipFactory.setCtm(this.state.ctm.clone());
         }
-        state.clipFactory.setData(pathData.clone());
+        state.clipFactory.setData(this.state.path.clone());
 
         return this;
     }
@@ -198,25 +159,27 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext moveTo(double x, double y) {
-        if (this.workPathObj == null) {
-            beginPath();
+        if (this.state.path == null) {
+            this.state.path = new AbbreviatedData();
         }
-        this.pathData.moveTo(x, y);
+        this.state.path.moveTo(x, y);
         return this;
     }
 
     /**
      * 从当前点连线到指定点
+     * <p>
+     * 请在调用前创建路径
      *
      * @param x X坐标
      * @param y Y坐标
      * @return this
      */
     public DrawContext lineTo(double x, double y) {
-        if (this.workPathObj == null) {
+        if (this.state.path == null) {
             return this;
         }
-        this.pathData.lineTo(x, y);
+        this.state.path.lineTo(x, y);
         return this;
     }
 
@@ -231,10 +194,10 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext quadraticCurveTo(double cpx, double cpy, double x, double y) {
-        if (this.workPathObj == null) {
-            return this;
+        if (this.state.path == null) {
+            this.state.path = new AbbreviatedData();
         }
-        this.pathData.quadraticBezier(cpx, cpy, x, y);
+        this.state.path.quadraticBezier(cpx, cpy, x, y);
         return this;
     }
 
@@ -252,10 +215,10 @@ public class DrawContext implements Closeable {
     public DrawContext bezierCurveTo(double cp1x, double cp1y,
                                      double cp2x, double cp2y,
                                      double x, double y) {
-        if (this.workPathObj == null) {
-            return this;
+        if (this.state.path == null) {
+            this.state.path = new AbbreviatedData();
         }
-        this.pathData.cubicBezier(cp1x, cp1y, cp2x, cp2y, x, y);
+        this.state.path.cubicBezier(cp1x, cp1y, cp2x, cp2y, x, y);
         return this;
     }
 
@@ -281,10 +244,10 @@ public class DrawContext implements Closeable {
                            boolean large,
                            boolean sweep,
                            double x, double y) {
-        if (this.workPathObj == null) {
-            return this;
+        if (this.state.path == null) {
+            this.state.path = new AbbreviatedData();
         }
-        this.pathData.arc(a, b, angle % 360, large ? 1 : 0, sweep ? 1 : 0, x, y);
+        this.state.path.arc(a, b, angle % 360, large ? 1 : 0, sweep ? 1 : 0, x, y);
         return this;
     }
 
@@ -304,8 +267,9 @@ public class DrawContext implements Closeable {
                            double r,
                            double sAngle, double eAngle,
                            boolean counterclockwise) {
-        if (this.workPathObj == null) {
-            return this;
+
+        if (this.state.path == null) {
+            this.state.path = new AbbreviatedData();
         }
 
         // 首先移动点到起始位置
@@ -318,13 +282,13 @@ public class DrawContext implements Closeable {
         if (angle == 360) {
             // 整个圆的时候需要分为两次路径进行绘制
             // 绘制结束位置起始位置
-            this.pathData.arc(r, r, angle, 1, counterclockwise ? 1 : 0, x - r, y)
+            this.state.path.arc(r, r, angle, 1, counterclockwise ? 1 : 0, x - r, y)
                     .arc(r, r, angle, 1, counterclockwise ? 1 : 0, x1, y1);
         } else {
             // 绘制结束位置起始位置
             double x2 = x + r * Math.cos(eAngle * Math.PI / 180);
             double y2 = y + r * Math.sin(eAngle * Math.PI / 180);
-            this.pathData.arc(r, r, angle,
+            this.state.path.arc(r, r, angle,
                     angle > 180 ? 1 : 0,
                     counterclockwise ? 1 : 0,
                     x2, y2);
@@ -362,11 +326,11 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext rect(double x, double y, double width, double height) {
-        if (this.workPathObj == null) {
-            this.beginPath();
+        if (this.state.path == null) {
+            this.state.path = new AbbreviatedData();
         }
 
-        this.pathData.moveTo(x, y)
+        this.state.path.moveTo(x, y)
                 .lineTo(x + width, y)
                 .lineTo(x + width, y + height)
                 .lineTo(x, y + height)
@@ -377,7 +341,7 @@ public class DrawContext implements Closeable {
     /**
      * 创建并填充矩形路径
      * <p>
-     * 默认的填充颜色是黑色。
+     * 填充矩形不会导致影响上下文中的路径。
      * <p>
      * 如果已经存在路径那么改路径将会提前关闭，并创建新的路径。
      *
@@ -388,17 +352,24 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext fillRect(double x, double y, double width, double height) {
-        this.beginPath();
-        // 创建路径,填充颜色
-        rect(x, y, width, height).fill();
-        flush2Canvas();
+        AbbreviatedData abData = new AbbreviatedData().moveTo(x, y)
+                .lineTo(x + width, y)
+                .lineTo(x + width, y + height)
+                .lineTo(x, y + height)
+                .close();
+
+        PathObject p = new PathObject(new ST_ID(maxUnitID.incrementAndGet()));
+        p.setAbbreviatedData(abData);
+        p.setFill(true);
+        applyDrawParam(p);
+        container.add(p);
         return this;
     }
 
     /**
      * 创建并描边矩形路径
      * <p>
-     * 如果已经存在路径那么改路径将会提前关闭，并创建新的路径。
+     * 描边矩形不会导致影响上下文中的路径。
      * <p>
      * 默认描边颜色为黑色
      *
@@ -409,10 +380,17 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext strokeRect(double x, double y, double width, double height) {
-        this.beginPath();
-        // 创建路径
-        rect(x, y, width, height).stroke();
-        flush2Canvas();
+        AbbreviatedData abData = new AbbreviatedData().moveTo(x, y)
+                .lineTo(x + width, y)
+                .lineTo(x + width, y + height)
+                .lineTo(x, y + height)
+                .close();
+
+        PathObject p = new PathObject(new ST_ID(maxUnitID.incrementAndGet()));
+        p.setAbbreviatedData(abData);
+        p.setStroke(true);
+        applyDrawParam(p);
+        container.add(p);
         return this;
     }
 
@@ -422,16 +400,15 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext stroke() {
-        if (this.workPathObj == null) {
+        if (this.state.path == null) {
             return this;
         }
-        // 设置线宽度，默认值0.353
-        workPathObj.setLineWidth(state.lineWidth)
-                .setStroke(true);
-        if (this.state.strokeColor != null) {
-            workPathObj.setStrokeColor(CT_Color.rgb(this.state.strokeColor));
-        }
 
+        PathObject p = new PathObject(new ST_ID(maxUnitID.incrementAndGet()));
+        p.setAbbreviatedData(this.state.path.clone());
+        p.setStroke(true);
+        applyDrawParam(p);
+        container.add(p);
         return this;
     }
 
@@ -443,14 +420,15 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext fill() {
-        if (this.workPathObj == null) {
+        if (this.state.path == null) {
             return this;
         }
-        workPathObj.setFill(true);
-        if (this.state.fillColor != null) {
-            workPathObj.setFillColor(CT_Color.rgb(this.state.fillColor));
-        }
 
+        PathObject p = new PathObject(new ST_ID(maxUnitID.incrementAndGet()));
+        p.setAbbreviatedData(this.state.path.clone());
+        p.setFill(true);
+        applyDrawParam(p);
+        container.add(p);
         return this;
     }
 
@@ -467,9 +445,6 @@ public class DrawContext implements Closeable {
         }
         ST_Array scale = new ST_Array(scalewidth, 0, 0, scaleheight, 0, 0);
         this.state.ctm = scale.mtxMul(this.state.ctm);
-        if (this.workPathObj != null) {
-            this.workPathObj.setCTM(state.ctm);
-        }
         return this;
     }
 
@@ -489,9 +464,6 @@ public class DrawContext implements Closeable {
                 -Math.sin(alpha), Math.cos(alpha),
                 0, 0);
         this.state.ctm = r.mtxMul(this.state.ctm);
-        if (this.workPathObj != null) {
-            this.workPathObj.setCTM(state.ctm);
-        }
         return this;
     }
 
@@ -511,9 +483,6 @@ public class DrawContext implements Closeable {
                 0, 1,
                 x, y);
         this.state.ctm = r.mtxMul(this.state.ctm);
-        if (this.workPathObj != null) {
-            this.workPathObj.setCTM(state.ctm);
-        }
         return this;
     }
 
@@ -539,9 +508,6 @@ public class DrawContext implements Closeable {
                 c, d,
                 e, f);
         this.state.ctm = r.mtxMul(this.state.ctm);
-        if (this.workPathObj != null) {
-            this.workPathObj.setCTM(state.ctm);
-        }
         return this;
     }
 
@@ -563,9 +529,6 @@ public class DrawContext implements Closeable {
                 a, b,
                 c, d,
                 e, f);
-        if (this.workPathObj != null) {
-            this.workPathObj.setCTM(state.ctm);
-        }
         return this;
     }
 
@@ -592,14 +555,14 @@ public class DrawContext implements Closeable {
         ImageObject imgObj = new ImageObject(maxUnitID.incrementAndGet());
         imgObj.setResourceID(id.ref());
         imgObj.setBoundary(boundary.clone());
+
+        // 应用变换矩阵
         ST_Array ctm = this.state.ctm == null ? ST_Array.unitCTM() : this.state.ctm;
         ctm = new ST_Array(width, 0, 0, height, x, y).mtxMul(ctm);
         imgObj.setCTM(ctm);
 
-        // 透明度
-        if (this.state.globalAlpha != null) {
-            imgObj.setAlpha((int) (255 * this.state.globalAlpha));
-        }
+        // 应用绘制参数
+        applyDrawParam(imgObj);
         container.addPageBlock(imgObj);
 
         return this;
@@ -657,6 +620,9 @@ public class DrawContext implements Closeable {
                 .setFont(id.ref())
                 .setSize(fontSize)
                 .toObj(new ST_ID(maxUnitID.incrementAndGet()));
+
+        // 设置填充
+        txtObj.setFill(true);
         // 设置字体宽度
         if (state.font.getFontWeight() != null && state.font.getFontWeight() != 400) {
             txtObj.setWeight(Weight.getInstance(state.font.getFontWeight()));
@@ -665,18 +631,7 @@ public class DrawContext implements Closeable {
         if (state.font.isItalic()) {
             txtObj.setItalic(true);
         }
-        // 设置颜色
-        if (state.fillColor != null) {
-            txtObj.setFillColor(CT_Color.rgb(state.fillColor));
-        }
-        // 设置变换矩阵
-        if (state.ctm != null) {
-            txtObj.setCTM(state.ctm.clone());
-        }
-        // 设置透明度
-        if (state.globalAlpha != null && state.globalAlpha != 1) {
-            txtObj.setAlpha((int) (255 * this.state.globalAlpha));
-        }
+
         // 设置阅读方向
         if (readDirection != 0) {
             txtObj.setReadDirection(Direction.getInstance(readDirection));
@@ -685,6 +640,12 @@ public class DrawContext implements Closeable {
         if (charDirection != 0) {
             txtObj.setCharDirection(Direction.getInstance(charDirection));
         }
+
+        // 应用绘制参数
+        if (this.state.drawParamCache != null) {
+            applyDrawParam(txtObj);
+        }
+
         // 测量字间距
         MeasureBody measureBody = TextMeasureTool.measureWithWith(text, state.font);
 
@@ -797,7 +758,7 @@ public class DrawContext implements Closeable {
      * @return 描边颜色（只读）
      */
     public int[] getStrokeColor() {
-        return state.strokeColor.clone();
+        return state.obtainDrawParamCache().getStrokeColor();
     }
 
     /**
@@ -809,14 +770,7 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext setStrokeColor(int[] strokeColor) {
-        if (strokeColor == null) {
-            return this;
-        }
-
-        this.state.strokeColor = strokeColor;
-        if (this.workPathObj != null) {
-            this.workPathObj.setStrokeColor(CT_Color.rgb(strokeColor));
-        }
+        this.state.obtainDrawParamCache().setStrokeColor(strokeColor);
         return this;
     }
 
@@ -840,7 +794,7 @@ public class DrawContext implements Closeable {
      * @return 填充颜色（只读）
      */
     public int[] getFillColor() {
-        return state.fillColor.clone();
+        return state.obtainDrawParamCache().getFillColor();
     }
 
     /**
@@ -852,14 +806,7 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext setFillColor(int[] fillColor) {
-        if (fillColor == null) {
-            return this;
-        }
-
-        this.state.fillColor = fillColor;
-        if (this.workPathObj != null) {
-            this.workPathObj.setFillColor(CT_Color.rgb(fillColor));
-        }
+        this.state.obtainDrawParamCache().setFillColor(fillColor);
         return this;
     }
 
@@ -884,7 +831,7 @@ public class DrawContext implements Closeable {
      * @return 线宽度（单位毫米mm）
      */
     public double getLineWidth() {
-        return state.lineWidth;
+        return this.state.obtainDrawParamCache().getLineWidth();
     }
 
     /**
@@ -894,10 +841,10 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext setLineWidth(double lineWidth) {
-        this.state.lineWidth = lineWidth;
-        if (this.workPathObj != null) {
-            this.workPathObj.setLineWidth(lineWidth);
+        if (lineWidth <= 0) {
+            lineWidth = 0.353;
         }
+        this.state.obtainDrawParamCache().setLineWidth(lineWidth);
         return this;
     }
 
@@ -923,10 +870,11 @@ public class DrawContext implements Closeable {
 
     /**
      * 设置默认字体
+     *
      * @param fontSize 字体大小
      * @return this
      */
-    public DrawContext setDefaultFont(double fontSize){
+    public DrawContext setDefaultFont(double fontSize) {
         this.state.font = FontSetting.getInstance(fontSize);
         return this;
     }
@@ -1114,25 +1062,36 @@ public class DrawContext implements Closeable {
     }
 
     /**
-     * 将当前绘制的路径更新到容器中去变为可视化的对象
+     * 应用当前上下文中的绘制参数到绘制对象
      */
-    private void flush2Canvas() {
-        if (workPathObj == null) {
+    private void applyDrawParam(CT_GraphicUnit<?> p) {
+        if (p == null) {
             return;
         }
-        if (workPathObj.getStroke() || workPathObj.getFill()) {
-            PathObject tbAdded = workPathObj.setAbbreviatedData(pathData)
-                    .toObj(new ST_ID(maxUnitID.incrementAndGet()));
-            // 如果存在绘制参数，那么设置图元的绘制参数
-            if (this.state.drawParamCache != null) {
-                ST_ID paramObjId = this.state.drawParamCache.addToResource(resManager);
-                tbAdded.setDrawParam(paramObjId.ref());
-            }
-            container.addPageBlock(tbAdded);
+        // 设置区域
+        p.setBoundary(this.boundary.clone());
+
+        // 设置透明度
+        if (this.state.globalAlpha != null) {
+            p.setAlpha((int) (255 * this.state.globalAlpha));
         }
 
-        this.workPathObj = null;
-        this.pathData = null;
+        // 设置裁剪区域
+        if (this.state.clipFactory != null) {
+            p.setClips(this.state.clipFactory.clips());
+        }
+
+        // 设置变换矩阵 忽略已经设置了变换矩阵的图元
+        if (this.state.ctm != null && p.getCTM() == null) {
+            p.setCTM(this.state.ctm.clone());
+        }
+
+
+        // 设置线条绘制参数
+        if (this.state.drawParamCache != null) {
+            ST_ID paramObjId = this.state.drawParamCache.addToResource(resManager);
+            p.setDrawParam(paramObjId.ref());
+        }
     }
 
     /**
@@ -1140,9 +1099,6 @@ public class DrawContext implements Closeable {
      */
     @Override
     public void close() {
-        if (this.workPathObj == null) {
-            return;
-        }
-        flush2Canvas();
+
     }
 }

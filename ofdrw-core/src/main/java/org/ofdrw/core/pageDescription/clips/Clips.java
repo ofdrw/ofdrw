@@ -3,8 +3,6 @@ package org.ofdrw.core.pageDescription.clips;
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -27,6 +25,7 @@ public class Clips extends OFDElement {
 
     public Clips() {
         super("Clips");
+        this.setTransFlag(false);
     }
 
     /**
@@ -68,5 +67,35 @@ public class Clips extends OFDElement {
      */
     public List<CT_Clip> getClips() {
         return this.getOFDElements("Clip", CT_Clip::new);
+    }
+
+    /**
+     * 【必选】
+     * 设置变换标志
+     * <p>
+     * 在1.2 版本后通过TransFlag参数来控制，
+     * 裁剪区域是否受外部CTM的影响，默认为false不受外部CTM影响。
+     *
+     * @param transFlag 是否受外部CTM影响
+     * @return this
+     */
+    public Clips setTransFlag(Boolean transFlag) {
+        if (transFlag == null) {
+            this.removeAttr("TransFlag");
+            return this;
+        }
+        this.addAttribute("TransFlag", Boolean.toString(transFlag));
+        return this;
+    }
+
+    /**
+     * 【必选】
+     * 获取裁剪区域变换标志，默认值为false 不受外部CTM影响
+     *
+     * @return 是否受外部CTM影响，false 不受
+     */
+    public boolean getTransFlag() {
+        String str = this.attributeValue("TransFlag");
+        return Boolean.parseBoolean(str);
     }
 }

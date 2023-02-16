@@ -1,46 +1,31 @@
 package org.ofdrw.layout.element.canvas;
 
 import org.ofdrw.core.basicType.ST_Array;
+import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.font.FontName;
 
 /**
- * 画布状态
+ * 画布上下文中的绘制参数状态
  *
  * @author 权观宇
  * @since 2020-05-06 19:22:15
  */
 public class CanvasState implements Cloneable {
+
+    /**
+     * 上下文 路径数据
+     */
+    AbbreviatedData path;
+
     /**
      * 待裁剪区域构造工厂
      */
     ClipFactory clipFactory;
 
     /**
-     * 描边RGB颜色
-     * <p>
-     * 默认黑色
-     */
-    int[] strokeColor = null;
-
-    /**
-     * 填充RGB颜色
-     * <p>
-     * 默认黑色
-     */
-    int[] fillColor = null;
-
-    /**
      * 变换矩阵
      */
     ST_Array ctm = null;
-
-
-    /**
-     * 线宽度
-     * <p>
-     * 默认值 0.353 mm
-     */
-    double lineWidth = 0.353;
 
     /**
      * 绘制文字设置
@@ -84,19 +69,16 @@ public class CanvasState implements Cloneable {
     @Override
     public CanvasState clone() {
         CanvasState that = new CanvasState();
+        if (path != null) {
+            that.path = path.clone();
+        }
         if (clipFactory != null) {
             that.clipFactory = clipFactory.clone();
-        }
-        if (strokeColor != null) {
-            that.strokeColor = strokeColor.clone();
-        }
-        if (fillColor != null) {
-            that.fillColor = fillColor.clone();
         }
         if (ctm != null) {
             that.ctm = ctm.clone();
         }
-        that.lineWidth = lineWidth;
+        // that.lineWidth = lineWidth;
         if (font != null) {
             that.font = font.clone();
         }
