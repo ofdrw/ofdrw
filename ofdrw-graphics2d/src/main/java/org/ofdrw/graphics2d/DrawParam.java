@@ -3,7 +3,11 @@ package org.ofdrw.graphics2d;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.basicType.ST_RefID;
+import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
+import org.ofdrw.core.pageDescription.clips.Area;
+import org.ofdrw.core.pageDescription.clips.CT_Clip;
+import org.ofdrw.core.pageDescription.clips.Clips;
 import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.pageDescription.color.color.MapType;
@@ -309,12 +313,31 @@ public class DrawParam {
             ref = ctx.addDrawParam(this.pCache).ref();
         }
         target.setDrawParam(ref);
-        // 变换矩阵
+
+        // 获取元素上已经存在变换矩阵
+        ST_Array ctmApplied = target.getCTM();
+        // 设置变换矩阵
         if (!this.ctm.equals(ONE)) {
-            target.setCTM(this.ctm);
+            if (ctmApplied != null) {
+                // 叠加变换矩阵
+                ctmApplied = ctmApplied.mtxMul(ctm);
+            } else {
+                ctmApplied = ctm;
+            }
+            target.setCTM(ctmApplied);
         }
+        // 设置裁剪区域
         if (gClip != null) {
-            // TODO 设置裁剪区
+            Clips clips = new Clips();
+            Area area = new Area();
+
+            if (ctmApplied != null) {
+                area.setCTM(ctmApplied);
+            }
+//            area.setDrawParam(ref);
+            area.setClipObj(new CT_Path().setAbbreviatedData(Shapes.path(gClip)));
+            clips.addClip(new CT_Clip().addArea(area));
+            target.setClips(clips);
         }
 
     }

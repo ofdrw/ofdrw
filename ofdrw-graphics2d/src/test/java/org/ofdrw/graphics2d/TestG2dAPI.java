@@ -3,6 +3,8 @@ package org.ofdrw.graphics2d;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +14,7 @@ import java.util.Arrays;
 
 public class TestG2dAPI {
     public static void main(String[] args) throws IOException {
-        BufferedImage image = new BufferedImage(200, 200, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage image = new BufferedImage(500, 500, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
 //        g.setPaint(Color.RED);
 //
@@ -32,7 +34,7 @@ public class TestG2dAPI {
 //
 
         g.setColor(Color.blue);
-        g.fillRect(0, 0, 200, 200);
+        g.fillRect(0, 0, 1000, 1000);
 
         g.setColor(Color.RED);
 //        g.scale(2, 2);
@@ -49,19 +51,27 @@ public class TestG2dAPI {
 //        g.rotate(10 * Math.PI / 180d);
 //        g.transform(null);
 
-        g.translate(10,10);
-        g.setTransform(new AffineTransform(
-                0.83, 0.83,
-                -0.58, 0.58,
-                117.45, 117.45));
-        AffineTransform tx = g.getTransform();
+//        g.translate(10,10);
+//        g.setTransform(new AffineTransform(
+//                0.83, 0.83,
+//                -0.58, 0.58,
+//                117.45, 117.45));
+//        AffineTransform tx = g.getTransform();
+//
+//        String var = String.format("%.2f %.2f %.2f %.2f %.2f %.2f",
+//                tx.getScaleX(), tx.getShearY(),
+//                tx.getShearX(), tx.getScaleY(),
+//                tx.getTranslateX(), tx.getTranslateY()
+//        );
+//        System.out.println(var);
 
-        String var = String.format("%.2f %.2f %.2f %.2f %.2f %.2f",
-                tx.getScaleX(), tx.getShearY(),
-                tx.getShearX(), tx.getScaleY(),
-                tx.getTranslateX(), tx.getTranslateY()
-        );
-        System.out.println(var);
+
+        g.translate(100,100);
+        g.setClip(new Rectangle2D.Double(0, 0, 200, 200));
+        g.fillArc(0,0, 400, 400, 0, 360);
+//        Path file = Paths.get("ofdrw-graphics2d/src/test/resources", "eg_tulip.jpg");
+//        BufferedImage img1 = ImageIO.read(file.toFile());
+//        g.drawImage(img1, 0, 0,  null);
 
         Path path = Paths.get("ofdrw-graphics2d/target/test.png");
         ImageIO.write(image, "png", path.toFile());

@@ -127,7 +127,7 @@ class PageGraphics2DTest {
         try (GraphicsDocument doc = new GraphicsDocument(dst)) {
             PageGraphics2D g = doc.newPage(null);
             g.setPaint(Color.RED);
-            g.drawArc(10, 10, 200, 200, 50, 50);
+            g.fillArc(10, 10, 200, 200, 50, 50);
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }
@@ -472,5 +472,23 @@ class PageGraphics2DTest {
             System.out.println(actual);
             assertEquals(expect, actual);
         }
+    }
+
+    /**
+     * 裁剪区域
+     */
+    @Test
+    void setClip() throws Exception {
+        final Path dst = Paths.get("target/clip.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(500, 500);
+//            Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
+//            g.translate(100,100);
+            g.setPaint(Color.RED);
+//            g.translate(100,100);
+            g.setClip(new Rectangle2D.Double(0, 0, 200, 200));
+            g.fillArc(0,0, 400, 400, 0, 360);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
     }
 }

@@ -272,12 +272,14 @@ public class PageGraphics2D extends Graphics2D {
         ImageObject imgObj = new ImageObject(doc.newID());
         imgObj.setResourceID(objId.ref());
         imgObj.setBoundary(this.size.clone());
-        ST_Array ctm = new ST_Array(width, 0, 0, height, x, y).mtxMul(this.drawParam.ctm);
-        imgObj.setCTM(ctm);
+        imgObj.setCTM(new ST_Array(width, 0, 0, height, x, y));
+//        ST_Array ctm = new ST_Array(width, 0, 0, height, x, y).mtxMul(this.drawParam.ctm);
+//        imgObj.setCTM(ctm);
         // 透明度
         if (this.drawParam.gColor instanceof Color) {
             imgObj.setAlpha(((Color) this.drawParam.gColor).getAlpha());
         }
+        this.drawParam.apply(imgObj);
         container.addPageBlock(imgObj);
         return true;
     }
@@ -649,45 +651,81 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @return
+     * 获取裁剪区域的外接矩形大小
+     *
+     * @return 裁剪区域外接矩形，可能为null
      */
     @Override
     public Rectangle getClipBounds() {
-        return null;
+        Shape c = getClip();
+        if (c == null) {
+            return null;
+        } else {
+            return c.getBounds();
+        }
     }
 
     /**
-     * @param x      the x coordinate of the rectangle to intersect the clip with
-     * @param y      the y coordinate of the rectangle to intersect the clip with
-     * @param width  the width of the rectangle to intersect the clip with
-     * @param height the height of the rectangle to intersect the clip with
+     * 设置矩形裁剪区域
+     *
+     * @param x      裁剪矩形区域X坐标
+     * @param y      裁剪矩形区域Y坐标
+     * @param width  裁剪矩形矩形宽度
+     * @param height 裁剪矩形矩形高度
      */
     @Override
     public void clipRect(int x, int y, int width, int height) {
-
+        clip(new Rectangle2D.Double(x, y, width, height));
     }
 
     /**
-     * @param x      the <i>x</i> coordinate of the new clip rectangle.
-     * @param y      the <i>y</i> coordinate of the new clip rectangle.
-     * @param width  the width of the new clip rectangle.
-     * @param height the height of the new clip rectangle.
+     * 设置矩形裁剪区域
+     * <p>
+     * 若已经存在裁剪区域那么旧的裁剪区域将会被新的裁剪区域覆盖
+     *
+     * @param x      裁剪矩形区域X坐标
+     * @param y      裁剪矩形区域Y坐标
+     * @param width  裁剪矩形矩形宽度
+     * @param height 裁剪矩形矩形高度
      */
     @Override
     public void setClip(int x, int y, int width, int height) {
-
+        setClip(new Rectangle2D.Double(x, y, width, height));
     }
 
     /**
-     * @return
+     * 获取裁剪区域
+     *
+     * @return 裁剪区域，可能为null
      */
     @Override
     public Shape getClip() {
-        return null;
+        return this.drawParam.gClip;
     }
 
     /**
      * 设置裁剪区域
+     * <p>
+     * 若已经存在裁剪区域，那么新的裁剪区域与旧的裁剪区域取交集。
+     *
+     * @param s 裁剪区域，如果为 null 则清除裁剪区域
+     */
+    @Override
+    public void clip(Shape s) {
+        if (this.drawParam.gClip == null) {
+            setClip(s);
+            return;
+        }
+        Area newClip = new Area(s);
+        newClip.intersect(new Area(s));
+        this.drawParam.gClip = new GeneralPath(newClip);
+    }
+
+
+    /**
+     * 设置裁剪区域
+     * <p>
+     * 若已经存在裁剪区域那么旧的裁剪区域将会被新的裁剪区域覆盖
      *
      * @param clip 裁剪区域
      */
@@ -697,6 +735,8 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
+     * 复制矩形区域
+     *
      * @param x      the <i>x</i> coordinate of the source rectangle.
      * @param y      the <i>y</i> coordinate of the source rectangle.
      * @param width  the width of the source rectangle.
@@ -706,7 +746,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void copyArea(int x, int y, int width, int height, int dx, int dy) {
-
+        // 不予实现
     }
 
     /**
@@ -1096,16 +1136,6 @@ public class PageGraphics2D extends Graphics2D {
     @Override
     public Stroke getStroke() {
         return this.drawParam.gStroke;
-    }
-
-    /**
-     * 设置裁剪区域
-     *
-     * @param s 裁剪区域，如果为 null 则清除裁剪区域
-     */
-    @Override
-    public void clip(Shape s) {
-        this.drawParam.gClip = s;
     }
 
     /**
