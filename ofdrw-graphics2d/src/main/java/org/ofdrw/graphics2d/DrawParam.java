@@ -72,7 +72,18 @@ public class DrawParam {
      * 由于OFD变换矩阵需要左乘于AWT相反，所以使用该副本来存储变换矩阵
      */
     AffineTransform jCtm;
+    /**
+     * 渲染器信息
+     * <p>
+     * 该属性只是为了兼容AWT接口保留，并无实际用途。
+     */
+    RenderingHints hints;
 
+    /**
+     * 创建绘制参数
+     *
+     * @param ctx 图形绘制上下文
+     */
     public DrawParam(GraphicsDocument ctx) {
         this.ctx = ctx;
         this.pCache = new CT_DrawParam();
@@ -89,6 +100,9 @@ public class DrawParam {
         this.jCtm = new AffineTransform();
         this.ref = null;
         this.gClip = null;
+
+        this.hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_DEFAULT);
     }
 
     /**
@@ -108,6 +122,8 @@ public class DrawParam {
         this.jCtm = new AffineTransform(this.jCtm);
         this.gClip = parent.gClip;
         this.ref = parent.ref;
+
+        this.hints = (RenderingHints) parent.hints.clone();
     }
 
     /**
@@ -302,10 +318,17 @@ public class DrawParam {
         setColor(c);
     }
 
+    /**
+     * 单位矩阵
+     * <p>
+     * 用于比较
+     */
     private final static ST_Array ONE = ST_Array.unitCTM();
 
     /**
      * 应用绘制参数的配置
+     * <p>
+     * 包括： 描边、变换矩阵、裁剪区域、颜色
      */
     public void apply(CT_GraphicUnit<?> target) {
         if (ref == null) {
@@ -331,10 +354,10 @@ public class DrawParam {
             Clips clips = new Clips();
             Area area = new Area();
 
-            if (ctmApplied != null) {
+            if (!this.ctm.equals(ONE)) {
                 area.setCTM(ctmApplied);
             }
-//            area.setDrawParam(ref);
+            // area.setDrawParam(ref); // 绘制参数不影响裁剪区
             area.setClipObj(new CT_Path().setAbbreviatedData(Shapes.path(gClip)));
             clips.addClip(new CT_Clip().addArea(area));
             target.setClips(clips);

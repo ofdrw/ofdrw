@@ -485,7 +485,7 @@ class PageGraphics2DTest {
 //            Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
 //            g.translate(100,100);
             g.setPaint(Color.RED);
-//            g.translate(100,100);
+            g.translate(100,100);
             g.setClip(new Rectangle2D.Double(0, 0, 200, 200));
             g.fillArc(0,0, 400, 400, 0, 360);
         }

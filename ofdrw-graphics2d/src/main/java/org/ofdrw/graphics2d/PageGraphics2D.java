@@ -534,46 +534,56 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @param hintKey   the key of the hint to be set.
-     * @param hintValue the value indicating preferences for the specified
-     *                  hint category.
+     * 设置绘制器参数
+     *
+     * @param hintKey   参数名
+     * @param hintValue 参数值
      */
     @Override
     public void setRenderingHint(RenderingHints.Key hintKey, Object hintValue) {
-
+        this.drawParam.hints.put(hintKey, hintValue);
     }
 
     /**
-     * @param hintKey the key corresponding to the hint to get.
-     * @return
+     * 获取绘制器参数值（为了兼容接口，无实际用途）
+     *
+     * @param hintKey 参数名
+     * @return 可能为空
      */
     @Override
     public Object getRenderingHint(RenderingHints.Key hintKey) {
-        return null;
+        return this.drawParam.hints.get(hintKey);
     }
 
     /**
-     * @param hints the rendering hints to be set
+     * 替换绘制器参数（为了兼容接口，无实际用途）
+     *
+     * @param hints 新参数
      */
     @Override
     public void setRenderingHints(Map<?, ?> hints) {
-
+        this.drawParam.hints.clear();
+        this.drawParam.hints.putAll(hints);
     }
 
     /**
-     * @param hints the rendering hints to be set
+     * 添加绘制器参数（为了兼容接口，无实际用途）
+     *
+     * @param hints 键值对
      */
     @Override
     public void addRenderingHints(Map<?, ?> hints) {
-
+        this.drawParam.hints.putAll(hints);
     }
 
     /**
-     * @return
+     * 获取当前绘制器参数信息（为了兼容接口，无实际用途）
+     *
+     * @return 参数信息（只读）
      */
     @Override
     public RenderingHints getRenderingHints() {
-        return null;
+        return (RenderingHints) this.drawParam.hints.clone();
     }
 
     /**
@@ -610,19 +620,21 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     *
+     * setPaintMode 不实现
      */
     @Override
     public void setPaintMode() {
-
+        // 不实现
     }
 
     /**
+     * setXORMode 不实现
+     *
      * @param c1 the XOR alternation color
      */
     @Override
     public void setXORMode(Color c1) {
-
+        // 不实现
     }
 
     /**
