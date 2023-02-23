@@ -70,6 +70,13 @@ public class PageGraphics2D extends Graphics2D {
     private final ST_Box size;
 
     /**
+     * 设备配置对象
+     * <p>
+     * 用于兼容AWT接口
+     */
+    private OFDPageGraphicsConfiguration devConfig;
+
+    /**
      * 创建2D图形对象
      *
      * @param doc     文档上下文
@@ -113,7 +120,7 @@ public class PageGraphics2D extends Graphics2D {
         this.pageObj = parent.pageObj;
         this.container = parent.container;
         this.size = parent.size.clone();
-        this.drawParam = new DrawParam(parent.drawParam);
+        this.drawParam = parent.drawParam.clone();
     }
 
 
@@ -354,8 +361,7 @@ public class PageGraphics2D extends Graphics2D {
     public boolean drawImage(Image img, int dx1, int dy1, int dx2, int dy2, int sx1, int sy1, int sx2, int sy2, ImageObserver observer) {
         int w = dx2 - dx1;
         int h = dy2 - dy1;
-        BufferedImage img2 = new BufferedImage(w, h,
-                BufferedImage.TYPE_INT_ARGB);
+        BufferedImage img2 = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = img2.createGraphics();
         g2.drawImage(img, 0, 0, w, h, sx1, sy1, sx2, sy2, null);
         return drawImage(img2, dx1, dy1, null);
@@ -484,33 +490,50 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @param rect     the area in device space to check for a hit
-     * @param s        the <code>Shape</code> to check for a hit
-     * @param onStroke flag used to choose between testing the
-     *                 stroked or the filled shape.  If the flag is <code>true</code>, the
-     *                 <code>Stroke</code> outline is tested.  If the flag is
-     *                 <code>false</code>, the filled <code>Shape</code> is tested.
-     * @return
+     * 检查在设备空间内容 指定的矩形区域是否与 指定形状存在交集。
+     * <p>
+     * onStroke 为false，表示检查指定形状整体是否与指定矩形相交。
+     * <p>
+     * onStroke 为true，表示检查指定形状的描边整体是否与指定矩形相交。
+     *
+     * @param rect     矩形区域
+     * @param s        待检查的图形形状
+     * @param onStroke 相交检查方式，true - 描边区域是否相交； false - 整个形状是否相交
+     * @return true - 相交；false - 不相交
      */
     @Override
     public boolean hit(Rectangle rect, Shape s, boolean onStroke) {
-        return false;
+        if (onStroke) {
+            s = this.drawParam.gStroke.createStrokedShape(s);
+        }
+        s = this.drawParam.gCtm.createTransformedShape(s);
+        return s.intersects(rect);
     }
 
     /**
-     * @return
+     * 获取设备图形配置对象
+     *
+     * @return OFD页面虚拟图形配置对象
      */
     @Override
     public GraphicsConfiguration getDeviceConfiguration() {
-        return null;
+        if (this.devConfig == null) {
+            this.devConfig = new OFDPageGraphicsConfiguration(size.getWidth(), size.getHeight());
+        }
+        return this.devConfig;
     }
 
     /**
-     * @param comp the <code>Composite</code> object to be used for rendering
+     * 设置像素合成模式
+     * <p>
+     * 该方法原用于在设备绘制图像时，当前绘制的像素与原位置上已经存在的像素颜色的合成方式。
+     * OFD中没有对应的合成效果，仅做兼容性实现。
+     *
+     * @param comp 合成方式
      */
     @Override
     public void setComposite(Composite comp) {
-
+        this.drawParam.composite = comp;
     }
 
     /**
@@ -988,12 +1011,9 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void translate(double tx, double ty) {
-        ST_Array r = new ST_Array(
-                1, 0,
-                0, 1,
-                tx, ty);
+        ST_Array r = new ST_Array(1, 0, 0, 1, tx, ty);
         this.drawParam.ctm = r.mtxMul(this.drawParam.ctm);
-        this.drawParam.jCtm.translate(tx, ty);
+        this.drawParam.gCtm.translate(tx, ty);
     }
 
     /**
@@ -1003,12 +1023,9 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void rotate(double theta) {
-        ST_Array r = new ST_Array(
-                Math.cos(theta), Math.sin(theta),
-                -Math.sin(theta), Math.cos(theta),
-                0, 0);
+        ST_Array r = new ST_Array(Math.cos(theta), Math.sin(theta), -Math.sin(theta), Math.cos(theta), 0, 0);
         this.drawParam.ctm = r.mtxMul(this.drawParam.ctm);
-        this.drawParam.jCtm.rotate(theta);
+        this.drawParam.gCtm.rotate(theta);
     }
 
     /**
@@ -1040,12 +1057,9 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void scale(double sx, double sy) {
-        ST_Array scale = new ST_Array(
-                sx, 0,
-                0, sy,
-                0, 0);
+        ST_Array scale = new ST_Array(sx, 0, 0, sy, 0, 0);
         this.drawParam.ctm = scale.mtxMul(this.drawParam.ctm);
-        this.drawParam.jCtm.scale(sx, sy);
+        this.drawParam.gCtm.scale(sx, sy);
     }
 
     /**
@@ -1056,12 +1070,9 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void shear(double shx, double shy) {
-        ST_Array shear = new ST_Array(
-                1, Math.tan(shx),
-                Math.tan(shy), 1,
-                0, 0);
+        ST_Array shear = new ST_Array(1, Math.tan(shx), Math.tan(shy), 1, 0, 0);
         this.drawParam.ctm = shear.mtxMul(this.drawParam.ctm);
-        this.drawParam.jCtm.shear(shx, shy);
+        this.drawParam.gCtm.shear(shx, shy);
     }
 
     /**
@@ -1076,7 +1087,7 @@ public class PageGraphics2D extends Graphics2D {
         }
         ST_Array ctm = trans(tx);
         this.drawParam.ctm = ctm.mtxMul(this.drawParam.ctm);
-        this.drawParam.jCtm.concatenate(tx);
+        this.drawParam.gCtm.concatenate(tx);
     }
 
     /**
@@ -1099,7 +1110,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public AffineTransform getTransform() {
-        return new AffineTransform(this.drawParam.jCtm);
+        return new AffineTransform(this.drawParam.gCtm);
     }
 
     /**
@@ -1113,11 +1124,15 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @return
+     * 获取像素合成模式
+     * <p>
+     * 该属性只是为了兼容AWT接口保留，并无实际用途。
+     *
+     * @return 获取像素合成模式
      */
     @Override
     public Composite getComposite() {
-        return null;
+        return this.drawParam.composite;
     }
 
     /**
@@ -1175,15 +1190,11 @@ public class PageGraphics2D extends Graphics2D {
      */
     public ST_Array trans(AffineTransform tx) {
       /*
-      m00 m10 0    a b 0
-      m01 m11 0  = c d 0
-      m02 m12 1    e f 1
+            m00 m10 0    a b 0
+            m01 m11 0  = c d 0
+            m02 m12 1    e f 1
        */
-        return new ST_Array(
-                tx.getScaleX(), tx.getShearY(),
-                tx.getShearX(), tx.getScaleY(),
-                tx.getTranslateX(), tx.getTranslateY()
-        );
+        return new ST_Array(tx.getScaleX(), tx.getShearY(), tx.getShearX(), tx.getScaleY(), tx.getTranslateX(), tx.getTranslateY());
     }
 
     /**

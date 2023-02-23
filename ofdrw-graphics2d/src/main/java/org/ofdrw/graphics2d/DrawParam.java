@@ -27,6 +27,7 @@ import java.awt.geom.AffineTransform;
  */
 public class DrawParam {
     private final GraphicsDocument ctx;
+
     /**
      * 缓存
      */
@@ -38,7 +39,7 @@ public class DrawParam {
     ST_RefID ref;
 
     /**
-     * AWT 颜色
+     * AWT 描边属性（颜色、描边样式）
      */
     BasicStroke gStroke;
 
@@ -71,13 +72,20 @@ public class DrawParam {
      * <p>
      * 由于OFD变换矩阵需要左乘于AWT相反，所以使用该副本来存储变换矩阵
      */
-    AffineTransform jCtm;
+    AffineTransform gCtm;
     /**
      * 渲染器信息
      * <p>
      * 该属性只是为了兼容AWT接口保留，并无实际用途。
      */
     RenderingHints hints;
+
+    /**
+     * 设置像素合并方式
+     * <p>
+     * 该属性只是为了兼容AWT接口保留，并无实际用途。
+     */
+    Composite composite;
 
     /**
      * 创建绘制参数
@@ -97,33 +105,13 @@ public class DrawParam {
         this.gForeground = new Color(0, 0, 0);
 
         this.ctm = ST_Array.unitCTM();
-        this.jCtm = new AffineTransform();
+        this.gCtm = new AffineTransform();
         this.ref = null;
         this.gClip = null;
 
         this.hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_DEFAULT);
-    }
-
-    /**
-     * 复制绘制参数
-     *
-     * @param parent 复制对象
-     */
-    DrawParam(DrawParam parent) {
-        this.ctx = parent.ctx;
-        this.pCache = parent.pCache.clone();
-        this.gColor = parent.gColor;
-        this.gStroke = parent.gStroke;
-        this.gBackground = parent.gBackground;
-        this.gForeground = parent.gForeground;
-
-        this.ctm = parent.ctm.clone();
-        this.jCtm = new AffineTransform(this.jCtm);
-        this.gClip = parent.gClip;
-        this.ref = parent.ref;
-
-        this.hints = (RenderingHints) parent.hints.clone();
+        this.composite = AlphaComposite.SrcOver;
     }
 
     /**
@@ -366,4 +354,27 @@ public class DrawParam {
     }
 
 
+    /**
+     * 复制绘制参数对象
+     *
+     * @return 复制的新对象
+     */
+    @Override
+    public DrawParam clone() {
+        DrawParam that = new DrawParam(this.ctx);
+        that.pCache = this.pCache.clone();
+        that.gColor = this.gColor;
+        that.gStroke = this.gStroke;
+        that.gBackground = this.gBackground;
+        that.gForeground = this.gForeground;
+
+        that.ctm = this.ctm.clone();
+        that.gCtm = new AffineTransform(this.gCtm);
+        that.gClip = this.gClip;
+        that.ref = this.ref;
+
+        that.hints = (RenderingHints) this.hints.clone();
+        that.composite = this.composite;
+        return that;
+    }
 }
