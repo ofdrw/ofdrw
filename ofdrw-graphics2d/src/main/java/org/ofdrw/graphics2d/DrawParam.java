@@ -1,5 +1,6 @@
 package org.ofdrw.graphics2d;
 
+import org.apache.commons.io.IOUtils;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.basicType.ST_RefID;
@@ -17,7 +18,9 @@ import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 
 import java.awt.*;
+import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
+import java.io.InputStream;
 
 /**
  * 绘制参数上下文
@@ -26,7 +29,28 @@ import java.awt.geom.AffineTransform;
  * @since 2023-1-30 21:37:36
  */
 public class DrawParam {
+
+    /**
+     * 默认字体：宋体
+     */
+    public static Font defaultFont;
+
+    static {
+        InputStream bIn = DrawParam.class.getClassLoader().getResourceAsStream("simsun.ttf");
+        try {
+            defaultFont = Font.createFont(Font.TRUETYPE_FONT, bIn);
+        } catch (Exception e) {
+            // ignore
+            System.err.println("默认字体加载异常: " + e.getMessage());
+        }
+    }
+
     private final GraphicsDocument ctx;
+
+    /**
+     * 字体
+     */
+    Font font;
 
     /**
      * 缓存
@@ -109,9 +133,10 @@ public class DrawParam {
         this.ref = null;
         this.gClip = null;
 
-        this.hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_DEFAULT);
+        this.hints = new RenderingHints(null);
         this.composite = AlphaComposite.SrcOver;
+
+        this.font = defaultFont;
     }
 
     /**
@@ -353,6 +378,46 @@ public class DrawParam {
 
     }
 
+    /**
+     * 获取字体绘制上下文
+     * <p>
+     * 字体绘制上线文使用hit中的绘制参数进行控制
+     * <p>
+     * code from apache batik: org.apache.batik.ext.awt.g2d.AbstractGraphics2D#getFontRenderContext
+     *
+     * @return 字体绘制上下文
+     */
+    public FontRenderContext getFontRenderContext() {
+
+        // 抗锯齿
+        Object antialiasingHint = hints.get(RenderingHints.KEY_TEXT_ANTIALIASING);
+        boolean isAntialiased = true;
+        if (antialiasingHint != RenderingHints.VALUE_TEXT_ANTIALIAS_ON &&
+                antialiasingHint != RenderingHints.VALUE_TEXT_ANTIALIAS_DEFAULT) {
+            // 如果抗锯齿没有被设置为 OFF 那么使用默认方式
+            if (antialiasingHint != RenderingHints.VALUE_TEXT_ANTIALIAS_OFF) {
+                antialiasingHint = hints.get(RenderingHints.KEY_ANTIALIASING);
+                // 判断是否是默认的抗锯齿
+                if (antialiasingHint != RenderingHints.VALUE_ANTIALIAS_ON &&
+                        antialiasingHint != RenderingHints.VALUE_ANTIALIAS_DEFAULT) {
+                    // Antialiasing was not requested. However, if it was not turned
+                    // off explicitly, use it.
+                    if (antialiasingHint == RenderingHints.VALUE_ANTIALIAS_OFF)
+                        isAntialiased = false;
+                }
+            } else
+                isAntialiased = false;
+
+        }
+
+        // 设置是否使用 FRACTIONALMETRICS
+        boolean useFractionalMetrics = hints.get(RenderingHints.KEY_FRACTIONALMETRICS) != RenderingHints.VALUE_FRACTIONALMETRICS_OFF;
+
+        return new FontRenderContext(new AffineTransform(),
+                isAntialiased,
+                useFractionalMetrics);
+    }
+
 
     /**
      * 复制绘制参数对象
@@ -375,6 +440,7 @@ public class DrawParam {
 
         that.hints = (RenderingHints) this.hints.clone();
         that.composite = this.composite;
+        that.font = this.font;
         return that;
     }
 }

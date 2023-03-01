@@ -77,6 +77,11 @@ public class PageGraphics2D extends Graphics2D {
     private OFDPageGraphicsConfiguration devConfig;
 
     /**
+     * 用于创建合适的字体规格
+     */
+    private Graphics2D fmg;
+
+    /**
      * 创建2D图形对象
      *
      * @param doc     文档上下文
@@ -85,6 +90,10 @@ public class PageGraphics2D extends Graphics2D {
      * @param box     绘制空间大小
      */
     PageGraphics2D(GraphicsDocument doc, PageDir pageDir, Page pageObj, ST_Box box) {
+
+        BufferedImage bi = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        fmg = bi.createGraphics();
+
         this.doc = doc;
         this.pageDir = pageDir;
         this.pageObj = pageObj;
@@ -661,28 +670,34 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @return
+     * 获取当前字体
+     *
+     * @return 字体
      */
     @Override
     public Font getFont() {
-        return null;
+        return this.drawParam.font;
     }
 
     /**
-     * @param font the font.
+     * 设置绘图上下文的字体
+     *
+     * @param font 字体
      */
     @Override
     public void setFont(Font font) {
-
+        this.drawParam.font = font;
     }
 
     /**
-     * @param f the specified font
-     * @return
+     * 获取特定字体的字体规格
+     *
+     * @param f 特定字体
+     * @return 字体规格
      */
     @Override
     public FontMetrics getFontMetrics(Font f) {
-        return null;
+        return fmg.getFontMetrics(f);
     }
 
     /**
@@ -1166,11 +1181,13 @@ public class PageGraphics2D extends Graphics2D {
     }
 
     /**
-     * @return
+     * 获取绘制上下文中的字体绘制上下文
+     *
+     * @return 字体绘制上下文
      */
     @Override
     public FontRenderContext getFontRenderContext() {
-        return null;
+        return this.drawParam.getFontRenderContext();
     }
 
 
