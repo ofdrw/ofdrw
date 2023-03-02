@@ -266,7 +266,7 @@ class PageGraphics2DTest {
 
             g.drawImage(img1, null, 10, 10);
             g.setPaint(Color.RED);
-            g.fillRect(0, 0, 30,30);
+            g.fillRect(0, 0, 30, 30);
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }
@@ -485,9 +485,25 @@ class PageGraphics2DTest {
 //            Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
 //            g.translate(100,100);
             g.setPaint(Color.RED);
-            g.translate(100,100);
+            g.translate(100, 100);
             g.setClip(new Rectangle2D.Double(0, 0, 200, 200));
-            g.fillArc(0,0, 400, 400, 0, 360);
+            g.fillArc(0, 0, 400, 400, 0, 360);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 文字绘制测试
+     */
+    @Test
+    void drawString() throws Exception {
+        final Path dst = Paths.get("target/drawString.ofd");
+        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
+            PageGraphics2D g = doc.newPage(500, 500);
+
+            g.setPaint(Color.RED);
+//            g.setFont(new Font("src/main/resources/simsun.ttf", Font.PLAIN, 15));
+            g.drawString("你好OFD R&W Hello ", 40, 120);
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }

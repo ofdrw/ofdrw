@@ -17,6 +17,7 @@ import org.ofdrw.pkg.container.PageDir;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
+import java.awt.font.TextLayout;
 import java.awt.geom.*;
 import java.awt.image.*;
 import java.awt.image.renderable.RenderableImage;
@@ -79,7 +80,7 @@ public class PageGraphics2D extends Graphics2D {
     /**
      * 用于创建合适的字体规格
      */
-    private Graphics2D fmg;
+    private final Graphics2D fmg;
 
     /**
      * 创建2D图形对象
@@ -130,6 +131,8 @@ public class PageGraphics2D extends Graphics2D {
         this.container = parent.container;
         this.size = parent.size.clone();
         this.drawParam = parent.drawParam.clone();
+        this.devConfig = parent.devConfig;
+        this.fmg = parent.fmg;
     }
 
 
@@ -181,63 +184,92 @@ public class PageGraphics2D extends Graphics2D {
 
 
     /**
-     * @param str the string to be rendered
-     * @param x   the x coordinate of the location where the
-     *            <code>String</code> should be rendered
-     * @param y   the y coordinate of the location where the
-     *            <code>String</code> should be rendered
+     * 使用当前的 字体(Font) 以及 画笔参数(Paint) 在指定位置上绘制文字
+     * <p>
+     * 文字将转换为图形路径绘制填充在OFD页面上
+     * <p>
+     * 第一个文字的基线坐标为传入的(x,y)参数位置。
+     * <p>
+     * 文字绘制的将被裁剪矩阵(clip)、变换矩阵影响。
+     *
+     * @param str 待绘制文字序列
+     * @param x   首个文字基线X坐标
+     * @param y   首个文字基线Y坐标
      */
     @Override
     public void drawString(String str, int x, int y) {
-
+        GlyphVector gv = getFont().createGlyphVector(getFontRenderContext(), str);
+        drawGlyphVector(gv, x, y);
     }
 
     /**
-     * @param str the <code>String</code> to be rendered
-     * @param x   the x coordinate of the location where the
-     *            <code>String</code> should be rendered
-     * @param y   the y coordinate of the location where the
-     *            <code>String</code> should be rendered
+     * 使用当前的 字体(Font) 以及 画笔参数(Paint) 在指定位置上绘制文字
+     * <p>
+     * 文字将转换为图形路径绘制填充在OFD页面上
+     * <p>
+     * 第一个文字的基线坐标为传入的(x,y)参数位置。
+     * <p>
+     * 文字绘制的将被裁剪矩阵(clip)、变换矩阵影响。
+     *
+     * @param str 待绘制文字序列
+     * @param x   首个文字基线X坐标
+     * @param y   首个文字基线Y坐标
      */
     @Override
     public void drawString(String str, float x, float y) {
-
+        GlyphVector gv = getFont().createGlyphVector(getFontRenderContext(), str);
+        drawGlyphVector(gv, x, y);
     }
 
     /**
-     * @param iterator the iterator whose text is to be rendered
-     * @param x        the x coordinate where the iterator's text is to be
-     *                 rendered
-     * @param y        the y coordinate where the iterator's text is to be
-     *                 rendered
+     * 使用迭代器绘制文字图形
+     * <p>
+     * 文字图形的绘制将绘制将受到画笔参数(Paint) 、被裁剪矩阵(clip)、变换矩阵影响（CTM）。
+     * <p>
+     * 第一个文字图形的基线坐标为传入的(x,y)参数位置。
+     *
+     * @param iterator 待绘制文本的迭代器
+     * @param x        首个文字基线X坐标
+     * @param y        首个文字基线Y坐标
      */
     @Override
     public void drawString(AttributedCharacterIterator iterator, int x, int y) {
-
+        TextLayout layout = new TextLayout(iterator, getFontRenderContext());
+        layout.draw(this, x, y);
     }
 
     /**
-     * @param iterator the iterator whose text is to be rendered
-     * @param x        the x coordinate where the iterator's text is to be
-     *                 rendered
-     * @param y        the y coordinate where the iterator's text is to be
-     *                 rendered
+     * 使用迭代器绘制文字图形
+     * <p>
+     * 文字图形的绘制将绘制将受到画笔参数(Paint) 、被裁剪矩阵(clip)、变换矩阵影响（CTM）。
+     * <p>
+     * 第一个文字图形的基线坐标为传入的(x,y)参数位置。
+     *
+     * @param iterator 待绘制文本的迭代器
+     * @param x        首个文字基线X坐标
+     * @param y        首个文字基线Y坐标
      */
     @Override
     public void drawString(AttributedCharacterIterator iterator, float x, float y) {
-
+        TextLayout layout = new TextLayout(iterator, getFontRenderContext());
+        layout.draw(this, x, y);
     }
 
     /**
-     * @param g the <code>GlyphVector</code> to be rendered
-     * @param x the x position in User Space where the glyphs should
-     *          be rendered
-     * @param y the y position in User Space where the glyphs should
-     *          be rendered
+     * 在指定位置上绘制绘制图形路径数据，
+     * <p>
+     * 图形的绘制将绘制将受到画笔参数(Paint) 、被裁剪矩阵(clip)、变换矩阵影响（CTM）。
+     * <p>
+     * 第一个文字的基线坐标为传入的(x,y)参数位置。
+     *
+     * @param g 路径向量数据
+     * @param x 图形绘制位置X坐标
+     * @param y 图形绘制位置Y坐标
      */
     @Override
     public void drawGlyphVector(GlyphVector g, float x, float y) {
-
+        Shape glyphOutline = g.getOutline(x, y);
+        fill(glyphOutline);
     }
 
     /**
@@ -573,6 +605,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void setRenderingHint(RenderingHints.Key hintKey, Object hintValue) {
+        this.drawParam.fontRenderCtx = null;
         this.drawParam.hints.put(hintKey, hintValue);
     }
 
@@ -594,6 +627,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void setRenderingHints(Map<?, ?> hints) {
+        this.drawParam.fontRenderCtx = null;
         this.drawParam.hints.clear();
         this.drawParam.hints.putAll(hints);
     }
@@ -605,6 +639,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void addRenderingHints(Map<?, ?> hints) {
+        this.drawParam.fontRenderCtx = null;
         this.drawParam.hints.putAll(hints);
     }
 
@@ -1015,7 +1050,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void translate(int x, int y) {
-        translate((double) x, (double) y);
+        translate(x, (double) y);
     }
 
     /**

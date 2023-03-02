@@ -7,7 +7,9 @@
 由于实现了Graphics2D标准JDK中AWT接口，借助该特性可以复用现有的转换图片的库实现其他类型文件或格式转换为OFD的功能。
 
 
-[github . jfree . https://github.com/jfree/skijagraphics2d](https://github.com/jfree/skijagraphics2d)
+- [github . jfree . https://github.com/jfree/skijagraphics2d](https://github.com/jfree/skijagraphics2d)
+- [apache . batik . https://xmlgraphics.apache.org/batik/](https://xmlgraphics.apache.org/batik/)
+
 
 `java.awt.Graphics2D` 参考文献：
 

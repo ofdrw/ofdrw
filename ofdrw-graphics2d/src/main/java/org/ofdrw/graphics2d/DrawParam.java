@@ -1,6 +1,5 @@
 package org.ofdrw.graphics2d;
 
-import org.apache.commons.io.IOUtils;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.basicType.ST_RefID;
@@ -20,7 +19,6 @@ import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
-import java.io.InputStream;
 
 /**
  * 绘制参数上下文
@@ -29,21 +27,6 @@ import java.io.InputStream;
  * @since 2023-1-30 21:37:36
  */
 public class DrawParam {
-
-    /**
-     * 默认字体：宋体
-     */
-    public static Font defaultFont;
-
-    static {
-        InputStream bIn = DrawParam.class.getClassLoader().getResourceAsStream("simsun.ttf");
-        try {
-            defaultFont = Font.createFont(Font.TRUETYPE_FONT, bIn);
-        } catch (Exception e) {
-            // ignore
-            System.err.println("默认字体加载异常: " + e.getMessage());
-        }
-    }
 
     private final GraphicsDocument ctx;
 
@@ -112,6 +95,11 @@ public class DrawParam {
     Composite composite;
 
     /**
+     * 文字绘制上下文
+     */
+    FontRenderContext fontRenderCtx;
+
+    /**
      * 创建绘制参数
      *
      * @param ctx 图形绘制上下文
@@ -136,7 +124,7 @@ public class DrawParam {
         this.hints = new RenderingHints(null);
         this.composite = AlphaComposite.SrcOver;
 
-        this.font = defaultFont;
+        this.font = new Font("sanserif", Font.PLAIN, 12);
     }
 
     /**
@@ -388,7 +376,9 @@ public class DrawParam {
      * @return 字体绘制上下文
      */
     public FontRenderContext getFontRenderContext() {
-
+        if (this.fontRenderCtx != null) {
+            return this.fontRenderCtx;
+        }
         // 抗锯齿
         Object antialiasingHint = hints.get(RenderingHints.KEY_TEXT_ANTIALIASING);
         boolean isAntialiased = true;
@@ -413,9 +403,10 @@ public class DrawParam {
         // 设置是否使用 FRACTIONALMETRICS
         boolean useFractionalMetrics = hints.get(RenderingHints.KEY_FRACTIONALMETRICS) != RenderingHints.VALUE_FRACTIONALMETRICS_OFF;
 
-        return new FontRenderContext(new AffineTransform(),
+        this.fontRenderCtx = new FontRenderContext(new AffineTransform(),
                 isAntialiased,
                 useFractionalMetrics);
+        return this.fontRenderCtx;
     }
 
 
