@@ -86,10 +86,10 @@ class DrawContextTest {
                     .setBorder(1d);
 
             canvas.setDrawer(ctx -> {
-                ctx.rect(20,20, 40,20);
+                ctx.rect(20, 20, 40, 20);
                 ctx.setStrokeColor(255, 0, 0);
                 ctx.stroke();
-                ctx.rect(30,30, 50,30);
+                ctx.rect(30, 30, 50, 30);
                 ctx.setStrokeColor(0, 0, 255);
                 ctx.stroke();
             });
@@ -99,8 +99,9 @@ class DrawContextTest {
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
+
     @Test
-    void strokeRect2()throws IOException {
+    void strokeRect2() throws IOException {
         Path outP = Paths.get("target/strokeRect2.ofd");
         try (OFDDoc ofdDoc = new OFDDoc(outP)) {
             VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
@@ -111,10 +112,10 @@ class DrawContextTest {
                     .setBorder(1d);
 
             canvas.setDrawer(ctx -> {
-                ctx.rect(20,20, 40,20);
-                ctx.setStrokeColor(255,0,0);
-                ctx.strokeRect(30,30, 50,30);
-                ctx.setStrokeColor(0,255,0);
+                ctx.rect(20, 20, 40, 20);
+                ctx.setStrokeColor(255, 0, 0);
+                ctx.strokeRect(30, 30, 50, 30);
+                ctx.setStrokeColor(0, 255, 0);
                 ctx.stroke();
             });
             vPage.add(canvas);
@@ -125,7 +126,7 @@ class DrawContextTest {
     }
 
     @Test
-    void fillRect2()throws IOException {
+    void fillRect2() throws IOException {
         Path outP = Paths.get("target/fillRect2.ofd");
         try (OFDDoc ofdDoc = new OFDDoc(outP)) {
             VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
@@ -136,10 +137,10 @@ class DrawContextTest {
                     .setBorder(1d);
 
             canvas.setDrawer(ctx -> {
-                ctx.rect(20,20, 40,20);
-                ctx.setFillColor(255,0,0);
-                ctx.fillRect(30,30, 50,30);
-                ctx.setFillColor(0,255,0);
+                ctx.rect(20, 20, 40, 20);
+                ctx.setFillColor(255, 0, 0);
+                ctx.fillRect(30, 30, 50, 30);
+                ctx.setFillColor(0, 255, 0);
                 ctx.fill();
             });
             vPage.add(canvas);
@@ -222,13 +223,13 @@ class DrawContextTest {
 
             canvas.setDrawer(ctx -> {
                 // 剪切矩形区域
-                ctx.rect(20,20, 40,20);
+                ctx.rect(20, 20, 40, 20);
                 ctx.setFillColor(255, 0, 0);
                 ctx.fill();
                 ctx.clip();
                 // 在 clip() 之后绘制绿色矩形
                 ctx.setFillColor(0, 255, 0);
-                ctx.fillRect(30,30, 50,30);
+                ctx.fillRect(30, 30, 50, 30);
             });
             vPage.add(canvas);
 
@@ -620,7 +621,7 @@ class DrawContextTest {
                     .setBorder(1d);
 
             canvas.setDrawer(ctx -> {
-                FontSetting fontSetting = new FontSetting(5,FontName.SimSun.font())
+                FontSetting fontSetting = new FontSetting(5, FontName.SimSun.font())
                         .setCharDirection(180)
                         .setReadDirection(90);
                 ctx.setFont(fontSetting);

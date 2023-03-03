@@ -2,15 +2,10 @@ package org.ofdrw.graphics2d;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 
 public class TestG2dAPI {
     public static void main(String[] args) throws IOException {
@@ -66,12 +61,14 @@ public class TestG2dAPI {
 //        System.out.println(var);
 
 
-        g.translate(100,100);
-        g.setClip(new Rectangle2D.Double(0, 0, 200, 200));
-        g.fillArc(0,0, 400, 400, 0, 360);
+//        g.translate(100,100);
+//        g.setClip(new Rectangle2D.Double(0, 0, 200, 200));
+//        g.fillArc(0,0, 400, 400, 0, 360);
 //        Path file = Paths.get("ofdrw-graphics2d/src/test/resources", "eg_tulip.jpg");
 //        BufferedImage img1 = ImageIO.read(file.toFile());
 //        g.drawImage(img1, 0, 0,  null);
+
+        g.drawString("你好OFD R&W Hello ", 40, 120);
 
         Path path = Paths.get("ofdrw-graphics2d/target/test.png");
         ImageIO.write(image, "png", path.toFile());

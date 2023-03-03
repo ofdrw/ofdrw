@@ -1,5 +1,6 @@
 package org.ofdrw.layout.element.canvas;
 
+import org.ofdrw.font.EnvFont;
 import org.ofdrw.font.Font;
 import org.ofdrw.font.FontName;
 import org.ofdrw.layout.element.TextFontInfo;
@@ -307,7 +308,12 @@ public class FontSetting implements Cloneable, TextFontInfo {
      * @return 宽度单位毫米
      */
     public Double charWidth(char c) {
-        return fontObj.getCharWidthScale(c) * fontSize;
+        if (fontObj.hasWidthMath()){
+            // 如果存在预设的字符映射表那么查表计算
+            return fontObj.getCharWidthScale(c) * fontSize;
+        }
+        // 从环境变量中加载字体并计算字体边界大小
+        return EnvFont.strBounds(fontObj.getName(), fontObj.getFamilyName(), String.valueOf(c), fontSize).getWidth();
     }
 
 

@@ -43,7 +43,7 @@ public class Font {
     public Font(String name, String familyName, Path fontFile) {
         this.name = name;
         this.familyName = familyName;
-        if (fontFile == null || Files.notExists(fontFile)){
+        if (fontFile == null || Files.notExists(fontFile)) {
             throw new IllegalArgumentException("字体文件(fontFile)不存在");
         }
 
@@ -57,18 +57,30 @@ public class Font {
 
     public Font(String name, Path fontFile) {
         this.name = name;
-        if (fontFile == null || Files.notExists(fontFile)){
+        if (fontFile == null || Files.notExists(fontFile)) {
             throw new IllegalArgumentException("字体文件(fontFile)不存在");
         }
         this.fontFile = fontFile;
 
     }
 
+    /**
+     * 创建字体并指定 可打印字符宽度缩放倍数
+     */
     public Font(String name, String familyName, Path fontFile, double[] printableAsciiWidthMap) {
         this.name = name;
         this.familyName = familyName;
         this.fontFile = fontFile;
         this.printableAsciiWidthMap = printableAsciiWidthMap;
+    }
+
+    /**
+     * 字体是否存在预设的字符宽度映射表
+     *
+     * @return true - 存在；false - 不存在
+     */
+    public boolean hasWidthMath() {
+        return this.printableAsciiWidthMap != null && this.printableAsciiWidthMap.length > 0;
     }
 
     /**
@@ -96,7 +108,7 @@ public class Font {
 
     /**
      * 设置可打印字符宽度映射表
-     *
+     * <p>
      * 在使用操作系统字体时，默认采用ACSII 0.5 其余1的比例计算宽度，因此可能需要手动设置宽度比例才可以达到相应的效果
      *
      * @param map 映射比例表
