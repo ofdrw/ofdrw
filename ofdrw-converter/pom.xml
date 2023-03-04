@@ -13,7 +13,7 @@
     <description>OFD转换为图片、SVG、PDF</description>
 
     <properties>
-        <pdfbox.version>2.0.24</pdfbox.version>
+        <pdfbox.version>2.0.27</pdfbox.version>
         <itext.version>7.1.10</itext.version>
     </properties>
 
@@ -32,6 +32,11 @@
         <dependency>
             <groupId>org.ofdrw</groupId>
             <artifactId>ofdrw-gm</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-graphics2d</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -92,11 +97,6 @@
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-transcoder</artifactId>
             <version>1.14</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>fontbox</artifactId>
-            <version>${pdfbox.version}</version>
         </dependency>
     </dependencies>
 </project>

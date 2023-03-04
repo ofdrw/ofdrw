@@ -7,12 +7,14 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.RoundRectangle2D;
 
 /**
- * 路径工具
+ * AWT路径转换工具
+ * <p>
+ * 将AWT的 {@link Shape} 转换为OFD的路径绘制数据 {@link AbbreviatedData}
  *
  * @author 权观宇
  * @since 2023-01-18 16:13:58
  */
-public class Shapes {
+public class OFDShapes {
 
 
     /**

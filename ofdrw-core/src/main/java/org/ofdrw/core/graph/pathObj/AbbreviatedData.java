@@ -4,6 +4,7 @@ import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.ST_Pos;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2019-10-16 09:09:15
  */
-public class AbbreviatedData extends OFDElement implements Cloneable {
+public class AbbreviatedData extends OFDElement implements Cloneable, Iterator<OptVal> {
 
     /**
      * 绘制数据队列
@@ -338,7 +339,8 @@ public class AbbreviatedData extends OFDElement implements Cloneable {
     @Override
     public String toString() {
         if (dataQueue.size() == 0) {
-            throw new IllegalArgumentException("AbbreviatedData 不能为空");
+//            throw new IllegalArgumentException("AbbreviatedData 不能为空");
+            return "";
         }
         StringBuilder dataBuilder = new StringBuilder();
         int cnt = 0;
@@ -367,5 +369,35 @@ public class AbbreviatedData extends OFDElement implements Cloneable {
         }
         clone.flush();
         return clone;
+    }
+
+
+    /**
+     * 是否还有下一个绘制操作对象（迭代器接口）
+     *
+     * @return true - 还有更多；false - 没有更多
+     */
+    @Override
+    public boolean hasNext() {
+        return dataQueue.iterator().hasNext();
+    }
+
+    /**
+     * 迭代下一个操作对象
+     *
+     * @return 下一个操作对象
+     */
+    @Override
+    public OptVal next() {
+        return dataQueue.iterator().next();
+    }
+
+    /**
+     * 绘制操作元素数量
+     *
+     * @return 元素数量
+     */
+    public int size() {
+        return dataQueue.size();
     }
 }

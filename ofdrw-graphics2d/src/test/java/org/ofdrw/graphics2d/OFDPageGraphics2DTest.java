@@ -11,7 +11,7 @@ import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class PageGraphics2DTest {
+class OFDPageGraphics2DTest {
 
     /**
      * 轴向渐变填充
@@ -19,8 +19,8 @@ class PageGraphics2DTest {
     @Test
     void linearGradientPaint() throws Exception {
         final Path dst = Paths.get("target/linearGradientPaint.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(null);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(null);
 
             Point2D start = new Point2D.Float(0, 0);
             Point2D end = new Point2D.Float(50, 50);
@@ -41,8 +41,8 @@ class PageGraphics2DTest {
     @Test
     void drawRoundRect() throws Exception {
         final Path dst = Paths.get("target/drawRoundRect.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(null);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(null);
             g.drawRoundRect(10, 10, 20, 40, 5, 5);
         }
         System.out.println(">> " + dst.toAbsolutePath());
@@ -54,8 +54,8 @@ class PageGraphics2DTest {
     @Test
     void fillRoundRect() throws Exception {
         final Path dst = Paths.get("target/fillRoundRect.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(200, 200);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(200, 200);
             g.setColor(Color.red);
             g.fillRoundRect(150, 50, 100, 100, 50, 25);
         }
@@ -69,8 +69,8 @@ class PageGraphics2DTest {
     @Test
     void draw() throws Exception {
         final Path dst = Paths.get("target/draw.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(null);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(null);
             int[] x2Points = {0, 100, 0, 100};
             int[] y2Points = {0, 50, 50, 0};
             GeneralPath polyline = new GeneralPath(GeneralPath.WIND_EVEN_ODD, x2Points.length);
@@ -91,8 +91,8 @@ class PageGraphics2DTest {
     @Test
     void drawStroke() throws Exception {
         final Path dst = Paths.get("target/drawStroke.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g2 = doc.newPage(500, 500);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g2 = doc.newPage(500, 500);
             final BasicStroke dashed =
                     new BasicStroke(1.0f,
                             BasicStroke.CAP_BUTT,
@@ -110,8 +110,8 @@ class PageGraphics2DTest {
     @Test
     void drawArc() throws Exception {
         final Path dst = Paths.get("target/drawArc.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(500, 500);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
             g.setPaint(Color.RED);
             g.fillArc(20, 20, 200, 200, 200, 200);
         }
@@ -124,8 +124,8 @@ class PageGraphics2DTest {
     @Test
     void fillArc() throws Exception {
         final Path dst = Paths.get("target/fillArc.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(null);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(null);
             g.setPaint(Color.RED);
             g.fillArc(10, 10, 200, 200, 50, 50);
         }
@@ -138,8 +138,8 @@ class PageGraphics2DTest {
     @Test
     void clearRect() throws Exception {
         final Path dst = Paths.get("target/clearRect.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(null);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(null);
             g.setPaint(Color.RED);
             g.fillArc(0, 0, 100, 100, 0, 360);
             g.clearRect(30, 30, 10, 10);
@@ -153,8 +153,8 @@ class PageGraphics2DTest {
     @Test
     void fillOval() throws Exception {
         final Path dst = Paths.get("target/fillOval.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(null);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(null);
             g.setPaint(Color.RED);
             g.fillOval(25, 25, 120, 60);
         }
@@ -167,8 +167,8 @@ class PageGraphics2DTest {
     @Test
     void drawOval() throws Exception {
         final Path dst = Paths.get("target/drawOval.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(null);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(null);
             g.setPaint(Color.RED);
             g.drawOval(25, 25, 120, 60);
         }
@@ -181,8 +181,8 @@ class PageGraphics2DTest {
     @Test
     void drawPolyline() throws Exception {
         final Path dst = Paths.get("target/drawPolyline.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(null);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(null);
             g.setPaint(Color.RED);
             int[] xs = {25, 75, 125, 85, 125, 75, 25, 65};
             int[] ys = {50, 90, 50, 100, 150, 110, 150, 100};
@@ -197,8 +197,8 @@ class PageGraphics2DTest {
     @Test
     void drawPolygon() throws Exception {
         final Path dst = Paths.get("target/drawPolygon.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(null);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(null);
             g.setPaint(Color.RED);
             int[] xpoints = {25, 145, 25, 145, 25};
             int[] ypoints = {25, 25, 145, 145, 25};
@@ -215,8 +215,8 @@ class PageGraphics2DTest {
     @Test
     void fillPolygon() throws Exception {
         final Path dst = Paths.get("target/fillPolygon.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(null);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(null);
             g.setPaint(Color.RED);
             int[] xpoints = {25, 145, 25, 145, 25};
             int[] ypoints = {25, 25, 145, 145, 25};
@@ -231,8 +231,8 @@ class PageGraphics2DTest {
     @Test
     void drawImage() throws Exception {
         final Path dst = Paths.get("target/drawImage.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(500, 500);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
             Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
             BufferedImage img1 = ImageIO.read(file.toFile());
 
@@ -246,8 +246,8 @@ class PageGraphics2DTest {
     @Test
     void drawImage2() throws Exception {
         final Path dst = Paths.get("target/drawImage2.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(500, 500);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
             Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
             BufferedImage img1 = ImageIO.read(file.toFile());
 
@@ -259,8 +259,8 @@ class PageGraphics2DTest {
     @Test
     void drawImageAffineTransform() throws Exception {
         final Path dst = Paths.get("target/drawImageAffineTransform.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(500, 500);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
             Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
             BufferedImage img1 = ImageIO.read(file.toFile());
 
@@ -278,8 +278,8 @@ class PageGraphics2DTest {
     @Test
     void drawImageBackground() throws Exception {
         final Path dst = Paths.get("target/drawImageBackground.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(500, 500);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
             Path file = Paths.get("src/test/resources", "empty.png");
             BufferedImage img1 = ImageIO.read(file.toFile());
 
@@ -291,8 +291,8 @@ class PageGraphics2DTest {
     @Test
     void drawImageBackground2() throws Exception {
         final Path dst = Paths.get("target/drawImageBackground2.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(500, 500);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
             Path file = Paths.get("src/test/resources", "empty.png");
             BufferedImage img1 = ImageIO.read(file.toFile());
 
@@ -307,8 +307,8 @@ class PageGraphics2DTest {
     @Test
     void drawImagePiece() throws Exception {
         final Path dst = Paths.get("target/drawImagePiece.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(500, 500);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
             Path file = Paths.get("src/test/resources", "empty.png");
             BufferedImage img1 = ImageIO.read(file.toFile());
 
@@ -320,8 +320,8 @@ class PageGraphics2DTest {
     @Test
     void drawImagePieceColor() throws Exception {
         final Path dst = Paths.get("target/drawImagePieceColor.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(500, 500);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
             Path file = Paths.get("src/test/resources", "empty.png");
             BufferedImage img1 = ImageIO.read(file.toFile());
 
@@ -336,8 +336,8 @@ class PageGraphics2DTest {
     @Test
     void translate() throws Exception {
         final Path dst = Paths.get("target/translate.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(200, 200);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(200, 200);
             g.translate(50, 50);
             g.setColor(Color.red);
             g.fillRect(0, 0, 20, 20);
@@ -351,8 +351,8 @@ class PageGraphics2DTest {
     @Test
     void rotate() throws Exception {
         final Path dst = Paths.get("target/rotate.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(200, 200);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(200, 200);
             g.setColor(Color.red);
             g.rotate(45 * Math.PI / 180d);
             g.fillRect(0, 0, 20, 20);
@@ -366,8 +366,8 @@ class PageGraphics2DTest {
     @Test
     void rotate2() throws Exception {
         final Path dst = Paths.get("target/rotate2.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(200, 200);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(200, 200);
             g.setColor(Color.red);
             g.rotate(45 * Math.PI / 180d, 100, 100);
             g.fillRect(100, 100, 50, 50);
@@ -378,8 +378,8 @@ class PageGraphics2DTest {
     @Test
     void translateRotate() throws Exception {
         final Path dst = Paths.get("target/translateRotate.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(200, 200);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(200, 200);
             g.setColor(Color.red);
             g.translate(100, 100);
             g.rotate(45 * Math.PI / 180d);
@@ -394,8 +394,8 @@ class PageGraphics2DTest {
     @Test
     void scale() throws Exception {
         final Path dst = Paths.get("target/scale.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(200, 200);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(200, 200);
             g.setColor(Color.red);
             g.scale(2, 2);
             g.drawRect(0, 0, 10, 10);
@@ -412,8 +412,8 @@ class PageGraphics2DTest {
     @Test
     void shear() throws Exception {
         final Path dst = Paths.get("target/shear.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(200, 200);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(200, 200);
             g.setColor(Color.red);
             g.shear(10 * Math.PI / 180d, 10 * Math.PI / 180d);
             g.fillRect(0, 0, 50, 50);
@@ -427,8 +427,8 @@ class PageGraphics2DTest {
     @Test
     void getTransform() throws Exception {
         final Path dst = Paths.get("target/getTransform.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(200, 200);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(200, 200);
             g.setColor(Color.RED);
 
             g.shear(10 * Math.PI / 180d, 10 * Math.PI / 180d);
@@ -454,8 +454,8 @@ class PageGraphics2DTest {
     @Test
     void transform() throws Exception {
         final Path dst = Paths.get("target/transform.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(200, 200);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(200, 200);
 
             g.translate(10, 10);
             g.transform(new AffineTransform(
@@ -480,8 +480,8 @@ class PageGraphics2DTest {
     @Test
     void setClip() throws Exception {
         final Path dst = Paths.get("target/clip.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(500, 500);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
 //            Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
 //            g.translate(100,100);
             g.setPaint(Color.RED);
@@ -498,8 +498,8 @@ class PageGraphics2DTest {
     @Test
     void drawString() throws Exception {
         final Path dst = Paths.get("target/drawString.ofd");
-        try (GraphicsDocument doc = new GraphicsDocument(dst)) {
-            PageGraphics2D g = doc.newPage(500, 500);
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
 
             g.setPaint(Color.RED);
 //            g.setFont(new Font("src/main/resources/simsun.ttf", Font.PLAIN, 15));

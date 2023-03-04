@@ -34,11 +34,11 @@ import java.util.Map;
  * @author 权观宇
  * @since 2023-01-18 10:07:52
  */
-public class PageGraphics2D extends Graphics2D {
+public class OFDPageGraphics2D extends Graphics2D {
     /**
      * 文档上下文
      */
-    private final GraphicsDocument doc;
+    private final OFDGraphicsDocument doc;
 
     /**
      * 所属页面容器
@@ -63,7 +63,7 @@ public class PageGraphics2D extends Graphics2D {
      * <p>
      * stroke、fill 或 drawString 时，如果DrawParam与上次的不一样，则添加
      */
-    private final DrawParam drawParam;
+    private final OFDGraphics2DDrawParam OFDGraphics2DDrawParam;
 
     /**
      * 绘制空间大小
@@ -90,7 +90,7 @@ public class PageGraphics2D extends Graphics2D {
      * @param pageObj 页面对象
      * @param box     绘制空间大小
      */
-    PageGraphics2D(GraphicsDocument doc, PageDir pageDir, Page pageObj, ST_Box box) {
+    OFDPageGraphics2D(OFDGraphicsDocument doc, PageDir pageDir, Page pageObj, ST_Box box) {
 
         BufferedImage bi = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         fmg = bi.createGraphics();
@@ -99,7 +99,7 @@ public class PageGraphics2D extends Graphics2D {
         this.pageDir = pageDir;
         this.pageObj = pageObj;
         this.size = box;
-        this.drawParam = new DrawParam(doc);
+        this.OFDGraphics2DDrawParam = new OFDGraphics2DDrawParam(doc);
 
         // 页面内容
         final Content content = new Content();
@@ -124,13 +124,13 @@ public class PageGraphics2D extends Graphics2D {
      *
      * @param parent 复制对象
      */
-    private PageGraphics2D(PageGraphics2D parent) {
+    private OFDPageGraphics2D(OFDPageGraphics2D parent) {
         this.doc = parent.doc;
         this.pageDir = parent.pageDir;
         this.pageObj = parent.pageObj;
         this.container = parent.container;
         this.size = parent.size.clone();
-        this.drawParam = parent.drawParam.clone();
+        this.OFDGraphics2DDrawParam = parent.OFDGraphics2DDrawParam.clone();
         this.devConfig = parent.devConfig;
         this.fmg = parent.fmg;
     }
@@ -147,7 +147,11 @@ public class PageGraphics2D extends Graphics2D {
             return;
         }
         // 转换图形对象为OFD路径
-        final AbbreviatedData pData = Shapes.path(s);
+        final AbbreviatedData pData = OFDShapes.path(s);
+        if (pData.size() == 0) {
+            // 没有绘制参数时不填充
+            return;
+        }
         // 创建路径对象并设置上下文参数
         CT_Path pathObj = newPathWithCtx();
         pathObj.setStroke(true);
@@ -178,7 +182,7 @@ public class PageGraphics2D extends Graphics2D {
         // 设置路径的区域
         ctPath.setBoundary(box);
         // 设置绘制参数
-        this.drawParam.apply(ctPath);
+        this.OFDGraphics2DDrawParam.apply(ctPath);
         return ctPath;
     }
 
@@ -324,10 +328,10 @@ public class PageGraphics2D extends Graphics2D {
 //        ST_Array ctm = new ST_Array(width, 0, 0, height, x, y).mtxMul(this.drawParam.ctm);
 //        imgObj.setCTM(ctm);
         // 透明度
-        if (this.drawParam.gColor instanceof Color) {
-            imgObj.setAlpha(((Color) this.drawParam.gColor).getAlpha());
+        if (this.OFDGraphics2DDrawParam.gColor instanceof Color) {
+            imgObj.setAlpha(((Color) this.OFDGraphics2DDrawParam.gColor).getAlpha());
         }
-        this.drawParam.apply(imgObj);
+        this.OFDGraphics2DDrawParam.apply(imgObj);
         container.addPageBlock(imgObj);
         return true;
     }
@@ -522,7 +526,11 @@ public class PageGraphics2D extends Graphics2D {
             return;
         }
         // 转换图形对象为OFD路径
-        final AbbreviatedData pData = Shapes.path(s);
+        final AbbreviatedData pData = OFDShapes.path(s);
+        if (pData.size() == 0) {
+            // 没有绘制参数时不填充
+            return;
+        }
         // 创建路径对象并设置上下文参数
         CT_Path pathObj = newPathWithCtx();
         pathObj.setFill(true);
@@ -545,9 +553,9 @@ public class PageGraphics2D extends Graphics2D {
     @Override
     public boolean hit(Rectangle rect, Shape s, boolean onStroke) {
         if (onStroke) {
-            s = this.drawParam.gStroke.createStrokedShape(s);
+            s = this.OFDGraphics2DDrawParam.gStroke.createStrokedShape(s);
         }
-        s = this.drawParam.gCtm.createTransformedShape(s);
+        s = this.OFDGraphics2DDrawParam.gCtm.createTransformedShape(s);
         return s.intersects(rect);
     }
 
@@ -574,7 +582,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void setComposite(Composite comp) {
-        this.drawParam.composite = comp;
+        this.OFDGraphics2DDrawParam.composite = comp;
     }
 
     /**
@@ -584,7 +592,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void setPaint(Paint paint) {
-        this.drawParam.setColor(paint);
+        this.OFDGraphics2DDrawParam.setColor(paint);
     }
 
     /**
@@ -594,7 +602,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void setStroke(Stroke s) {
-        this.drawParam.setStroke(s);
+        this.OFDGraphics2DDrawParam.setStroke(s);
     }
 
     /**
@@ -605,8 +613,8 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void setRenderingHint(RenderingHints.Key hintKey, Object hintValue) {
-        this.drawParam.fontRenderCtx = null;
-        this.drawParam.hints.put(hintKey, hintValue);
+        this.OFDGraphics2DDrawParam.fontRenderCtx = null;
+        this.OFDGraphics2DDrawParam.hints.put(hintKey, hintValue);
     }
 
     /**
@@ -617,7 +625,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public Object getRenderingHint(RenderingHints.Key hintKey) {
-        return this.drawParam.hints.get(hintKey);
+        return this.OFDGraphics2DDrawParam.hints.get(hintKey);
     }
 
     /**
@@ -627,9 +635,9 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void setRenderingHints(Map<?, ?> hints) {
-        this.drawParam.fontRenderCtx = null;
-        this.drawParam.hints.clear();
-        this.drawParam.hints.putAll(hints);
+        this.OFDGraphics2DDrawParam.fontRenderCtx = null;
+        this.OFDGraphics2DDrawParam.hints.clear();
+        this.OFDGraphics2DDrawParam.hints.putAll(hints);
     }
 
     /**
@@ -639,8 +647,8 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void addRenderingHints(Map<?, ?> hints) {
-        this.drawParam.fontRenderCtx = null;
-        this.drawParam.hints.putAll(hints);
+        this.OFDGraphics2DDrawParam.fontRenderCtx = null;
+        this.OFDGraphics2DDrawParam.hints.putAll(hints);
     }
 
     /**
@@ -650,7 +658,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public RenderingHints getRenderingHints() {
-        return (RenderingHints) this.drawParam.hints.clone();
+        return (RenderingHints) this.OFDGraphics2DDrawParam.hints.clone();
     }
 
     /**
@@ -660,7 +668,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public Graphics create() {
-        return new PageGraphics2D(this);
+        return new OFDPageGraphics2D(this);
     }
 
     /**
@@ -670,7 +678,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public Color getColor() {
-        return this.drawParam.gForeground;
+        return this.OFDGraphics2DDrawParam.gForeground;
     }
 
     /**
@@ -683,7 +691,7 @@ public class PageGraphics2D extends Graphics2D {
         if (c == null) {
             return;
         }
-        this.drawParam.setForeground(c);
+        this.OFDGraphics2DDrawParam.setForeground(c);
     }
 
     /**
@@ -711,7 +719,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public Font getFont() {
-        return this.drawParam.font;
+        return this.OFDGraphics2DDrawParam.font;
     }
 
     /**
@@ -721,7 +729,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void setFont(Font font) {
-        this.drawParam.font = font;
+        this.OFDGraphics2DDrawParam.font = font;
     }
 
     /**
@@ -785,7 +793,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public Shape getClip() {
-        return this.drawParam.gClip;
+        return this.OFDGraphics2DDrawParam.gClip;
     }
 
     /**
@@ -797,13 +805,13 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void clip(Shape s) {
-        if (this.drawParam.gClip == null) {
+        if (this.OFDGraphics2DDrawParam.gClip == null) {
             setClip(s);
             return;
         }
         Area newClip = new Area(s);
         newClip.intersect(new Area(s));
-        this.drawParam.gClip = new GeneralPath(newClip);
+        this.OFDGraphics2DDrawParam.gClip = new GeneralPath(newClip);
     }
 
 
@@ -816,7 +824,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void setClip(Shape clip) {
-        this.drawParam.gClip = clip;
+        this.OFDGraphics2DDrawParam.gClip = clip;
     }
 
     /**
@@ -886,11 +894,11 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void clearRect(int x, int y, int width, int height) {
-        if (this.drawParam.gBackground == null) {
+        if (this.OFDGraphics2DDrawParam.gBackground == null) {
             return;
         }
         Paint saved = getPaint();
-        setPaint(this.drawParam.gBackground);
+        setPaint(this.OFDGraphics2DDrawParam.gBackground);
         fillRect(x, y, width, height);
         setPaint(saved);
     }
@@ -1062,8 +1070,8 @@ public class PageGraphics2D extends Graphics2D {
     @Override
     public void translate(double tx, double ty) {
         ST_Array r = new ST_Array(1, 0, 0, 1, tx, ty);
-        this.drawParam.ctm = r.mtxMul(this.drawParam.ctm);
-        this.drawParam.gCtm.translate(tx, ty);
+        this.OFDGraphics2DDrawParam.ctm = r.mtxMul(this.OFDGraphics2DDrawParam.ctm);
+        this.OFDGraphics2DDrawParam.gCtm.translate(tx, ty);
     }
 
     /**
@@ -1074,8 +1082,8 @@ public class PageGraphics2D extends Graphics2D {
     @Override
     public void rotate(double theta) {
         ST_Array r = new ST_Array(Math.cos(theta), Math.sin(theta), -Math.sin(theta), Math.cos(theta), 0, 0);
-        this.drawParam.ctm = r.mtxMul(this.drawParam.ctm);
-        this.drawParam.gCtm.rotate(theta);
+        this.OFDGraphics2DDrawParam.ctm = r.mtxMul(this.OFDGraphics2DDrawParam.ctm);
+        this.OFDGraphics2DDrawParam.gCtm.rotate(theta);
     }
 
     /**
@@ -1108,8 +1116,8 @@ public class PageGraphics2D extends Graphics2D {
     @Override
     public void scale(double sx, double sy) {
         ST_Array scale = new ST_Array(sx, 0, 0, sy, 0, 0);
-        this.drawParam.ctm = scale.mtxMul(this.drawParam.ctm);
-        this.drawParam.gCtm.scale(sx, sy);
+        this.OFDGraphics2DDrawParam.ctm = scale.mtxMul(this.OFDGraphics2DDrawParam.ctm);
+        this.OFDGraphics2DDrawParam.gCtm.scale(sx, sy);
     }
 
     /**
@@ -1121,8 +1129,8 @@ public class PageGraphics2D extends Graphics2D {
     @Override
     public void shear(double shx, double shy) {
         ST_Array shear = new ST_Array(1, Math.tan(shx), Math.tan(shy), 1, 0, 0);
-        this.drawParam.ctm = shear.mtxMul(this.drawParam.ctm);
-        this.drawParam.gCtm.shear(shx, shy);
+        this.OFDGraphics2DDrawParam.ctm = shear.mtxMul(this.OFDGraphics2DDrawParam.ctm);
+        this.OFDGraphics2DDrawParam.gCtm.shear(shx, shy);
     }
 
     /**
@@ -1136,8 +1144,8 @@ public class PageGraphics2D extends Graphics2D {
             throw new IllegalArgumentException("变换矩阵为空");
         }
         ST_Array ctm = trans(tx);
-        this.drawParam.ctm = ctm.mtxMul(this.drawParam.ctm);
-        this.drawParam.gCtm.concatenate(tx);
+        this.OFDGraphics2DDrawParam.ctm = ctm.mtxMul(this.OFDGraphics2DDrawParam.ctm);
+        this.OFDGraphics2DDrawParam.gCtm.concatenate(tx);
     }
 
     /**
@@ -1150,7 +1158,7 @@ public class PageGraphics2D extends Graphics2D {
         if (tx == null) {
             throw new IllegalArgumentException("变换矩阵为空");
         }
-        this.drawParam.ctm = trans(tx);
+        this.OFDGraphics2DDrawParam.ctm = trans(tx);
     }
 
     /**
@@ -1160,7 +1168,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public AffineTransform getTransform() {
-        return new AffineTransform(this.drawParam.gCtm);
+        return new AffineTransform(this.OFDGraphics2DDrawParam.gCtm);
     }
 
     /**
@@ -1170,7 +1178,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public Paint getPaint() {
-        return this.drawParam.gColor;
+        return this.OFDGraphics2DDrawParam.gColor;
     }
 
     /**
@@ -1182,7 +1190,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public Composite getComposite() {
-        return this.drawParam.composite;
+        return this.OFDGraphics2DDrawParam.composite;
     }
 
     /**
@@ -1192,7 +1200,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public void setBackground(Color color) {
-        this.drawParam.gBackground = color;
+        this.OFDGraphics2DDrawParam.gBackground = color;
     }
 
     /**
@@ -1202,7 +1210,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public Color getBackground() {
-        return this.drawParam.gBackground;
+        return this.OFDGraphics2DDrawParam.gBackground;
     }
 
     /**
@@ -1212,7 +1220,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public Stroke getStroke() {
-        return this.drawParam.gStroke;
+        return this.OFDGraphics2DDrawParam.gStroke;
     }
 
     /**
@@ -1222,7 +1230,7 @@ public class PageGraphics2D extends Graphics2D {
      */
     @Override
     public FontRenderContext getFontRenderContext() {
-        return this.drawParam.getFontRenderContext();
+        return this.OFDGraphics2DDrawParam.getFontRenderContext();
     }
 
 

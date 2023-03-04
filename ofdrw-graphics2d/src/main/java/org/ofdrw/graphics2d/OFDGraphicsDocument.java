@@ -34,12 +34,12 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * AWT图形OFD文档对象
+ * 图形OFD文档对象
  *
  * @author 权观宇
  * @since 2023-1-18 09:45:18
  */
-public class GraphicsDocument implements Closeable {
+public class OFDGraphicsDocument implements Closeable {
     /**
      * 打包后OFD文档存放路径
      */
@@ -61,14 +61,14 @@ public class GraphicsDocument implements Closeable {
     /**
      * 多媒体清单，用于记录添加到文档的资源信息
      * <p>
-     * 请不要直接使该参数，应通过 {@link GraphicsDocument#obtainMedias()}
+     * 请不要直接使该参数，应通过 {@link OFDGraphicsDocument#obtainMedias()}
      */
     private MultiMedias medias;
 
     /**
      * 绘制参数清单
      * <p>
-     * 请不要直接使该参数，应通过 {@link GraphicsDocument#obtainDrawParam()}
+     * 请不要直接使该参数，应通过 {@link OFDGraphicsDocument#obtainDrawParam()}
      */
     private DrawParams drawParams;
 
@@ -110,7 +110,7 @@ public class GraphicsDocument implements Closeable {
      *
      * @param outPath OFD输出路径
      */
-    public GraphicsDocument(Path outPath) {
+    public OFDGraphicsDocument(Path outPath) {
         this();
         if (outPath == null) {
             throw new IllegalArgumentException("OFD文件存储路径(outPath)为空");
@@ -127,7 +127,7 @@ public class GraphicsDocument implements Closeable {
     /**
      * 文档初始化构造器
      */
-    private GraphicsDocument() {
+    private OFDGraphicsDocument() {
         // 初始化文档对象
         CT_DocInfo docInfo = new CT_DocInfo()
                 .setDocID(UUID.randomUUID())
@@ -199,7 +199,7 @@ public class GraphicsDocument implements Closeable {
      * @param height 页面高度，单位：毫米
      * @return 2D图形绘制对象
      */
-    public PageGraphics2D newPage(double width, double height) {
+    public OFDPageGraphics2D newPage(double width, double height) {
         CT_PageArea size = new CT_PageArea()
                 .setPhysicalBox(0, 0, width, height)
                 .setApplicationBox(0, 0, width, height);
@@ -212,7 +212,7 @@ public class GraphicsDocument implements Closeable {
      * @param pageSize 页面大小配置
      * @return 2D图形绘制对象
      */
-    public PageGraphics2D newPage(CT_PageArea pageSize) {
+    public OFDPageGraphics2D newPage(CT_PageArea pageSize) {
         final Pages pages = document.getPages();
         // 如果存在Pages那么获取，不存在那么创建
         final PagesDir pagesDir = docDir.obtainPages();
@@ -232,7 +232,7 @@ public class GraphicsDocument implements Closeable {
         }
         pageDir.setContent(pageObj);
 
-        return new PageGraphics2D(this, pageDir, pageObj,pageSize.getBox() );
+        return new OFDPageGraphics2D(this, pageDir, pageObj,pageSize.getBox() );
     }
 
     /**

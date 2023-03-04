@@ -26,9 +26,9 @@ import java.awt.geom.AffineTransform;
  * @author 权观宇
  * @since 2023-1-30 21:37:36
  */
-public class DrawParam {
+public class OFDGraphics2DDrawParam {
 
-    private final GraphicsDocument ctx;
+    private final OFDGraphicsDocument ctx;
 
     /**
      * 字体
@@ -104,7 +104,7 @@ public class DrawParam {
      *
      * @param ctx 图形绘制上下文
      */
-    public DrawParam(GraphicsDocument ctx) {
+    public OFDGraphics2DDrawParam(OFDGraphicsDocument ctx) {
         this.ctx = ctx;
         this.pCache = new CT_DrawParam();
         this.pCache.setLineWidth(0.353d);
@@ -359,7 +359,7 @@ public class DrawParam {
                 area.setCTM(ctmApplied);
             }
             // area.setDrawParam(ref); // 绘制参数不影响裁剪区
-            area.setClipObj(new CT_Path().setAbbreviatedData(Shapes.path(gClip)));
+            area.setClipObj(new CT_Path().setAbbreviatedData(OFDShapes.path(gClip)));
             clips.addClip(new CT_Clip().addArea(area));
             target.setClips(clips);
         }
@@ -416,8 +416,8 @@ public class DrawParam {
      * @return 复制的新对象
      */
     @Override
-    public DrawParam clone() {
-        DrawParam that = new DrawParam(this.ctx);
+    public OFDGraphics2DDrawParam clone() {
+        OFDGraphics2DDrawParam that = new OFDGraphics2DDrawParam(this.ctx);
         that.pCache = this.pCache.clone();
         that.gColor = this.gColor;
         that.gStroke = this.gStroke;
