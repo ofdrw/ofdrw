@@ -369,7 +369,7 @@ public class ItextMaker {
             }
             if (pathObject.getFillColor() == null
                     && ctDrawParam.getFillColor() != null) {
-                pathObject.setStrokeColor(new CT_Color().setValue(ctDrawParam.getFillColor().getValue()));
+                pathObject.setFillColor(new CT_Color().setValue(ctDrawParam.getFillColor().getValue()));
             }
             if (pathObject.getLineWidth() == null
                     && ctDrawParam.getLineWidth() != null) {
