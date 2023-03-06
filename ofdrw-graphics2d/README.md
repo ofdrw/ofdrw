@@ -80,7 +80,8 @@ OFDGraphicsDocument doc = new OFDGraphicsDocument(dst);
 CT_PageArea pSize = new CT_PageArea()
         .setPhysicalBox(0,0,210d,297d)
         .setApplicationBox(0,0,210d,297d);
-        OFDPageGraphics2D g=doc.newPage(pSize);
+
+OFDPageGraphics2D g = doc.newPage(pSize);
 ```
 
 > 若`newPage`参数为`newPage`使用文档默认页面大小，一般为 A4 (210 x 297 mm) 大小。
