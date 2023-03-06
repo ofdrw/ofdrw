@@ -84,7 +84,7 @@ CT_PageArea pSize = new CT_PageArea()
 OFDPageGraphics2D g = doc.newPage(pSize);
 ```
 
-> 若`newPage`参数为`newPage`使用文档默认页面大小，一般为 A4 (210 x 297 mm) 大小。
+> 若`newPage`参数为`null`，那么创建的页面将使用文档默认页面大小，一般为 A4 (210 x 297 mm) 大小。
 
 或通过手动设定页面长、宽的方式创建页面：
 
