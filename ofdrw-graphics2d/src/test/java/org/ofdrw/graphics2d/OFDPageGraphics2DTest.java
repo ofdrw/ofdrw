@@ -507,4 +507,25 @@ class OFDPageGraphics2DTest {
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }
+
+    /**
+     * 径向渐变测试
+     */
+    @Test
+    void setPaintRadialGradientPaint() throws Exception {
+        final Path dst = Paths.get("target/setPaintRadialGradientPaint.ofd");
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
+
+            Color[] colors = { Color.red, Color.green, Color.blue };
+            float[] dist = {0.0f, 0.5f, 1.0f };
+            Point2D center = new Point2D.Float(0.5f * 500, 0.5f * 500);
+
+            RadialGradientPaint p =
+                    new RadialGradientPaint(center, 0.5f * 500, dist, colors);
+            g.setPaint(p);
+            g.fillRect(0, 0, 500, 500);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
 }

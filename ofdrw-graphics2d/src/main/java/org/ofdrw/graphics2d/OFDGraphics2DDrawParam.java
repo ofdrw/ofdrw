@@ -8,10 +8,7 @@ import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.clips.Area;
 import org.ofdrw.core.pageDescription.clips.CT_Clip;
 import org.ofdrw.core.pageDescription.clips.Clips;
-import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
-import org.ofdrw.core.pageDescription.color.color.CT_Color;
-import org.ofdrw.core.pageDescription.color.color.MapType;
-import org.ofdrw.core.pageDescription.color.color.Segment;
+import org.ofdrw.core.pageDescription.color.color.*;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
@@ -107,7 +104,6 @@ public class OFDGraphics2DDrawParam {
     public OFDGraphics2DDrawParam(OFDGraphicsDocument ctx) {
         this.ctx = ctx;
         this.pCache = new CT_DrawParam();
-        this.pCache.setLineWidth(0.353d);
         this.gStroke = new BasicStroke(0.353f);
 
         // 默认 描边颜色为黑色
@@ -124,7 +120,7 @@ public class OFDGraphics2DDrawParam {
         this.hints = new RenderingHints(null);
         this.composite = AlphaComposite.SrcOver;
 
-        this.font = new Font("sanserif", Font.PLAIN, 12);
+        this.font = new Font("sanserif", Font.PLAIN, 3);
     }
 
     /**
@@ -168,8 +164,6 @@ public class OFDGraphics2DDrawParam {
         // 线宽度
         if (gStroke.getLineWidth() > 0) {
             this.pCache.setLineWidth((double) gStroke.getLineWidth());
-        } else {
-            this.pCache.setLineWidth(0.353);
         }
 
         // 线条虚线重复样式
@@ -232,6 +226,7 @@ public class OFDGraphics2DDrawParam {
             ctColor = CT_Color.rgb(c.getRed(), c.getGreen(), c.getBlue());
             ctColor.setAlpha(c.getAlpha());
         } else if (paint instanceof LinearGradientPaint) {
+            // 线性渐变
             final LinearGradientPaint lgp = (LinearGradientPaint) paint;
 
             ctColor = new CT_Color();
@@ -266,40 +261,59 @@ public class OFDGraphics2DDrawParam {
 
             ctColor.setColor(axialShd);
         } else if (paint instanceof RadialGradientPaint) {
-            // TODO 径向渐变
-//            final RadialGradientPaint rgp = (RadialGradientPaint) paint;
-//            float x = (float) rgp.getCenterPoint().getX();
-//            float y = (float) rgp.getCenterPoint().getY();
-//
-//            final int[] colors = new int[rgp.getColors().length];
-//            for (int i = 0; i < rgp.getColors().length; i++) {
-//                colors[i] = rgp.getColors()[i].getRGB();
-//            }
-//            final GradientStyle gs = GradientStyle.DEFAULT.withTileMode(awtCycleMethodToSkijaFilterTileMode(rgp.getCycleMethod()));
-//            float fx = (float) rgp.getFocusPoint().getX();
-//            float fy = (float) rgp.getFocusPoint().getY();
-//
-//            final Shader shader;
-//            if (rgp.getFocusPoint().equals(rgp.getCenterPoint())) {
-//                shader = Shader.makeRadialGradient(x, y, rgp.getRadius(), colors, rgp.getFractions(), gs);
-//            } else {
-//                shader = Shader.makeTwoPointConicalGradient(fx, fy, 0, x, y, rgp.getRadius(), colors, rgp.getFractions(), gs);
-//            }
-//            this.skijaPaint.setShader(shader);
+            // 径向渐变
+            final RadialGradientPaint rgp = (RadialGradientPaint) paint;
+
+            ctColor = new CT_Color();
+            CT_RadialShd radialShd = new CT_RadialShd();
+            // 设置颜色段以及分布
+            Color[] colors = rgp.getColors();
+            float[] fractions = rgp.getFractions();
+            for (int i = 0; i < colors.length; i++) {
+                CT_Color cc = CT_Color.rgb(colors[i].getRed(), colors[i].getGreen(), colors[i].getBlue());
+                cc.setAlpha(colors[i].getAlpha());
+                radialShd.addSegment(new Segment((double) fractions[i], cc));
+            }
+            // 设置渐变绘制方式
+            switch (rgp.getCycleMethod()) {
+                case NO_CYCLE:
+                    radialShd.setMapType(MapType.Direct);
+                    break;
+                case REFLECT:
+                    radialShd.setMapType(MapType.Reflect);
+                    break;
+                case REPEAT:
+                    radialShd.setMapType(MapType.Repeat);
+                    break;
+            }
+            // 设置半径
+            radialShd.setEndRadius((double) rgp.getRadius());
+            // 设置 起始 椭圆中心点
+            ST_Pos startPoint = ST_Pos.getInstance(rgp.getCenterPoint().getX(), rgp.getCenterPoint().getY());
+            radialShd.setStartPoint(startPoint);
+            // 设置 结束 椭圆中心点
+            ST_Pos endPoint = ST_Pos.getInstance(rgp.getFocusPoint().getX(), rgp.getFocusPoint().getY());
+            radialShd.setEndPoint(endPoint);
+            ctColor.setColor(radialShd);
         } else if (paint instanceof GradientPaint) {
-            // TODO 高思德渐变
-//            final GradientPaint gp = (GradientPaint) paint;
-//            float x1 = (float) gp.getPoint1().getX();
-//            float y1 = (float) gp.getPoint1().getY();
-//            float x2 = (float) gp.getPoint2().getX();
-//            float y2 = (float) gp.getPoint2().getY();
-//
-//            final int[] colors = new int[]{gp.getColor1().getRGB(), gp.getColor2().getRGB()};
-//            final GradientStyle gs = (gp.isCyclic())
-//                    ? GradientStyle.DEFAULT.withTileMode(FilterTileMode.MIRROR)
-//                    : GradientStyle.DEFAULT;
-//
-//            this.skijaPaint.setShader(Shader.makeLinearGradient(x1, y1, x2, y2, colors, (float[]) null, gs));
+            final GradientPaint gp = (GradientPaint) paint;
+            ctColor = new CT_Color();
+            CT_AxialShd axialShd = new CT_AxialShd();
+
+            // 轴线起点
+            axialShd.setStartPoint(ST_Pos.getInstance(gp.getPoint1().getX(), gp.getPoint1().getY()));
+            // 轴线终点
+            axialShd.setEndPoint(ST_Pos.getInstance(gp.getPoint2().getX(), gp.getPoint2().getY()));
+
+            // 设置 渐变绘制的方式
+            if (gp.isCyclic()){
+                axialShd.setMapType(MapType.Repeat);
+            }
+            // 设置起点终点
+            axialShd.addSegment(new Segment(CT_Color.rgb(gp.getColor1().getRed(), gp.getColor1().getGreen(), gp.getColor1().getBlue())));
+            axialShd.addSegment(new Segment(CT_Color.rgb(gp.getColor2().getRed(), gp.getColor2().getGreen(), gp.getColor2().getBlue())));
+
+            ctColor.setColor(axialShd);
         }
 
         if (ctColor != null) {
