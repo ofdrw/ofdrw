@@ -7,6 +7,7 @@ import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_Loc;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 附件
@@ -116,13 +117,31 @@ public class CT_Attachment extends OFDElement {
      *
      * @param creationDate 创建时间
      * @return this
+     * @deprecated {@link #setCreationDate(LocalDateTime)}
      */
+    @Deprecated
     public CT_Attachment setCreationDate(LocalDate creationDate) {
         if (creationDate == null) {
             this.removeAttr("CreationDate");
             return this;
         }
-        this.addAttribute("CreationDate", creationDate.format(Const.DATE_FORMATTER));
+        this.addAttribute("CreationDate", creationDate.atStartOfDay().format(Const.DATETIME_FORMATTER));
+        return this;
+    }
+
+    /**
+     * 【可选 属性】
+     * 设置 创建时间
+     *
+     * @param creationDate 创建时间
+     * @return this
+     */
+    public CT_Attachment setCreationDate(LocalDateTime creationDate) {
+        if (creationDate == null) {
+            this.removeAttr("CreationDate");
+            return this;
+        }
+        this.addAttribute("CreationDate", creationDate.format(Const.DATETIME_FORMATTER));
         return this;
     }
 
@@ -131,13 +150,57 @@ public class CT_Attachment extends OFDElement {
      * 获取 创建时间
      *
      * @return 创建时间
+     * @deprecated {@link #getCreationDateTime()}
      */
+    @Deprecated
     public LocalDate getCreationDate() {
         String str = this.attributeValue("CreationDate");
         if (str == null || str.trim().length() == 0) {
             return null;
         }
-        return LocalDate.parse(str, Const.DATE_FORMATTER);
+        str = str.trim();
+        try {
+            return LocalDateTime.parse(str, Const.DATETIME_FORMATTER).toLocalDate();
+        } catch (Exception ignore) {
+            return LocalDate.parse(str, Const.DATE_FORMATTER);
+        }
+    }
+
+    /**
+     * 【可选 属性】
+     * 获取 创建时间
+     *
+     * @return 创建时间
+     */
+    public LocalDateTime getCreationDateTime() {
+        String str = this.attributeValue("CreationDate");
+        if (str == null || str.trim().length() == 0) {
+            return null;
+        }
+        str = str.trim();
+        try {
+            return LocalDateTime.parse(str, Const.DATETIME_FORMATTER);
+        } catch (Exception ignore) {
+            return LocalDate.parse(str, Const.DATE_FORMATTER).atStartOfDay();
+        }
+    }
+
+    /**
+     * 【可选 属性】
+     * 设置 修改时间
+     *
+     * @param modDate 修改时间
+     * @return this
+     * @deprecated {@link #setModDate(LocalDateTime)}
+     */
+    @Deprecated
+    public CT_Attachment setModDate(LocalDate modDate) {
+        if (modDate == null) {
+            this.removeAttr("ModDate");
+            return this;
+        }
+        this.addAttribute("ModDate", modDate.atStartOfDay().format(Const.DATETIME_FORMATTER));
+        return this;
     }
 
     /**
@@ -147,12 +210,12 @@ public class CT_Attachment extends OFDElement {
      * @param modDate 修改时间
      * @return this
      */
-    public CT_Attachment setModDate(LocalDate modDate) {
+    public CT_Attachment setModDate(LocalDateTime modDate) {
         if (modDate == null) {
             this.removeAttr("ModDate");
             return this;
         }
-        this.addAttribute("ModDate", modDate.format(Const.DATE_FORMATTER));
+        this.addAttribute("ModDate", modDate.format(Const.DATETIME_FORMATTER));
         return this;
     }
 
@@ -161,13 +224,39 @@ public class CT_Attachment extends OFDElement {
      * 获取 修改时间
      *
      * @return 修改时间
+     * @deprecated {@link #getModDateTime()}
      */
+    @Deprecated
     public LocalDate getModDate() {
         String str = this.attributeValue("ModDate");
         if (str == null || str.trim().length() == 0) {
             return null;
         }
-        return LocalDate.parse(str, Const.DATE_FORMATTER);
+        str = str.trim();
+        try {
+            return LocalDateTime.parse(str, Const.DATETIME_FORMATTER).toLocalDate();
+        } catch (Exception ignore) {
+            return LocalDate.parse(str, Const.DATE_FORMATTER);
+        }
+    }
+
+    /**
+     * 【可选 属性】
+     * 获取 修改时间
+     *
+     * @return 修改时间
+     */
+    public LocalDateTime getModDateTime() {
+        String str = this.attributeValue("ModDate");
+        if (str == null || str.trim().length() == 0) {
+            return null;
+        }
+        str = str.trim();
+        try {
+            return LocalDateTime.parse(str, Const.DATETIME_FORMATTER);
+        } catch (Exception ignore) {
+            return LocalDate.parse(str, Const.DATE_FORMATTER).atStartOfDay();
+        }
     }
 
     /**

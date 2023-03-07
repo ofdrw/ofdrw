@@ -1,12 +1,11 @@
 package org.ofdrw.layout.edit;
 
 import org.ofdrw.core.attachment.CT_Attachment;
-import org.ofdrw.layout.engine.ResManager;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 附件对象构造器
@@ -97,8 +96,22 @@ public class Attachment {
      *
      * @param creationDate 创建时间
      * @return this
+     * @deprecated {@link  #setCreationDate(LocalDateTime)}
      */
+    @Deprecated
     public Attachment setCreationDate(LocalDate creationDate) {
+        atmObj.setCreationDate(creationDate.atStartOfDay());
+        return this;
+    }
+
+    /**
+     * 【可选 属性】
+     * 设置 创建时间
+     *
+     * @param creationDate 创建时间
+     * @return this
+     */
+    public Attachment setCreationDate(LocalDateTime creationDate) {
         atmObj.setCreationDate(creationDate);
         return this;
     }
@@ -108,9 +121,35 @@ public class Attachment {
      * 获取 创建时间
      *
      * @return 创建时间
+     * @deprecated {@link  #getCreationDateTime()}
      */
+    @Deprecated
     public LocalDate getCreationDate() {
-        return atmObj.getCreationDate();
+        return atmObj.getCreationDateTime().toLocalDate();
+    }
+
+    /**
+     * 【可选 属性】
+     * 获取 创建时间
+     *
+     * @return 创建时间
+     */
+    public LocalDateTime getCreationDateTime() {
+        return atmObj.getCreationDateTime();
+    }
+
+    /**
+     * 【可选 属性】
+     * 设置 修改时间
+     *
+     * @param modDate 修改时间
+     * @return this
+     * @deprecated {@link #setModDateTime(LocalDateTime)}
+     */
+    @Deprecated
+    public Attachment setModDate(LocalDate modDate) {
+        atmObj.setModDate(modDate.atStartOfDay());
+        return this;
     }
 
     /**
@@ -120,7 +159,7 @@ public class Attachment {
      * @param modDate 修改时间
      * @return this
      */
-    public Attachment setModDate(LocalDate modDate) {
+    public Attachment setModDateTime(LocalDateTime modDate) {
         atmObj.setModDate(modDate);
         return this;
     }
@@ -130,9 +169,21 @@ public class Attachment {
      * 获取 修改时间
      *
      * @return 修改时间
+     * @deprecated {@link #getCreationDateTime()}
      */
+    @Deprecated
     public LocalDate getModDate() {
-        return atmObj.getModDate();
+        return atmObj.getModDateTime().toLocalDate();
+    }
+
+    /**
+     * 【可选 属性】
+     * 获取 修改时间
+     *
+     * @return 修改时间
+     */
+    public LocalDateTime getModDateTime() {
+        return atmObj.getCreationDateTime();
     }
 
     /**
@@ -207,7 +258,7 @@ public class Attachment {
         return this;
     }
 
-    public CT_Attachment getAttachment(){
+    public CT_Attachment getAttachment() {
         return atmObj;
     }
 }
