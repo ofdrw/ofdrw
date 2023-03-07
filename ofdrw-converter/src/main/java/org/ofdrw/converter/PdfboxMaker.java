@@ -1,10 +1,9 @@
 package org.ofdrw.converter;
 
-import org.apache.fontbox.ttf.TrueTypeFont;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
@@ -17,6 +16,7 @@ import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.converter.utils.PointUtil;
 import org.ofdrw.core.annotation.pageannot.Annot;
+import org.ofdrw.core.attachment.CT_Attachment;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
@@ -46,18 +46,19 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
-import java.util.List;
 
-import static org.ofdrw.converter.utils.CommonUtil.*;
+import static org.ofdrw.converter.utils.CommonUtil.convertPDColor;
+import static org.ofdrw.converter.utils.CommonUtil.converterDpi;
 
 
 /**
  * PDFBox实现的PDF转换实现
- *
- * @deprecated see {@link ItextMaker}
  */
-@Deprecated
 public class PdfboxMaker {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfboxMaker.class);
@@ -589,6 +590,47 @@ public class PdfboxMaker {
             contentStream.restoreGraphicsState();
         }
 
+    }
+
+    /**
+     * 添加附件
+     *
+     * @param ofdReader OFD解析器
+     * @throws IOException IO异常
+     */
+    public void addAttachments(OFDReader ofdReader) throws IOException {
+        // 获取OFD中所有附件
+        List<CT_Attachment> attachmentList = ofdReader.getAttachmentList();
+        if (attachmentList == null || attachmentList.isEmpty()) {
+            return;
+        }
+        PDEmbeddedFilesNameTreeNode efTree = new PDEmbeddedFilesNameTreeNode();
+        Map<String, PDComplexFileSpecification> efMap = new HashMap<>();
+        for (CT_Attachment attachment : attachmentList) {
+            PDComplexFileSpecification fs = new PDComplexFileSpecification();
+            Path attFile = ofdReader.getAttachmentFile(attachment);
+            // 文件名传
+            fs.setFile(attFile.getFileName().toString());
+
+            // 文件流，该流将由PDEmbeddedFile内部关闭
+            PDEmbeddedFile ef = new PDEmbeddedFile(pdf, Files.newInputStream(attFile));
+            // 文件类型
+            ef.setSubtype(attachment.getFormat());
+            ef.setSize((int) Files.size(attFile));
+            // 设置创建时间
+            LocalDateTime creationDate = attachment.getCreationDateTime();
+            Date date = Date.from(creationDate.atZone(ZoneId.systemDefault()).toInstant());
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            ef.setCreationDate(calendar);
+
+            fs.setEmbeddedFile(ef);
+            efMap.put(attachment.getAttachmentName(), fs);
+        }
+        efTree.setNames(efMap);
+        PDDocumentNameDictionary names = new PDDocumentNameDictionary(pdf.getDocumentCatalog());
+        names.setEmbeddedFiles(efTree);
+        pdf.getDocumentCatalog().setNames(names);
     }
 
     /**

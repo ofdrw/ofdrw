@@ -12,8 +12,8 @@ import org.w3c.dom.Document;
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * SVG转换类
@@ -33,11 +33,11 @@ public class SVGMaker extends AWTMaker {
      * @param reader OFD解析器
      * @param ppm    每毫米像素数量(Pixels per millimeter)
      */
-	@Deprecated
+    @Deprecated
     public SVGMaker(OFDReader reader, int ppm) {
         super(reader, ppm);
     }
-    
+
     /**
      * 创建SVG转换对象实例
      * <p>
@@ -47,7 +47,7 @@ public class SVGMaker extends AWTMaker {
      * @param ppm    每毫米像素数量(Pixels per millimeter) 调用CommonUtil.dpiToPpm(200) 给定DPI下的像素数量
      */
 
-    public SVGMaker(OFDReader reader,double ppm) {
+    public SVGMaker(OFDReader reader, double ppm) {
         super(reader, ppm);
     }
 
@@ -63,7 +63,7 @@ public class SVGMaker extends AWTMaker {
         }
         PageInfo pageInfo = pages.get(pageIndex);
         ST_Box pageBox = pageInfo.getSize();
-        
+
         int pageWidthPixel = (int) Math.round(ppm * pageBox.getWidth());
         int pageHeightPixel = (int) Math.round(ppm * pageBox.getHeight());
 
@@ -86,11 +86,9 @@ public class SVGMaker extends AWTMaker {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Writer out = null;
         try {
-            out = new OutputStreamWriter(outputStream, "UTF-8");
+            out = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
             svgGenerator.stream(out, useCSS);
-            return new String(outputStream.toByteArray());
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            return outputStream.toString();
         } catch (SVGGraphics2DIOException e) {
             e.printStackTrace();
         }

@@ -1,6 +1,5 @@
 package org.ofdrw.converter;
 
-import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.font.otf.Glyph;
 import com.itextpdf.io.font.otf.GlyphLine;
 import com.itextpdf.io.image.ImageData;
@@ -8,7 +7,6 @@ import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.font.PdfFont;
-import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.AffineTransform;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.geom.Rectangle;
@@ -24,7 +22,6 @@ import com.itextpdf.kernel.pdf.filespec.PdfFileSpec;
 import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import com.itextpdf.kernel.pdf.xobject.PdfImageXObject;
 import com.itextpdf.layout.Canvas;
-import org.apache.commons.io.IOUtils;
 import org.dom4j.Element;
 import org.ofdrw.converter.font.FontWrapper;
 import org.ofdrw.converter.point.PathPoint;
@@ -88,16 +85,9 @@ public class ItextMaker {
      */
     private final ResourceManage resMgt;
 
-    /**
-     * 默认字体，在无法找到可用字体时使用该字体替换
-     */
-    private PdfFont DEFAULT_FONT;
-
     public ItextMaker(OFDReader ofdReader) throws IOException {
         this.ofdReader = ofdReader;
         this.resMgt = ofdReader.getResMgt();
-        byte[] font = IOUtils.toByteArray(this.getClass().getClassLoader().getResourceAsStream("fonts/simsun.ttf"));
-        this.DEFAULT_FONT = PdfFontFactory.createFont(font, PdfEncodings.WINANSI, true);
     }
 
     /**

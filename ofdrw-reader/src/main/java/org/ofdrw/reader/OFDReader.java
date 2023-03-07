@@ -125,7 +125,7 @@ public class OFDReader implements Closeable {
     /**
      * 构造一个 OFDReader
      *
-     * @param stream OFD文件输入流
+     * @param stream OFD文件输入流，流由调用者负责关闭。
      * @throws IOException OFD文件操作IO异常
      */
     public OFDReader(InputStream stream) throws IOException {

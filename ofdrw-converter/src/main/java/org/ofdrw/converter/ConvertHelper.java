@@ -48,14 +48,15 @@ public class ConvertHelper {
 
     /**
      * OFD转换PDF
-     *
-     * 不建议使用该方法，建议使用 {@link  #toPdf(Path, Path)} 系列明确参数方法。
+     * <p>
      *
      * @param input  OFD文件路径，支持OutputStream、Path、String（文件路径）
      * @param output PDF输出流，支持OutputStream、Path、File、String（文件路径）
      * @throws IllegalArgumentException 参数错误
      * @throws GeneralConvertException  文档转换过程中异常
+     * @deprecated 不建议使用该方法，建议使用 {@link  #toPdf(Path, Path)} 系列明确参数方法。
      */
+    @Deprecated
     public static void ofd2pdf(Object input, Object output) {
         OFDReader reader = null;
         try {
@@ -75,7 +76,7 @@ public class ConvertHelper {
             switch (lib) {
                 case iText: {
                     try (PdfWriter pdfWriter = new PdfWriter(bos);
-                         PdfDocument pdfDocument = new PdfDocument(pdfWriter);) {
+                         PdfDocument pdfDocument = new PdfDocument(pdfWriter)) {
                         long start;
                         long end;
                         int pageNum = 1;
@@ -93,7 +94,7 @@ public class ConvertHelper {
                     break;
                 }
                 case PDFBox: {
-                    try (PDDocument pdfDocument = new PDDocument();) {
+                    try (PDDocument pdfDocument = new PDDocument()) {
                         PdfboxMaker pdfMaker = new PdfboxMaker(reader, pdfDocument);
                         long start = 0, end = 0, pageNum = 1;
                         for (PageInfo pageInfo : reader.getPageList()) {
@@ -118,7 +119,7 @@ public class ConvertHelper {
                     bos.writeTo(fileOutputStream);
                 }
             } else if (output instanceof Path) {
-                try(OutputStream out = Files.newOutputStream((Path) output)){
+                try (OutputStream out = Files.newOutputStream((Path) output)) {
                     bos.writeTo(out);
                 }
             } else {

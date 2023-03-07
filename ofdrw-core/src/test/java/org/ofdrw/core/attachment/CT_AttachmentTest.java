@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.ofdrw.TestTool;
 import org.ofdrw.core.basicType.ST_Loc;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,7 +14,7 @@ public class CT_AttachmentTest {
                 .setID("10004")
                 .setAttachmentName("File.txt")
                 .setFormat("Text")
-                .setCreationDate(LocalDate.now())
+                .setCreationDate(LocalDateTime.now())
                 .setSize(4D)
                 .setFileLoc(new ST_Loc("/Doc_0/Res/File.txt"));
     }

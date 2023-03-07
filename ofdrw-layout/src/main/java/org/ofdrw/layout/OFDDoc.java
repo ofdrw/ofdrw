@@ -35,6 +35,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -440,7 +441,7 @@ public class OFDDoc implements Closeable {
         double size = Files.size(file) / 1024d;
         CT_Attachment ctAttachment = attachment.getAttachment()
                 .setID(String.valueOf(MaxUnitID.incrementAndGet()))
-                .setCreationDate(LocalDate.now())
+                .setCreationDate(LocalDateTime.now())
                 .setSize(size)
                 .setFileLoc(loc);
         ResourceLocator rl = new ResourceLocator(docDefault);
