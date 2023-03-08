@@ -47,8 +47,8 @@ import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 /**
  * AWT设备转换类
@@ -778,6 +778,18 @@ public abstract class AWTMaker {
             default:
                 return new Color(color[0], color[1], color[2]);
         }
+    }
+
+    /**
+     * 设置转换质量
+     *
+     * @param ppm 每毫米像素数量(Pixels per millimeter)
+     */
+    public void setPPM(double ppm) {
+        if (ppm <= 0){
+            return;
+        }
+        this.ppm = ppm;
     }
 
     public static List<Double> parseDelta(ST_Array array) {

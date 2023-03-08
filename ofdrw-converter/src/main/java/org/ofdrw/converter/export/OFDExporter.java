@@ -31,7 +31,7 @@ public interface OFDExporter extends Closeable {
      *     obj.export(4,5);
      * </pre>
      *
-     * @param indexes 页码序列，如果为空表示全部页码
+     * @param indexes 页码序列，如果为空表示全部页码（注意：页码从0起）
      * @throws GeneralConvertException 转换异常
      */
     public void export(int... indexes) throws GeneralConvertException;

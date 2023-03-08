@@ -20,7 +20,7 @@ import java.util.List;
  * @author 权观宇
  * @since 2023-3-7 21:30:40
  */
-public class PDFExportPDFBox implements OFDExporter {
+public class PDFExporterPDFBox implements OFDExporter {
 
     /**
      * OFD解析器
@@ -59,7 +59,7 @@ public class PDFExportPDFBox implements OFDExporter {
      * @param pdfFilePath 生成PDF文件路径
      * @throws IOException 文件创建失败
      */
-    public PDFExportPDFBox(Path ofdFilePath, Path pdfFilePath) throws IOException {
+    public PDFExporterPDFBox(Path ofdFilePath, Path pdfFilePath) throws IOException {
         ofdReader = new OFDReader(ofdFilePath);
         pdfDoc = new PDDocument();
         pdfMaker = new PdfboxMaker(this.ofdReader, pdfDoc);
@@ -69,7 +69,11 @@ public class PDFExportPDFBox implements OFDExporter {
         pdfFilePath = pdfFilePath.toAbsolutePath();
         if (!Files.exists(pdfFilePath)) {
             Path parent = pdfFilePath.getParent();
-            if (!Files.exists(parent)) {
+            if (Files.exists(parent)) {
+                if (!Files.isDirectory(parent)) {
+                    throw new IllegalArgumentException("已经存在同名文件: " + parent);
+                }
+            } else {
                 Files.createDirectories(parent);
             }
             Files.createFile(pdfFilePath);
@@ -86,7 +90,7 @@ public class PDFExportPDFBox implements OFDExporter {
      * @param pdfOutStream 生成PDF文件流，流由调用者负责关闭。
      * @throws IOException 流操作失败
      */
-    public PDFExportPDFBox(InputStream ofdInStream, OutputStream pdfOutStream) throws IOException {
+    public PDFExporterPDFBox(InputStream ofdInStream, OutputStream pdfOutStream) throws IOException {
         ofdReader = new OFDReader(ofdInStream);
         pdfDoc = new PDDocument();
         pdfMaker = new PdfboxMaker(this.ofdReader, pdfDoc);
@@ -99,7 +103,7 @@ public class PDFExportPDFBox implements OFDExporter {
     /**
      * 导出指定OFD页
      *
-     * @param indexes 页码序列，如果为空表示全部页码
+     * @param indexes 页码序列，如果为空表示全部页码（注意：页码从0起）
      * @throws GeneralConvertException 导出异常
      */
     @Override

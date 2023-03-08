@@ -23,8 +23,8 @@ public class OFD2HTMLTest {
 //            Path ofdIn = Paths.get("src/test/resources/n.ofd");
 //            Path htmlOut = Paths.get("target/n.html");
             //发票示例.ofd
-            Path ofdIn = Paths.get("src/test/resources/发票示例.ofd");
-            Path htmlOut = Paths.get("target/发票示例.ofd/发票示例.html");
+            Path ofdIn = Paths.get("src/test/resources/999.ofd");
+            Path htmlOut = Paths.get("target/999.ofd/999.html");
             // 2. [可选]配置字体，别名，扫描目录等
             // FontLoader.getInstance().addAliasMapping(null, "小标宋体", "方正小标宋简体", "方正小标宋简体")
             // FontLoader.getInstance().scanFontDir(new File("src/test/resources/fonts"));
