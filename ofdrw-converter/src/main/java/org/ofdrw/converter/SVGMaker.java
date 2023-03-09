@@ -33,7 +33,6 @@ public class SVGMaker extends AWTMaker {
      * @param reader OFD解析器
      * @param ppm    每毫米像素数量(Pixels per millimeter)
      */
-    @Deprecated
     public SVGMaker(OFDReader reader, int ppm) {
         super(reader, ppm);
     }

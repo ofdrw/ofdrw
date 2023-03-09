@@ -21,6 +21,9 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +47,10 @@ public class HtmlMaker {
 
     private int screenWidth = 1000;
 
-    private String outputFile;
+    /**
+     * 文件导出存放路径
+     */
+    private Path outputPath;
 
     private float scale;
 
@@ -55,12 +61,76 @@ public class HtmlMaker {
      * @param ofdReader   OFD输入文件
      * @param outputFile  HTML输出文件路径
      * @param screenWidth 页面宽度，或者屏幕宽度
+     * @deprecated {@link  HtmlMaker#HtmlMaker(OFDReader, Path, int)}
      */
+    @Deprecated
     public HtmlMaker(OFDReader ofdReader, String outputFile, int screenWidth) {
         this.ofdReader = ofdReader;
-        this.outputFile = outputFile;
+        this.screenWidth = screenWidth;
+        if (outputFile == null || "".equals(outputFile)) {
+            throw new IllegalArgumentException("输出路径为空");
+        }
+        outputPath = Paths.get(outputFile).toAbsolutePath();
+        if (!Files.exists(outputPath)) {
+            Path parent = outputPath.getParent();
+            try {
+                if (Files.exists(parent)) {
+                    if (!Files.isDirectory(parent)) {
+                        throw new IllegalArgumentException("已经存在同名文件: " + parent);
+                    }
+                } else {
+                    Files.createDirectories(parent);
+                }
+                Files.createFile(outputPath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    /**
+     * HTML转换器
+     *
+     *
+     * @param ofdReader   OFD输入文件
+     * @param outputPath  HTML输出文件路径
+     * @param screenWidth 页面宽度，或者屏幕宽度
+     */
+    public HtmlMaker(OFDReader ofdReader, Path outputPath, int screenWidth) throws IOException {
+        this.ofdReader = ofdReader;
+        this.outputPath = outputPath;
+        this.screenWidth = screenWidth;
+        if (outputPath.toString().equals("")) {
+            throw new IllegalArgumentException("输出路径为空");
+        }
+        outputPath = outputPath.toAbsolutePath();
+        if (!Files.exists(outputPath)) {
+            Path parent = outputPath.getParent();
+            if (Files.exists(parent)) {
+                if (!Files.isDirectory(parent)) {
+                    throw new IllegalArgumentException("已经存在同名文件: " + parent);
+                }
+            } else {
+                Files.createDirectories(parent);
+            }
+            Files.createFile(outputPath);
+        }
+    }
+
+    /**
+     * 转HTML构造方法，注意该方法无法输出到文件
+     *
+     <p>
+     * 您仅允许使用 {@link #makePageDiv(SVGMaker, int)} 在获取每一页的Div元素
+     *
+     * @param ofdReader   OFD输入文件
+     * @param screenWidth 页面宽度，或者屏幕宽度
+     */
+    public HtmlMaker(OFDReader ofdReader, int screenWidth) throws IOException {
+        this.ofdReader = ofdReader;
         this.screenWidth = screenWidth;
     }
+
 
     /**
      * 将字符串写入文件
@@ -70,18 +140,21 @@ public class HtmlMaker {
      * @throws IOException IO异常
      */
     public void writeToFile(String filepath, String content) throws IOException {
-
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filepath))) {
             bufferedWriter.write(content);
             bufferedWriter.flush();
         }
-
     }
 
     /**
-     * 开始转换
+     * 转换全部文档
      */
     public void parse() {
+
+        if (this.outputPath == null) {
+            System.err.println("没有设置输出路径");
+            return;
+        }
 
         long start;
         long end;
@@ -112,11 +185,11 @@ public class HtmlMaker {
             Element pageDiv = new Element();
             pageDiv.setTagName("div");
             pageDiv.setAttribute(
-                "style",
-                String.format(
-                    "margin-bottom: 20px;position: relative;width:%dpx;height:%dpx;;",
-                    pageWidthPixel, pageHeightPixel
-                )
+                    "style",
+                    String.format(
+                            "margin-bottom: 20px;position: relative;width:%dpx;height:%dpx;;",
+                            pageWidthPixel, pageHeightPixel
+                    )
             );
 
             List<Element> elements = makePage(pageInfo);
@@ -143,19 +216,54 @@ public class HtmlMaker {
         }
 
         String ofdHtml = displayOfdDiv(pageDivs, svgs, boxs);
-
         try {
-            writeToFile(outputFile, ofdHtml);
+
+            Files.write(this.outputPath, ofdHtml.getBytes());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * ofd每页的object画到pdf
+     * 转换指定页为HTML
+     *
+     * @param svgMaker 图片转换器
+     * @param index    页码，从0开始
+     * @return 页面的转换后的HTML Div
+     */
+    public String makePageDiv(SVGMaker svgMaker, int index) {
+        PageInfo pageInfo = ofdReader.getPageInfo(index + 1);
+        ST_Box pageBox = pageInfo.getSize();
+
+        scale = (float) Math.round(((screenWidth - 10) / pageBox.getWidth()) * 10) / 10;
+        int pageWidthPixel = (int) converterDpi(pageBox.getWidth());
+        int pageHeightPixel = (int) converterDpi(pageBox.getHeight());
+
+
+        Element pageDiv = new Element();
+        pageDiv.setTagName("div");
+        pageDiv.setAttribute(
+                "style",
+                String.format("position: absolute;width:%dpx;height:%dpx;", pageWidthPixel, pageHeightPixel)
+        );
+        List<Element> elements = makePage(pageInfo);
+        for (Element ele : elements) {
+            pageDiv.appendChild(ele);
+        }
+        double paperWidth = pageBox.getWidth();
+        double ppm = (double) pageWidthPixel / paperWidth;
+        svgMaker.setPPM(ppm);
+        String svg = svgMaker.makePage(index);
+        String textLayer = ofdElementToXmlNode(pageDiv, null).asXML();
+        return String.format("<div style=\"background: white; width: %dpx;height: %dpx;\">%s%s</div>", pageWidthPixel, pageHeightPixel, textLayer, svg);
+    }
+
+
+    /**
+     * ofd每页的图元生成HTML元素
      *
      * @param pageInfo 页面信息
-     * @return PDF页面，只含文字节点
+     * @return HTML元素
      */
     private List<Element> makePage(PageInfo pageInfo) {
 
@@ -172,8 +280,8 @@ public class HtmlMaker {
 
         elements.addAll(elements2);
         return elements;
-
     }
+
 
     public String displayOfdDiv(List<Element> pageDivs, List<String> svgs, List<ST_Box> boxs) {
 
@@ -182,21 +290,21 @@ public class HtmlMaker {
         String svgss = "";
         for (int i = 0; i < svgs.size(); i++) {
             svgss = svgss +
-                "<div style=\"margin:0 auto;margin-top: 20px;text-align:center;background:white;" +
-                "height:" + boxs.get(i).getHeight() + "px;" +
-                "width:" + boxs.get(i).getWidth() + "px;" +
-                "\" class=\"svgItem\">" + svgs.get(i) + "</div>";
+                    "<div style=\"margin:0 auto;margin-top: 20px;text-align:center;background:white;" +
+                    "height:" + boxs.get(i).getHeight() + "px;" +
+                    "width:" + boxs.get(i).getWidth() + "px;" +
+                    "\" class=\"svgItem\">" + svgs.get(i) + "</div>";
         }
 
 
         String title = "文件预览";
         String htmlWrapper = "";
         String prefix = " <!DOCTYPE html>\n" +
-            "                <html lang=\"en\">\n" +
-            "                  <head>\n" +
-            "                    <meta charset=\"utf-8\">\n" +
-            "                    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n" +
-            "                    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">";
+                "                <html lang=\"en\">\n" +
+                "                  <head>\n" +
+                "                    <meta charset=\"utf-8\">\n" +
+                "                    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n" +
+                "                    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">";
         String titleElement = "<title>" + title + "</title>";
         String ele1 = "</head><body>";
 
@@ -206,31 +314,31 @@ public class HtmlMaker {
 
         String ele2 = "</div></body></html>";
         String style = "<style>" +
-            "            .svgWrapper {" +
-            "                margin: 0 auto;" +
-            "                left: 0;" +
-            "                right: 0;" +
-            "                text-align: center;" +
-            "                position: absolute;" +
-            "                z-index: 1" +
-            "            }" +
-            "            html," +
-            "            body {" +
-            "                margin: 0;" +
-            "                background: #808080;" +
-            "                height: 100%" +
-            "            }" +
-            "            .main-section {" +
-            "                padding-top: 20px;" +
-            "                display: flex;" +
-            "                flex-direction: column;" +
-            "                align-items: center;" +
-            "                justify-content: center;" +
-            "                background: #808080;" +
-            "                overflow: hidden;" +
-            "                position: relative;" +
-            "            }"+
-            "          </style>";
+                "            .svgWrapper {" +
+                "                margin: 0 auto;" +
+                "                left: 0;" +
+                "                right: 0;" +
+                "                text-align: center;" +
+                "                position: absolute;" +
+                "                z-index: 1" +
+                "            }" +
+                "            html," +
+                "            body {" +
+                "                margin: 0;" +
+                "                background: #808080;" +
+                "                height: 100%" +
+                "            }" +
+                "            .main-section {" +
+                "                padding-top: 20px;" +
+                "                display: flex;" +
+                "                flex-direction: column;" +
+                "                align-items: center;" +
+                "                justify-content: center;" +
+                "                background: #808080;" +
+                "                overflow: hidden;" +
+                "                position: relative;" +
+                "            }" +
+                "          </style>";
         String js = "";
 //                """
 //                <script>
@@ -256,16 +364,16 @@ public class HtmlMaker {
         }
 
         return sb.
-            append(prefix).
-            append(titleElement).
-            append(ele1).
-            append(svgWrapper).
-            append(main).
-            append(divs).
-            append(ele2).
-            append(style).
-            append(js)
-            .toString();
+                append(prefix).
+                append(titleElement).
+                append(ele1).
+                append(svgWrapper).
+                append(main).
+                append(divs).
+                append(ele2).
+                append(style).
+                append(js)
+                .toString();
     }
 
     private List<Element> renderLayer(List<CT_Layer> layerList) {
@@ -385,11 +493,11 @@ public class HtmlMaker {
                     text.setY((textCodePoint.getY() * ctm[0]));
                 } else {
                     text.setAttribute(
-                        "transform",
-                        String.format(
-                            "matrix(%s %s %s %s %.2f %.2f)",
-                            ctm[0], ctm[1], ctm[2], ctm[3], converterDpi(ctm[4]), converterDpi(ctm[5])
-                        )
+                            "transform",
+                            String.format(
+                                    "matrix(%s %s %s %s %.2f %.2f)",
+                                    ctm[0], ctm[1], ctm[2], ctm[3], converterDpi(ctm[4]), converterDpi(ctm[5])
+                            )
                     );
                 }
             } else {
@@ -409,31 +517,31 @@ public class HtmlMaker {
             text.setAttribute("fill", "transparent");
 
             text.setAttribute(
-                "style",
-                String.format(
-                    "font-weight: %d;font-size:%dpx;font-family: %s;%s",
-                    fontWeight.getWeight(), fontSize, "simSum", ""
-                )
+                    "style",
+                    String.format(
+                            "font-weight: %d;font-size:%dpx;font-family: %s;%s",
+                            fontWeight.getWeight(), fontSize, "simSum", ""
+                    )
             );
             svg.appendChild(text);
         }
 
 
         svg.setAttribute("style",
-            String.format(
-                "overflow:visible;" +
-                    "position:absolute;" +
-                    "width:%.1fpx;" +
-                    "height:%.1fpx;" +
-                    "left:%.1fpx;" +
-                    "top:%.1fpx;" +
-                    "z-index:%s",
-                converterDpi(boundary.getWidth()),
-                converterDpi(boundary.getHeight()),
-                converterDpi(boundary.getTopLeftX()),
-                converterDpi(boundary.getTopLeftY()),
-                textObject.getID()
-            )
+                String.format(
+                        "overflow:visible;" +
+                                "position:absolute;" +
+                                "width:%.1fpx;" +
+                                "height:%.1fpx;" +
+                                "left:%.1fpx;" +
+                                "top:%.1fpx;" +
+                                "z-index:%s",
+                        converterDpi(boundary.getWidth()),
+                        converterDpi(boundary.getHeight()),
+                        converterDpi(boundary.getTopLeftX()),
+                        converterDpi(boundary.getTopLeftY()),
+                        textObject.getID()
+                )
         );
         return svg;
     }
@@ -497,7 +605,6 @@ public class HtmlMaker {
         x = textCode.getX();
         y = textCode.getY();
 
-
         List<Double> deltaXList = new ArrayList<>();
         List<Double> deltaYList = new ArrayList<>();
 
@@ -513,18 +620,26 @@ public class HtmlMaker {
         for (int i = 0; i < textStr.length(); i++) {
 
             if (i > 0 && deltaXList.size() > 0) {
-                x += deltaXList.get(i - 1);
+                int offset = i - 1;
+                if (offset >= deltaXList.size()) {
+                    offset = deltaXList.size() - 1;
+                }
+                x += deltaXList.get(offset);
             }
             if (i > 0 && deltaYList.size() > 0) {
-                y += deltaYList.get(i - 1);
+                int offset = i - 1;
+                if (offset >= deltaYList.size()) {
+                    offset = deltaYList.size() - 1;
+                }
+                y += deltaYList.get(offset);
             }
             String text = textStr.substring(i, i + 1);
 
             TextCodePoint point = new TextCodePoint(
-                converterDpi(x),
-                converterDpi(y),
-                text,
-                deltaYList.size() > 0 && deltaXList.size() == 0
+                    converterDpi(x),
+                    converterDpi(y),
+                    text,
+                    deltaYList.size() > 0 && deltaXList.size() == 0
             );
 
             textCodePointList.add(point);
@@ -537,12 +652,12 @@ public class HtmlMaker {
     public static boolean isChineseByBlock(char c) {
         Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
         if (ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
-            || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
-            || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
-            || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C
-            || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D
-            || ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
-            || ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT) {
+                || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+                || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
+                || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C
+                || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D
+                || ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
+                || ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT) {
             return true;
         } else {
             return false;
