@@ -75,7 +75,8 @@ public class HTMLExporter implements OFDExporter {
             "  <title>文件预览</title>\n" +
             "</head>\n" +
             "<body style=\"margin: 0;background: #E6E8EB;height: 100%\">\n" +
-            "  <div style=\"display: flex; flex-direction: column;align-items: center;\">").getBytes(StandardCharsets.UTF_8);
+            "  <div style=\"display: flex; flex-direction: column;align-items: center;\">" +
+            "    <div style=\"height: 10px;\"></div>").getBytes(StandardCharsets.UTF_8);
     /**
      * 文件标签闭合
      * <p>
