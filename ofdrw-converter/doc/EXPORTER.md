@@ -208,6 +208,36 @@ try (HTMLExporter exporter = new HTMLExporter(ofdPath, htmlPath)) {
 > 详见 [测试用例](../src/test/java/org/ofdrw/converter/export/HTMLExporterTest.java)
 
 
+
+### 导出为文本
+
+导出OFD文档页面为文本文件，并非所有OFD页面都能导出文本，只有符合特定条件的OFD才可导出。
+
+实现类：`org.ofdrw.converter.export.TextExporter`
+
+注意事项：
+
+- 部分OFD文档由于采用字形索引来定位文字、有个OFD整个页面均为路径数据图元而不是文字图元、有的OFD页面整个都为图片等诸多原因，无法保证一定能够导出文本。
+- 由于文本布局等各种因素，导出文本顺序也难以与原文文本顺序一致。
+
+示例：
+
+```
+Path ofdPath = Paths.get("src/test/resources/999.ofd");
+Path txtPath = Paths.get("target/999.txt");
+try (TextExporter exporter = new TextExporter(ofdPath, txtPath)) {
+    exporter.export();
+}
+```
+
+效果如下：
+
+![img.png](img/textexport.png)
+
+> 详见 [测试用例](../src/test/java/org/ofdrw/converter/export/TextExporterTest.java)
+
+
+
 ### 导出为PDF
 
 > 提示：不推荐导出为PDF，OFD本身就是国产的板式文件，非特殊场景没有必要导出为PDF文件。

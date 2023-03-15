@@ -14,7 +14,7 @@ public class PDF2OFDTest {
     @Test
     void pdfbox2ofdrw() throws Exception {
 
-        Path path = Paths.get("C:\\Users\\pc\\Desktop\\006.pdf");
+        Path path = Paths.get("src/test/resources/Test.pdf");
         Path dir = Paths.get("target", path.getFileName().toString());
 
         Path dst = Paths.get("target/helloworld.ofd");

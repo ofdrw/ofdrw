@@ -11,7 +11,7 @@ import java.nio.file.Path;
  * @author 权观宇
  * @since 2023-3-14 22:59:16
  */
-public interface ConvertOFD extends Closeable {
+public interface DocConverter extends Closeable {
 
     /**
      * 转换为OFD页面
