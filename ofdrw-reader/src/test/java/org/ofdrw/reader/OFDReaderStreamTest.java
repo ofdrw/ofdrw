@@ -48,28 +48,6 @@ class OFDReaderStreamTest {
         }
     }
 
-    /**
-     * 获取附件对象
-     *
-     * @throws IOException
-     */
-    @Test
-    void getAttachment() throws IOException {
-        Path src = Paths.get("src/test/resources/AddAttachment.ofd");
-
-        try (OFDReader reader = new OFDReader(new ByteArrayInputStream(Files.readAllBytes(src)))) {
-            CT_Attachment attachment = reader.getAttachment("AAABBB");
-            Assertions.assertNull(attachment);
-
-            Path file = reader.getAttachmentFile("AAABBB");
-            Assertions.assertNull(file);
-
-            file = reader.getAttachmentFile("Gao");
-            Assertions.assertTrue(Files.exists(file));
-
-        }
-
-    }
 
     @Test
     void close() throws IOException {

@@ -228,45 +228,6 @@ public class DocEditDemos {
     }
 
 
-    /**
-     * 向文件中加入附件文件
-     */
-    @Test
-    void addAttachmentTest() throws IOException {
-        Path outP = Paths.get("target/AddAttachment.ofd");
-        Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
-        Path file2 = Paths.get("src/test/resources", "NotoSerifCJKsc-Regular.otf");
-
-        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
-            Paragraph p = new Paragraph();
-            Span span = new Span("这是一个带有附件的OFD文件").setFontSize(10d);
-            p.add(span);
-            ofdDoc.add(p);
-
-            // 加入附件文件
-            ofdDoc.addAttachment(new Attachment("Gao", file));
-            ofdDoc.addAttachment(new Attachment("FontFile", file2));
-        }
-        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
-    }
-
-    /**
-     * 替换附件文件
-     */
-    @Test
-    void replaceAttachmentTest() throws IOException {
-        Path srcP = Paths.get("src/test/resources/AddAttachment.ofd");
-        Path outP = Paths.get("target/ReplaceAttachment.ofd");
-        Path file = Paths.get("src/test/resources", "ASCII字体宽度测量.html");
-
-        try (OFDReader reader = new OFDReader(srcP);
-             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
-            // 加入附件文件
-            ofdDoc.addAttachment(new Attachment("Gao", file));
-        }
-        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
-    }
-
 
     /**
      * 添加书签

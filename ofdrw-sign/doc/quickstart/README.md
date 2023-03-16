@@ -11,10 +11,11 @@
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-sign</artifactId>
-    <version>1.20.2</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
+> - 若您没有采用Maven管理项目，请参阅项目中`pom.xml`文件中的依赖，手动解决三方依赖包问题。
 
 实现电子签章你需要下面步骤：
 

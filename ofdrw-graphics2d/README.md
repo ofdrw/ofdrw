@@ -6,20 +6,25 @@ OFDRW已经有Canvas元素了为什么要实现`Graphics2D`接口？
 
 - 借助标准Graphics2D接口可以复用现有的各类格式文件转换库的转换代码，实现其他类型文件或格式转换为OFD文件，如PDF转换OFD。
 
-
-> 致谢：[jfree/skijagraphics2d](https://github.com/jfree/skijagraphics2d)、[apache.org/batik](https://xmlgraphics.apache.org/batik/) 它们为ofdrw-graphics2d模块的开发提供非常多的灵感，非常感谢。
+>
+致谢：[jfree/skijagraphics2d](https://github.com/jfree/skijagraphics2d)、[apache.org/batik](https://xmlgraphics.apache.org/batik/)
+它们为ofdrw-graphics2d模块的开发提供非常多的灵感，非常感谢。
 
 ## Quick Start
 
 引入依赖
 
 ```xml
+
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-graphics2d</artifactId>
-    <version>1.20.2</version>
+    <version>2.0.0</version>
 </dependency>
 ```
+
+> - 若您没有采用Maven管理项目，请参阅项目中`pom.xml`文件中的依赖，手动解决三方依赖包问题。
+
 
 ofdrw-graphics2d模块使用流程如下：
 
@@ -69,26 +74,26 @@ OFDRW-Graphics2d模块主要由以下构成：
 您可以通过下面构造器通过提供生成文件的路径来实现`OFDGraphicsDocument`创建。
 
 ```java
-OFDGraphicsDocument doc = new OFDGraphicsDocument(dst);
+OFDGraphicsDocument doc=new OFDGraphicsDocument(dst);
 ```
 
 在获得了`OFDGraphicsDocument`对象之后您就可以往刚才创建的OFD文件中添加页面了，请使用下面接口`newPage`创建页面
 
 通过Box
 
-```java
-CT_PageArea pSize = new CT_PageArea()
+```
+CT_PageArea pSize=new CT_PageArea()
         .setPhysicalBox(0,0,210d,297d)
         .setApplicationBox(0,0,210d,297d);
 
-OFDPageGraphics2D g = doc.newPage(pSize);
+OFDPageGraphics2D g=doc.newPage(pSize);
 ```
 
 > 若`newPage`参数为`null`，那么创建的页面将使用文档默认页面大小，一般为 A4 (210 x 297 mm) 大小。
 
 或通过手动设定页面长、宽的方式创建页面：
 
-```java
+```
 OFDPageGraphics2D g = doc.newPage(210d,297d);
 ```
 
@@ -96,11 +101,11 @@ OFDPageGraphics2D g = doc.newPage(210d,297d);
 
 除了创建页面之外`OFDGraphicsDocument`还提供部分资源管理功能：
 
-| 函数原型                                                | 作用              |
-|:----------------------------------------------------|:----------------|
-| `public ST_ID addResImg(Image img)`                 | 向文档中添加图片资源。     |
-| `public ST_ID addDrawParam(CT_DrawParam drawParam)` | 向文档中绘制参数对象。     |
-| `public ST_ID newID()`                              | 产生下一个文档中对象的ID号。 |
+| 函数原型                                         | 作用              |
+|:---------------------------------------------|:----------------|
+| `ST_ID addResImg(Image img)`                 | 向文档中添加图片资源。     |
+| `ST_ID addDrawParam(CT_DrawParam drawParam)` | 向文档中绘制参数对象。     |
+| `ST_ID newID()`                              | 产生下一个文档中对象的ID号。 |
 
 ### OFDPageGraphics2D OFD页面2D图形
 
@@ -115,34 +120,34 @@ OFDPageGraphics2D g = doc.newPage(210d,297d);
 
 下面列举常用的`Graphics2D`系列API
 
-| 函数原型                                                                                               | 作用                                |
-|:---------------------------------------------------------------------------------------------------|:----------------------------------|
-| `public Graphics create()`                                                                         | 以当前的绘图环境创建新的绘图上下文，类似于Canvas的Save。 |
-| `public void dispose()`                                                                            | 销毁绘制上下文对象。                        |
-| `public void drawString(String str, float x, float y)`                                             | 绘制文字。                             |
-| `public boolean drawImage(Image img, int x, int y, int width, int height, ImageObserver observer)` | 在指定矩形区域内绘制图片。                     |
-| `public void fill(Shape s)`                                                                        | 填充图形区域。                           |
-| `public void setPaint(Paint paint)`                                                                | 设置画笔信息，如颜色、渐变等。                   |
-| `public void setStroke(Stroke s)`                                                                  | 设置描边属性，如粗细、虚线样式。                  |
-| `public void setFont(Font font)`                                                                   | 设置字体信息，包括字号、样式等。                  |
-| `public void setClip(Shape clip)`                                                                  | 设置裁剪区域。                           |
-| `public void clip(Shape s)`                                                                        | 追加自定义裁剪区域。                        |
-| `public void drawLine(int x1, int y1, int x2, int y2)`                                             | 画线。                               |
-| `public void fillRect(int x, int y, int width, int height)`                                        | 填充矩形区域。                           |
-| `public void drawRect(int x, int y, int width, int height)`                                        | 描边矩形区域。                           |
-| `public void drawOval(int x, int y, int width, int height)`                                        | 描边椭圆。                             |
-| `public void fillOval(int x, int y, int width, int height)`                                        | 填充椭圆。                             |
-| `public void drawArc(int x, int y, int width, int height, int startAngle, int arcAngle)`           | 描边圆弧。                             |
-| `public void fillArc(int x, int y, int width, int height, int startAngle, int arcAngle)`           | 填充圆弧。                             |
-| `public void drawPolyline(int[] xPoints, int[] yPoints, int nPoints)`                              | 描边折线。                             |
-| `public void drawPolygon(int[] xPoints, int[] yPoints, int nPoints)`                               | 描边多边形。                            |
-| `public void fillPolygon(int[] xPoints, int[] yPoints, int nPoints)`                               | 填充多边形。                            |
-| `public void translate(double tx, double ty)`                                                      | 移动坐标原点。                           |
-| `public void rotate(double theta)`                                                                 | 旋转坐标。                             |
-| `public void scale(double sx, double sy) `                                                         | 缩放坐标。                             |
-| `public void shear(double shx, double shy)`                                                        | 切变坐标。                             |
-| `public void transform(AffineTransform tx)`                                                        | 在当前坐标系基础追加变换矩阵变换坐标系。              |
-| `public void setTransform(AffineTransform tx)`                                                     | 设置坐标系统的变换矩阵。                      |
+| 函数原型                                                                                        | 作用                                |
+|:--------------------------------------------------------------------------------------------|:----------------------------------|
+| `Graphics create()`                                                                         | 以当前的绘图环境创建新的绘图上下文，类似于Canvas的Save。 |
+| `void dispose()`                                                                            | 销毁绘制上下文对象。                        |
+| `void drawString(String str, float x, float y)`                                             | 绘制文字。                             |
+| `boolean drawImage(Image img, int x, int y, int width, int height, ImageObserver observer)` | 在指定矩形区域内绘制图片。                     |
+| `void fill(Shape s)`                                                                        | 填充图形区域。                           |
+| `void setPaint(Paint paint)`                                                                | 设置画笔信息，如颜色、渐变等。                   |
+| `void setStroke(Stroke s)`                                                                  | 设置描边属性，如粗细、虚线样式。                  |
+| `void setFont(Font font)`                                                                   | 设置字体信息，包括字号、样式等。                  |
+| `void setClip(Shape clip)`                                                                  | 设置裁剪区域。                           |
+| `void clip(Shape s)`                                                                        | 追加自定义裁剪区域。                        |
+| `void drawLine(int x1, int y1, int x2, int y2)`                                             | 画线。                               |
+| `void fillRect(int x, int y, int width, int height)`                                        | 填充矩形区域。                           |
+| `void drawRect(int x, int y, int width, int height)`                                        | 描边矩形区域。                           |
+| `void drawOval(int x, int y, int width, int height)`                                        | 描边椭圆。                             |
+| `void fillOval(int x, int y, int width, int height)`                                        | 填充椭圆。                             |
+| `void drawArc(int x, int y, int width, int height, int startAngle, int arcAngle)`           | 描边圆弧。                             |
+| `void fillArc(int x, int y, int width, int height, int startAngle, int arcAngle)`           | 填充圆弧。                             |
+| `void drawPolyline(int[] xPoints, int[] yPoints, int nPoints)`                              | 描边折线。                             |
+| `void drawPolygon(int[] xPoints, int[] yPoints, int nPoints)`                               | 描边多边形。                            |
+| `void fillPolygon(int[] xPoints, int[] yPoints, int nPoints)`                               | 填充多边形。                            |
+| `void translate(double tx, double ty)`                                                      | 移动坐标原点。                           |
+| `void rotate(double theta)`                                                                 | 旋转坐标。                             |
+| `void scale(double sx, double sy) `                                                         | 缩放坐标。                             |
+| `void shear(double shx, double shy)`                                                        | 切变坐标。                             |
+| `void transform(AffineTransform tx)`                                                        | 在当前坐标系基础追加变换矩阵变换坐标系。              |
+| `void setTransform(AffineTransform tx)`                                                     | 设置坐标系统的变换矩阵。                      |
 
 您也可以参考已有测试用例来学习如何使用`Graphics2D API`：
 

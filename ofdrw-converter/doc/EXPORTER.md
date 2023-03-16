@@ -9,6 +9,19 @@ OFDRW提供了将OFD文档导出为其他格式文档的能力，如导出为图
 
 ## 入门
 
+使用Maven 引入相关模块
+
+```xml
+<dependency>
+    <groupId>org.ofdrw</groupId>
+    <artifactId>ofdrw-converter</artifactId>
+    <version>2.0.0</version>
+</dependency>
+```
+
+> - 若您没有采用Maven管理项目，请参阅项目中`pom.xml`文件中的依赖，手动解决三方依赖包问题。
+
+
 OFDRW 转换模块在`2.0.0`之后抽象了多种文档导出接口，使用统一的API实现OFD文档导出功能。
 
 在开始文档转换之前您可以需要花几分钟，学习一下`OFDExporter`如何使用。
@@ -251,7 +264,7 @@ try (TextExporter exporter = new TextExporter(ofdPath, txtPath)) {
 
 注意事项：
 
-- 2种实现目前均由社区维护，导出无法保证文档效果一致性，若您有建设性意见请提交PR。
+- 导出无法保证文档效果一致性，若您有建设性意见请提交PR。
 
 基于PDFBox实现示例：
 

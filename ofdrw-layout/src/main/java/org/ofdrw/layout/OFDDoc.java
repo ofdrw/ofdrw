@@ -169,7 +169,7 @@ public class OFDDoc implements Closeable {
     /**
      * 在指定路径位置上创建一个OFD文件
      *
-     * @param outStream OFD输出流
+     * @param outStream OFD输出流，由调用者负责关闭。
      */
     public OFDDoc(OutputStream outStream) {
         this();

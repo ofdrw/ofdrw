@@ -13,13 +13,13 @@
   <img width="275" height="275" src="./img/icon2.png">
 </p>
 
-OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、文档保护、文档合并、转换等功能。
+OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、文档保护、文档合并、转换、导出等功能。
 
-本项目采用Apache 2.0许可，请尊重开源项目作者，在软件中附带OFDRW开源软件许可。
+本项目采用[Apache 2.0许可](./LICENSE)，请尊重开源项目作者，在软件中附带OFDRW开源软件许可，**在遵守开源协议前提下可免费商业化使用**。
 
 根据[《GB/T 33190-2016 电子文件存储与交换格式版式文档》](./GBT_33190-2016_电子文件存储与交换格式版式文档.pdf)标准实现版式文档OFD库（含有书签）。
 
-项目采用模块管理，各模块如下：
+项目采用Maven模块管理，各模块如下：
 
 - [**ofdrw-core**](./ofdrw-core) OFD核心API，参考[《GB/T 33190-2016 电子文件存储与交换格式版式文档》](./GBT_33190-2016_电子文件存储与交换格式版式文档.pdf)实现的基础数据结构。
 - [**ofdrw-font**](./ofdrw-font) 生成OFD字体相关。
@@ -30,27 +30,32 @@ OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、
 - [**ofdrw-gm**](./ofdrw-gm) 用于支持签章模块需要的国密电子签章数据结构。
 - [**ofrw-crypto**](./ofdrw-crypto) 用于实现《GM/T 0099-2020 开放版式文档密码应用技术规范》对OFD的密码相关功能。
 - [**ofdrw-gv**](./ofdrw-gv) OFDRW 所有模块所共用的全局变量。
-- [**ofdrw-converter**](./ofdrw-converter) OFD文档转换PDF、图片、SVG、HTML。
+- [**ofdrw-converter**](./ofdrw-converter) OFD文档转换。 ***New***
 - [**ofdrw-tool**](./ofdrw-tool) OFD文档工具，文档合并、裁剪、重组。
+- [**ofdrw-graphics2d**](./ofdrw-graphics2d) 实现了AWT Graphics2D接口，生成OFD文档内容。 ***New***
 - [**ofdrw-full**](./ofdrw-full) 上述所有模块整合包，用于简化依赖引入。
 
 注：
 
 - 您可以根据需求裁剪模块优化程序体积。
-- 您可以仅引用`ofdrw-core`中定义的数据结来构建属于您自己的OFD库。
+- 您可以仅引用`ofdrw-core`中定义的数据结来构建属于您自己的OFD库，就像[ofdrw-graphics2d](./ofdrw-graphics2d)那样。
 
 ## QuickStart
 
-引入依赖
+Maven项目引入依赖
 ```xml
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>1.20.2</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
-> OFDRW 将持续保证API的向下兼容，您可以放心的升级OFDRW库至最新版本。
+**OFDRW 将持续保证API的向下兼容，您可以放心的升级OFDRW库至最新版本。**
+
+> - 若您没有采用Maven管理项目，请参阅项目中`pom.xml`文件中的依赖，手动解决三方依赖包问题。
+> - 若出现NoClassFound等错误，请检查相关包是否存在冲突。
+
 
 如何生成一份OFD文档，如何把大象放入冰箱？
 
@@ -72,14 +77,15 @@ public class HelloWorld {
 
 ![示例](./ofdrw-layout/doc/示例.png)
 
-- [生成示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/OFDDocTest.java)
-- [布局示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/LayoutTest.java)
+- [文档生成API示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/OFDDocTest.java)
+- [文档布局示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/LayoutTest.java)
 - [Canvas示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/element/canvas/DrawContextTest.java)
 - [文字抽取示例](./ofdrw-reader/src/test/java/org/ofdrw/reader/ContentExtractorTest.java)
 - [水印示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/cases/watermark/WatermarkTest.java)
 - [段落布局示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/ParagraphLayoutDemo.java)
-- [数字签名清理示例](./ofdrw-sign/src/test/java/org/ofdrw/sign/SignCleanerTest.java)
 - [文档编辑示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/DocEditDemos.java)
+- [附件操作示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/AttachmentTest.java)
+- [数字签名清理示例](./ofdrw-sign/src/test/java/org/ofdrw/sign/SignCleanerTest.java)
 
 相关文档目录：
 
@@ -87,17 +93,12 @@ public class HelloWorld {
 - [OFD R&W Canvas](./ofdrw-layout/doc/canvas/README.md)
 - [OFD R&W 签名签章快速入门](./ofdrw-sign/doc/quickstart/README.md)
 - [OFD R&W 加密 完整性保护协议](./ofdrw-crypto/README.md)
-- [OFD R&W OFD转换PDF](./ofdrw-converter/README.md)
-- [OFD R&W OFD转换图片](./ofdrw-converter/README.md)
-- [OFD R&W OFD转换SVG](./ofdrw-converter/README.md)
-- [OFD R&W OFD转换HTML](./ofdrw-converter/README.md)
+- [OFD R&W 转换OFD/OFD导出 ](./ofdrw-converter/README.md)
 - [OFD R&W 字形数据解析](./ofdrw-converter/src/main/java/org/ofdrw/converter/font/README.md)
 - [OFD R&W 文档合并](./ofdrw-tool/README.md)
 
 
-OFD阅读器客户端: [数科阅读器 . http://www.suwell.cn/](http://www.suwell.cn/)
-
-### 社区解决方案
+### 相关解决方案
 
 #### HTML5
 
@@ -108,12 +109,12 @@ HTML5前端预览解决方案： [DLTech21/ofd.js . https://github.com/DLTech21/
 - `svg`及`canvas`渲染实现。
 - 完全浏览器OFD页面渲染。
 
-#### 开源客户端
+#### 开源阅读器
 
 推荐开源客户端预览解决方案： [roy19831015/OfdiumEx . https://github.com/roy19831015/OfdiumEx](https://github.com/roy19831015/OfdiumEx)
 
 - 基于cairo库渲染OFD。
-- Windows客户端
+- Windows客户端阅读器
 
 #### OFD R&W Android
 
@@ -128,8 +129,14 @@ OFD Reader and Writer 安卓平台解决方案： [DLTech21/ofdrw-aar . https://
 - 支持OFD解析。
 - 基于java.awt解析OFD实现图片绘制。
 
-## 源码安装
+#### 阅读器
 
+阅读器方面，您也可以尝试：
+
+- [数科网维公司 . 数科OFD阅读器 . www.ofd.cn](https://www.ofd.cn/)
+- [Foxit . 福昕OFD . www.foxitsoftware.cn/ofd/](https://www.foxitsoftware.cn/ofd/)
+
+## 源码安装
 
 > 支持 ***JDK 1.8*** 及以上版本构建。
 
@@ -161,7 +168,7 @@ mvn install
 
 
 > - 若您遇到与OFD相关的技术问题，欢迎进群交流!
-> - 若您对项目有建设性意见或方案欢迎提交**Issue**与**PR**。
+> - 若您对项目有建设性意见或方案欢迎提交**Issue**与**Pull Request**。
 
 ## 参与贡献
 
@@ -179,6 +186,8 @@ mvn install
 ### 进展
 
 [>> 项目进展](releasenotes.md)
+
+> 在OFDRW 2.0.0之后，项目进展以发布说明的方式在项目托管仓库中描述。
 
 ### 项目关注度
 
