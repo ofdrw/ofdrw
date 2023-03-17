@@ -27,7 +27,7 @@ public abstract class STBase implements Serializable {
     /**
      * 如果浮点数为整数，则省略小数
      * <p>
-     * 浮点数含有小数，那么对保留3位小数，并且四舍五入
+     * 浮点数含有小数，那么对保留3位有效小数
      *
      * @param d 浮点数
      * @return 数字字符串
@@ -35,7 +35,22 @@ public abstract class STBase implements Serializable {
     public static String fmt(double d) {
         if (d == (long) d) {
             return String.format("%d", (long) d);
-        } else {
+        } else if (-1 < d && d < 1) {
+            String str = String.format("%f", d);
+
+            int len = str.length();
+            for (int i = 0; i < len; i++) {
+                char c = str.charAt(i);
+                if (c - '0' <= 0) {
+                    continue;
+                }
+                if (i + 3 <= len) {
+                    return str.substring(0, i + 3);
+                }
+                return str.substring(0, len);
+            }
+            return str;
+        }  else {
             return String.format("%.3f", d);
         }
     }

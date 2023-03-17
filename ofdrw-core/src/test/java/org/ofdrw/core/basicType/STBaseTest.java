@@ -35,11 +35,15 @@ class STBaseTest {
     }
 
     @Test
-    public void fmt() {
+    public void testFmt() {
+
         assertEquals("9", ST_Box.fmt(9));
         assertEquals("9", ST_Box.fmt(9.0));
-        assertEquals("112.00", ST_Box.fmt(111.999999));
-        assertEquals("3.14", ST_Box.fmt(3.1415926));
-
+        assertEquals("112.000", ST_Box.fmt(111.999999));
+        assertEquals("3.142", ST_Box.fmt(3.1415926));
+        assertEquals("0.0222", ST_Box.fmt(0.022221));
+        assertEquals("0.00200", ST_Box.fmt(0.002));
+        assertEquals("0.000102", ST_Box.fmt(0.000102));
     }
+
 }

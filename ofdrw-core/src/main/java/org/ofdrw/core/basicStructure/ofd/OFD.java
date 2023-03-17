@@ -3,9 +3,7 @@ package org.ofdrw.core.basicStructure.ofd;
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 主入口
@@ -18,11 +16,11 @@ public class OFD extends OFDElement {
      * 【必选】
      * 文件格式的版本号
      * <p>
-     * 固定值： 1.0
+     * 固定值： 1.2
      * <p>
      * 参照表 3
      */
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.2";
 
     /**
      * 【必选】
@@ -68,12 +66,23 @@ public class OFD extends OFDElement {
     }
 
     /**
-     * 【必选 属性】文件格式版本号，取值为“1.0”
+     * 【必选 属性】文件格式版本号
      *
      * @return 文件格式版本号
      */
     public String getVersion() {
-        return VERSION;
+        return this.attributeValue("Version");
+    }
+
+    /**
+     * 【必选 属性】设置 文件版本号
+     *
+     * @param version 版本好
+     * @return this
+     */
+    public OFD setVersion(String version) {
+        this.addAttribute("Version", version);
+        return this;
     }
 
     /**

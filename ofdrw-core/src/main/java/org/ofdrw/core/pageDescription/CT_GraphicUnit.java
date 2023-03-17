@@ -7,9 +7,13 @@ import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.pageDescription.clips.Area;
+import org.ofdrw.core.pageDescription.clips.CT_Clip;
+import org.ofdrw.core.pageDescription.clips.ClipAble;
 import org.ofdrw.core.pageDescription.clips.Clips;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
+
+import java.util.List;
 
 /**
  * 图元对象
@@ -508,9 +512,26 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @param clips 图元对象的裁剪区域序列
      * @return this
      */
-    public CT_GraphicUnit setClips(Clips clips) {
+    public CT_GraphicUnit<T> setClips(Clips clips) {
         if (clips == null) {
             return this;
+        }
+
+        List<CT_Clip> ctClips = clips.getClips();
+        if (ctClips == null || ctClips.isEmpty()) {
+            return this;
+        }
+        // 在裁剪区域被加入图元时，设置裁剪对象中的路径数据的Boundary，以符合基础的图元必要数据要求，
+        for (CT_Clip ctClip : ctClips) {
+            List<Area> areas = ctClip.getAreas();
+            for (Area area : areas) {
+                ClipAble clipObj = area.getClipObj();
+                if (clipObj instanceof CT_GraphicUnit) {
+                    ST_Box boundary = this.getBoundary().clone().
+                            setTopLeftX(0d).setTopLeftY(0d);
+                    ((CT_GraphicUnit<?>) clipObj).setBoundary(boundary);
+                }
+            }
         }
         this.add(clips);
         return this;

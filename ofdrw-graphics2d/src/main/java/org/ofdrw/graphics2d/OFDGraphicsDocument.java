@@ -6,7 +6,6 @@ import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.ofd.docInfo.CT_DocInfo;
-
 import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
@@ -16,7 +15,6 @@ import org.ofdrw.core.basicStructure.res.resources.DrawParams;
 import org.ofdrw.core.basicStructure.res.resources.MultiMedias;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
-
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.gv.GlobalVar;
 import org.ofdrw.pkg.container.*;
@@ -54,9 +52,16 @@ public class OFDGraphicsDocument implements Closeable {
     /**
      * OFD公共资源
      * <p>
-     * 所有图形图像都将存储于公共资源中
+     * 字形、颜色空间等宜在公共资源文件中描述
      */
-    public final Res publicRes;
+    public final Res pubRes;
+
+    /**
+     * 文档资源
+     * <p>
+     * 绘制参数、多媒体和矢量图像等宜在文档资源文件中描述
+     */
+    public final Res docRes;
 
     /**
      * 多媒体清单，用于记录添加到文档的资源信息
@@ -139,6 +144,7 @@ public class OFDGraphicsDocument implements Closeable {
                 .setDocRoot(new ST_Loc("Doc_0/Document.xml"));
         OFD ofd = new OFD().addDocBody(docBody);
 
+
         // 创建一个低层次的文档对象
         document = new Document();
         cdata = new CT_CommonData();
@@ -160,10 +166,15 @@ public class OFDGraphicsDocument implements Closeable {
         this.docDir = docDir;
         docDir.setDocument(document);
 
-        // 创建公共资源清单，容器目录为文档根目录下的Res目录
-        publicRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
-        docDir.setPublicRes(publicRes);
+        // 创建公共资源清单
+        pubRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
+        docDir.setPublicRes(pubRes);
         cdata.addPublicRes(ST_Loc.getInstance("PublicRes.xml"));
+
+        // 创建文档资源清单
+        docRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
+        docDir.setDocumentRes(docRes);
+        cdata.addDocumentRes(ST_Loc.getInstance("DocumentRes.xml"));
     }
 
     /**
@@ -174,7 +185,7 @@ public class OFDGraphicsDocument implements Closeable {
     private MultiMedias obtainMedias() {
         if (this.medias == null) {
             this.medias = new MultiMedias();
-            publicRes.addResource(this.medias);
+            docRes.addResource(this.medias);
         }
         return this.medias;
     }
@@ -187,7 +198,7 @@ public class OFDGraphicsDocument implements Closeable {
     private DrawParams obtainDrawParam() {
         if (this.drawParams == null) {
             this.drawParams = new DrawParams();
-            publicRes.addResource(this.drawParams);
+            docRes.addResource(this.drawParams);
         }
         return this.drawParams;
     }
@@ -227,12 +238,12 @@ public class OFDGraphicsDocument implements Closeable {
         org.ofdrw.core.basicStructure.pageObj.Page pageObj = new org.ofdrw.core.basicStructure.pageObj.Page();
         if (pageSize != null) {
             pageObj.setArea(pageSize);
-        }else{
+        } else {
             pageSize = this.cdata.getPageArea();
         }
         pageDir.setContent(pageObj);
 
-        return new OFDPageGraphics2D(this, pageDir, pageObj,pageSize.getBox() );
+        return new OFDPageGraphics2D(this, pageDir, pageObj, pageSize.getBox());
     }
 
     /**
@@ -254,15 +265,15 @@ public class OFDGraphicsDocument implements Closeable {
             BufferedImage bi;
             if (img instanceof BufferedImage) {
                 bi = (BufferedImage) img;
-            }else{
-                bi   = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+            } else {
+                bi = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
                 Graphics g2 = bi.getGraphics();
                 g2.drawImage(img, 0, 0, null);
                 g2.dispose();
             }
             ImageIO.write(bi, "png", imgFile);
         } catch (IOException e) {
-            throw new RuntimeException("graphics2d 图片写入IO异常",e);
+            throw new RuntimeException("graphics2d 图片写入IO异常", e);
         }
         // 生成加入资源的ID
         ST_ID id = new ST_ID(MaxUnitID.incrementAndGet());
