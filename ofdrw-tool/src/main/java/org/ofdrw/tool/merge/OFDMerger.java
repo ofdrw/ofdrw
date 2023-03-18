@@ -25,12 +25,14 @@ import org.ofdrw.reader.ResourceLocator;
 import org.ofdrw.reader.model.TemplatePageEntity;
 
 import java.io.Closeable;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -312,11 +314,8 @@ public class OFDMerger implements Closeable {
         // 缓存对象
         docCtx.resOldNewMap.put(oldResId, resObj);
         resObj.setParent(null);
-        // 给资源在新文档中分配ID
-        long newId = ofdDoc.MaxUnitID.incrementAndGet();
         if (resObj instanceof CT_ColorSpace) {
             CT_ColorSpace cs = (CT_ColorSpace) resObj;
-            cs.setObjID(newId);
             ST_Loc profile = cs.getProfile();
             if (profile != null) {
                 // 复制资源到新的文档中
@@ -324,14 +323,12 @@ public class OFDMerger implements Closeable {
                 profile = copyResFile(filepath);
                 cs.setProfile(profile);
             }
-            ofdDoc.prm.addRaw(cs);
+            ofdDoc.prm.addRawWithCache(cs);
         } else if (resObj instanceof CT_DrawParam) {
             CT_DrawParam dp = (CT_DrawParam) resObj;
-            dp.setObjID(newId);
-            ofdDoc.prm.addRaw(dp);
+            ofdDoc.prm.addRawWithCache(dp);
         } else if (resObj instanceof CT_Font) {
             CT_Font f = (CT_Font) resObj;
-            f.setObjID(newId);
             ST_Loc fontFileLoc = f.getFontFile();
             if (fontFileLoc != null) {
                 // 复制资源到新的文档中
@@ -339,10 +336,9 @@ public class OFDMerger implements Closeable {
                 fontFileLoc = copyResFile(filepath);
                 f.setFontFile(fontFileLoc);
             }
-            ofdDoc.prm.addRaw(f);
+            ofdDoc.prm.addRawWithCache(f);
         } else if (resObj instanceof CT_MultiMedia) {
             CT_MultiMedia mm = (CT_MultiMedia) resObj;
-            mm.setObjID(newId);
             ST_Loc mediaFileLoc = mm.getMediaFile();
             if (mediaFileLoc != null) {
                 // 复制资源到新的文档中
@@ -351,19 +347,21 @@ public class OFDMerger implements Closeable {
                 mm.setMediaFile(mediaFileLoc);
             }
 
-            ofdDoc.prm.addRaw(mm);
+            ofdDoc.prm.addRawWithCache(mm);
         } else if (resObj instanceof CT_VectorG) {
             CT_VectorG vg = (CT_VectorG) resObj;
             final Document d = DocumentHelper.createDocument();
             d.add(vg);
 
-            // 矢量图像，等于一个DOM 运行迁移程序
+            // 矢量图像，等于一个DOM 运行迁移程序，向迁移矢量图像内部的资源，再迁该资源本身。
             domMigrate(docCtx, vg);
-            vg.setObjID(newId);
-            ofdDoc.prm.addRaw(vg);
+            ofdDoc.prm.addRawWithCache(vg);
+        } else {
+            // 未知的资源类型不进行迁移
+            return 0;
         }
 
-        return newId;
+        return resObj.getObjID().getId();
     }
 
     /**

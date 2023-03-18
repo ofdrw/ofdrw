@@ -13,8 +13,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
  * Canvas 测试
  *
@@ -945,5 +943,36 @@ class DrawContextTest {
             ofdDoc.addVPage(vPage);
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+
+    /**
+     * 测试 绘制参数 缓存
+     */
+    @Test
+    public void testMultiColorSet() throws Exception {
+        Path outP = Paths.get("target/testMultiColorSet.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(500d, 500d);
+
+            Canvas canvas = new Canvas(500d, 500d);
+            canvas.setPosition(Position.Absolute);
+            canvas.setXY(0d, 0d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.setFillColor(255, 0, 0);
+                ctx.fillRect(100, 100, 100, 100);
+
+                ctx.setFillColor(0, 0, 255);
+                ctx.fillRect(200, 200, 100, 100);
+
+                ctx.setFillColor(255, 0, 0);
+                ctx.fillRect(300, 300, 100, 100);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath());
     }
 }

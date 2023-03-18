@@ -233,7 +233,7 @@ public class DocDir extends VirtualContainer {
      * <p>
      * 如果资源文件不存在则创建
      *
-     * @return this
+     * @return 资源目录
      */
     public ResDir obtainRes() {
         return this.obtainContainer(DocDir.ResDir, ResDir::new);
@@ -367,6 +367,17 @@ public class DocDir extends VirtualContainer {
     public DocDir addResource(Path resource) throws IOException {
         obtainRes().add(resource);
         return this;
+    }
+
+    /**
+     * 增加资源 并返回资源在文档中的绝对路径
+     *
+     * @param resource 资源
+     * @return 文件复制后的绝对路径
+     * @throws IOException 文件复制过程中IO异常
+     */
+    public Path addResourceWithPath(Path resource) throws IOException {
+        return obtainRes().addWithPath(resource);
     }
 
     /**

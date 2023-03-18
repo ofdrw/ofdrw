@@ -1,10 +1,17 @@
 package org.ofdrw.pkg.tool;
 
-import org.dom4j.*;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -26,6 +33,19 @@ public class ElemCup {
      * 命名空间修改器
      */
     private static final OFDNameSpaceModifier SpaceModifier = new OFDNameSpaceModifier();
+
+    /**
+     * 输出模式
+     */
+    private static final OutputFormat PrettyPrint = OutputFormat.createPrettyPrint();
+
+    /**
+     * 是否允许调试模式输出XML内容
+     * <p>
+     * true - 开启，XML含有空格和换行
+     * false - 关闭。XML采用紧凑模式输出，（默认）
+     */
+    public static boolean ENABLE_DEBUG_PRINT = false;
 
     /**
      * 从文件加载反序列化元素对象
@@ -72,7 +92,12 @@ public class ElemCup {
         }
         doc.add(e);
         try (OutputStream out = Files.newOutputStream(to)) {
-            XMLWriter writeToFile = new XMLWriter(out);
+            XMLWriter writeToFile;
+            if (ENABLE_DEBUG_PRINT) {
+                writeToFile = new XMLWriter(out, PrettyPrint);
+            } else {
+                writeToFile = new XMLWriter(out);
+            }
             writeToFile.write(doc);
             writeToFile.close();
         }
@@ -109,7 +134,12 @@ public class ElemCup {
         doc.add(e);
         doc.accept(SpaceModifier);
         try (OutputStream out = Files.newOutputStream(to)) {
-            XMLWriter writeToFile = new XMLWriter(out);
+            XMLWriter writeToFile;
+            if (ENABLE_DEBUG_PRINT) {
+                writeToFile = new XMLWriter(out, PrettyPrint);
+            } else {
+                writeToFile = new XMLWriter(out);
+            }
             writeToFile.write(doc);
             writeToFile.close();
         }
@@ -130,7 +160,12 @@ public class ElemCup {
         }
         doc.add(e);
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        XMLWriter writeToFile = new XMLWriter(bout);
+        XMLWriter writeToFile;
+        if (ENABLE_DEBUG_PRINT) {
+            writeToFile = new XMLWriter(bout, PrettyPrint);
+        } else {
+            writeToFile = new XMLWriter(bout);
+        }
         writeToFile.write(doc);
         writeToFile.close();
         return bout.toByteArray();

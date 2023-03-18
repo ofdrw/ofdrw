@@ -1,10 +1,12 @@
 package org.ofdrw.layout.engine;
 
 import org.dom4j.DocumentException;
+import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicStructure.res.MediaType;
+import org.ofdrw.core.basicStructure.res.OFDResource;
 import org.ofdrw.core.basicStructure.res.Res;
 import org.ofdrw.core.basicStructure.res.resources.*;
 import org.ofdrw.core.basicType.ST_ID;
@@ -20,7 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -44,35 +46,50 @@ public class ResManager {
 
     /**
      * 媒体资源列表
+     * <p>
+     * 位于文档资源列表
      */
     private MultiMedias medias;
 
     /**
      * 绘制参数列表
+     * <p>
+     * 位于文档资源列表
      */
     private DrawParams drawParams;
 
+
     /**
      * 字体资源列表
+     * <p>
+     * 位于公共资源列表
      */
     private Fonts fonts;
 
     /**
      * 颜色空间的描述列表
+     * <p>
+     * 位于公共资源列表
      */
     private ColorSpaces colorSpaces;
 
     /**
      * 矢量图像列表
+     * <p>
+     * 位于文档资源列表
      */
     private CompositeGraphicUnits compositeGraphicUnits;
 
+
     /**
-     * 资源缓存
+     * 绘制参数Hash
      * <p>
-     * 防止资源重复添加
+     * KEY: 资源对象的去除ID后的XML字符串
+     * VALUE: 文档中的对象ID。
+     * <p>
+     * 该缓存表用于解决绘制参数冗余造成的资源浪费。
      */
-    private Map<String, OFDElement> cache;
+    private final HashMap<String, ST_ID> resObjHash = new HashMap<>();
 
     private ResManager() {
     }
@@ -87,36 +104,58 @@ public class ResManager {
     public ResManager(DocDir docDir, AtomicInteger maxUnitID) {
         this.docDir = docDir;
         this.maxUnitID = maxUnitID;
-        this.cache = new HashMap<>();
-        // 初始化资源缓存
-        reloadCache();
+
+        // 如果存在公共资源，尝试加载
+        if (docDir.exist(DocDir.PublicResFileName)) {
+            try {
+                reloadRes(docDir.getPublicRes());
+            } catch (FileNotFoundException e) {
+                // ignore 文件不存在，不解析
+            } catch (DocumentException e) {
+                throw new RuntimeException("已有 PublicRes.xml 资源文件解析失败", e);
+            }
+        }
+        // 如果存在文档资源，尝试加载
+        if (docDir.exist(DocDir.DocumentResFileName)) {
+            try {
+                reloadRes(docDir.getDocumentRes());
+            } catch (FileNotFoundException e) {
+                // ignore 文件不存在，不解析
+            } catch (DocumentException e) {
+                throw new RuntimeException("已有 DocumentRes.xml 资源文件解析失败", e);
+            }
+        }
+        System.out.println(resObjHash);
     }
 
     /**
      * 重载公共资源缓存
-     * <p>
-     * 初始化内容只要是文档资源
      */
-    private void reloadCache() {
-        try {
-            // 初始化字体缓存
-            Res docRes = docDir.getPublicRes();
-            for (Fonts f : docRes.getFonts()) {
-                f.getFonts().forEach(item -> {
-                    String completeFontName = item.getFontName();
-                    String familyName = item.getFamilyName();
-                    if (familyName != null && familyName.length() > 0) {
-                        completeFontName += "-" + familyName;
-                    }
-                    // 加入缓存防止重复加入
-                    cache.put(completeFontName, item);
-                });
-            }
-        } catch (FileNotFoundException e) {
-            // 如果抛出异常说明资源不存在
-        } catch (DocumentException e) {
-            throw new RuntimeException("已有DocumentRes.xml 资源文件解析失败", e);
+    private void reloadRes(Res res) {
+        List<OFDResource> resources = res.getResources();
+        if (resources == null || resources.isEmpty()) {
+            return;
         }
+        for (OFDResource resource : resources) {
+            // 获取各个集合下的资源对象
+            List<Element> elements = resource.elements();
+            if (elements == null || elements.isEmpty()) {
+                continue;
+            }
+            for (Element ctResObj : elements) {
+                // 获取原来资源对象的ID
+                ST_ID id = ST_ID.getInstance(ctResObj.attributeValue("ID"));
+                if (id == null) {
+                    return;
+                }
+                // 遍历每一个资源对象，复制对象，删除对象ID，序列化为XML字符串
+                Element copy = (Element) ctResObj.clone();
+                copy.remove(copy.attribute("ID"));
+                String key = copy.asXML();
+                resObjHash.put(key, id);
+            }
+        }
+
     }
 
     /**
@@ -129,58 +168,37 @@ public class ResManager {
      * @throws IOException 文件复制异常
      */
     public ST_ID addFont(Font font) throws IOException {
-        Res resMenu = pubRes();
-
         // 获取字体全名
-        String completeFontName = font.getCompleteFontName();
-        // 检查缓存
-        if (cache.get(completeFontName) == null) {
-            if (this.fonts == null) {
-                this.fonts = new Fonts();
-                resMenu.addResource(this.fonts);
-            }
-            // 生成加入资源的ID
-            ST_ID id = new ST_ID(maxUnitID.incrementAndGet());
-            String familyName = font.getFamilyName();
-            // 新建一个OFD字体对象
-            CT_Font ctFont = new CT_Font()
-                    .setFontName(font.getName())
-                    .setFamilyName(familyName)
-                    .setID(id);
-            Path fontFile = font.getFontFile();
-            if (fontFile != null) {
-                ctFont.setFontFile(fontFile.getFileName().toString());
-            }
-            // 设置特殊字族属性
-            if (familyName != null) {
-                switch (familyName.toLowerCase()) {
-                    case "serif":
-                        ctFont.setSerif(true);
-                        break;
-                    case "bold":
-                        ctFont.setBold(true);
-                        break;
-                    case "italic":
-                        ctFont.setItalic(true);
-                        break;
-                    case "fixedwidth":
-                        ctFont.setFixedWidth(true);
-                        break;
-                }
-            }
-            if (fontFile != null) {
-                // 将字体文件加入到文档容器中
-                docDir.addResource(fontFile);
-            }
-            // 把字体加入到字体清单中
-            fonts.addFont(ctFont);
-            // 缓存字体
-            cache.put(completeFontName, ctFont);
-            return id;
-        } else {
-            // 该资源已经加入过返回资源的ID
-            return cache.get(completeFontName).getObjID();
+        String familyName = font.getFamilyName();
+        // 新建一个OFD字体对象
+        CT_Font ctFont = new CT_Font()
+                .setFontName(font.getName())
+                .setFamilyName(familyName);
+        Path fontFile = font.getFontFile();
+        if (fontFile != null) {
+            // 将字体文件加入到文档容器中
+            fontFile = docDir.addResourceWithPath(fontFile);
+            ctFont.setFontFile(fontFile.getFileName().toString());
         }
+
+        // 设置特殊字族属性
+        if (familyName != null) {
+            switch (familyName.toLowerCase()) {
+                case "serif":
+                    ctFont.setSerif(true);
+                    break;
+                case "bold":
+                    ctFont.setBold(true);
+                    break;
+                case "italic":
+                    ctFont.setItalic(true);
+                    break;
+                case "fixedwidth":
+                    ctFont.setFixedWidth(true);
+                    break;
+            }
+        }
+        return addRawWithCache(ctFont);
     }
 
     /**
@@ -195,33 +213,23 @@ public class ResManager {
     public ST_ID addImage(Path imgPath) throws IOException {
         Res resMenu = docRes();
         String absPath = imgPath.toAbsolutePath().toString();
-        String fileName = imgPath.getFileName().toString();
-        if (cache.get(absPath) == null) {
-            if (medias == null) {
-                this.medias = new MultiMedias();
-                resMenu.addResource(medias);
-            }
-            // 生成加入资源的ID
-            ST_ID id = new ST_ID(maxUnitID.incrementAndGet());
-            // 获取图片文件后缀名称
-            String fileSuffix = pictureFormat(fileName);
-            // 将文件加入资源容器中
-            docDir.addResource(imgPath);
-            // 创建图片对象
-            CT_MultiMedia multiMedia = new CT_MultiMedia()
-                    .setType(MediaType.Image)
-                    .setFormat(fileSuffix)
-                    .setMediaFile(ST_Loc.getInstance(fileName))
-                    .setID(id);
-            // 加入媒体类型清单
-            medias.addMultiMedia(multiMedia);
-            // 加入缓存
-            cache.put(absPath, multiMedia);
-            return id;
-        } else {
-            // 该资源已经加入过返回资源的ID
-            return cache.get(absPath).getObjID();
-        }
+
+
+        // 将文件加入资源容器中，并获取资源在文件中的绝对路径
+        Path imgCtnPath = docDir.addResourceWithPath(imgPath);
+        // 获取在容器中的文件名称
+        String fileName = imgCtnPath.getFileName().toString();
+
+
+        // 获取图片文件后缀名称
+        String fileSuffix = pictureFormat(fileName);
+        // 创建图片对象
+        CT_MultiMedia multiMedia = new CT_MultiMedia()
+                .setType(MediaType.Image)
+                .setFormat(fileSuffix)
+                .setMediaFile(ST_Loc.getInstance(fileName));
+        // 添加到资源列表中
+        return addRawWithCache(multiMedia);
     }
 
     /**
@@ -233,17 +241,7 @@ public class ResManager {
      * @return 资源ID
      */
     public ST_ID addDrawParam(CT_DrawParam param) {
-        Res resMenu = docRes();
-        if (drawParams == null) {
-            this.drawParams = new DrawParams();
-            resMenu.addResource(drawParams);
-        }
-        // 生成加入资源的ID
-        ST_ID id = new ST_ID(maxUnitID.incrementAndGet());
-        param.setID(id);
-        // 加入媒体类型清单
-        drawParams.addDrawParam(param);
-        return id;
+        return addRawWithCache(param);
     }
 
     /**
@@ -284,19 +282,6 @@ public class ResManager {
     }
 
     /**
-     * 忽略无法获取到得到错误信息
-     *
-     * @return document对象
-     */
-    private Document document() {
-        try {
-            return docDir.getDocument();
-        } catch (FileNotFoundException | DocumentException ex) {
-            throw new RuntimeException("文档中缺少Document.xml 文件");
-        }
-    }
-
-    /**
      * 文档资源清单
      * <p>
      * 与文档相关的资源：图片、视频等
@@ -315,6 +300,19 @@ public class ResManager {
         }
     }
 
+    /**
+     * 忽略无法获取到得到错误信息
+     *
+     * @return document对象
+     */
+    private Document document() {
+        try {
+            return docDir.getDocument();
+        } catch (FileNotFoundException | DocumentException ex) {
+            throw new RuntimeException("文档中缺少Document.xml 文件");
+        }
+    }
+
 
     /**
      * 直接向资源列表中加入资源对象
@@ -323,38 +321,44 @@ public class ResManager {
      *
      * @param resObj 资源对象
      * @return this
+     * @deprecated {@link #addRawWithCache(OFDElement)}
      */
+    @Deprecated
     public ResManager addRaw(OFDElement resObj) {
         if (resObj == null) {
             return this;
         }
-        Res resMenu = docRes();
 
         if (resObj instanceof CT_ColorSpace) {
+            Res resMenu = pubRes();
             if (colorSpaces == null) {
                 this.colorSpaces = new ColorSpaces();
                 resMenu.addResource(colorSpaces);
             }
             colorSpaces.addColorSpace((CT_ColorSpace) resObj);
-        } else if (resObj instanceof CT_DrawParam) {
-            if (drawParams == null) {
-                this.drawParams = new DrawParams();
-                resMenu.addResource(drawParams);
-            }
-            drawParams.addDrawParam((CT_DrawParam) resObj);
         } else if (resObj instanceof CT_Font) {
+            Res resMenu = pubRes();
             if (fonts == null) {
                 this.fonts = new Fonts();
                 resMenu.addResource(fonts);
             }
             fonts.addFont((CT_Font) resObj);
+        } else if (resObj instanceof CT_DrawParam) {
+            Res resMenu = docRes();
+            if (drawParams == null) {
+                this.drawParams = new DrawParams();
+                resMenu.addResource(drawParams);
+            }
+            drawParams.addDrawParam((CT_DrawParam) resObj);
         } else if (resObj instanceof CT_MultiMedia) {
+            Res resMenu = docRes();
             if (medias == null) {
                 this.medias = new MultiMedias();
                 resMenu.addResource(medias);
             }
             medias.addMultiMedia((CT_MultiMedia) resObj);
         } else if (resObj instanceof CT_VectorG) {
+            Res resMenu = docRes();
             if (compositeGraphicUnits == null) {
                 this.compositeGraphicUnits = new CompositeGraphicUnits();
                 resMenu.addResource(compositeGraphicUnits);
@@ -364,4 +368,75 @@ public class ResManager {
         return this;
     }
 
+
+    /**
+     * 直接向资源列表中加入资源对象
+     * <p>
+     * 加入资源时将优先检查缓存是否存在完全一致的资源，如果存在则复用对象。
+     * <p>
+     * 注意：加入对象的ID将被忽略，对象ID有资源管理器生成并设置。
+     *
+     * @param resObj 资源对象
+     * @return 对象在文档中的资源ID
+     */
+    public ST_ID addRawWithCache(OFDElement resObj) {
+        if (resObj == null) {
+            return null;
+        }
+
+        // 移除对象上已经存在的用于基于资源本身的Hash值
+        resObj.removeAttr("ID");
+        String key = resObj.asXML();
+
+        ST_ID objId = this.resObjHash.get(key);
+        if (objId != null) {
+            // 文档中已经存在相同资源，则复用该资源。
+            resObj.setObjID(objId);
+            return objId;
+        } else {
+            // 文档中不存在该资源则资源ID，并缓存
+            objId = new ST_ID(maxUnitID.incrementAndGet());
+            resObj.setObjID(objId);
+            this.resObjHash.put(key, objId);
+        }
+
+        // 判断资源类型加入到合适的资源列表中
+        if (resObj instanceof CT_ColorSpace) {
+            Res resMenu = pubRes();
+            if (colorSpaces == null) {
+                this.colorSpaces = new ColorSpaces();
+                resMenu.addResource(colorSpaces);
+            }
+            colorSpaces.addColorSpace((CT_ColorSpace) resObj);
+        } else if (resObj instanceof CT_Font) {
+            Res resMenu = pubRes();
+            if (fonts == null) {
+                this.fonts = new Fonts();
+                resMenu.addResource(fonts);
+            }
+            fonts.addFont((CT_Font) resObj);
+        } else if (resObj instanceof CT_DrawParam) {
+            Res resMenu = docRes();
+            if (drawParams == null) {
+                this.drawParams = new DrawParams();
+                resMenu.addResource(drawParams);
+            }
+            drawParams.addDrawParam((CT_DrawParam) resObj);
+        } else if (resObj instanceof CT_MultiMedia) {
+            Res resMenu = docRes();
+            if (medias == null) {
+                this.medias = new MultiMedias();
+                resMenu.addResource(medias);
+            }
+            medias.addMultiMedia((CT_MultiMedia) resObj);
+        } else if (resObj instanceof CT_VectorG) {
+            Res resMenu = docRes();
+            if (compositeGraphicUnits == null) {
+                this.compositeGraphicUnits = new CompositeGraphicUnits();
+                resMenu.addResource(compositeGraphicUnits);
+            }
+            compositeGraphicUnits.addCompositeGraphicUnit((CT_VectorG) resObj);
+        }
+        return objId;
+    }
 }

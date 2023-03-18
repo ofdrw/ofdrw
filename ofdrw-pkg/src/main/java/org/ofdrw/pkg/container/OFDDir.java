@@ -241,7 +241,7 @@ public class OFDDir extends VirtualContainer {
      * @return 第一个文档容器
      */
     public DocDir obtainDocDefault() {
-        if (exit(OFDFileName)) {
+        if (exist(OFDFileName)) {
             // 检查OFDFileName是否已经存在，如果存在那么大可能性是读取操作
             // 在读模式下，通过OFD.xml 最后一个DocBody节点中的DocRoot作为默认文档
             // 如果获取失败那么，尝试获取Doc_0

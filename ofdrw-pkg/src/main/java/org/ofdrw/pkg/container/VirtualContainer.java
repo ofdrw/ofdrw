@@ -9,7 +9,10 @@ import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.pkg.tool.ElemCup;
 
 import java.io.*;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -147,9 +150,21 @@ public class VirtualContainer implements Closeable {
      * @throws IOException IO异常
      */
     public VirtualContainer putFile(Path file) throws IOException {
+        putFileWithPath(file);
+        return this;
+    }
+
+    /**
+     * 向虚拟容器中加入文件，并获取文件在容器中的绝对路径
+     *
+     * @param file 文件路径对象
+     * @return null 或 文件在容器中的绝对路径
+     * @throws IOException IO异常
+     */
+    public Path putFileWithPath(Path file) throws IOException {
         if (file == null || Files.notExists(file) || Files.isDirectory(file)) {
             // 为空或是一个文件夹，或者不存在
-            return this;
+            return null;
         }
         String fileName = file.getFileName().toString();
         Path target = Paths.get(fullPath, fileName);
@@ -157,24 +172,17 @@ public class VirtualContainer implements Closeable {
         if (Files.exists(target) || target.toAbsolutePath().toString()
                 .equals(file.toAbsolutePath().toString())) {
             if (FileUtils.contentEquals(target.toFile(), file.toFile())) {
-                // 两个文件一致，那么不做任何改变
-                return this;
+                // 两个文件一致，那么不做任何改变，返回已经存在的文件路径
+                return target;
             } else {
-                throw new FileAlreadyExistsException("文档中已经存在同名文件资源(" + fileName + ")，请重命名文件");
-//                // 修改更名文件名称，添加时间后缀
-//                String suffix = new SimpleDateFormat("_yyyyMMddHHmmss").format(new Date());
-//                int i = fileName.lastIndexOf('.');
-//                if (i != -1) {
-//                    fileName = fileName.substring(0, i) + suffix + fileName.substring(i);
-//                } else {
-//                    fileName += suffix;
-//                }
-//                target = Paths.get(fullPath, fileName);
+                // 修改更名文件名称，添加前缀时间防止冲突
+                String prefix = new SimpleDateFormat("yyyyMMddHHmmss_").format(new Date());
+                target = Paths.get(fullPath, prefix + fileName);
             }
         }
         // 复制文件到指定目录
         Files.copy(file, target);
-        return this;
+        return target;
     }
 
     /**
@@ -329,6 +337,7 @@ public class VirtualContainer implements Closeable {
      * @param <R>    容器子类
      * @return 新建或已经存在的容器
      */
+    @SuppressWarnings("unchecked")
     public <R extends VirtualContainer> R obtainContainer(String name, Function<Path, R> mapper) {
         if (name == null || name.length() == 0) {
             throw new IllegalArgumentException("容器名称（name）为空");
@@ -412,12 +421,24 @@ public class VirtualContainer implements Closeable {
     }
 
     /**
+     * 判断文件或对象是否存在（错误的函数名称）
+     *
+     * @param fileName 文件名称
+     * @return true - 存在;false - 不存在
+     * @deprecated {@link #exist(String)}
+     */
+    @Deprecated
+    public boolean exit(String fileName) {
+        return exist(fileName);
+    }
+
+    /**
      * 判断文件或对象是否存在
      *
      * @param fileName 文件名称
      * @return true - 存在;false - 不存在
      */
-    public boolean exit(String fileName) {
+    public boolean exist(String fileName) {
         if (fileName == null || fileName.length() == 0) {
             return false;
         }
@@ -425,16 +446,11 @@ public class VirtualContainer implements Closeable {
         if (element == null) {
             // 缓存中不存在，从文件目录中尝试读取
             Path res = Paths.get(fullPath, fileName);
-            if (Files.isDirectory(res) || Files.notExists(res)) {
-                return false;
-            } else {
-                return true;
-            }
+            return !Files.isDirectory(res) && !Files.notExists(res);
         } else {
             return true;
         }
     }
-
 
     /**
      * 删除整个虚拟容器

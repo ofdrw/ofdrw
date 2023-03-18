@@ -51,14 +51,16 @@ class VirtualContainerTest {
         // 重复放置相同文件
         vc.flush();
         Path fileCopy = Paths.get("target", fileName);
-        Files.delete(fileCopy);
+        Files.deleteIfExists(fileCopy);
         Files.copy(path, fileCopy);
         vc.putFile(fileCopy);
 
         // 同名不同内容文件
         Files.delete(fileCopy);
         Files.copy(Paths.get("src/test/resources/StampImg.png"), fileCopy);
-        Assertions.assertThrows(FileAlreadyExistsException.class, () -> vc.putFile(fileCopy));
+        // 重命名
+        vc.putFile(fileCopy);
+
     }
 
     @Test
