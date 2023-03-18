@@ -157,7 +157,7 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
      * @param div       元素本身
      * @param blockSize 元素尺寸
      */
-    private void add(Div div, Rectangle blockSize) {
+    private void add(Div<?> div, Rectangle blockSize) {
         if (height < blockSize.getHeight()) {
             this.height = blockSize.getHeight();
         }

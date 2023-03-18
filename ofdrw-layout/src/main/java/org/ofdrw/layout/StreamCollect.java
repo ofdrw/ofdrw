@@ -22,13 +22,15 @@ public class StreamCollect {
     /**
      * 开始页面位置
      */
-    private Integer pageNum = null;
+    private Integer pageNum;
     /**
      * 流式页面内容
      */
-    private LinkedList<Div> content = new LinkedList<>();
+    private final LinkedList<Div> content;
 
     public StreamCollect() {
+        pageNum = null;
+        content = new LinkedList<>();
     }
 
     /**
@@ -37,6 +39,8 @@ public class StreamCollect {
      * @param pageNum 页码（从1开始）
      */
     public StreamCollect(Integer pageNum) {
+        this();
+
         this.pageNum = pageNum;
     }
 
@@ -87,7 +91,7 @@ public class StreamCollect {
         StreamingLayoutAnalyzer analyzer = new StreamingLayoutAnalyzer(pageLayout);
         // 流式布局队列经过分段引擎，获取分段队列
         List<Segment> sgmQueue = sgmEngine.process(this.content);
-        //段队列进入布局分析器，构造基于固定布局的虚拟页面。
+        // 段队列进入布局分析器，构造基于固定布局的虚拟页面。
         List<VirtualPage> virtualPageList = analyzer.analyze(sgmQueue);
         if (this.pageNum != null) {
             int start = this.pageNum;

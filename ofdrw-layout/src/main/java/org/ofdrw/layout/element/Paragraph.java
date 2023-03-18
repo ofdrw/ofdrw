@@ -538,14 +538,9 @@ public class Paragraph extends Div<Paragraph> {
                 .sum();
         // 设置元素高度，如果元素已经预设高度那么则不设置
         setHeightIfNotExist(height);
-        // clean=both:
-        //  - 宽度: 固定值 widthLimit
-        // clean!=both:
-        //  - 宽度 = null: lineMaxAvailableWidth
+        //  - 宽度 = null: 最长行宽度
         //  - 宽度 != null: 区间 [宽度, widthLimit]
-        if (this.getClear() == Clear.both) {
-            setWidth(widthLimit);
-        } else if (this.getClear() != Clear.both && originW == null) {
+        if (originW == null) {
             double maxWidth = lines.stream().mapToDouble(TxtLineBlock::getWidth).max().getAsDouble();
             setWidth(maxWidth);
         } else {

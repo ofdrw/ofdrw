@@ -6,11 +6,14 @@ import org.ofdrw.core.action.Actions;
 import org.ofdrw.core.action.CT_Action;
 import org.ofdrw.core.action.EventType;
 import org.ofdrw.core.action.actionType.URI;
-import org.ofdrw.core.annotation.pageannot.*;
+import org.ofdrw.core.annotation.pageannot.AnnotType;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
-import org.ofdrw.core.basicType.*;
+import org.ofdrw.core.basicType.ST_Array;
+import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.text.CT_CGTransform;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.font.Font;
@@ -26,8 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * OFD 功能测试
@@ -419,6 +420,18 @@ class OFDDocTest {
     }
 
     @Test
+    void textCenter() throws IOException {
+        Path path = Paths.get("target/textCenter.ofd").toAbsolutePath();
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            Span author = new Span("朱泳燚").setBold(true).setFontSize(3d);
+            Paragraph p = new Paragraph().add(author);
+            p.setFloat(AFloat.center).setMargin(5d);
+            ofdDoc.add(p);
+        }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+    }
+
+    @Test
     void streamTestParagraphPageSplit() throws IOException {
         Path path = Paths.get("target/VPage8.ofd").toAbsolutePath();
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
@@ -682,7 +695,7 @@ class OFDDocTest {
         try (OFDReader reader = new OFDReader(srcP);
              OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
 
-            Font newFont = new Font("simsun-cut1","simsun-cut1",fontFile);
+            Font newFont = new Font("simsun-cut1", "simsun-cut1", fontFile);
             ST_ID newFontID = ofdDoc.getResManager().addFont(newFont);
 
             DocContentReplace docContentReplace = new DocContentReplace(ofdDoc);
@@ -694,8 +707,9 @@ class OFDDocTest {
                         return new CT_CGTransform().setCodeCount(10).setCodePosition(0).setGlyphCount(10).setGlyphs(ST_Array.getInstance("25 26 27 28 29 30 31 32 33 34"));
                     return null;
                 }
+
                 @Override
-                public Font handleNewFont(TextObject textObject, String newText, CT_Font beforeCtFont){
+                public Font handleNewFont(TextObject textObject, String newText, CT_Font beforeCtFont) {
                     if (newText.equals("红宇测试有限公司")) {
                         textObject.setFont(new ST_RefID(newFontID));
                         return newFont;
@@ -727,7 +741,7 @@ class OFDDocTest {
 
         try (OFDReader reader = new OFDReader(srcP);
              OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
-            Font font = new Font("simsun-cut1","simsun-cut1",fontFile);
+            Font font = new Font("simsun-cut1", "simsun-cut1", fontFile);
             ofdDoc.getResManager().addFont(font);
 
             Paragraph p = new Paragraph("国庆节普天同庆", 8d, font);

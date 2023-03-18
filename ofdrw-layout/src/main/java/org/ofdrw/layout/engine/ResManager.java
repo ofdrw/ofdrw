@@ -102,6 +102,7 @@ public class ResManager {
      * @param maxUnitID 自增最大ID提供者
      */
     public ResManager(DocDir docDir, AtomicInteger maxUnitID) {
+        this();
         this.docDir = docDir;
         this.maxUnitID = maxUnitID;
 
@@ -125,7 +126,6 @@ public class ResManager {
                 throw new RuntimeException("已有 DocumentRes.xml 资源文件解析失败", e);
             }
         }
-        System.out.println(resObjHash);
     }
 
     /**
@@ -211,10 +211,6 @@ public class ResManager {
      * @throws IOException 文件复制异常
      */
     public ST_ID addImage(Path imgPath) throws IOException {
-        Res resMenu = docRes();
-        String absPath = imgPath.toAbsolutePath().toString();
-
-
         // 将文件加入资源容器中，并获取资源在文件中的绝对路径
         Path imgCtnPath = docDir.addResourceWithPath(imgPath);
         // 获取在容器中的文件名称

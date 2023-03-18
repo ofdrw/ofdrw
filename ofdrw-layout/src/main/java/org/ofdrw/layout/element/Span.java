@@ -291,7 +291,9 @@ public class Span implements TextFontInfo {
         double height = 0;
         for (TxtGlyph glyph : txtGlyphs) {
             width += glyph.getW();
-            height = glyph.getH();
+            if (glyph.getH() > height) {
+                height = glyph.getH();
+            }
         }
         return new Rectangle(width, height);
     }
@@ -316,7 +318,7 @@ public class Span implements TextFontInfo {
 
     /**
      * 设置Span为占满剩下行空间的元素
-     *
+     * <p>
      * 等价于在字符串末尾增加\n，当字符串末尾存在\n 时该参数无效。
      *
      * @param linebreak 是否占满剩下行空间 true 标识占满；false标识不占满
@@ -370,7 +372,7 @@ public class Span implements TextFontInfo {
         span.italic = italic;
         span.underline = underline;
         span.fill = fill;
-        span.text = new String(text);
+        span.text = text;
         span.integrity = integrity;
         span.linebreak = linebreak;
         span.fillColor = fillColor == null ? null : fillColor.clone();
