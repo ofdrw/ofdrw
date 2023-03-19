@@ -101,6 +101,13 @@ public class PDFConverter implements DocConverter {
                 PDRectangle pdfPageSize = pdfDoc.getPage(index).getBBox();
                 OFDPageGraphics2D ofdPageG2d = ofdDoc.newPage(pdfPageSize.getWidth(), pdfPageSize.getHeight());
                 pdfRender.renderPageToGraphics(index, ofdPageG2d);
+
+//                BufferedImage image = new BufferedImage((int) pdfPageSize.getWidth(), (int) pdfPageSize.getHeight(), BufferedImage.TYPE_INT_RGB);
+//                Graphics2D g = image.createGraphics();
+//                pdfRender.renderPageToGraphics(index, g);
+//                Path path = Paths.get("target/" + index + ".png");
+//                ImageIO.write(image, "png", path.toFile());
+
                 // 启用页面缩放后 PDF中的图片也会被缩放导致绘制图片模糊
                 // OFDPageGraphics2D ofdPageG2d = ofdDoc.newPage(pdfPageSize.getWidth()/UUPMM, pdfPageSize.getHeight()/UUPMM);
                 // pdfRender.renderPageToGraphics(index, ofdPageG2d, (float) (1d/UUPMM));

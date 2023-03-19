@@ -10,9 +10,6 @@ import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicStructure.res.MediaType;
-import org.ofdrw.core.basicStructure.res.Res;
-import org.ofdrw.core.basicStructure.res.resources.DrawParams;
-import org.ofdrw.core.basicStructure.res.resources.MultiMedias;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
@@ -50,34 +47,6 @@ public class OFDGraphicsDocument implements Closeable {
     private boolean closed = false;
 
     /**
-     * OFD公共资源
-     * <p>
-     * 字形、颜色空间等宜在公共资源文件中描述
-     */
-    public final Res pubRes;
-
-    /**
-     * 文档资源
-     * <p>
-     * 绘制参数、多媒体和矢量图像等宜在文档资源文件中描述
-     */
-    public final Res docRes;
-
-    /**
-     * 多媒体清单，用于记录添加到文档的资源信息
-     * <p>
-     * 请不要直接使该参数，应通过 {@link OFDGraphicsDocument#obtainMedias()}
-     */
-    private MultiMedias medias;
-
-    /**
-     * 绘制参数清单
-     * <p>
-     * 请不要直接使该参数，应通过 {@link OFDGraphicsDocument#obtainDrawParam()}
-     */
-    private DrawParams drawParams;
-
-    /**
      * OFD 打包
      */
     public final OFDDir ofdDir;
@@ -89,7 +58,7 @@ public class OFDGraphicsDocument implements Closeable {
      * 新的标识符，新标识符取值宜为 MaxUnitID + 1，
      * 同时需要修改此 MaxUnitID值。
      */
-    public final AtomicInteger MaxUnitID = new AtomicInteger(0);
+    public final AtomicInteger MaxUnitID;
 
 
     /**
@@ -109,6 +78,10 @@ public class OFDGraphicsDocument implements Closeable {
      */
     public final DocDir docDir;
 
+    /**
+     * 资源管理器
+     */
+    public final ResManager resMgr;
 
     /**
      * 在指定路径位置上创建一个OFD文件
@@ -133,6 +106,8 @@ public class OFDGraphicsDocument implements Closeable {
      * 文档初始化构造器
      */
     private OFDGraphicsDocument() {
+
+
         // 初始化文档对象
         CT_DocInfo docInfo = new CT_DocInfo()
                 .setDocID(UUID.randomUUID())
@@ -166,41 +141,8 @@ public class OFDGraphicsDocument implements Closeable {
         this.docDir = docDir;
         docDir.setDocument(document);
 
-        // 创建公共资源清单
-        pubRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
-        docDir.setPublicRes(pubRes);
-        cdata.addPublicRes(ST_Loc.getInstance("PublicRes.xml"));
-
-        // 创建文档资源清单
-        docRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
-        docDir.setDocumentRes(docRes);
-        cdata.addDocumentRes(ST_Loc.getInstance("DocumentRes.xml"));
-    }
-
-    /**
-     * 获取媒体清单，如果存在则创建
-     *
-     * @return 媒体清单
-     */
-    private MultiMedias obtainMedias() {
-        if (this.medias == null) {
-            this.medias = new MultiMedias();
-            docRes.addResource(this.medias);
-        }
-        return this.medias;
-    }
-
-    /**
-     * 获取绘制参数清单，如果存在则创建
-     *
-     * @return 绘制参数清单
-     */
-    private DrawParams obtainDrawParam() {
-        if (this.drawParams == null) {
-            this.drawParams = new DrawParams();
-            docRes.addResource(this.drawParams);
-        }
-        return this.drawParams;
+        MaxUnitID = new AtomicInteger(0);
+        this.resMgr = new ResManager(this.docDir, MaxUnitID);
     }
 
     /**
@@ -275,34 +217,25 @@ public class OFDGraphicsDocument implements Closeable {
         } catch (IOException e) {
             throw new RuntimeException("graphics2d 图片写入IO异常", e);
         }
-        // 生成加入资源的ID
-        ST_ID id = new ST_ID(MaxUnitID.incrementAndGet());
+
         // 将文件加入资源容器中
         // 创建图片对象，为了保持透明图片的兼容性采用PNG格式
         CT_MultiMedia multiMedia = new CT_MultiMedia()
                 .setType(MediaType.Image)
                 .setFormat("PNG")
-                .setMediaFile(resDir.getAbsLoc().cat(imgFile.getName()))
-                .setID(id);
-        // 加入媒体类型清单
-        obtainMedias().addMultiMedia(multiMedia);
-        return id;
+                .setMediaFile(resDir.getAbsLoc().cat(imgFile.getName()));
+
+        return resMgr.addRawWithCache(multiMedia);
     }
 
     /**
      * 添加绘制参数至资源文件中
      *
-     * @param drawParam 绘制参数
+     * @param dp 绘制参数
      * @return 资源对象ID
      */
-    public ST_ID addDrawParam(CT_DrawParam drawParam) {
-        if (drawParam == null) {
-            return null;
-        }
-        ST_ID id = new ST_ID(MaxUnitID.incrementAndGet());
-        drawParam.setObjID(id);
-        obtainDrawParam().addDrawParam(drawParam);
-        return id;
+    public ST_ID addDrawParam(CT_DrawParam dp) {
+        return resMgr.addRawWithCache(dp);
     }
 
     /**

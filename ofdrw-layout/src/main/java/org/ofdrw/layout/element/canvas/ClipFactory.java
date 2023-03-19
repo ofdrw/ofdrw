@@ -1,6 +1,7 @@
 package org.ofdrw.layout.element.canvas;
 
 import org.ofdrw.core.basicType.ST_Array;
+import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.pageDescription.clips.Area;
@@ -26,6 +27,7 @@ public class ClipFactory implements Cloneable {
     private ST_Array ctm;
 
 
+
     public ClipFactory(AbbreviatedData data, ST_Array ctm) {
         this.data = data;
         this.ctm = ctm;
@@ -37,6 +39,7 @@ public class ClipFactory implements Cloneable {
 
     public ClipFactory() {
     }
+
 
     public AbbreviatedData getData() {
         return data;
@@ -55,19 +58,29 @@ public class ClipFactory implements Cloneable {
         this.ctm = ctm;
         return this;
     }
-
     /**
      * 构造裁剪对象
      *
-     * @return 裁剪徐磊
+     * @return 裁剪区
      */
-    public Clips clips() {
+    public Clips clips(){
+        return clips(new ST_Box(0, 0, 210d, 297d));
+    }
+    /**
+     * 构造裁剪对象
+     *
+     * @param boundary 裁剪边界
+     * @return 裁剪区
+     */
+    public Clips clips(ST_Box boundary) {
         Clips clips = new Clips();
         Area area = new Area();
         if (ctm != null) {
             area.setCTM(ctm.clone());
         }
-        area.setClipObj(new CT_Path().setAbbreviatedData(data.clone()));
+        CT_Path clipObj = new CT_Path().setAbbreviatedData(data.clone());
+        clipObj.setBoundary(boundary);
+        area.setClipObj(clipObj);
         return clips.addClip(new CT_Clip().addArea(area));
     }
 

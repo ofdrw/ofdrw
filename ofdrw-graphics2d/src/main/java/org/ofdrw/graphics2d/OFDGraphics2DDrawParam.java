@@ -1,13 +1,10 @@
 package org.ofdrw.graphics2d;
 
 import org.ofdrw.core.basicType.ST_Array;
+import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.basicType.ST_RefID;
-import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
-import org.ofdrw.core.pageDescription.clips.Area;
-import org.ofdrw.core.pageDescription.clips.CT_Clip;
-import org.ofdrw.core.pageDescription.clips.Clips;
 import org.ofdrw.core.pageDescription.color.color.*;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
@@ -25,7 +22,15 @@ import java.awt.geom.AffineTransform;
  */
 public class OFDGraphics2DDrawParam {
 
-    private final OFDGraphicsDocument ctx;
+    /**
+     * 文档上下文
+     */
+    private final OFDGraphicsDocument docCtx;
+
+    /**
+     * 工作区大小
+     */
+    ST_Box area;
 
     /**
      * 字体
@@ -56,6 +61,12 @@ public class OFDGraphics2DDrawParam {
      * 裁剪区域
      */
     Shape gClip;
+    /**
+     * 发生裁剪时的变换矩阵
+     * <p>
+     * 注意：该参数仅在设置裁剪区域时设置，默认情况下保持为null
+     */
+    ST_Array clipCTM = null;
 
     /**
      * 背景色
@@ -99,10 +110,11 @@ public class OFDGraphics2DDrawParam {
     /**
      * 创建绘制参数
      *
-     * @param ctx 图形绘制上下文
+     * @param docCtx 文档上下文
+     * @param area   工作区大小
      */
-    public OFDGraphics2DDrawParam(OFDGraphicsDocument ctx) {
-        this.ctx = ctx;
+    public OFDGraphics2DDrawParam(OFDGraphicsDocument docCtx, ST_Box area) {
+        this.docCtx = docCtx;
         this.pCache = new CT_DrawParam();
         this.gStroke = new BasicStroke(0.353f);
 
@@ -121,7 +133,25 @@ public class OFDGraphics2DDrawParam {
         this.composite = AlphaComposite.SrcOver;
 
         this.font = new Font("sanserif", Font.PLAIN, 3);
+        if (area != null) {
+            this.area = area.clone();
+        }
+
     }
+
+    /**
+     * 创建绘制参数
+     * <p>
+     * 若您需要使用该方法，请手动设置工作区 {@link #area} 否则默认为A4大小
+     *
+     * @param docCtx 文档上下文
+     * @deprecated {@link OFDGraphics2DDrawParam#OFDGraphics2DDrawParam(OFDGraphicsDocument, ST_Box)}
+     */
+    @Deprecated
+    public OFDGraphics2DDrawParam(OFDGraphicsDocument docCtx) {
+        this(docCtx, new ST_Box(0, 0, 210d, 297d));
+    }
+
 
     /**
      * 设置描边属性
@@ -208,6 +238,9 @@ public class OFDGraphics2DDrawParam {
      * @param paint 颜色对象
      */
     public void setColor(Paint paint) {
+        if (this.gColor == paint) {
+            return;
+        }
         if (this.ref != null) {
             // 防止同一引用重复添加
             this.pCache = this.pCache.clone();
@@ -224,7 +257,10 @@ public class OFDGraphics2DDrawParam {
         if (paint instanceof Color) {
             final Color c = (Color) paint;
             ctColor = CT_Color.rgb(c.getRed(), c.getGreen(), c.getBlue());
-            ctColor.setAlpha(c.getAlpha());
+            int alpha = c.getAlpha();
+            if (alpha != 255) {
+                ctColor.setAlpha(alpha);
+            }
         } else if (paint instanceof LinearGradientPaint) {
             // 线性渐变
             final LinearGradientPaint lgp = (LinearGradientPaint) paint;
@@ -242,7 +278,10 @@ public class OFDGraphics2DDrawParam {
             float[] fractions = lgp.getFractions();
             for (int i = 0; i < colors.length; i++) {
                 CT_Color cc = CT_Color.rgb(colors[i].getRed(), colors[i].getGreen(), colors[i].getBlue());
-                cc.setAlpha(colors[i].getAlpha());
+                int alpha = colors[i].getAlpha();
+                if (alpha != 255) {
+                    cc.setAlpha(alpha);
+                }
                 axialShd.addSegment(new Segment((double) fractions[i], cc));
             }
 
@@ -271,7 +310,10 @@ public class OFDGraphics2DDrawParam {
             float[] fractions = rgp.getFractions();
             for (int i = 0; i < colors.length; i++) {
                 CT_Color cc = CT_Color.rgb(colors[i].getRed(), colors[i].getGreen(), colors[i].getBlue());
-                cc.setAlpha(colors[i].getAlpha());
+                int alpha = colors[i].getAlpha();
+                if (alpha != 255) {
+                    cc.setAlpha(alpha);
+                }
                 radialShd.addSegment(new Segment((double) fractions[i], cc));
             }
             // 设置渐变绘制方式
@@ -306,7 +348,7 @@ public class OFDGraphics2DDrawParam {
             axialShd.setEndPoint(ST_Pos.getInstance(gp.getPoint2().getX(), gp.getPoint2().getY()));
 
             // 设置 渐变绘制的方式
-            if (gp.isCyclic()){
+            if (gp.isCyclic()) {
                 axialShd.setMapType(MapType.Repeat);
             }
             // 设置起点终点
@@ -338,7 +380,7 @@ public class OFDGraphics2DDrawParam {
      * <p>
      * 用于比较
      */
-    private final static ST_Array ONE = ST_Array.unitCTM();
+    final static ST_Array ONE = ST_Array.unitCTM();
 
     /**
      * 应用绘制参数的配置
@@ -348,7 +390,7 @@ public class OFDGraphics2DDrawParam {
     public void apply(CT_GraphicUnit<?> target) {
         if (ref == null) {
             // 添加绘制参数至文档资源中，并保存绘制参数在文档对象ID引用
-            ref = ctx.addDrawParam(this.pCache).ref();
+            ref = docCtx.addDrawParam(this.pCache).ref();
         }
         target.setDrawParam(ref);
 
@@ -364,19 +406,33 @@ public class OFDGraphics2DDrawParam {
             }
             target.setCTM(ctmApplied);
         }
-        // 设置裁剪区域
-        if (gClip != null) {
-            Clips clips = new Clips();
-            Area area = new Area();
 
-            if (!this.ctm.equals(ONE)) {
-                area.setCTM(ctmApplied);
-            }
-            // area.setDrawParam(ref); // 绘制参数不影响裁剪区
-            area.setClipObj(new CT_Path().setAbbreviatedData(OFDShapes.path(gClip)));
-            clips.addClip(new CT_Clip().addArea(area));
-            target.setClips(clips);
-        }
+        // TODO: 如何处理裁剪区域
+//        if (gClip != null) {
+//            // 设置裁剪区域
+//            ST_Box stBox = target.getBoundary();
+//            Rectangle2D targetBoundary = new Rectangle2D.Double(stBox.getTopLeftX(), stBox.getTopLeftY(), stBox.getWidth(), stBox.getHeight());
+//            Rectangle2D clipsBoundary = gClip.getBounds2D();
+//            System.out.printf(">> 图元 %s 裁剪区域 %s\n", targetBoundary, clipsBoundary);
+//            if (clipsBoundary.contains(targetBoundary)) {
+//                // 如果裁剪区域大小 大于等于图元大小，那么忽略该裁剪区域
+//            } else {
+//                Clips clips = new Clips();
+//                Area area = new Area();
+//                // 如果裁剪区域的变换矩阵不为空不为单位矩阵 并且与当前的变换矩阵不一致，
+//                // 那么需要设置裁剪区域独立的变换矩阵
+//                if (clipCTM != null && !this.ctm.equals(ONE) && !clipCTM.equals(this.ctm)) {
+//                    area.setCTM(clipCTM);
+//                }
+//                // area.setDrawParam(ref); // 绘制参数不影响裁剪区
+//                CT_Path clipObj = new CT_Path().setAbbreviatedData(OFDShapes.path(gClip));
+//                // 裁剪区域不受所处图元影响，默认使用整个页面作为工作区
+//                clipObj.setBoundary(this.area);
+//                area.setClipObj(clipObj);
+//                clips.addClip(new CT_Clip().addArea(area));
+//                target.setClips(clips);
+//            }
+//        }
 
     }
 
@@ -431,7 +487,7 @@ public class OFDGraphics2DDrawParam {
      */
     @Override
     public OFDGraphics2DDrawParam clone() {
-        OFDGraphics2DDrawParam that = new OFDGraphics2DDrawParam(this.ctx);
+        OFDGraphics2DDrawParam that = new OFDGraphics2DDrawParam(this.docCtx, this.area);
         that.pCache = this.pCache.clone();
         that.gColor = this.gColor;
         that.gStroke = this.gStroke;
@@ -441,6 +497,9 @@ public class OFDGraphics2DDrawParam {
         that.ctm = this.ctm.clone();
         that.gCtm = new AffineTransform(this.gCtm);
         that.gClip = this.gClip;
+        if (this.clipCTM != null) {
+            that.clipCTM = this.clipCTM.clone();
+        }
         that.ref = this.ref;
 
         that.hints = (RenderingHints) this.hints.clone();

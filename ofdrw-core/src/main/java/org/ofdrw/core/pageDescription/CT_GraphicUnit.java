@@ -6,9 +6,7 @@ import org.ofdrw.core.action.Actions;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_RefID;
-import org.ofdrw.core.pageDescription.clips.Area;
 import org.ofdrw.core.pageDescription.clips.CT_Clip;
-import org.ofdrw.core.pageDescription.clips.ClipAble;
 import org.ofdrw.core.pageDescription.clips.Clips;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
@@ -46,6 +44,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @param boundary 外接矩形
      * @return this
      */
+    @SuppressWarnings("unchecked")
     public T setBoundary(ST_Box boundary) {
         if (boundary == null) {
             throw new IllegalArgumentException("外接矩形不能为空");
@@ -92,6 +91,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @param name 图元对象的名字
      * @return this
      */
+    @SuppressWarnings("unchecked")
     public T setGraphicName(String name) {
         if (name == null || name.trim().length() == 0) {
             this.removeAttr("Name");
@@ -118,6 +118,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @param visible true - 可见；false - 不见
      * @return this
      */
+    @SuppressWarnings("unchecked")
     public T setVisible(Boolean visible) {
         if (visible == null) {
             this.removeAttr("Visible");
@@ -149,6 +150,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @param ctm 变换矩阵
      * @return this
      */
+    @SuppressWarnings("unchecked")
     public T setCTM(ST_Array ctm) {
         this.addAttribute("CTM", ctm.toString());
         return (T) this;
@@ -171,6 +173,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @param id 绘制参数标识
      * @return this
      */
+    @SuppressWarnings("unchecked")
     public T setDrawParam(ST_RefID id) {
         this.addAttribute("DrawParam", id.toString());
         return (T) this;
@@ -196,6 +199,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @param lineWidth 绘制路径时使用的线宽
      * @return this
      */
+    @SuppressWarnings("unchecked")
     public T setLineWidth(Double lineWidth) {
         if (lineWidth == null) {
             this.removeAttr("LineWidth");
@@ -232,6 +236,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @param cap 线端点样式
      * @return this
      */
+    @SuppressWarnings("unchecked")
     public T setCap(LineCapType cap) {
         if (cap == null) {
             this.removeAttr("Cap");
@@ -266,6 +271,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @param join 线条连接样式
      * @return this
      */
+    @SuppressWarnings("unchecked")
     public T setJoin(LineJoinType join) {
         if (join == null) {
             this.removeAttr("Join");
@@ -303,6 +309,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @param miterLimit Join的截断值长度
      * @return this
      */
+    @SuppressWarnings("unchecked")
     public T setMiterLimit(Double miterLimit) {
         if (miterLimit == null) {
             this.removeAttr("MiterLimit");
@@ -349,6 +356,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @param dashOffset 线条虚线开始位置
      * @return this
      */
+    @SuppressWarnings("unchecked")
     public T setDashOffset(Double dashOffset) {
         if (dashOffset == null) {
             this.removeAttr("DashOffset");
@@ -398,6 +406,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @param dashPattern 线条虚线的重复样式的数组中共含两个值，第一个值代表虚线的线段的长度，第二个值代表虚线间隔的长度。
      * @return this
      */
+    @SuppressWarnings("unchecked")
     public T setDashPattern(ST_Array dashPattern) {
         if (dashPattern == null) {
             this.removeAttr("DashPattern");
@@ -434,18 +443,19 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * <p>
      * 取值区间为 [0,255]
      * <p>
-     * 默认为 0
+     * 默认为 255
      *
      * @param alpha 图元对象透明度，取值区间为 [0,255]
      * @return this
      */
+    @SuppressWarnings("unchecked")
     public T setAlpha(Integer alpha) {
         if (alpha == null) {
             this.removeAttr("Alpha");
             return (T) this;
         }
         if (alpha < 0) {
-            alpha = 0;
+            alpha = 255;
         }
         if (alpha > 255) {
             alpha = 255;
@@ -482,6 +492,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      * @param actions 图元对象的动作序列
      * @return this
      */
+    @SuppressWarnings("unchecked")
     public T setActions(Actions actions) {
         this.add(actions);
         return (T) this;
@@ -520,18 +531,6 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
         List<CT_Clip> ctClips = clips.getClips();
         if (ctClips == null || ctClips.isEmpty()) {
             return this;
-        }
-        // 在裁剪区域被加入图元时，设置裁剪对象中的路径数据的Boundary，以符合基础的图元必要数据要求，
-        for (CT_Clip ctClip : ctClips) {
-            List<Area> areas = ctClip.getAreas();
-            for (Area area : areas) {
-                ClipAble clipObj = area.getClipObj();
-                if (clipObj instanceof CT_GraphicUnit) {
-                    ST_Box boundary = this.getBoundary().clone().
-                            setTopLeftX(0d).setTopLeftY(0d);
-                    ((CT_GraphicUnit<?>) clipObj).setBoundary(boundary);
-                }
-            }
         }
         this.add(clips);
         return this;

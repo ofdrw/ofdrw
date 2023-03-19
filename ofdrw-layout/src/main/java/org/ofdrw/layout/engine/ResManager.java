@@ -84,12 +84,12 @@ public class ResManager {
     /**
      * 绘制参数Hash
      * <p>
-     * KEY: 资源对象的去除ID后的XML字符串
+     * KEY: 资源对象的去除ID后的XML字符串的hashCode
      * VALUE: 文档中的对象ID。
      * <p>
      * 该缓存表用于解决绘制参数冗余造成的资源浪费。
      */
-    private final HashMap<String, ST_ID> resObjHash = new HashMap<>();
+    private final HashMap<Integer, ST_ID> resObjHash = new HashMap<>();
 
     private ResManager() {
     }
@@ -152,7 +152,7 @@ public class ResManager {
                 Element copy = (Element) ctResObj.clone();
                 copy.remove(copy.attribute("ID"));
                 String key = copy.asXML();
-                resObjHash.put(key, id);
+                resObjHash.put(key.hashCode(), id);
             }
         }
 
@@ -382,7 +382,7 @@ public class ResManager {
 
         // 移除对象上已经存在的用于基于资源本身的Hash值
         resObj.removeAttr("ID");
-        String key = resObj.asXML();
+        int key = resObj.asXML().hashCode();
 
         ST_ID objId = this.resObjHash.get(key);
         if (objId != null) {

@@ -2,7 +2,6 @@ package org.ofdrw.graphics2d;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,12 +28,29 @@ public class TestG2dAPI {
 //
 //
 
-//        g.setColor(Color.blue);
-//        g.fillRect(0, 0, 1000, 1000);
+        g.setColor(Color.blue);
+        g.fillRect(0, 0, 1000, 1000);
 
 //        g.setColor(Color.RED);
 //        g.scale(2, 2);
 //        g.drawRect(0, 0, 10, 10);
+//        g.scale(2, 2);
+//        g.drawRect(0, 0, 10, 10);
+//        g.fillRoundRect(150, 50, 100, 100, 50, 25);
+//        g.shear(10 * Math.PI / 180d, 10 * Math.PI / 180d);
+//        g.translate(100, 100);
+//        g.rotate(45 * Math.PI / 180d);
+//        g.fillRect(0, 0, 50, 50);
+
+
+
+        g.setColor(Color.RED);
+        g.translate(100,100);
+        g.clipRect(0,0, 100,100);
+        g.fillRect(0, 0, 100, 100);
+        g.rotate(45 * Math.PI / 180d);
+        g.setColor(Color.YELLOW);
+        g.fillRect(0, 0, 100, 100);
 //        g.scale(2, 2);
 //        g.drawRect(0, 0, 10, 10);
 //        g.fillRoundRect(150, 50, 100, 100, 50, 25);
@@ -71,14 +87,16 @@ public class TestG2dAPI {
 
 //        g.drawString("你好OFD R&W Hello ", 40, 120);
 
-        Color[] colors = { Color.red, Color.green, Color.blue };
-        float[] dist = {0.0f, 0.5f, 1.0f };
-        Point2D center = new Point2D.Float(0.5f * 500, 0.5f * 500);
 
-        RadialGradientPaint p =
-                new RadialGradientPaint(center, 0.5f * 500, dist, colors);
-        g.setPaint(p);
-        g.fillRect(0, 0, 500, 500);
+
+//        Color[] colors = { Color.red, Color.green, Color.blue };
+//        float[] dist = {0.0f, 0.5f, 1.0f };
+//        Point2D center = new Point2D.Float(0.5f * 500, 0.5f * 500);
+//
+//        RadialGradientPaint p =
+//                new RadialGradientPaint(center, 0.5f * 500, dist, colors);
+//        g.setPaint(p);
+//        g.fillRect(0, 0, 500, 500);
 
         Path path = Paths.get("ofdrw-graphics2d/target/test.png");
         ImageIO.write(image, "png", path.toFile());

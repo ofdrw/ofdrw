@@ -528,4 +528,29 @@ class OFDPageGraphics2DTest {
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }
+
+    /**
+     * 裁剪区域的变换 与 图元变换
+     */
+    @Test
+    void clipAndCTM()throws Exception{
+        final Path dst = Paths.get("target/clipAndCTM.ofd");
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
+
+
+            g.setColor(Color.WHITE);
+            g.fillRect(0, 0, 500, 500);
+
+            g.setColor(Color.RED);
+            g.translate(100,100);
+            g.clipRect(0,0, 100,100);
+            g.fillRect(0, 0, 100, 100);
+
+            g.rotate(45 * Math.PI / 180d);
+            g.setColor(Color.YELLOW);
+            g.fillRect(0, 0, 100, 100);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
 }

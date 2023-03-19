@@ -1078,7 +1078,8 @@ public class DrawContext implements Closeable {
 
         // 设置裁剪区域
         if (this.state.clipFactory != null) {
-            p.setClips(this.state.clipFactory.clips());
+            // TODO: 裁剪区域的Boundary 以及 CTM
+            p.setClips(this.state.clipFactory.clips(this.boundary));
         }
 
         // 设置变换矩阵 忽略已经设置了变换矩阵的图元

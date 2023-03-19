@@ -63,7 +63,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      * <p>
      * stroke、fill 或 drawString 时，如果DrawParam与上次的不一样，则添加
      */
-    private final OFDGraphics2DDrawParam OFDGraphics2DDrawParam;
+    private final OFDGraphics2DDrawParam drawParam;
 
     /**
      * 绘制空间大小
@@ -99,7 +99,8 @@ public class OFDPageGraphics2D extends Graphics2D {
         this.pageDir = pageDir;
         this.pageObj = pageObj;
         this.size = box;
-        this.OFDGraphics2DDrawParam = new OFDGraphics2DDrawParam(doc);
+        this.drawParam = new OFDGraphics2DDrawParam(doc, box);
+
 
         // 页面内容
         final Content content = new Content();
@@ -130,7 +131,7 @@ public class OFDPageGraphics2D extends Graphics2D {
         this.pageObj = parent.pageObj;
         this.container = parent.container;
         this.size = parent.size.clone();
-        this.OFDGraphics2DDrawParam = parent.OFDGraphics2DDrawParam.clone();
+        this.drawParam = parent.drawParam.clone();
         this.devConfig = parent.devConfig;
         this.fmg = parent.fmg;
     }
@@ -153,7 +154,7 @@ public class OFDPageGraphics2D extends Graphics2D {
             return;
         }
         // 创建路径对象并设置上下文参数
-        CT_Path pathObj = newPathWithCtx();
+        CT_Path pathObj = newPathWithCtx(s.getBounds2D());
         pathObj.setStroke(true);
         pathObj.setAbbreviatedData(pData);
         container.addPageBlock(pathObj.toObj(doc.newID()));
@@ -164,9 +165,10 @@ public class OFDPageGraphics2D extends Graphics2D {
      * <p>
      * 并设置上下文相关参数
      *
+     * @param bounds 路径数据在页面中的外接矩形
      * @return 路径对象
      */
-    private CT_Path newPathWithCtx() {
+    private CT_Path newPathWithCtx(Rectangle2D bounds) {
         final CT_Path ctPath = new CT_Path();
         CT_PageArea area = pageObj.getArea();
         if (area == null) {
@@ -175,14 +177,11 @@ public class OFDPageGraphics2D extends Graphics2D {
         if (area == null) {
             throw new IllegalArgumentException("请设置页面大小");
         }
-        ST_Box box = area.getBox();
-        if (box == null) {
-            throw new IllegalArgumentException("请设置页面大小");
-        }
-        // 设置路径的区域
-        ctPath.setBoundary(box);
+        // 设置路径的区域，由于Canvas是使用整个画布绘制元素，
+        // 因此每个元素绘制时的边界也是整个画布大小。
+        ctPath.setBoundary(this.size);
         // 设置绘制参数
-        this.OFDGraphics2DDrawParam.apply(ctPath);
+        this.drawParam.apply(ctPath);
         return ctPath;
     }
 
@@ -323,15 +322,20 @@ public class OFDPageGraphics2D extends Graphics2D {
         ST_ID objId = this.doc.addResImg(img);
         ImageObject imgObj = new ImageObject(doc.newID());
         imgObj.setResourceID(objId.ref());
-        imgObj.setBoundary(this.size.clone());
+        // 由于Canvas是使用整个画布绘制元素，
+       // 因此每个元素绘制时的边界也是整个画布大小。
+        imgObj.setBoundary(this.size);
         imgObj.setCTM(new ST_Array(width, 0, 0, height, x, y));
 //        ST_Array ctm = new ST_Array(width, 0, 0, height, x, y).mtxMul(this.drawParam.ctm);
 //        imgObj.setCTM(ctm);
         // 透明度
-        if (this.OFDGraphics2DDrawParam.gColor instanceof Color) {
-            imgObj.setAlpha(((Color) this.OFDGraphics2DDrawParam.gColor).getAlpha());
+        if (this.drawParam.gColor instanceof Color) {
+            int alpha = ((Color) this.drawParam.gColor).getAlpha();
+            if (alpha != 255) {
+                imgObj.setAlpha(alpha);
+            }
         }
-        this.OFDGraphics2DDrawParam.apply(imgObj);
+        this.drawParam.apply(imgObj);
         container.addPageBlock(imgObj);
         return true;
     }
@@ -532,7 +536,7 @@ public class OFDPageGraphics2D extends Graphics2D {
             return;
         }
         // 创建路径对象并设置上下文参数
-        CT_Path pathObj = newPathWithCtx();
+        CT_Path pathObj = newPathWithCtx(s.getBounds2D());
         pathObj.setFill(true);
         pathObj.setAbbreviatedData(pData);
         container.addPageBlock(pathObj.toObj(doc.newID()));
@@ -553,9 +557,9 @@ public class OFDPageGraphics2D extends Graphics2D {
     @Override
     public boolean hit(Rectangle rect, Shape s, boolean onStroke) {
         if (onStroke) {
-            s = this.OFDGraphics2DDrawParam.gStroke.createStrokedShape(s);
+            s = this.drawParam.gStroke.createStrokedShape(s);
         }
-        s = this.OFDGraphics2DDrawParam.gCtm.createTransformedShape(s);
+        s = this.drawParam.gCtm.createTransformedShape(s);
         return s.intersects(rect);
     }
 
@@ -582,7 +586,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void setComposite(Composite comp) {
-        this.OFDGraphics2DDrawParam.composite = comp;
+        this.drawParam.composite = comp;
     }
 
     /**
@@ -592,7 +596,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void setPaint(Paint paint) {
-        this.OFDGraphics2DDrawParam.setColor(paint);
+        this.drawParam.setColor(paint);
     }
 
     /**
@@ -602,7 +606,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void setStroke(Stroke s) {
-        this.OFDGraphics2DDrawParam.setStroke(s);
+        this.drawParam.setStroke(s);
     }
 
     /**
@@ -613,8 +617,8 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void setRenderingHint(RenderingHints.Key hintKey, Object hintValue) {
-        this.OFDGraphics2DDrawParam.fontRenderCtx = null;
-        this.OFDGraphics2DDrawParam.hints.put(hintKey, hintValue);
+        this.drawParam.fontRenderCtx = null;
+        this.drawParam.hints.put(hintKey, hintValue);
     }
 
     /**
@@ -625,7 +629,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public Object getRenderingHint(RenderingHints.Key hintKey) {
-        return this.OFDGraphics2DDrawParam.hints.get(hintKey);
+        return this.drawParam.hints.get(hintKey);
     }
 
     /**
@@ -635,9 +639,9 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void setRenderingHints(Map<?, ?> hints) {
-        this.OFDGraphics2DDrawParam.fontRenderCtx = null;
-        this.OFDGraphics2DDrawParam.hints.clear();
-        this.OFDGraphics2DDrawParam.hints.putAll(hints);
+        this.drawParam.fontRenderCtx = null;
+        this.drawParam.hints.clear();
+        this.drawParam.hints.putAll(hints);
     }
 
     /**
@@ -647,8 +651,8 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void addRenderingHints(Map<?, ?> hints) {
-        this.OFDGraphics2DDrawParam.fontRenderCtx = null;
-        this.OFDGraphics2DDrawParam.hints.putAll(hints);
+        this.drawParam.fontRenderCtx = null;
+        this.drawParam.hints.putAll(hints);
     }
 
     /**
@@ -658,7 +662,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public RenderingHints getRenderingHints() {
-        return (RenderingHints) this.OFDGraphics2DDrawParam.hints.clone();
+        return (RenderingHints) this.drawParam.hints.clone();
     }
 
     /**
@@ -678,7 +682,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public Color getColor() {
-        return this.OFDGraphics2DDrawParam.gForeground;
+        return this.drawParam.gForeground;
     }
 
     /**
@@ -691,7 +695,7 @@ public class OFDPageGraphics2D extends Graphics2D {
         if (c == null) {
             return;
         }
-        this.OFDGraphics2DDrawParam.setForeground(c);
+        this.drawParam.setForeground(c);
     }
 
     /**
@@ -719,7 +723,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public Font getFont() {
-        return this.OFDGraphics2DDrawParam.font;
+        return this.drawParam.font;
     }
 
     /**
@@ -729,7 +733,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void setFont(Font font) {
-        this.OFDGraphics2DDrawParam.font = font;
+        this.drawParam.font = font;
     }
 
     /**
@@ -793,7 +797,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public Shape getClip() {
-        return this.OFDGraphics2DDrawParam.gClip;
+        return this.drawParam.gClip;
     }
 
     /**
@@ -805,13 +809,23 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void clip(Shape s) {
-        if (this.OFDGraphics2DDrawParam.gClip == null) {
+        if (s == null) {
+            this.drawParam.gClip = null;
+            this.drawParam.clipCTM = null;
+            return;
+        }
+
+        if (this.drawParam.gClip == null) {
             setClip(s);
             return;
         }
         Area newClip = new Area(s);
         newClip.intersect(new Area(s));
-        this.OFDGraphics2DDrawParam.gClip = new GeneralPath(newClip);
+        this.drawParam.gClip = new GeneralPath(newClip);
+        // 存储 发生裁剪时的变换矩阵
+        if (this.drawParam.ctm != null && !OFDGraphics2DDrawParam.ONE.equals(this.drawParam.ctm)) {
+            this.drawParam.clipCTM = this.drawParam.ctm.clone();
+        }
     }
 
 
@@ -820,11 +834,20 @@ public class OFDPageGraphics2D extends Graphics2D {
      * <p>
      * 若已经存在裁剪区域那么旧的裁剪区域将会被新的裁剪区域覆盖
      *
-     * @param clip 裁剪区域
+     * @param clip 裁剪区域，为null时表示清空裁剪区域
      */
     @Override
     public void setClip(Shape clip) {
-        this.OFDGraphics2DDrawParam.gClip = clip;
+        if (clip == null) {
+            this.drawParam.gClip = null;
+            this.drawParam.clipCTM = null;
+            return;
+        }
+        this.drawParam.gClip = clip;
+        // 存储 发生裁剪时的变换矩阵
+        if (this.drawParam.ctm != null && !OFDGraphics2DDrawParam.ONE.equals(this.drawParam.ctm)) {
+            this.drawParam.clipCTM = this.drawParam.ctm.clone();
+        }
     }
 
     /**
@@ -894,11 +917,11 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void clearRect(int x, int y, int width, int height) {
-        if (this.OFDGraphics2DDrawParam.gBackground == null) {
+        if (this.drawParam.gBackground == null) {
             return;
         }
         Paint saved = getPaint();
-        setPaint(this.OFDGraphics2DDrawParam.gBackground);
+        setPaint(this.drawParam.gBackground);
         fillRect(x, y, width, height);
         setPaint(saved);
     }
@@ -1070,8 +1093,8 @@ public class OFDPageGraphics2D extends Graphics2D {
     @Override
     public void translate(double tx, double ty) {
         ST_Array r = new ST_Array(1, 0, 0, 1, tx, ty);
-        this.OFDGraphics2DDrawParam.ctm = r.mtxMul(this.OFDGraphics2DDrawParam.ctm);
-        this.OFDGraphics2DDrawParam.gCtm.translate(tx, ty);
+        this.drawParam.ctm = r.mtxMul(this.drawParam.ctm);
+        this.drawParam.gCtm.translate(tx, ty);
     }
 
     /**
@@ -1082,8 +1105,8 @@ public class OFDPageGraphics2D extends Graphics2D {
     @Override
     public void rotate(double theta) {
         ST_Array r = new ST_Array(Math.cos(theta), Math.sin(theta), -Math.sin(theta), Math.cos(theta), 0, 0);
-        this.OFDGraphics2DDrawParam.ctm = r.mtxMul(this.OFDGraphics2DDrawParam.ctm);
-        this.OFDGraphics2DDrawParam.gCtm.rotate(theta);
+        this.drawParam.ctm = r.mtxMul(this.drawParam.ctm);
+        this.drawParam.gCtm.rotate(theta);
     }
 
     /**
@@ -1116,8 +1139,8 @@ public class OFDPageGraphics2D extends Graphics2D {
     @Override
     public void scale(double sx, double sy) {
         ST_Array scale = new ST_Array(sx, 0, 0, sy, 0, 0);
-        this.OFDGraphics2DDrawParam.ctm = scale.mtxMul(this.OFDGraphics2DDrawParam.ctm);
-        this.OFDGraphics2DDrawParam.gCtm.scale(sx, sy);
+        this.drawParam.ctm = scale.mtxMul(this.drawParam.ctm);
+        this.drawParam.gCtm.scale(sx, sy);
     }
 
     /**
@@ -1129,8 +1152,8 @@ public class OFDPageGraphics2D extends Graphics2D {
     @Override
     public void shear(double shx, double shy) {
         ST_Array shear = new ST_Array(1, Math.tan(shx), Math.tan(shy), 1, 0, 0);
-        this.OFDGraphics2DDrawParam.ctm = shear.mtxMul(this.OFDGraphics2DDrawParam.ctm);
-        this.OFDGraphics2DDrawParam.gCtm.shear(shx, shy);
+        this.drawParam.ctm = shear.mtxMul(this.drawParam.ctm);
+        this.drawParam.gCtm.shear(shx, shy);
     }
 
     /**
@@ -1144,8 +1167,8 @@ public class OFDPageGraphics2D extends Graphics2D {
             throw new IllegalArgumentException("变换矩阵为空");
         }
         ST_Array ctm = trans(tx);
-        this.OFDGraphics2DDrawParam.ctm = ctm.mtxMul(this.OFDGraphics2DDrawParam.ctm);
-        this.OFDGraphics2DDrawParam.gCtm.concatenate(tx);
+        this.drawParam.ctm = ctm.mtxMul(this.drawParam.ctm);
+        this.drawParam.gCtm.concatenate(tx);
     }
 
     /**
@@ -1158,7 +1181,7 @@ public class OFDPageGraphics2D extends Graphics2D {
         if (tx == null) {
             throw new IllegalArgumentException("变换矩阵为空");
         }
-        this.OFDGraphics2DDrawParam.ctm = trans(tx);
+        this.drawParam.ctm = trans(tx);
     }
 
     /**
@@ -1168,7 +1191,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public AffineTransform getTransform() {
-        return new AffineTransform(this.OFDGraphics2DDrawParam.gCtm);
+        return new AffineTransform(this.drawParam.gCtm);
     }
 
     /**
@@ -1178,7 +1201,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public Paint getPaint() {
-        return this.OFDGraphics2DDrawParam.gColor;
+        return this.drawParam.gColor;
     }
 
     /**
@@ -1190,7 +1213,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public Composite getComposite() {
-        return this.OFDGraphics2DDrawParam.composite;
+        return this.drawParam.composite;
     }
 
     /**
@@ -1200,7 +1223,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void setBackground(Color color) {
-        this.OFDGraphics2DDrawParam.gBackground = color;
+        this.drawParam.gBackground = color;
     }
 
     /**
@@ -1210,7 +1233,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public Color getBackground() {
-        return this.OFDGraphics2DDrawParam.gBackground;
+        return this.drawParam.gBackground;
     }
 
     /**
@@ -1220,7 +1243,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public Stroke getStroke() {
-        return this.OFDGraphics2DDrawParam.gStroke;
+        return this.drawParam.gStroke;
     }
 
     /**
@@ -1230,7 +1253,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public FontRenderContext getFontRenderContext() {
-        return this.OFDGraphics2DDrawParam.getFontRenderContext();
+        return this.drawParam.getFontRenderContext();
     }
 
 

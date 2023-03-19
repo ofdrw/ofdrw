@@ -10,6 +10,9 @@ OFDRW已经有Canvas元素了为什么要实现`Graphics2D`接口？
 致谢：[jfree/skijagraphics2d](https://github.com/jfree/skijagraphics2d)、[apache.org/batik](https://xmlgraphics.apache.org/batik/)
 它们为ofdrw-graphics2d模块的开发提供非常多的灵感，非常感谢。
 
+
+**目前裁剪功能相关API（`clip`）暂不可用！**
+
 ## Quick Start
 
 引入依赖
