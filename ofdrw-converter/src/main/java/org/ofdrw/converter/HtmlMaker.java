@@ -91,10 +91,10 @@ public class HtmlMaker {
     /**
      * HTML转换器
      *
-     *
      * @param ofdReader   OFD输入文件
      * @param outputPath  HTML输出文件路径
      * @param screenWidth 页面宽度，或者屏幕宽度
+     * @throws IOException 文件创建失败
      */
     public HtmlMaker(OFDReader ofdReader, Path outputPath, int screenWidth) throws IOException {
         this.ofdReader = ofdReader;
@@ -120,11 +120,12 @@ public class HtmlMaker {
     /**
      * 转HTML构造方法，注意该方法无法输出到文件
      *
-     <p>
+     * <p>
      * 您仅允许使用 {@link #makePageDiv(SVGMaker, int)} 在获取每一页的Div元素
      *
      * @param ofdReader   OFD输入文件
      * @param screenWidth 页面宽度，或者屏幕宽度
+     * @throws IOException 不会发生
      */
     public HtmlMaker(OFDReader ofdReader, int screenWidth) throws IOException {
         this.ofdReader = ofdReader;

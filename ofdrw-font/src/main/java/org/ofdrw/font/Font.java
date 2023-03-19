@@ -66,6 +66,11 @@ public class Font {
 
     /**
      * 创建字体并指定 可打印字符宽度缩放倍数
+     *
+     * @param name                   字形名
+     * @param familyName             字族名
+     * @param fontFile               字形文件路径
+     * @param printableAsciiWidthMap 可打印字符映射表，用于处理字符的宽度
      */
     public Font(String name, String familyName, Path fontFile, double[] printableAsciiWidthMap) {
         this.name = name;

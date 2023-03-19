@@ -383,9 +383,11 @@ public class OFDGraphics2DDrawParam {
     final static ST_Array ONE = ST_Array.unitCTM();
 
     /**
-     * 应用绘制参数的配置
+     * 在图元上应用绘制参数配置
      * <p>
      * 包括： 描边、变换矩阵、裁剪区域、颜色
+     *
+     * @param target 目标图元
      */
     public void apply(CT_GraphicUnit<?> target) {
         if (ref == null) {
