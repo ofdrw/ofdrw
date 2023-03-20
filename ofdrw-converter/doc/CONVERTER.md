@@ -16,7 +16,7 @@ OFDRW提供了将其它类型媒体文件或文档转换成OFD文档内容功能
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-converter</artifactId>
-    <version>2.0.1</version>
+    <version>2.0.2</version>
 </dependency>
 ```
 
@@ -138,7 +138,7 @@ converter.close();
 注意事项：
 
 - 转换后的页面将采用PDF中页面尺寸。
-- **目前该转换器任处于试验阶段**，可能存在部分特性在转换过程中丢失，显示效果与原PDF文档不一致。
+- **目前该转换器任然有改进空间**，可能存在部分特性在转换过程中丢失，显示效果与原PDF文档不一致。
 
 示例：
 
