@@ -154,7 +154,7 @@ public class OFDPageGraphics2D extends Graphics2D {
             return;
         }
         // 创建路径对象并设置上下文参数
-        CT_Path pathObj = newPathWithCtx(s.getBounds2D());
+        CT_Path pathObj = newPathWithCtx();
         pathObj.setStroke(true);
         pathObj.setAbbreviatedData(pData);
         container.addPageBlock(pathObj.toObj(doc.newID()));
@@ -165,10 +165,9 @@ public class OFDPageGraphics2D extends Graphics2D {
      * <p>
      * 并设置上下文相关参数
      *
-     * @param bounds 路径数据在页面中的外接矩形
      * @return 路径对象
      */
-    private CT_Path newPathWithCtx(Rectangle2D bounds) {
+    private CT_Path newPathWithCtx() {
         final CT_Path ctPath = new CT_Path();
         CT_PageArea area = pageObj.getArea();
         if (area == null) {
@@ -323,11 +322,8 @@ public class OFDPageGraphics2D extends Graphics2D {
         ImageObject imgObj = new ImageObject(doc.newID());
         imgObj.setResourceID(objId.ref());
         // 由于Canvas是使用整个画布绘制元素，
-       // 因此每个元素绘制时的边界也是整个画布大小。
+        // 因此每个元素绘制时的边界也是整个画布大小。
         imgObj.setBoundary(this.size);
-        imgObj.setCTM(new ST_Array(width, 0, 0, height, x, y));
-//        ST_Array ctm = new ST_Array(width, 0, 0, height, x, y).mtxMul(this.drawParam.ctm);
-//        imgObj.setCTM(ctm);
         // 透明度
         if (this.drawParam.gColor instanceof Color) {
             int alpha = ((Color) this.drawParam.gColor).getAlpha();
@@ -335,7 +331,16 @@ public class OFDPageGraphics2D extends Graphics2D {
                 imgObj.setAlpha(alpha);
             }
         }
+
+        // 保存图片放置之前变换矩阵
+        AffineTransform before = getTransform();
+        // 计算缩放后的图片应用变换矩阵，并作为当前的变换矩阵
+        AffineTransform imgCTM = new AffineTransform(before);
+        imgCTM.concatenate(new AffineTransform(width, 0, 0, height, x, y));
+        this.setTransform(imgCTM);
         this.drawParam.apply(imgObj);
+        // 回复图片放置之前的变换矩阵
+        this.setTransform(before);
         container.addPageBlock(imgObj);
         return true;
     }
@@ -536,7 +541,7 @@ public class OFDPageGraphics2D extends Graphics2D {
             return;
         }
         // 创建路径对象并设置上下文参数
-        CT_Path pathObj = newPathWithCtx(s.getBounds2D());
+        CT_Path pathObj = newPathWithCtx();
         pathObj.setFill(true);
         pathObj.setAbbreviatedData(pData);
         container.addPageBlock(pathObj.toObj(doc.newID()));
@@ -559,7 +564,7 @@ public class OFDPageGraphics2D extends Graphics2D {
         if (onStroke) {
             s = this.drawParam.gStroke.createStrokedShape(s);
         }
-        s = this.drawParam.gCtm.createTransformedShape(s);
+        s = this.drawParam.ctm.createTransformedShape(s);
         return s.intersects(rect);
     }
 
@@ -820,11 +825,14 @@ public class OFDPageGraphics2D extends Graphics2D {
             return;
         }
         Area newClip = new Area(s);
-        newClip.intersect(new Area(s));
+        newClip.intersect(new Area(this.drawParam.gClip));
         this.drawParam.gClip = new GeneralPath(newClip);
-        // 存储 发生裁剪时的变换矩阵
-        if (this.drawParam.ctm != null && !OFDGraphics2DDrawParam.ONE.equals(this.drawParam.ctm)) {
-            this.drawParam.clipCTM = this.drawParam.ctm.clone();
+//        // 存储 发生裁剪时的变换矩阵
+//        if (this.drawParam.ctm != null && !OFDGraphics2DDrawParam.ONE.equals(this.drawParam.ctm)) {
+//            this.drawParam.clipCTM = this.drawParam.ctm.clone();
+//        }
+        if (!this.drawParam.ctm.isIdentity()) {
+            this.drawParam.clipCTM = new AffineTransform(this.drawParam.ctm);
         }
     }
 
@@ -844,9 +852,12 @@ public class OFDPageGraphics2D extends Graphics2D {
             return;
         }
         this.drawParam.gClip = clip;
-        // 存储 发生裁剪时的变换矩阵
-        if (this.drawParam.ctm != null && !OFDGraphics2DDrawParam.ONE.equals(this.drawParam.ctm)) {
-            this.drawParam.clipCTM = this.drawParam.ctm.clone();
+//        // 存储 发生裁剪时的变换矩阵
+//        if (this.drawParam.ctm != null && !OFDGraphics2DDrawParam.ONE.equals(this.drawParam.ctm)) {
+//            this.drawParam.clipCTM = this.drawParam.ctm.clone();
+//        }
+        if (!this.drawParam.ctm.isIdentity()) {
+            this.drawParam.clipCTM = new AffineTransform(this.drawParam.ctm);
         }
     }
 
@@ -1092,9 +1103,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void translate(double tx, double ty) {
-        ST_Array r = new ST_Array(1, 0, 0, 1, tx, ty);
-        this.drawParam.ctm = r.mtxMul(this.drawParam.ctm);
-        this.drawParam.gCtm.translate(tx, ty);
+        this.drawParam.ctm.translate(tx, ty);
     }
 
     /**
@@ -1104,9 +1113,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void rotate(double theta) {
-        ST_Array r = new ST_Array(Math.cos(theta), Math.sin(theta), -Math.sin(theta), Math.cos(theta), 0, 0);
-        this.drawParam.ctm = r.mtxMul(this.drawParam.ctm);
-        this.drawParam.gCtm.rotate(theta);
+        this.drawParam.ctm.rotate(theta);
     }
 
     /**
@@ -1138,9 +1145,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void scale(double sx, double sy) {
-        ST_Array scale = new ST_Array(sx, 0, 0, sy, 0, 0);
-        this.drawParam.ctm = scale.mtxMul(this.drawParam.ctm);
-        this.drawParam.gCtm.scale(sx, sy);
+        this.drawParam.ctm.scale(sx, sy);
     }
 
     /**
@@ -1151,9 +1156,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public void shear(double shx, double shy) {
-        ST_Array shear = new ST_Array(1, Math.tan(shx), Math.tan(shy), 1, 0, 0);
-        this.drawParam.ctm = shear.mtxMul(this.drawParam.ctm);
-        this.drawParam.gCtm.shear(shx, shy);
+        this.drawParam.ctm.shear(shx, shy);
     }
 
     /**
@@ -1164,11 +1167,9 @@ public class OFDPageGraphics2D extends Graphics2D {
     @Override
     public void transform(AffineTransform tx) {
         if (tx == null) {
-            throw new IllegalArgumentException("变换矩阵为空");
+            return;
         }
-        ST_Array ctm = trans(tx);
-        this.drawParam.ctm = ctm.mtxMul(this.drawParam.ctm);
-        this.drawParam.gCtm.concatenate(tx);
+        this.drawParam.ctm.concatenate(tx);
     }
 
     /**
@@ -1179,9 +1180,9 @@ public class OFDPageGraphics2D extends Graphics2D {
     @Override
     public void setTransform(AffineTransform tx) {
         if (tx == null) {
-            throw new IllegalArgumentException("变换矩阵为空");
+            tx = new AffineTransform();
         }
-        this.drawParam.ctm = trans(tx);
+        this.drawParam.ctm = new AffineTransform(tx);
     }
 
     /**
@@ -1191,7 +1192,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public AffineTransform getTransform() {
-        return new AffineTransform(this.drawParam.gCtm);
+        return new AffineTransform(this.drawParam.ctm);
     }
 
     /**
@@ -1265,20 +1266,6 @@ public class OFDPageGraphics2D extends Graphics2D {
 
     }
 
-    /**
-     * 转为AWT变换矩阵 {@link AffineTransform} 为 OFD 类型变换矩阵{@link ST_Array}
-     *
-     * @param tx AWT变换矩阵
-     * @return OFD ST_Array
-     */
-    public ST_Array trans(AffineTransform tx) {
-      /*
-            m00 m10 0    a b 0
-            m01 m11 0  = c d 0
-            m02 m12 1    e f 1
-       */
-        return new ST_Array(tx.getScaleX(), tx.getShearY(), tx.getShearX(), tx.getScaleY(), tx.getTranslateX(), tx.getTranslateY());
-    }
 
     /**
      * 将可渲染对象转换为缓存图像
@@ -1307,5 +1294,20 @@ public class OFDPageGraphics2D extends Graphics2D {
         final BufferedImage result = new BufferedImage(cm, raster, isAlphaPremultiplied, properties);
         img.copyData(raster);
         return result;
+    }
+
+    /**
+     * 转为AWT变换矩阵 {@link AffineTransform} 为 OFD 类型变换矩阵{@link ST_Array}
+     *
+     * @param tx AWT变换矩阵
+     * @return OFD ST_Array
+     */
+    public ST_Array trans(AffineTransform tx) {
+          /*
+            m00 m10 0    a b 0
+            m01 m11 0  = c d 0
+            m02 m12 1    e f 1
+       */
+        return new ST_Array(tx.getScaleX(), tx.getShearY(), tx.getShearX(), tx.getScaleY(), tx.getTranslateX(), tx.getTranslateY());
     }
 }

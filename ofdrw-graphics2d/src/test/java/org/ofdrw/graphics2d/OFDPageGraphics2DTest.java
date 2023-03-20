@@ -1,6 +1,7 @@
 package org.ofdrw.graphics2d;
 
 import org.junit.jupiter.api.Test;
+import org.ofdrw.pkg.tool.ElemCup;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -9,7 +10,7 @@ import java.awt.image.BufferedImage;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class OFDPageGraphics2DTest {
 
@@ -517,8 +518,8 @@ class OFDPageGraphics2DTest {
         try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
             OFDPageGraphics2D g = doc.newPage(500, 500);
 
-            Color[] colors = { Color.red, Color.green, Color.blue };
-            float[] dist = {0.0f, 0.5f, 1.0f };
+            Color[] colors = {Color.red, Color.green, Color.blue};
+            float[] dist = {0.0f, 0.5f, 1.0f};
             Point2D center = new Point2D.Float(0.5f * 500, 0.5f * 500);
 
             RadialGradientPaint p =
@@ -533,7 +534,8 @@ class OFDPageGraphics2DTest {
      * 裁剪区域的变换 与 图元变换
      */
     @Test
-    void clipAndCTM()throws Exception{
+    void clipAndCTM() throws Exception {
+        ElemCup.ENABLE_DEBUG_PRINT = true;
         final Path dst = Paths.get("target/clipAndCTM.ofd");
         try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
             OFDPageGraphics2D g = doc.newPage(500, 500);
@@ -543,8 +545,8 @@ class OFDPageGraphics2DTest {
             g.fillRect(0, 0, 500, 500);
 
             g.setColor(Color.RED);
-            g.translate(100,100);
-            g.clipRect(0,0, 100,100);
+            g.translate(100, 100);
+            g.clipRect(0, 0, 100, 100);
             g.fillRect(0, 0, 100, 100);
 
             g.rotate(45 * Math.PI / 180d);
@@ -553,4 +555,66 @@ class OFDPageGraphics2DTest {
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }
+
+    /**
+     * 裁剪区域的变换 与 图元变换
+     */
+    @Test
+    void clips() throws Exception {
+        ElemCup.ENABLE_DEBUG_PRINT = true;
+        final Path dst = Paths.get("target/clips.ofd");
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
+
+            g.setColor(Color.RED);
+            g.translate(100, 100);
+            g.fillRect(0, 0, 100, 100);
+            g.clipRect(0, 0, 100, 100);
+
+            g.setColor(Color.BLUE);
+            g.translate(-50, -50);
+            g.fillRect(0, 0, 100, 100);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+
+    /**
+     * 裁剪区域的变换 与 图元变换
+     */
+    @Test
+    void complexCTMSetAndReset() throws Exception {
+        ElemCup.ENABLE_DEBUG_PRINT = true;
+        final Path dst = Paths.get("target/complexCTMSetAndReset.ofd");
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
+
+            g.rotate(90 * Math.PI / 180d);
+            g.translate(100, 0);
+            g.setColor(Color.RED);
+            g.fillRect(0, -50, 100, 50);
+
+            g.setTransform(new AffineTransform());
+            g.translate(100, 0);
+            g.rotate(90 * Math.PI / 180d);
+            g.setColor(Color.BLUE);
+            g.fillRect(0, -50, 100, 50);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    @Test
+    void drawImageWithCTM() throws Exception {
+        final Path dst = Paths.get("target/drawImageWithCTM.ofd");
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
+            Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
+            BufferedImage img1 = ImageIO.read(file.toFile());
+            g.translate(400, 0);
+            g.rotate(90 * Math.PI / 180d);
+            g.drawImage(img1, 10, 10,  null);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
 }

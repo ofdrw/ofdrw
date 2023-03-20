@@ -7,6 +7,7 @@ import org.ofdrw.converter.GeneralConvertException;
 import org.ofdrw.graphics2d.OFDGraphicsDocument;
 import org.ofdrw.graphics2d.OFDPageGraphics2D;
 
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -97,20 +98,18 @@ public class PDFConverter implements DocConverter {
             }
 
             PDFRenderer pdfRender = new PDFRenderer(pdfDoc);
+            RenderingHints r = new RenderingHints(null);
+            r.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            // 设置渲染模式为快速，关闭PDFBox对图片的压缩
+            r.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+            r.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            pdfRender.setRenderingHints(r);
+
             for (Integer index : targetPages) {
                 PDRectangle pdfPageSize = pdfDoc.getPage(index).getBBox();
-                OFDPageGraphics2D ofdPageG2d = ofdDoc.newPage(pdfPageSize.getWidth(), pdfPageSize.getHeight());
-                pdfRender.renderPageToGraphics(index, ofdPageG2d);
-
-//                BufferedImage image = new BufferedImage((int) pdfPageSize.getWidth(), (int) pdfPageSize.getHeight(), BufferedImage.TYPE_INT_RGB);
-//                Graphics2D g = image.createGraphics();
-//                pdfRender.renderPageToGraphics(index, g);
-//                Path path = Paths.get("target/" + index + ".png");
-//                ImageIO.write(image, "png", path.toFile());
-
-                // 启用页面缩放后 PDF中的图片也会被缩放导致绘制图片模糊
-                // OFDPageGraphics2D ofdPageG2d = ofdDoc.newPage(pdfPageSize.getWidth()/UUPMM, pdfPageSize.getHeight()/UUPMM);
-                // pdfRender.renderPageToGraphics(index, ofdPageG2d, (float) (1d/UUPMM));
+                // 将PDF页面尺寸缩放至OFD尺寸
+                OFDPageGraphics2D ofdPageG2d = ofdDoc.newPage(pdfPageSize.getWidth() / UUPMM, pdfPageSize.getHeight() / UUPMM);
+                pdfRender.renderPageToGraphics(index, ofdPageG2d, (float) (1d / UUPMM));
             }
         } catch (IOException e) {
             throw new GeneralConvertException("PDF转换OFD异常", e);

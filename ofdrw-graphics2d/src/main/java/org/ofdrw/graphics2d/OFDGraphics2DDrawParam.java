@@ -4,7 +4,11 @@ import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.basicType.ST_RefID;
+import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
+import org.ofdrw.core.pageDescription.clips.Area;
+import org.ofdrw.core.pageDescription.clips.CT_Clip;
+import org.ofdrw.core.pageDescription.clips.Clips;
 import org.ofdrw.core.pageDescription.color.color.*;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
@@ -66,7 +70,12 @@ public class OFDGraphics2DDrawParam {
      * <p>
      * 注意：该参数仅在设置裁剪区域时设置，默认情况下保持为null
      */
-    ST_Array clipCTM = null;
+    AffineTransform clipCTM = null;
+
+    /**
+     * AWT变换矩阵
+     */
+    AffineTransform ctm;
 
     /**
      * 背景色
@@ -78,16 +87,6 @@ public class OFDGraphics2DDrawParam {
      */
     Color gForeground;
 
-    /**
-     * 变换矩阵
-     */
-    ST_Array ctm;
-    /**
-     * AWT变换矩阵
-     * <p>
-     * 由于OFD变换矩阵需要左乘于AWT相反，所以使用该副本来存储变换矩阵
-     */
-    AffineTransform gCtm;
     /**
      * 渲染器信息
      * <p>
@@ -124,12 +123,14 @@ public class OFDGraphics2DDrawParam {
         this.gBackground = new Color(255, 255, 255);
         this.gForeground = new Color(0, 0, 0);
 
-        this.ctm = ST_Array.unitCTM();
-        this.gCtm = new AffineTransform();
+        this.ctm = new AffineTransform();
         this.ref = null;
         this.gClip = null;
 
         this.hints = new RenderingHints(null);
+        // 设置为快速模式，以次来关闭PDFBox对图片的
+//        this.hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+
         this.composite = AlphaComposite.SrcOver;
 
         this.font = new Font("sanserif", Font.PLAIN, 3);
@@ -396,45 +397,23 @@ public class OFDGraphics2DDrawParam {
         }
         target.setDrawParam(ref);
 
-        // 获取元素上已经存在变换矩阵
-        ST_Array ctmApplied = target.getCTM();
-        // 设置变换矩阵
-        if (!this.ctm.equals(ONE)) {
-            if (ctmApplied != null) {
-                // 叠加变换矩阵
-                ctmApplied = ctmApplied.mtxMul(ctm);
-            } else {
-                ctmApplied = ctm;
-            }
-            target.setCTM(ctmApplied);
+        if (!this.ctm.isIdentity()) {
+            target.setCTM(trans(this.ctm));
         }
 
-        // TODO: 如何处理裁剪区域
-//        if (gClip != null) {
-//            // 设置裁剪区域
-//            ST_Box stBox = target.getBoundary();
-//            Rectangle2D targetBoundary = new Rectangle2D.Double(stBox.getTopLeftX(), stBox.getTopLeftY(), stBox.getWidth(), stBox.getHeight());
-//            Rectangle2D clipsBoundary = gClip.getBounds2D();
-//            System.out.printf(">> 图元 %s 裁剪区域 %s\n", targetBoundary, clipsBoundary);
-//            if (clipsBoundary.contains(targetBoundary)) {
-//                // 如果裁剪区域大小 大于等于图元大小，那么忽略该裁剪区域
-//            } else {
-//                Clips clips = new Clips();
-//                Area area = new Area();
-//                // 如果裁剪区域的变换矩阵不为空不为单位矩阵 并且与当前的变换矩阵不一致，
-//                // 那么需要设置裁剪区域独立的变换矩阵
-//                if (clipCTM != null && !this.ctm.equals(ONE) && !clipCTM.equals(this.ctm)) {
-//                    area.setCTM(clipCTM);
-//                }
-//                // area.setDrawParam(ref); // 绘制参数不影响裁剪区
-//                CT_Path clipObj = new CT_Path().setAbbreviatedData(OFDShapes.path(gClip));
-//                // 裁剪区域不受所处图元影响，默认使用整个页面作为工作区
-//                clipObj.setBoundary(this.area);
-//                area.setClipObj(clipObj);
-//                clips.addClip(new CT_Clip().addArea(area));
-//                target.setClips(clips);
-//            }
-//        }
+
+        if (gClip != null) {
+            Clips clips = new Clips();
+            Area area = new Area();
+            CT_Path clipObj = new CT_Path().setAbbreviatedData(OFDShapes.path(gClip));
+            clipObj.setFill(true);
+            // 裁剪区域不受所处图元影响，默认使用整个页面作为工作区
+            clipObj.setBoundary(this.area);
+            clipObj.setCTM(trans(clipCTM));
+            area.setClipObj(clipObj);
+            clips.addClip(new CT_Clip().addArea(area));
+            target.setClips(clips);
+        }
 
     }
 
@@ -496,11 +475,10 @@ public class OFDGraphics2DDrawParam {
         that.gBackground = this.gBackground;
         that.gForeground = this.gForeground;
 
-        that.ctm = this.ctm.clone();
-        that.gCtm = new AffineTransform(this.gCtm);
+        that.ctm = new AffineTransform(this.ctm);
         that.gClip = this.gClip;
         if (this.clipCTM != null) {
-            that.clipCTM = this.clipCTM.clone();
+            that.clipCTM = new AffineTransform(this.clipCTM);
         }
         that.ref = this.ref;
 
@@ -509,4 +487,20 @@ public class OFDGraphics2DDrawParam {
         that.font = this.font;
         return that;
     }
+
+    /**
+     * 转为AWT变换矩阵 {@link AffineTransform} 为 OFD 类型变换矩阵{@link ST_Array}
+     *
+     * @param tx AWT变换矩阵
+     * @return OFD ST_Array
+     */
+    public static ST_Array trans(AffineTransform tx) {
+      /*
+            m00 m10 0    a b 0
+            m01 m11 0  = c d 0
+            m02 m12 1    e f 1
+       */
+        return new ST_Array(tx.getScaleX(), tx.getShearY(), tx.getShearX(), tx.getScaleY(), tx.getTranslateX(), tx.getTranslateY());
+    }
+
 }

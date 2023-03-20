@@ -36,7 +36,10 @@ public abstract class STBase implements Serializable {
         if (d == (long) d) {
             return String.format("%d", (long) d);
         } else if (-1 < d && d < 1) {
-            String str = String.format("%f", d);
+            String str = String.format("%.8f", d);
+            if (str.equals("0.00000000")) {
+                return "0";
+            }
 
             int len = str.length();
             for (int i = 0; i < len; i++) {
