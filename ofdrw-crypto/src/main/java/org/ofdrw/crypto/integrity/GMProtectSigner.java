@@ -1,10 +1,10 @@
 package org.ofdrw.crypto.integrity;
 
-import org.bouncycastle.crypto.digests.SM3Digest;
 import org.bouncycastle.jcajce.provider.digest.SM3;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.util.encoders.Base64;
 import org.jetbrains.annotations.NotNull;
+import org.ofdrw.gm.sm2strut.ContentInfo;
+import org.ofdrw.gm.sm2strut.OIDs;
 import org.ofdrw.gm.sm2strut.SignedData;
 import org.ofdrw.gm.sm2strut.builder.SignedDataBuilder;
 
@@ -82,7 +82,8 @@ public class GMProtectSigner implements ProtectSigner {
         final SignedData signedData = SignedDataBuilder.signedData(plaintext, signature, this.signCert);
         // DER编码ASN1结构
         final byte[] encoded = signedData.getEncoded();
-        System.out.println(        Base64.toBase64String(encoded));
-        return encoded;
+        ContentInfo ci = new ContentInfo(OIDs.signedData, signedData);
+//        System.out.println(        Base64.toBase64String(encoded));
+        return ci.getEncoded();
     }
 }
