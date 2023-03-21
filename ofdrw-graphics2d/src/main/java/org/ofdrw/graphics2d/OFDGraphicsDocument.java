@@ -1,5 +1,7 @@
 package org.ofdrw.graphics2d;
 
+import org.ofdrw.core.attachment.Attachments;
+import org.ofdrw.core.attachment.CT_Attachment;
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.doc.Document;
@@ -22,9 +24,11 @@ import java.awt.image.BufferedImage;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -72,6 +76,13 @@ public class OFDGraphicsDocument implements Closeable {
      * OFD文档对象
      */
     public final Document document;
+
+    /**
+     * 附件列表
+     * <p>
+     * null表示没有附件
+     */
+    public Attachments attachments;
 
     /**
      * 正在操作的文档目录
@@ -245,6 +256,57 @@ public class OFDGraphicsDocument implements Closeable {
      */
     public ST_ID newID() {
         return new ST_ID(MaxUnitID.incrementAndGet());
+    }
+
+
+    /**
+     * 向文档中添加附件文件
+     * <p>
+     * 如果名称相同原有附件将会被替换
+     *
+     * @param file 附件文件路径
+     * @throws IOException 文件操作异常
+     */
+    public void addAttachment(Path file) throws IOException {
+        if (file == null || Files.notExists(file)) {
+            return;
+        }
+
+        // 创建附件列表文件
+        if (attachments == null) {
+            attachments = new Attachments();
+            docDir.putObj(DocDir.Attachments, attachments);
+            document.setAttachments(docDir.getAbsLoc().cat(DocDir.Attachments));
+        }
+
+        String fileName = file.getFileName().toString();
+
+        // 计算附件所占用的空间，单位KB。
+        double size = (double) Files.size(file) / 1024d;
+        CT_Attachment ctAttachment = new CT_Attachment()
+                .setAttachmentName(fileName)
+                .setID(String.valueOf(MaxUnitID.incrementAndGet()))
+                .setCreationDate(LocalDateTime.now())
+                .setSize(size);
+
+        // 添加附件到资源
+        docDir.addResource(file);
+        // 构造附件文件存放路径
+        ST_Loc loc = docDir.getRes().getAbsLoc().cat(fileName);
+        ctAttachment.setFileLoc(loc);
+        // 加入附件记录到列表文件
+        attachments.addAttachment(ctAttachment);
+    }
+
+    /**
+     * 向文档中添加附件文件
+     *
+     * @param filename 文件名
+     * @param input    附件流
+     * @throws IOException 文件操作异常
+     */
+    public void addAttachment(String filename, InputStream input) throws IOException {
+
     }
 
 

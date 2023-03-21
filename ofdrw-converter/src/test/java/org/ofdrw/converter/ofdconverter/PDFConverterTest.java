@@ -1,12 +1,22 @@
 package org.ofdrw.converter.ofdconverter;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
+import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.pkg.tool.ElemCup;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 class PDFConverterTest {
+
 
     @Test
     void convert() throws Exception {
@@ -44,8 +54,8 @@ class PDFConverterTest {
         Path src = Paths.get("src/test/resources/Test.pdf");
         Path dst = Paths.get("target/convertMulti.ofd");
         try (PDFConverter converter = new PDFConverter(dst)) {
-            converter.convert(src,  0);
-            converter.convert(src,  2);
+            converter.convert(src, 0);
+            converter.convert(src, 2);
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }
@@ -55,9 +65,9 @@ class PDFConverterTest {
         Path src = Paths.get("src/test/resources/Test.pdf");
         Path dst = Paths.get("target/convertRepeat.ofd");
         try (PDFConverter converter = new PDFConverter(dst)) {
-            converter.convert(src,  0);
-            converter.convert(src,  1);
-            converter.convert(src,  1);
+            converter.convert(src, 0);
+            converter.convert(src, 1);
+            converter.convert(src, 1);
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }
@@ -69,9 +79,56 @@ class PDFConverterTest {
         int[] range1 = new int[]{0, 1};
         int[] range2 = new int[]{3};
         try (PDFConverter converter = new PDFConverter(dst)) {
-            converter.convert(src,  range1);
-            converter.convert(src,  range2);
+            converter.convert(src, range1);
+            converter.convert(src, range2);
         }
         System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+
+    /**
+     * 向PDF添加附件
+     */
+    @Test
+    void makeAttachPDF() throws Exception {
+        ElemCup.ENABLE_DEBUG_PRINT = true;
+        Path src = Paths.get("src/test/resources/Test.pdf");
+        Path dst = Paths.get("target/Test.pdf");
+
+        Path[] arr = new Path[]{
+                Paths.get("src/test/resources/img.jpg"),
+                Paths.get("src/test/resources/log4j2.xml"),
+                Paths.get("src/test/resources/helloworld.ofd")
+        };
+        try (PDDocument pdfDoc =  PDDocument.load(src.toFile())) {
+            PDEmbeddedFilesNameTreeNode efTree = new PDEmbeddedFilesNameTreeNode();
+            Map<String, PDComplexFileSpecification> efMap = new HashMap<>();
+            for (Path attFile : arr) {
+                PDComplexFileSpecification fs = new PDComplexFileSpecification();
+                String fileName = attFile.getFileName().toString();
+                // 文件名传
+                fs.setFile(fileName);
+                // 文件流，该流将由PDEmbeddedFile内部关闭
+                PDEmbeddedFile ef = new PDEmbeddedFile(pdfDoc, Files.newInputStream(attFile));
+                int index = fileName.lastIndexOf('.');
+                if (index > 0) {
+                    String extension = fileName.substring(index + 1);
+                    // 文件类型
+                    ef.setSubtype(extension);
+                }
+                ef.setSize((int) Files.size(attFile));
+                ef.setCreationDate(Calendar.getInstance());
+                fs.setEmbeddedFile(ef);
+                efMap.put(fileName, fs);
+            }
+            efTree.setNames(efMap);
+            PDDocumentNameDictionary names = new PDDocumentNameDictionary(pdfDoc.getDocumentCatalog());
+            names.setEmbeddedFiles(efTree);
+            pdfDoc.getDocumentCatalog().setNames(names);
+            Files.deleteIfExists(dst);
+            Files.createFile(dst);
+            pdfDoc.save(dst.toFile());
+        }
+        System.out.println(">> " +dst.toAbsolutePath());
     }
 }
