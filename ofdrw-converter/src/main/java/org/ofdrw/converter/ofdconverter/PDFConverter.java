@@ -228,7 +228,13 @@ public class PDFConverter implements DocConverter {
         if (desp != null && desp.length() > 0) {
             attObj.setUsage(desp);
         }
-        attObj.setAttachmentName(filename);
+        String name = filename;
+        int off = filename.lastIndexOf('.');
+        if (off > 0) {
+            name = filename.substring(0, off);
+        }
+
+        attObj.setAttachmentName(name);
         if (creationDate == null) {
             attObj.setCreationDate(LocalDateTime.now());
         } else {
