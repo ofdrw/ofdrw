@@ -1,18 +1,33 @@
 package org.ofdrw.converter.ofdconverter;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
+import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDFileSpecification;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationFileAttachment;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.ofdrw.converter.GeneralConvertException;
+import org.ofdrw.core.attachment.CT_Attachment;
 import org.ofdrw.graphics2d.OFDGraphicsDocument;
 import org.ofdrw.graphics2d.OFDPageGraphics2D;
 
 import java.awt.*;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * PDF转换为OFD转换器
@@ -110,12 +125,151 @@ public class PDFConverter implements DocConverter {
                 // 将PDF页面尺寸缩放至OFD尺寸
                 OFDPageGraphics2D ofdPageG2d = ofdDoc.newPage(pdfPageSize.getWidth() / UUPMM, pdfPageSize.getHeight() / UUPMM);
                 pdfRender.renderPageToGraphics(index, ofdPageG2d, (float) (1d / UUPMM));
+//                BufferedImage image = new BufferedImage((int) pdfPageSize.getWidth(), (int) pdfPageSize.getHeight(), BufferedImage.TYPE_INT_RGB);
+//                Graphics2D g = image.createGraphics();
+//                g.setColor(Color.WHITE);
+//                pdfRender.renderPageToGraphics(index, g);
+//                Path path = Paths.get("target/" + index + ".png");
+//                ImageIO.write(image, "png", path.toFile());
+
             }
+            // 复制附件到OFD
+            copyAttachFiles(pdfDoc, targetPages);
         } catch (IOException e) {
             throw new GeneralConvertException("PDF转换OFD异常", e);
         }
     }
 
+    /**
+     * 复制文档中以及页面注释中的附件文件
+     * <p>
+     * ref: <a href="https://svn.apache.org/repos/asf/pdfbox/trunk/examples/src/main/java/org/apache/pdfbox/examples/pdmodel/ExtractEmbeddedFiles.java">PDFBox ExtractEmbeddedFiles.java</a>
+     *
+     * @param document    PDF文档
+     * @param targetPages 目标页面
+     * @throws IOException 文件复制异常
+     */
+    public void copyAttachFiles(PDDocument document, List<Integer> targetPages) throws IOException {
+        PDDocumentNameDictionary namesDictionary = new PDDocumentNameDictionary(document.getDocumentCatalog());
+        // 从全局获取文档附件
+        PDEmbeddedFilesNameTreeNode efTree = namesDictionary.getEmbeddedFiles();
+        if (efTree != null) {
+            extractFilesFromEFTree(efTree);
+        }
+
+        // 从页面注解中获取附件
+        for (Integer index : targetPages) {
+            extractFilesFromPage(document.getPage(index));
+        }
+    }
+
+    /**
+     * 抽取某页PDF内注释相关联的附件到OFD
+     *
+     * @param page PDF页面
+     * @throws IOException 文件复制异常
+     */
+    private void extractFilesFromPage(PDPage page) throws IOException {
+        for (PDAnnotation annotation : page.getAnnotations()) {
+            if (annotation instanceof PDAnnotationFileAttachment) {
+                PDAnnotationFileAttachment annotationFileAttachment = (PDAnnotationFileAttachment) annotation;
+                PDFileSpecification fileSpec = annotationFileAttachment.getFile();
+                if (fileSpec instanceof PDComplexFileSpecification) {
+                    addFileToOFD((PDComplexFileSpecification) fileSpec);
+                }
+            }
+        }
+    }
+
+    /**
+     * 从页树中抽取附件到OFD
+     *
+     * @param efTree 页树
+     * @throws IOException 文件复制异常
+     */
+    private void extractFilesFromEFTree(PDNameTreeNode<PDComplexFileSpecification> efTree) throws IOException {
+        Map<String, PDComplexFileSpecification> names = efTree.getNames();
+        if (names != null) {
+            for (Map.Entry<String, PDComplexFileSpecification> entry : names.entrySet()) {
+                PDComplexFileSpecification fileSpec = entry.getValue();
+                addFileToOFD(fileSpec);
+
+            }
+        } else {
+            List<PDNameTreeNode<PDComplexFileSpecification>> kids = efTree.getKids();
+            if (kids == null) {
+                return;
+            }
+            for (PDNameTreeNode<PDComplexFileSpecification> node : kids) {
+                extractFilesFromEFTree(node);
+            }
+        }
+    }
+
+    /**
+     * 添加PDF附件文件到OFD内
+     *
+     * @param fileSpec 文件描述
+     * @throws IOException 文件复制异常
+     */
+    private void addFileToOFD(PDComplexFileSpecification fileSpec) throws IOException {
+        PDEmbeddedFile embeddedFile = getEmbeddedFile(fileSpec);
+        if (embeddedFile == null) {
+            return;
+        }
+
+        String filename = fileSpec.getFilename();
+        String desp = fileSpec.getFileDescription();
+        Calendar creationDate = embeddedFile.getCreationDate();
+        Calendar modDate = embeddedFile.getModDate();
+        String subtype = embeddedFile.getSubtype();
+
+        CT_Attachment attObj = new CT_Attachment();
+        if (desp != null && desp.length() > 0) {
+            attObj.setUsage(desp);
+        }
+        attObj.setAttachmentName(filename);
+        if (creationDate == null) {
+            attObj.setCreationDate(LocalDateTime.now());
+        } else {
+            attObj.setCreationDate(LocalDateTime.ofInstant(creationDate.toInstant(), creationDate.getTimeZone().toZoneId()));
+        }
+        if (modDate != null) {
+            attObj.setCreationDate(LocalDateTime.ofInstant(modDate.toInstant(), modDate.getTimeZone().toZoneId()));
+        }
+        attObj.setFormat(subtype);
+        InputStream input = new ByteArrayInputStream(embeddedFile.toByteArray());
+        ofdDoc.addAttachment(attObj, input);
+        input.close();
+    }
+
+
+    /**
+     * 获取PDF文件附件对象
+     *
+     * @param fileSpec 附件描述
+     * @return PDF附件
+     */
+    private PDEmbeddedFile getEmbeddedFile(PDComplexFileSpecification fileSpec) {
+        // search for the first available alternative of the embedded file
+        PDEmbeddedFile embeddedFile = null;
+        if (fileSpec != null) {
+            embeddedFile = fileSpec.getEmbeddedFileUnicode();
+            if (embeddedFile == null) {
+                embeddedFile = fileSpec.getEmbeddedFileDos();
+            }
+            if (embeddedFile == null) {
+                embeddedFile = fileSpec.getEmbeddedFileMac();
+            }
+            if (embeddedFile == null) {
+                embeddedFile = fileSpec.getEmbeddedFileUnix();
+            }
+            if (embeddedFile == null) {
+                embeddedFile = fileSpec.getEmbeddedFile();
+            }
+        }
+        return embeddedFile;
+    }
 
     @Override
     public void close() throws IOException {

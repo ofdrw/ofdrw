@@ -433,7 +433,7 @@ public class OFDDoc implements Closeable {
         }
         DocDir docDefault = ofdDir.obtainDocDefault();
         Path file = attachment.getFile();
-        docDefault.addResource(file);
+        file = docDefault.addResourceWithPath(file);
         // 构造附件文件存放路径
         ST_Loc loc = docDefault.getRes().getAbsLoc()
                 .cat(file.getFileName().toString());

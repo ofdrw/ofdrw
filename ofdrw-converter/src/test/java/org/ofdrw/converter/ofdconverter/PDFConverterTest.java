@@ -20,6 +20,7 @@ class PDFConverterTest {
 
     @Test
     void convert() throws Exception {
+
         ElemCup.ENABLE_DEBUG_PRINT = true;
         Path src = Paths.get("src/test/resources/Test.pdf");
         Path dst = Paths.get("target/convert.ofd");

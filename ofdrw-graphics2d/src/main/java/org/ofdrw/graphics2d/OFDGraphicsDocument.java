@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -265,11 +266,12 @@ public class OFDGraphicsDocument implements Closeable {
      * 如果名称相同原有附件将会被替换
      *
      * @param file 附件文件路径
+     * @return 加入后的文件附件对象ID
      * @throws IOException 文件操作异常
      */
-    public void addAttachment(Path file) throws IOException {
+    public ST_ID addAttachment(Path file) throws IOException {
         if (file == null || Files.notExists(file)) {
-            return;
+            return null;
         }
 
         // 创建附件列表文件
@@ -283,30 +285,66 @@ public class OFDGraphicsDocument implements Closeable {
 
         // 计算附件所占用的空间，单位KB。
         double size = (double) Files.size(file) / 1024d;
+
         CT_Attachment ctAttachment = new CT_Attachment()
                 .setAttachmentName(fileName)
-                .setID(String.valueOf(MaxUnitID.incrementAndGet()))
                 .setCreationDate(LocalDateTime.now())
                 .setSize(size);
+        ST_ID id = new ST_ID(MaxUnitID.incrementAndGet());
+        ctAttachment.setObjID(id);
 
         // 添加附件到资源
-        docDir.addResource(file);
+        file = docDir.addResourceWithPath(file);
         // 构造附件文件存放路径
-        ST_Loc loc = docDir.getRes().getAbsLoc().cat(fileName);
+        ST_Loc loc = docDir.getRes().getAbsLoc().cat(file.getFileName().toString());
         ctAttachment.setFileLoc(loc);
         // 加入附件记录到列表文件
         attachments.addAttachment(ctAttachment);
+        return id;
     }
 
     /**
      * 向文档中添加附件文件
+     * <p>
+     * 如果已经存在同名文件则替换
      *
-     * @param filename 文件名
-     * @param input    附件流
+     * @param attObj 文件名
+     * @param input  附件流
+     * @return 加入后的文件附件对象ID
      * @throws IOException 文件操作异常
      */
-    public void addAttachment(String filename, InputStream input) throws IOException {
+    public ST_ID addAttachment(CT_Attachment attObj, InputStream input) throws IOException {
+        if (attObj == null || input == null) {
+            return null;
+        }
 
+        String filename = attObj.getAttachmentName();
+        if (filename == null || filename.length() == 0) {
+            return null;
+        }
+
+        // 创建附件列表文件
+        if (attachments == null) {
+            attachments = new Attachments();
+            docDir.putObj(DocDir.Attachments, attachments);
+            document.setAttachments(ST_Loc.getInstance(DocDir.Attachments));
+        }
+
+        // 添加附件到资源
+        Path target = docDir.obtainRes().getContainerPath().resolve(filename);
+        Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING);
+        // 计算附件所占用的空间，单位KB。
+        double size = (double) Files.size(target) / 1024d;
+
+        // 构造附件文件存放路径
+        ST_Loc loc = docDir.obtainRes().getAbsLoc().cat(filename);
+        attObj.setSize(size).setFileLoc(loc);
+        ST_ID id = new ST_ID(MaxUnitID.incrementAndGet());
+        attObj.setObjID(id);
+
+        // 加入附件记录到列表文件
+        attachments.addAttachment(attObj);
+        return id;
     }
 
 
