@@ -13,6 +13,7 @@ OFDRW提供了将其它类型媒体文件或文档转换成OFD文档内容功能
 使用Maven 引入相关模块
 
 ```xml
+
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-converter</artifactId>
@@ -128,10 +129,10 @@ converter.close();
 
 不同的转换实现结合目标类型特性具有不同的接口，下面将介绍各种转换器的使用方式，以及特有方法。
 
-
 ### PDF转换OFD
 
-将PDF中页面转换为OFD页面，采用PDFBox `PDFRenderer`接口，以AWT graphics2d接口桥接，并通过[ofdrw-graphics2d](../../ofdrw-graphics2d) 模块完成转换功能。
+将PDF中页面转换为OFD页面，采用PDFBox `PDFRenderer`接口，以AWT
+graphics2d接口桥接，并通过[ofdrw-graphics2d](../../ofdrw-graphics2d) 模块完成转换功能。
 
 实现类：`org.ofdrw.converter.ofdconverter.PDFConverter`
 
@@ -151,8 +152,11 @@ try (PDFConverter converter = new PDFConverter(dst)) {
 System.out.println(">> " + dst.toAbsolutePath());
 ```
 
-> 详见 [测试用例](../src/test/java/org/ofdrw/converter/ofdconverter/PDFConverterTest.java)
+| 特有方法                                                           | 用途              |
+|:---------------------------------------------------------------|:----------------|
+| `void setEnableCopyAttachFiles(boolean enableCopyAttachFiles)` | 设置是否复制附件（默认复制）。 |
 
+> 详见 [测试用例](../src/test/java/org/ofdrw/converter/ofdconverter/PDFConverterTest.java)
 
 ### 图片转换OFD
 

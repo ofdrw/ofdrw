@@ -1,5 +1,6 @@
 package org.ofdrw.converter.ofdconverter;
 
+import org.apache.pdfbox.cos.COSInputStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
 import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
@@ -18,16 +19,12 @@ import org.ofdrw.graphics2d.OFDGraphicsDocument;
 import org.ofdrw.graphics2d.OFDPageGraphics2D;
 
 import java.awt.*;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.Calendar;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * PDF转换为OFD转换器
@@ -56,6 +53,19 @@ public class PDFConverter implements DocConverter {
     final double UUPMM = 2.8346;
 
     /**
+     * 已经完成附件复制的文件绝对路径
+     * <p>
+     * 防止重复拷贝同一个文件中的附件
+     */
+    private final Set<String> copied;
+
+
+    /**
+     * 是否允许复制PDF的附件到OFD中
+     */
+    private boolean enableCopyAttachFiles;
+
+    /**
      * 创建PDF转换OFD转换器
      *
      * @param ofdPath 转换后的OFD文件路径
@@ -79,6 +89,8 @@ public class PDFConverter implements DocConverter {
             Files.createFile(ofdPath);
         }
         ofdDoc = new OFDGraphicsDocument(ofdPath);
+        copied = new HashSet<>();
+        enableCopyAttachFiles = true;
     }
 
 
@@ -131,13 +143,31 @@ public class PDFConverter implements DocConverter {
 //                pdfRender.renderPageToGraphics(index, g);
 //                Path path = Paths.get("target/" + index + ".png");
 //                ImageIO.write(image, "png", path.toFile());
-
             }
+            if (!enableCopyAttachFiles) {
+                return;
+            }
+            // 检查文件中的附件是否已经复制过
+            String srcFilePath = filepath.toAbsolutePath().toString();
+            if (copied.contains(srcFilePath)) {
+                return;
+            }
+            copied.add(srcFilePath);
             // 复制附件到OFD
             copyAttachFiles(pdfDoc, targetPages);
         } catch (IOException e) {
             throw new GeneralConvertException("PDF转换OFD异常", e);
         }
+    }
+
+
+    /**
+     * 启用或禁用PDF附件向OFD复制
+     *
+     * @param enableCopyAttachFiles true - 启用复制； false - 禁用复制；默认为true 复制
+     */
+    public void setEnableCopyAttachFiles(boolean enableCopyAttachFiles) {
+        this.enableCopyAttachFiles = enableCopyAttachFiles;
     }
 
     /**
@@ -244,9 +274,10 @@ public class PDFConverter implements DocConverter {
             attObj.setCreationDate(LocalDateTime.ofInstant(modDate.toInstant(), modDate.getTimeZone().toZoneId()));
         }
         attObj.setFormat(subtype);
-        InputStream input = new ByteArrayInputStream(embeddedFile.toByteArray());
-        ofdDoc.addAttachment(attObj, input);
-        input.close();
+
+        try (COSInputStream inputStream = embeddedFile.createInputStream()) {
+            ofdDoc.addAttachment(attObj, inputStream);
+        }
     }
 
 
