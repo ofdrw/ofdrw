@@ -4,11 +4,7 @@ import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.basicType.ST_RefID;
-import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
-import org.ofdrw.core.pageDescription.clips.Area;
-import org.ofdrw.core.pageDescription.clips.CT_Clip;
-import org.ofdrw.core.pageDescription.clips.Clips;
 import org.ofdrw.core.pageDescription.color.color.*;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
@@ -42,11 +38,6 @@ public class OFDGraphics2DDrawParam {
     Font font;
 
     /**
-     * 缓存
-     */
-    CT_DrawParam pCache;
-
-    /**
      * 引用对象
      */
     ST_RefID ref;
@@ -64,13 +55,8 @@ public class OFDGraphics2DDrawParam {
     /**
      * 裁剪区域
      */
-    Shape gClip;
-    /**
-     * 发生裁剪时的变换矩阵
-     * <p>
-     * 注意：该参数仅在设置裁剪区域时设置，默认情况下保持为null
-     */
-    AffineTransform clipCTM = null;
+    java.awt.geom.Area clip;
+
 
     /**
      * AWT变换矩阵
@@ -114,23 +100,17 @@ public class OFDGraphics2DDrawParam {
      */
     public OFDGraphics2DDrawParam(OFDGraphicsDocument docCtx, ST_Box area) {
         this.docCtx = docCtx;
-        this.pCache = new CT_DrawParam();
         this.gStroke = new BasicStroke(0.353f);
-
         // 默认 描边颜色为黑色
-        this.pCache.setStrokeColor(CT_Color.rgb(0, 0, 0));
         this.gColor = new Color(0, 0, 0);
         this.gBackground = new Color(255, 255, 255);
         this.gForeground = new Color(0, 0, 0);
 
         this.ctm = new AffineTransform();
         this.ref = null;
-        this.gClip = null;
+        this.clip = null;
 
         this.hints = new RenderingHints(null);
-        // 设置为快速模式，以次来关闭PDFBox对图片的
-//        this.hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
-
         this.composite = AlphaComposite.SrcOver;
 
         this.font = new Font("sanserif", Font.PLAIN, 3);
@@ -155,116 +135,53 @@ public class OFDGraphics2DDrawParam {
 
 
     /**
-     * 设置描边属性
+     * 构造绘制参数，并追加到文档中
+     * <p>
+     * 如果存在缓存优先使用缓存中的绘制参数
      *
-     * @param s 属性参数
+     * @return 绘制参数
      */
-    public void setStroke(Stroke s) {
-        if (this.ref != null) {
-            // 防止同一引用重复添加
-            this.pCache = this.pCache.clone();
-        }
-        // 清空引用缓存
-        this.ref = null;
-        if (s == null) {
-            // 如果为空时设置为默认颜色黑色
-            s = new BasicStroke(0.353f);
+    ST_RefID makeDrawParam() {
+        if (ref != null) {
+            return ref;
         }
 
-        if (s instanceof BasicStroke) {
-            this.gStroke = (BasicStroke) s;
-        }
+        CT_DrawParam param = new CT_DrawParam();
+        // 设置描边属性
+        setStrokeParam(param);
 
+        // 设置颜色和填充
+        setColorParam(param);
 
-        // 线条连接样式
-        switch (gStroke.getLineJoin()) {
-            case BasicStroke.JOIN_BEVEL:
-                this.pCache.setJoin(LineJoinType.Bevel);
-                break;
-            case BasicStroke.JOIN_MITER:
-                this.pCache.setJoin(LineJoinType.Miter);
-                break;
-            case BasicStroke.JOIN_ROUND:
-                this.pCache.setJoin(LineJoinType.Round);
-                break;
-            default:
-                this.pCache.setJoin(null);
-                break;
+        // 设置线宽
+        double lineWidth = gStroke.getLineWidth();
+        double scale = 1;
+        if (!this.ctm.isIdentity()) {
+            scale = Math.min(Math.abs(this.ctm.getScaleX()), Math.abs(this.ctm.getScaleY()));
         }
+        param.setLineWidth(lineWidth * scale);
 
-        // 线宽度
-        if (gStroke.getLineWidth() > 0) {
-            this.pCache.setLineWidth((double) gStroke.getLineWidth());
-        }
-
-        // 线条虚线重复样式
-        final float[] dashArray = gStroke.getDashArray();
-        if (dashArray != null && dashArray.length > 0) {
-            final ST_Array pattern = new ST_Array();
-            for (float v : dashArray) {
-                pattern.add(Float.toString(v));
-            }
-            this.pCache.setDashPattern(pattern);
-        } else {
-            this.pCache.setDashPattern(null);
-        }
-
-        // 线端点样式
-        switch (gStroke.getEndCap()) {
-            case BasicStroke.CAP_BUTT:
-                this.pCache.setCap(LineCapType.Butt);
-                break;
-            case BasicStroke.CAP_ROUND:
-                this.pCache.setCap(LineCapType.Round);
-                break;
-            case BasicStroke.CAP_SQUARE:
-                this.pCache.setCap(LineCapType.Square);
-                break;
-            default:
-                this.pCache.setCap(null);
-        }
-
-        // Join的截断值
-        final float miterLimit = gStroke.getMiterLimit();
-        if (miterLimit > 0) {
-            this.pCache.setMiterLimit((double) miterLimit);
-        } else {
-            this.pCache.setMiterLimit(null);
-        }
+        this.ref = docCtx.addDrawParam(param).ref();
+        return ref;
     }
 
     /**
-     * 设置颜色
+     * 设置颜色和填充
      *
-     * @param paint 颜色对象
+     * @param param 绘制参数
      */
-    public void setColor(Paint paint) {
-        if (this.gColor == paint) {
-            return;
-        }
-        if (this.ref != null) {
-            // 防止同一引用重复添加
-            this.pCache = this.pCache.clone();
-        }
-
-        // 清空引用缓存
-        this.ref = null;
-        if (paint == null) {
-            // 如果为空时设置为默认颜色黑色
-            paint = new Color(0, 0, 0);
-        }
-        this.gColor = paint;
+    private void setColorParam(CT_DrawParam param) {
         CT_Color ctColor = null;
-        if (paint instanceof Color) {
-            final Color c = (Color) paint;
+        if (this.gColor instanceof Color) {
+            final Color c = (Color) this.gColor;
             ctColor = CT_Color.rgb(c.getRed(), c.getGreen(), c.getBlue());
             int alpha = c.getAlpha();
             if (alpha != 255) {
                 ctColor.setAlpha(alpha);
             }
-        } else if (paint instanceof LinearGradientPaint) {
+        } else if (this.gColor instanceof LinearGradientPaint) {
             // 线性渐变
-            final LinearGradientPaint lgp = (LinearGradientPaint) paint;
+            final LinearGradientPaint lgp = (LinearGradientPaint) this.gColor;
 
             ctColor = new CT_Color();
             CT_AxialShd axialShd = new CT_AxialShd();
@@ -300,9 +217,9 @@ public class OFDGraphics2DDrawParam {
             }
 
             ctColor.setColor(axialShd);
-        } else if (paint instanceof RadialGradientPaint) {
+        } else if (this.gColor instanceof RadialGradientPaint) {
             // 径向渐变
-            final RadialGradientPaint rgp = (RadialGradientPaint) paint;
+            final RadialGradientPaint rgp = (RadialGradientPaint) this.gColor;
 
             ctColor = new CT_Color();
             CT_RadialShd radialShd = new CT_RadialShd();
@@ -338,8 +255,8 @@ public class OFDGraphics2DDrawParam {
             ST_Pos endPoint = ST_Pos.getInstance(rgp.getFocusPoint().getX(), rgp.getFocusPoint().getY());
             radialShd.setEndPoint(endPoint);
             ctColor.setColor(radialShd);
-        } else if (paint instanceof GradientPaint) {
-            final GradientPaint gp = (GradientPaint) paint;
+        } else if (this.gColor instanceof GradientPaint) {
+            final GradientPaint gp = (GradientPaint) this.gColor;
             ctColor = new CT_Color();
             CT_AxialShd axialShd = new CT_AxialShd();
 
@@ -361,9 +278,108 @@ public class OFDGraphics2DDrawParam {
 
         if (ctColor != null) {
             // 同时设置填充颜色和描边颜色
-            this.pCache.setFillColor(ctColor);
-            this.pCache.setStrokeColor(ctColor);
+            param.setFillColor(ctColor);
+            param.setStrokeColor(ctColor);
         }
+    }
+
+    /**
+     * 设置描边参数
+     *
+     * @param param 绘制参数上下文
+     */
+    private void setStrokeParam(CT_DrawParam param) {
+        // 线条连接样式
+        switch (gStroke.getLineJoin()) {
+            case BasicStroke.JOIN_BEVEL:
+                param.setJoin(LineJoinType.Bevel);
+                break;
+            case BasicStroke.JOIN_MITER:
+                param.setJoin(LineJoinType.Miter);
+                break;
+            case BasicStroke.JOIN_ROUND:
+                param.setJoin(LineJoinType.Round);
+                break;
+            default:
+                param.setJoin(null);
+                break;
+        }
+
+        // 线宽度
+        if (gStroke.getLineWidth() > 0) {
+            param.setLineWidth((double) gStroke.getLineWidth());
+        }
+
+        // 线条虚线重复样式
+        final float[] dashArray = gStroke.getDashArray();
+        if (dashArray != null && dashArray.length > 0) {
+            final ST_Array pattern = new ST_Array();
+            for (float v : dashArray) {
+                pattern.add(Float.toString(v));
+            }
+            param.setDashPattern(pattern);
+        } else {
+            param.setDashPattern(null);
+        }
+
+        // 线端点样式
+        switch (gStroke.getEndCap()) {
+            case BasicStroke.CAP_BUTT:
+                param.setCap(LineCapType.Butt);
+                break;
+            case BasicStroke.CAP_ROUND:
+                param.setCap(LineCapType.Round);
+                break;
+            case BasicStroke.CAP_SQUARE:
+                param.setCap(LineCapType.Square);
+                break;
+            default:
+                param.setCap(null);
+        }
+
+        // Join的截断值
+        final float miterLimit = gStroke.getMiterLimit();
+        if (miterLimit > 0) {
+            param.setMiterLimit((double) miterLimit);
+        } else {
+            param.setMiterLimit(null);
+        }
+    }
+
+    /**
+     * 设置描边属性
+     *
+     * @param s 属性参数
+     */
+    public void setStroke(Stroke s) {
+        // 清空引用缓存
+        this.ref = null;
+        if (s == null) {
+            // 如果为空时设置为默认颜色黑色
+            s = new BasicStroke(0.353f);
+        }
+
+        if (s instanceof BasicStroke) {
+            this.gStroke = (BasicStroke) s;
+        }
+    }
+
+    /**
+     * 设置颜色
+     *
+     * @param paint 颜色对象
+     */
+    public void setColor(Paint paint) {
+        if (this.gColor == paint) {
+            return;
+        }
+        // 清空引用缓存
+        this.ref = null;
+        if (paint == null) {
+            // 如果为空时设置为默认颜色黑色
+            paint = new Color(0, 0, 0);
+        }
+        this.gColor = paint;
     }
 
     /**
@@ -377,44 +393,35 @@ public class OFDGraphics2DDrawParam {
     }
 
     /**
-     * 单位矩阵
-     * <p>
-     * 用于比较
-     */
-    final static ST_Array ONE = ST_Array.unitCTM();
-
-    /**
      * 在图元上应用绘制参数配置
      * <p>
      * 包括： 描边、变换矩阵、裁剪区域、颜色
      *
      * @param target 目标图元
+     * @deprecated {@link #makeDrawParam()}
      */
+    @Deprecated
     public void apply(CT_GraphicUnit<?> target) {
-        if (ref == null) {
-            // 添加绘制参数至文档资源中，并保存绘制参数在文档对象ID引用
-            ref = docCtx.addDrawParam(this.pCache).ref();
-        }
-        target.setDrawParam(ref);
-
-        if (!this.ctm.isIdentity()) {
-            target.setCTM(trans(this.ctm));
-        }
-
-
-        if (gClip != null) {
-            Clips clips = new Clips();
-            Area area = new Area();
-            CT_Path clipObj = new CT_Path().setAbbreviatedData(OFDShapes.path(gClip));
-            clipObj.setFill(true);
-            // 裁剪区域不受所处图元影响，默认使用整个页面作为工作区
-            clipObj.setBoundary(this.area);
-            clipObj.setCTM(trans(clipCTM));
-            area.setClipObj(clipObj);
-            clips.addClip(new CT_Clip().addArea(area));
-            target.setClips(clips);
-        }
-
+//        if (ref == null) {
+//            // 添加绘制参数至文档资源中，并保存绘制参数在文档对象ID引用
+//            ref = docCtx.addDrawParam(this.pCache).ref();
+//        }
+//        target.setDrawParam(ref);
+//
+//        if (!this.ctm.isIdentity()) {
+//            target.setCTM(trans(this.ctm));
+//        }
+//        if (clip != null) {
+//            Clips clips = new Clips();
+//            Area area = new Area();
+//            CT_Path clipObj = new CT_Path().setAbbreviatedData(OFDShapes.path(clip));
+//            clipObj.setFill(true);
+//            // 裁剪区域不受所处图元影响，默认使用整个页面作为工作区
+//            clipObj.setBoundary(this.area);
+//            area.setClipObj(clipObj);
+//            clips.addClip(new CT_Clip().addArea(area));
+//            target.setClips(clips);
+//        }
     }
 
     /**
@@ -469,17 +476,13 @@ public class OFDGraphics2DDrawParam {
     @Override
     public OFDGraphics2DDrawParam clone() {
         OFDGraphics2DDrawParam that = new OFDGraphics2DDrawParam(this.docCtx, this.area);
-        that.pCache = this.pCache.clone();
         that.gColor = this.gColor;
         that.gStroke = this.gStroke;
         that.gBackground = this.gBackground;
         that.gForeground = this.gForeground;
 
         that.ctm = new AffineTransform(this.ctm);
-        that.gClip = this.gClip;
-        if (this.clipCTM != null) {
-            that.clipCTM = new AffineTransform(this.clipCTM);
-        }
+        that.clip = this.clip;
         that.ref = this.ref;
 
         that.hints = (RenderingHints) this.hints.clone();

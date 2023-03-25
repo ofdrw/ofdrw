@@ -400,4 +400,18 @@ public class AbbreviatedData extends OFDElement implements Cloneable, Iterator<O
     public int size() {
         return dataQueue.size();
     }
+
+    /**
+     * 判断两个路径是否完全一致
+     *
+     * @param o 带比较对象
+     * @return true - 路径一致；false - 路径不一致
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof AbbreviatedData) {
+            return false;
+        }
+        return this.toString().equals(o.toString());
+    }
 }

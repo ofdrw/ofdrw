@@ -3,6 +3,7 @@ package org.ofdrw.core.pageDescription;
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.action.Actions;
+import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_RefID;
@@ -205,7 +206,8 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
             this.removeAttr("LineWidth");
             return (T) this;
         }
-        this.addAttribute("LineWidth", lineWidth.toString());
+
+        this.addAttribute("LineWidth", STBase.fmt(lineWidth));
         return (T) this;
     }
 
@@ -315,7 +317,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
             this.removeAttr("MiterLimit");
             return (T) this;
         }
-        this.addAttribute("MiterLimit", miterLimit.toString());
+        this.addAttribute("MiterLimit", STBase.fmt(miterLimit));
         return (T) this;
     }
 
@@ -362,7 +364,7 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
             this.removeAttr("DashOffset");
             return (T) this;
         }
-        this.addAttribute("DashOffset", dashOffset.toString());
+        this.addAttribute("DashOffset", STBase.fmt(dashOffset));
         return (T) this;
     }
 

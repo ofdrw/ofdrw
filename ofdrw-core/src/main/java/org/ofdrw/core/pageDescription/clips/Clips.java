@@ -25,7 +25,7 @@ public class Clips extends OFDElement {
 
     public Clips() {
         super("Clips");
-        this.setTransFlag(false);
+//        this.setTransFlag(false);
     }
 
     /**

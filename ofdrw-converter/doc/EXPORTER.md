@@ -2,7 +2,7 @@
 
 OFD Reader & Writer Document Exporter (OFDRW DE)
 
-OFDRW提供了将OFD文档导出为其他格式文档的能力，如导出为图片、SVG、PDF等。
+OFDRW提供了将OFD文档导出为其他格式文档的能力，如导出为图片、SVG、文本等。
 
 > 致谢：该模块的发展离不开社区的支持，非常感谢 [DLTech21](https://github.com/DLTech21)、 [QAQtutu](https://github.com/QAQtutu)、[yuanfangme](https://github.com/yuanfangme)
 等人的贡献。
@@ -250,10 +250,9 @@ try (TextExporter exporter = new TextExporter(ofdPath, txtPath)) {
 > 详见 [测试用例](../src/test/java/org/ofdrw/converter/export/TextExporterTest.java)
 
 
+### [不推荐] 导出为PDF
 
-### 导出为PDF
-
-> 提示：不推荐导出为PDF，OFD本身就是国产的板式文件，非特殊场景没有必要导出为PDF文件。
+**警告：不推荐导出为PDF，OFD本身就是国产的板式文件，非特殊场景没有必要导出为PDF文件，该模块将进入LTS状态，不再持续更新！**
 
 导出OFD文档页面为PDF文件，该导出根据实现所使用的库不一致具有两种导出实现。
 

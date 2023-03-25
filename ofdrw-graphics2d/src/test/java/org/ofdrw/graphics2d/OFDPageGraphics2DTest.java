@@ -612,9 +612,71 @@ class OFDPageGraphics2DTest {
             BufferedImage img1 = ImageIO.read(file.toFile());
             g.translate(400, 0);
             g.rotate(90 * Math.PI / 180d);
-            g.drawImage(img1, 10, 10,  null);
+            g.drawImage(img1, 10, 10, null);
         }
         System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+
+    @Test
+    void clipImg() throws Exception {
+        ElemCup.ENABLE_DEBUG_PRINT = true;
+        final Path dst = Paths.get("target/clipImg.ofd");
+        final Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
+        BufferedImage img1 = ImageIO.read(file.toFile());
+
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
+            g.setClip(100, 100, 100, 100);
+            g.rotate(10 * Math.PI / 180d);
+            g.drawImage(img1, 100, 100, null);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+
+
+    @Test
+    void clip() throws Exception {
+        ElemCup.ENABLE_DEBUG_PRINT = true;
+        final Path dst = Paths.get("target/clipLarge.ofd");
+
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
+
+            // 处于裁剪区内部
+            g.setClip(0, 0, 300,300);
+            g.setColor(Color.BLUE);
+            g.fillRect(10, 10, 50, 50);
+
+            // 与裁剪区相交
+            g.setClip(null);
+            g.setClip(0, 100, 100,100);
+            g.setColor(Color.RED);
+            g.fillRect(50, 150, 200, 200);
+
+            // 与裁剪区不相交
+            g.setClip(null);
+            g.setClip(0, 300, 100,100);
+            g.setColor(Color.RED);
+            g.fillRect(400, 400, 50, 50);
+
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    @Test
+    void intersects() {
+        Rectangle2D.Double large = new Rectangle2D.Double(0, 0, 200, 200);
+        Rectangle2D.Double small = new Rectangle2D.Double(50, 50, 50, 50);
+        Rectangle2D.Double a2 = new Rectangle2D.Double(100, 0, 200, 200);
+        Rectangle2D.Double remote = new Rectangle2D.Double(1000, 1000, 10, 10);
+
+//        System.out.println(large.intersects(remote));
+        System.out.println(large.intersects(remote));
+//        System.out.println(large.intersects(small));
+//        System.out.println(large.contains(small));
+//        System.out.println(large.intersects(a2));
     }
 
 }

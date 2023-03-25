@@ -152,9 +152,11 @@ try (PDFConverter converter = new PDFConverter(dst)) {
 System.out.println(">> " + dst.toAbsolutePath());
 ```
 
-| 特有方法                                                           | 用途              |
-|:---------------------------------------------------------------|:----------------|
-| `void setEnableCopyAttachFiles(boolean enableCopyAttachFiles)` | 设置是否复制附件（默认复制）。 |
+| 特有方法                                                           | 用途                  |
+|:---------------------------------------------------------------|:--------------------|
+| `void setEnableCopyAttachFiles(boolean enableCopyAttachFiles)` | 设置是否复制附件（默认复制）。     |
+| `void setEnableCopyBookmarks(boolean enableCopyBookmarks)`     | 设置是否复制书签（默认复制）。     |
+| `void setUUPMM(double UUPMM)`                                  | 设置毫米表示的用户单元数（PDF单位） |
 
 > 详见 [测试用例](../src/test/java/org/ofdrw/converter/ofdconverter/PDFConverterTest.java)
 

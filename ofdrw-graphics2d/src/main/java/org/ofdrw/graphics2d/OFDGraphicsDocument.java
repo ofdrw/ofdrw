@@ -185,7 +185,8 @@ public class OFDGraphicsDocument implements Closeable {
         // 创建页面容器
         PageDir pageDir = pagesDir.newPageDir();
         String pageLoc = String.format("Pages/Page_%d/Content.xml", pageDir.getIndex());
-        final Page page = new Page(MaxUnitID.incrementAndGet(), pageLoc);
+        ST_ID pageID = new ST_ID(MaxUnitID.incrementAndGet());
+        final Page page = new Page(pageID, ST_Loc.getInstance(pageLoc));
         pages.addPage(page);
 
         // 创建页面对象
@@ -197,7 +198,7 @@ public class OFDGraphicsDocument implements Closeable {
         }
         pageDir.setContent(pageObj);
 
-        return new OFDPageGraphics2D(this, pageDir, pageObj, pageSize.getBox());
+        return new OFDPageGraphics2D(this,pageID, pageDir, pageObj, pageSize.getBox());
     }
 
     /**

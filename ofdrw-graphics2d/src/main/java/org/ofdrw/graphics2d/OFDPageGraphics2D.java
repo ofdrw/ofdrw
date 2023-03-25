@@ -1,6 +1,5 @@
 package org.ofdrw.graphics2d;
 
-import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.pageObj.Content;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
@@ -10,8 +9,11 @@ import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.graph.pathObj.CT_Path;
+import org.ofdrw.core.pageDescription.clips.CT_Clip;
+import org.ofdrw.core.pageDescription.clips.Clips;
 import org.ofdrw.pkg.container.PageDir;
 
 import java.awt.*;
@@ -71,6 +73,11 @@ public class OFDPageGraphics2D extends Graphics2D {
     private final ST_Box size;
 
     /**
+     * 页面在页树中的对象ID
+     */
+    public final ST_ID pageID;
+
+    /**
      * 设备配置对象
      * <p>
      * 用于兼容AWT接口
@@ -86,21 +93,22 @@ public class OFDPageGraphics2D extends Graphics2D {
      * 创建2D图形对象
      *
      * @param doc     文档上下文
+     * @param pageID  页对象ID
      * @param pageDir 页面目录
      * @param pageObj 页面对象
      * @param box     绘制空间大小
      */
-    OFDPageGraphics2D(OFDGraphicsDocument doc, PageDir pageDir, Page pageObj, ST_Box box) {
+    OFDPageGraphics2D(OFDGraphicsDocument doc, ST_ID pageID, PageDir pageDir, Page pageObj, ST_Box box) {
 
         BufferedImage bi = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         fmg = bi.createGraphics();
 
         this.doc = doc;
+        this.pageID = pageID;
         this.pageDir = pageDir;
         this.pageObj = pageObj;
         this.size = box;
         this.drawParam = new OFDGraphics2DDrawParam(doc, box);
-
 
         // 页面内容
         final Content content = new Content();
@@ -127,6 +135,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     private OFDPageGraphics2D(OFDPageGraphics2D parent) {
         this.doc = parent.doc;
+        this.pageID = parent.pageID;
         this.pageDir = parent.pageDir;
         this.pageObj = parent.pageObj;
         this.container = parent.container;
@@ -147,41 +156,34 @@ public class OFDPageGraphics2D extends Graphics2D {
         if (s == null) {
             return;
         }
-        // 转换图形对象为OFD路径
+
+        // 将用户空间图形变换为设备空间坐标
+        if (!this.drawParam.ctm.isIdentity()) {
+            s = this.drawParam.ctm.createTransformedShape(s);
+        }
+
         final AbbreviatedData pData = OFDShapes.path(s);
         if (pData.size() == 0) {
             // 没有绘制参数时不填充
             return;
         }
-        // 创建路径对象并设置上下文参数
-        CT_Path pathObj = newPathWithCtx();
+
+        CT_Path pathObj = new CT_Path();
+        pathObj.setBoundary(this.size);
         pathObj.setStroke(true);
         pathObj.setAbbreviatedData(pData);
-        container.addPageBlock(pathObj.toObj(doc.newID()));
-    }
 
-    /**
-     * 创建OFD路径对象
-     * <p>
-     * 并设置上下文相关参数
-     *
-     * @return 路径对象
-     */
-    private CT_Path newPathWithCtx() {
-        final CT_Path ctPath = new CT_Path();
-        CT_PageArea area = pageObj.getArea();
-        if (area == null) {
-            area = doc.cdata.getPageArea();
+        // 如果存在裁剪区域，设置裁剪
+        if (this.drawParam.clip != null) {
+            Clips clips = makeClip(s, new AffineTransform(this.drawParam.ctm));
+            pathObj.setClips(clips);
         }
-        if (area == null) {
-            throw new IllegalArgumentException("请设置页面大小");
-        }
-        // 设置路径的区域，由于Canvas是使用整个画布绘制元素，
-        // 因此每个元素绘制时的边界也是整个画布大小。
-        ctPath.setBoundary(this.size);
-        // 设置绘制参数
-        this.drawParam.apply(ctPath);
-        return ctPath;
+
+        // 构造绘制参数
+        ST_RefID dpId = this.drawParam.makeDrawParam();
+        pathObj.setDrawParam(dpId);
+
+        container.addPageBlock(pathObj.toObj(doc.newID()));
     }
 
 
@@ -318,8 +320,18 @@ public class OFDPageGraphics2D extends Graphics2D {
             return true;
         }
 
+        // 保存图片放置之前变换矩阵
+        AffineTransform before = getTransform();
+        // 计算缩放后的图片应用变换矩阵，并作为当前的变换矩阵
+        AffineTransform imgCTM = new AffineTransform(before);
+        imgCTM.concatenate(new AffineTransform(width, 0, 0, height, x, y));
+
+        /*
+         * 构造图片图元
+         */
         ST_ID objId = this.doc.addResImg(img);
         ImageObject imgObj = new ImageObject(doc.newID());
+        imgObj.setCTM(trans(imgCTM));
         imgObj.setResourceID(objId.ref());
         // 由于Canvas是使用整个画布绘制元素，
         // 因此每个元素绘制时的边界也是整个画布大小。
@@ -332,15 +344,17 @@ public class OFDPageGraphics2D extends Graphics2D {
             }
         }
 
-        // 保存图片放置之前变换矩阵
-        AffineTransform before = getTransform();
-        // 计算缩放后的图片应用变换矩阵，并作为当前的变换矩阵
-        AffineTransform imgCTM = new AffineTransform(before);
-        imgCTM.concatenate(new AffineTransform(width, 0, 0, height, x, y));
-        this.setTransform(imgCTM);
-        this.drawParam.apply(imgObj);
-        // 回复图片放置之前的变换矩阵
-        this.setTransform(before);
+        ST_RefID dpId = this.drawParam.makeDrawParam();
+        imgObj.setDrawParam(dpId);
+
+        // 如果存在裁剪区域，那么取裁剪区域与变换后图形的交集作为绘制内容
+        if (this.drawParam.clip != null) {
+            // 图片缩放后在画布上的路径
+            // 说明：图片是通过一个 (x: 0,y: 0,w: 1,h: 1)的矩形通过变换矩阵放置到OFD上
+            Shape imgShape = imgCTM.createTransformedShape(new Rectangle2D.Double(0, 0, 1, 1));
+            Clips clips = makeClip(imgShape, imgCTM);
+            imgObj.setClips(clips);
+        }
         container.addPageBlock(imgObj);
         return true;
     }
@@ -534,17 +548,33 @@ public class OFDPageGraphics2D extends Graphics2D {
         if (s == null) {
             return;
         }
-        // 转换图形对象为OFD路径
+        // 将用户空间图形变换为设备空间坐标
+        if (!this.drawParam.ctm.isIdentity()) {
+            s = this.drawParam.ctm.createTransformedShape(s);
+        }
+
         final AbbreviatedData pData = OFDShapes.path(s);
         if (pData.size() == 0) {
             // 没有绘制参数时不填充
             return;
         }
-        // 创建路径对象并设置上下文参数
-        CT_Path pathObj = newPathWithCtx();
+
+        CT_Path pathObj = new CT_Path();
+        pathObj.setBoundary(this.size);
         pathObj.setFill(true);
         pathObj.setAbbreviatedData(pData);
+        // 如果存在裁剪区域，设置裁剪
+        if (this.drawParam.clip != null) {
+            Clips clips = makeClip(s, new AffineTransform(this.drawParam.ctm));
+            pathObj.setClips(clips);
+        }
+
+        // 构造绘制参数
+        ST_RefID dpId = this.drawParam.makeDrawParam();
+        pathObj.setDrawParam(dpId);
+
         container.addPageBlock(pathObj.toObj(doc.newID()));
+
     }
 
     /**
@@ -802,7 +832,7 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     @Override
     public Shape getClip() {
-        return this.drawParam.gClip;
+        return this.drawParam.clip;
     }
 
     /**
@@ -815,24 +845,19 @@ public class OFDPageGraphics2D extends Graphics2D {
     @Override
     public void clip(Shape s) {
         if (s == null) {
-            this.drawParam.gClip = null;
-            this.drawParam.clipCTM = null;
+            this.drawParam.clip = null;
             return;
         }
 
-        if (this.drawParam.gClip == null) {
-            setClip(s);
-            return;
-        }
-        Area newClip = new Area(s);
-        newClip.intersect(new Area(this.drawParam.gClip));
-        this.drawParam.gClip = new GeneralPath(newClip);
-//        // 存储 发生裁剪时的变换矩阵
-//        if (this.drawParam.ctm != null && !OFDGraphics2DDrawParam.ONE.equals(this.drawParam.ctm)) {
-//            this.drawParam.clipCTM = this.drawParam.ctm.clone();
-//        }
+        // 如果不是单位矩阵则对路径进行变换
         if (!this.drawParam.ctm.isIdentity()) {
-            this.drawParam.clipCTM = new AffineTransform(this.drawParam.ctm);
+            s = this.drawParam.ctm.createTransformedShape(s);
+        }
+
+        if (this.drawParam.clip == null) {
+            this.drawParam.clip = new Area(s);
+        } else {
+            this.drawParam.clip.intersect(new Area(s));
         }
     }
 
@@ -842,23 +867,20 @@ public class OFDPageGraphics2D extends Graphics2D {
      * <p>
      * 若已经存在裁剪区域那么旧的裁剪区域将会被新的裁剪区域覆盖
      *
-     * @param clip 裁剪区域，为null时表示清空裁剪区域
+     * @param s 裁剪区域，为null时表示清空裁剪区域
      */
     @Override
-    public void setClip(Shape clip) {
-        if (clip == null) {
-            this.drawParam.gClip = null;
-            this.drawParam.clipCTM = null;
+    public void setClip(Shape s) {
+        if (s == null) {
+            this.drawParam.clip = null;
             return;
         }
-        this.drawParam.gClip = clip;
-//        // 存储 发生裁剪时的变换矩阵
-//        if (this.drawParam.ctm != null && !OFDGraphics2DDrawParam.ONE.equals(this.drawParam.ctm)) {
-//            this.drawParam.clipCTM = this.drawParam.ctm.clone();
-//        }
+
+        // 如果不是单位矩阵则对路径进行变换
         if (!this.drawParam.ctm.isIdentity()) {
-            this.drawParam.clipCTM = new AffineTransform(this.drawParam.ctm);
+            s = this.drawParam.ctm.createTransformedShape(s);
         }
+        this.drawParam.clip = new Area(s);
     }
 
     /**
@@ -1093,6 +1115,7 @@ public class OFDPageGraphics2D extends Graphics2D {
     @Override
     public void translate(int x, int y) {
         translate(x, (double) y);
+        this.drawParam.ref = null;
     }
 
     /**
@@ -1104,6 +1127,7 @@ public class OFDPageGraphics2D extends Graphics2D {
     @Override
     public void translate(double tx, double ty) {
         this.drawParam.ctm.translate(tx, ty);
+        this.drawParam.ref = null;
     }
 
     /**
@@ -1114,6 +1138,7 @@ public class OFDPageGraphics2D extends Graphics2D {
     @Override
     public void rotate(double theta) {
         this.drawParam.ctm.rotate(theta);
+        this.drawParam.ref = null;
     }
 
     /**
@@ -1135,6 +1160,7 @@ public class OFDPageGraphics2D extends Graphics2D {
         translate(x, y);
         rotate(theta);
         translate(-x, -y);
+        this.drawParam.ref = null;
     }
 
     /**
@@ -1146,6 +1172,7 @@ public class OFDPageGraphics2D extends Graphics2D {
     @Override
     public void scale(double sx, double sy) {
         this.drawParam.ctm.scale(sx, sy);
+        this.drawParam.ref = null;
     }
 
     /**
@@ -1157,6 +1184,7 @@ public class OFDPageGraphics2D extends Graphics2D {
     @Override
     public void shear(double shx, double shy) {
         this.drawParam.ctm.shear(shx, shy);
+        this.drawParam.ref = null;
     }
 
     /**
@@ -1170,6 +1198,7 @@ public class OFDPageGraphics2D extends Graphics2D {
             return;
         }
         this.drawParam.ctm.concatenate(tx);
+        this.drawParam.ref = null;
     }
 
     /**
@@ -1183,6 +1212,7 @@ public class OFDPageGraphics2D extends Graphics2D {
             tx = new AffineTransform();
         }
         this.drawParam.ctm = new AffineTransform(tx);
+        this.drawParam.ref = null;
     }
 
     /**
@@ -1266,6 +1296,51 @@ public class OFDPageGraphics2D extends Graphics2D {
 
     }
 
+    /**
+     * 构造裁剪区域
+     * <p>
+     * 如果图形完全处于裁剪区域中，那么不裁剪
+     *
+     * @param s      图形对象
+     * @param objCTM 对象当前的变换矩阵
+     * @return 裁剪区 或 null（图形完全处于裁剪区）
+     */
+    private Clips makeClip(Shape s, AffineTransform objCTM) {
+        Rectangle2D bounds = s.getBounds2D();
+
+        // 由于 double 的特性存在精度误差，为了减少由精度误差造成 contains 判断错误
+        // 这里将原始矩形缩小较小的偏差 10^-6，保证边界区域也能较好的处理。
+        double w = bounds.getWidth() - 0.000001;
+        double h = bounds.getHeight() - 0.000001;
+        bounds = new Rectangle2D.Double(
+                bounds.getX() + 0.000001,
+                bounds.getY() + 0.000001,
+                w < 0 ? 0 : w,
+                h < 0 ? 0 : h);
+        if (this.drawParam.clip.contains(bounds)){
+            // 若图形外边框都处于裁剪区域内部，那么忽略裁剪区域
+        }else {
+            Clips clips = new Clips();
+            org.ofdrw.core.pageDescription.clips.Area area = new org.ofdrw.core.pageDescription.clips.Area();
+            CT_Path clipObj = new CT_Path().setAbbreviatedData(OFDShapes.path(new GeneralPath(this.drawParam.clip)));
+            clipObj.setFill(true);
+            clipObj.setBoundary(this.size);
+            try {
+                // 由于图元内的裁剪区域受到图元的变换矩阵影响，
+                // 而裁剪区域是位于未受到变换的原始画布上的区域，
+                // 因此在图元内部的裁剪区为需要叠加一个图元内变换的逆变换，
+                // 才可以实现向外部空间的映射。
+                AffineTransform inverse = objCTM.createInverse();
+                clipObj.setCTM(trans(inverse));
+                area.setClipObj(clipObj);
+                clips.addClip(new CT_Clip().addArea(area));
+                return clips;
+            } catch (NoninvertibleTransformException e) {
+                // 初等变换都可逆，若非初等变换那么忽略裁剪区
+            }
+        }
+        return null;
+    }
 
     /**
      * 将可渲染对象转换为缓存图像
