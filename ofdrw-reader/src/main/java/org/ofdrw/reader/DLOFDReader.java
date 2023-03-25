@@ -5,6 +5,7 @@ import org.dom4j.DocumentException;
 import org.ofdrw.core.annotation.Annotations;
 import org.ofdrw.core.annotation.pageannot.AnnPage;
 import org.ofdrw.core.annotation.pageannot.PageAnnot;
+import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.pageObj.CT_TemplatePage;
@@ -113,15 +114,19 @@ public class DLOFDReader extends OFDReader {
     private void getPageBox() {
         documentBox = null;
         try {
-            documentBox = document.getCommonData().getPageArea().getPhysicalBox();
-            if (documentBox == null) {
-                documentBox = document.getCommonData().getPageArea().getApplicationBox();
+            CT_PageArea pageArea = document.getCommonData().getPageArea();
+            if (pageArea != null) {
+                documentBox = pageArea.getPhysicalBox();
+                if (documentBox == null) {
+                    documentBox = pageArea.getApplicationBox();
+                }
+                if (documentBox == null) {
+                    documentBox = pageArea.getContentBox();
+                }
             }
+
             if (documentBox == null) {
-                documentBox = document.getCommonData().getPageArea().getContentBox();
-            }
-            if (documentBox == null) {
-                new ST_Box(0, 0, 210, 140);
+                documentBox = new ST_Box(0, 0, 210, 140);
             }
         } catch (Exception e) {
             throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
