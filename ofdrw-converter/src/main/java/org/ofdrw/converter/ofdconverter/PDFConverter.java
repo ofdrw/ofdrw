@@ -161,16 +161,14 @@ public class PDFConverter implements DocConverter {
                 // 将PDF页面尺寸缩放至OFD尺寸
                 OFDPageGraphics2D ofdPageG2d = ofdDoc.newPage(pdfPageSize.getWidth() / uuPmm, pdfPageSize.getHeight() / uuPmm);
                 pdfRender.renderPageToGraphics(index, ofdPageG2d, (float) (1d / uuPmm));
-
-//                BufferedImage image = new BufferedImage((int) pdfPageSize.getWidth(), (int) pdfPageSize.getHeight(), BufferedImage.TYPE_INT_RGB);
-//                Graphics2D g = image.createGraphics();
-//                g.setColor(Color.WHITE);
-//                pdfRender.renderPageToGraphics(index, g);
-//                Path path = Paths.get("target/" + index + ".png");
-//                ImageIO.write(image, "png", path.toFile());
                 if (enableCopyBookmarks) {
                     exportBookmark(pdfDoc, pdfOutline, ofdPageG2d.pageID, index);
                 }
+//                BufferedImage image = new BufferedImage((int) pdfPageSize.getWidth(), (int) pdfPageSize.getHeight(), BufferedImage.TYPE_INT_ARGB);
+//                Graphics2D g = image.createGraphics();
+//                pdfRender.renderPageToGraphics(index, g);
+//                Path path = Paths.get("target/" + index + ".png");
+//                ImageIO.write(image, "png", path.toFile());
             }
 
             if (!enableCopyAttachFiles) {

@@ -17,10 +17,19 @@ import java.util.Map;
 
 class PDFConverterTest {
 
+    @Test
+    void convertFont() throws Exception {
+        ElemCup.ENABLE_DEBUG_PRINT = true;
+        Path src = Paths.get("src/test/resources/ff.pdf");
+        Path dst = Paths.get("target/ff.ofd");
+        try (PDFConverter converter = new PDFConverter(dst)) {
+            converter.convert(src);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
 
     @Test
     void convert() throws Exception {
-
         ElemCup.ENABLE_DEBUG_PRINT = true;
         Path src = Paths.get("src/test/resources/Test.pdf");
         Path dst = Paths.get("target/convert.ofd");
@@ -29,6 +38,37 @@ class PDFConverterTest {
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }
+
+    /**
+     * 不复制附件
+     */
+    @Test
+    void convertDropAttachFile() throws Exception {
+        ElemCup.ENABLE_DEBUG_PRINT = true;
+        Path src = Paths.get("src/test/resources/Test.pdf");
+        Path dst = Paths.get("target/convert.ofd");
+        try (PDFConverter converter = new PDFConverter(dst)) {
+            converter.setEnableCopyAttachFiles(false);
+            converter.convert(src);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
+     * 不导出书签
+     */
+    @Test
+    void convertDropBookmark() throws Exception {
+        ElemCup.ENABLE_DEBUG_PRINT = true;
+        Path src = Paths.get("src/test/resources/Test.pdf");
+        Path dst = Paths.get("target/convert.ofd");
+        try (PDFConverter converter = new PDFConverter(dst)) {
+            converter.setEnableCopyBookmarks(false);
+            converter.convert(src);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
 
     @Test
     void convertPage2() throws Exception {
