@@ -3,7 +3,6 @@ package org.ofdrw.layout.element;
 import org.ofdrw.font.EnvFont;
 import org.ofdrw.font.Font;
 
-
 import java.awt.geom.Rectangle2D;
 
 /**
@@ -46,8 +45,8 @@ public class TxtGlyph {
         }
         if (this.bounds == null) {
             // 分析字体大小
-            this.bounds = EnvFont.strBounds(textFontInfo.getFont().getName(),
-                    textFontInfo.getFont().getFamilyName(),
+            this.bounds = EnvFont.strBounds(font.getName(),
+                    font.getFamilyName(),
                     String.valueOf(txt),
                     textFontInfo.getFontSize());
         }
@@ -66,11 +65,11 @@ public class TxtGlyph {
         }
         if (this.bounds == null) {
             // 分析字体大小
-            this.bounds = EnvFont.strBounds(textFontInfo.getFont().getName(),
-                    textFontInfo.getFont().getFamilyName(),
+            this.bounds = EnvFont.strBounds(font.getName(),
+                    font.getFamilyName(),
                     String.valueOf(txt),
                     textFontInfo.getFontSize());
         }
-        return bounds.getWidth();
+        return bounds.getHeight();
     }
 }

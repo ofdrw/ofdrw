@@ -503,7 +503,6 @@ class OFDPageGraphics2DTest {
             OFDPageGraphics2D g = doc.newPage(500, 500);
 
             g.setPaint(Color.RED);
-//            g.setFont(new Font("src/main/resources/simsun.ttf", Font.PLAIN, 15));
             g.drawString("你好OFD R&W Hello ", 40, 120);
         }
         System.out.println(">> " + dst.toAbsolutePath());

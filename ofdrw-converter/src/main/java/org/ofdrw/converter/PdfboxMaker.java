@@ -6,6 +6,7 @@ import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecifica
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
@@ -78,10 +79,7 @@ public class PdfboxMaker {
      * 用于获取OFD内资源
      */
     private final ResourceManage resMgt;
-    /**
-     * 默认字体，在无法找到可用字体时使用该字体替换
-     */
-    private final PDType0Font DEFAULT_FONT;
+
 
     /**
      * 字体缓存防止重复加载字体
@@ -95,7 +93,6 @@ public class PdfboxMaker {
         this.reader = reader;
         this.pdf = pdf;
         this.resMgt = reader.getResMgt();
-        this.DEFAULT_FONT = PDType0Font.load(pdf, this.getClass().getClassLoader().getResourceAsStream("fonts/simsun.ttf"));
     }
 
     /**
@@ -644,16 +641,15 @@ public class PdfboxMaker {
         if (fontCache.containsKey(key)) {
             return fontCache.get(key);
         }
-        PDFont font;
         try {
             // 加载字体
-            final InputStream in = FontLoader.getInstance().loadFontSimilarStream(reader.getResourceLocator(), ctFont);
-            font = PDType0Font.load(pdf, in, true);
+            InputStream in = FontLoader.getInstance().loadFontSimilarStream(reader.getResourceLocator(), ctFont);
+            PDFont  font = PDType0Font.load(pdf, in, true);
+            fontCache.put(key, font);
+            return font;
         } catch (Exception e) {
             logger.info("无法使用字体: {} {} {}", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile().toString());
-            font = DEFAULT_FONT;
+            return PDType1Font.HELVETICA_BOLD;
         }
-        fontCache.put(key, font);
-        return font;
     }
 }

@@ -19,24 +19,15 @@ public class OFD2PDFTest {
         // 为不规范的字体名创建映射
         FontLoader.getInstance()
                 .addAliasMapping("小标宋体", "方正小标宋简体")
-                .addAliasMapping("KaiTi_GB2312", "楷体")
-                .addAliasMapping("楷体", "KaiTi")
+                .addSimilarFontReplaceRegexMapping(".*SimSun.*", "SimSun");
 
-                .addSimilarFontReplaceRegexMapping(".*Kai.*", "楷体")
-                .addSimilarFontReplaceRegexMapping(".*Kai.*", "楷体")
-                .addSimilarFontReplaceRegexMapping(".*MinionPro.*", "SimSun")
-                .addSimilarFontReplaceRegexMapping(".*SimSun.*", "SimSun")
-                .addSimilarFontReplaceRegexMapping(".*Song.*", "宋体")
-                .addSimilarFontReplaceRegexMapping(".*MinionPro.*", "SimSun");
-
-        FontLoader.getInstance().scanFontDir(new File("src/main/resources/fonts"));
         FontLoader.setSimilarFontReplace(true);
         long start = System.currentTimeMillis();
         try {
 //            ConvertHelper.toPdf(src, dst);
             ConvertHelper.toPdf(Paths.get("src/test/resources/发票示例.ofd"), Paths.get("target/发票示例.pdf"));
-//            ConvertHelper.toPdf(Paths.get("src/test/resources/zsbk.ofd"), Paths.get("target/zsbk.pdf"));
-//            ConvertHelper.toPdf(Paths.get("src/test/resources/999.ofd"), Paths.get("target/999.pdf"));
+            ConvertHelper.toPdf(Paths.get("src/test/resources/zsbk.ofd"), Paths.get("target/zsbk.pdf"));
+            ConvertHelper.toPdf(Paths.get("src/test/resources/999.ofd"), Paths.get("target/999.pdf"));
             System.out.printf(">> 总计花费: %dms\n", System.currentTimeMillis() - start);
         } catch (GeneralConvertException e) {
             e.printStackTrace();

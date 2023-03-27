@@ -2,11 +2,10 @@ package org.ofdrw.layout.element;
 
 
 import org.ofdrw.core.basicStructure.pageObj.layer.Type;
-import org.ofdrw.layout.RenderPrepare;
 import org.ofdrw.layout.Rectangle;
+import org.ofdrw.layout.RenderPrepare;
 import org.ofdrw.layout.engine.ElementSplit;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 
 /**
@@ -149,6 +148,22 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
     public Div(Double width, Double height) {
         this.width = width;
         this.height = height;
+    }
+
+    /**
+     * 创建绝对定位的Div对象
+     *
+     * @param x 固定布局的盒式模型左上角X坐标
+     * @param y 固定布局的盒式模型左上角y坐标
+     * @param width 宽度
+     * @param height 高度
+     */
+    public Div(double x, double y, double width, double height) {
+        setX(x);
+        setY(y);
+        setWidth(width);
+        setHeight(height);
+        setPosition(Position.Absolute);
     }
 
     /**

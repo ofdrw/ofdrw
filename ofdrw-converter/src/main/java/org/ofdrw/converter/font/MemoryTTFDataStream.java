@@ -20,18 +20,17 @@ import java.io.*;
 
 /**
  * An interface into a data stream.
- * 
+ *
  * @author Ben Litchfield
- * 
  */
-public class MemoryTTFDataStream extends TTFDataStream
-{
+public class MemoryTTFDataStream extends TTFDataStream {
 
     private byte[] data = null;
     private int currentPosition = 0;
 
     /**
      * 构造内存字体随机读取流
+     *
      * @param data 字体数据
      */
     public MemoryTTFDataStream(byte[] data) {
@@ -39,121 +38,109 @@ public class MemoryTTFDataStream extends TTFDataStream
     }
 
     /**
-     * Constructor from a stream. 
+     * Constructor from a stream.
+     *
      * @param is The stream to read from. It will be closed by this method.
      * @throws IOException If an error occurs while reading from the stream.
      */
-    public MemoryTTFDataStream(InputStream is) throws IOException
-    {
-        try (ByteArrayOutputStream output = new ByteArrayOutputStream(is.available()))
-        {
+    public MemoryTTFDataStream(InputStream is) throws IOException {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream(is.available())) {
             byte[] buffer = new byte[1024];
             int amountRead;
-            while ((amountRead = is.read(buffer)) != -1)
-            {
+            while ((amountRead = is.read(buffer)) != -1) {
                 output.write(buffer, 0, amountRead);
             }
             data = output.toByteArray();
-        }
-        finally
-        {
+        } finally {
             is.close();
         }
     }
-    
+
     /**
      * Read an unsigned byte.
+     *
      * @return An unsigned byte.
      * @throws IOException If there is an error reading the data.
      */
     @Override
-    public long readLong() throws IOException
-    {
-        return ((long)(readSignedInt()) << 32) + (readSignedInt() & 0xFFFFFFFFL);
+    public long readLong() throws IOException {
+        return ((long) (readSignedInt()) << 32) + (readSignedInt() & 0xFFFFFFFFL);
     }
-    
+
     /**
      * Read a signed integer.
-     * 
+     *
      * @return A signed integer.
      * @throws IOException If there is a problem reading the file.
      */
-    public int readSignedInt() throws IOException
-    {
+    public int readSignedInt() throws IOException {
         int ch1 = read();
         int ch2 = read();
         int ch3 = read();
         int ch4 = read();
-        if( (ch1 | ch2 | ch3 | ch4) < 0)
-        {
+        if ((ch1 | ch2 | ch3 | ch4) < 0) {
             throw new EOFException();
         }
         return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
     }
-    
+
     /**
      * Read an unsigned byte.
+     *
      * @return An unsigned byte.
      * @throws IOException If there is an error reading the data.
      */
     @Override
-    public int read() throws IOException
-    {
-        if (currentPosition >= data.length)
-        {
+    public int read() throws IOException {
+        if (currentPosition >= data.length) {
             return -1;
         }
         int retval = data[currentPosition];
         currentPosition++;
-        return (retval+256)%256;
+        return (retval + 256) % 256;
     }
-    
+
     /**
      * Read an unsigned short.
-     * 
+     *
      * @return An unsigned short.
      * @throws IOException If there is an error reading the data.
      */
     @Override
-    public int readUnsignedShort() throws IOException
-    {
+    public int readUnsignedShort() throws IOException {
         int ch1 = this.read();
         int ch2 = this.read();
-        if ((ch1 | ch2) < 0)
-        {
+        if ((ch1 | ch2) < 0) {
             throw new EOFException();
         }
         return (ch1 << 8) + (ch2 << 0);
     }
-    
+
     /**
      * Read an signed short.
-     * 
+     *
      * @return An signed short.
      * @throws IOException If there is an error reading the data.
      */
     @Override
-    public short readSignedShort() throws IOException
-    {
+    public short readSignedShort() throws IOException {
         int ch1 = this.read();
         int ch2 = this.read();
-        if ((ch1 | ch2) < 0)
-        {
+        if ((ch1 | ch2) < 0) {
             throw new EOFException();
         }
-        return (short)((ch1 << 8) + (ch2 << 0));
+        return (short) ((ch1 << 8) + (ch2 << 0));
     }
-    
+
     /**
      * Close the underlying resources.
-     * 
+     *
      * @throws IOException If there is an error closing the resources.
      */
     @Override
-    public void close() throws IOException
-    {
+    public void close() throws IOException {
     }
-    
+
     /**
      * Seek into the datasource.
      *
@@ -161,68 +148,57 @@ public class MemoryTTFDataStream extends TTFDataStream
      * @throws IOException If the seek position is negative or larger than MAXINT.
      */
     @Override
-    public void seek(long pos) throws IOException
-    {
-        if (pos < 0 || pos > Integer.MAX_VALUE)
-        {
+    public void seek(long pos) throws IOException {
+        if (pos < 0 || pos > Integer.MAX_VALUE) {
             throw new IOException("Illegal seek position: " + pos);
         }
         currentPosition = (int) pos;
     }
-    
+
     /**
-     * @see InputStream#read( byte[], int, int )
-     * 
-     * @param b The buffer to write to.
+     * @param b   The buffer to write to.
      * @param off The offset into the buffer.
      * @param len The length into the buffer.
-     * 
      * @return The number of bytes read, or -1 at the end of the stream
-     * 
      * @throws IOException If there is an error reading from the stream.
+     * @see InputStream#read(byte[], int, int)
      */
     @Override
-    public int read(byte[] b, int off, int len) throws IOException
-    {
-        if (currentPosition < data.length)
-        {
-            int amountRead = Math.min( len, data.length-currentPosition );
-            System.arraycopy(data,currentPosition,b, off, amountRead );
-            currentPosition+=amountRead;
+    public int read(byte[] b, int off, int len) throws IOException {
+        if (currentPosition < data.length) {
+            int amountRead = Math.min(len, data.length - currentPosition);
+            System.arraycopy(data, currentPosition, b, off, amountRead);
+            currentPosition += amountRead;
             return amountRead;
-        }
-        else
-        {
+        } else {
             return -1;
         }
-     }
-    
+    }
+
     /**
      * Get the current position in the stream.
+     *
      * @return The current position in the stream.
      * @throws IOException If an error occurs while reading the stream.
      */
     @Override
-    public long getCurrentPosition() throws IOException
-    {
+    public long getCurrentPosition() throws IOException {
         return currentPosition;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public InputStream getOriginalData() throws IOException
-    {
-        return new ByteArrayInputStream( data );
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public long getOriginalDataSize()
-    {
+    public InputStream getOriginalData() throws IOException {
+        return new ByteArrayInputStream(data);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getOriginalDataSize() {
         return data.length;
     }
 }
