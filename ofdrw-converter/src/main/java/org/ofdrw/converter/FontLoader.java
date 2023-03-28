@@ -18,6 +18,7 @@ import org.ofdrw.reader.ResourceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -336,13 +337,21 @@ public final class FontLoader {
             return this;
         }
 
-        final String name = file.getName();
+        final String name = file.getName().toLowerCase();
         if (!name.endsWith("otf") && !name.endsWith("ttf") && !name.endsWith("ttc")) {
             log.info("字体映射添加失败 {} 不是一个OpenType字体", fontFilePath);
             return this;
         }
         synchronized (fontNamePathMapping) {
+            String p = fontNamePathMapping.get(fontName);
+            if (p != null && p.equals(fontFilePath)) {
+                return this;
+            }
+
             fontNamePathMapping.put(fontName, fontFilePath);
+            if (DEBUG) {
+                log.info("建立字体映射 {} --> {}", fontName, fontFilePath);
+            }
         }
         return this;
     }
@@ -801,8 +810,20 @@ public final class FontLoader {
         if (font.psName != null && font.psName.length() > 0) {
             addSystemFontMapping(font.psName, path);
         }
-        if (DEBUG) {
-            log.info("加载字体 {} | {} | {} ---> {}\n", font.fontFamily, font.fontSubFamily, font.psName, path);
+
+        try {
+            Font awtFont = Font.createFont(Font.TRUETYPE_FONT, new File(path));
+            String family = awtFont.getFamily();
+            String fontName = awtFont.getFontName();
+            if (family != null && family.equals(fontName)) {
+                addSystemFontMapping(family, path);
+            } else if (family != null) {
+                addSystemFontMapping(fontName, path);
+            }
+        } catch (Exception e) {
+            if (DEBUG) {
+                log.warn("无法加载AWT字体 " + path, e);
+            }
         }
     }
 
