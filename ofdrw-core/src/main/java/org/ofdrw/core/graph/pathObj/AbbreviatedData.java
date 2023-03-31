@@ -87,6 +87,20 @@ public class AbbreviatedData extends OFDElement implements Cloneable, Iterator<O
     }
 
     /**
+     * 追加整个 图形轮廓数据
+     *
+     * @param another 图形轮廓数据
+     * @return this
+     */
+    public AbbreviatedData append(AbbreviatedData another) {
+        if (another == null) {
+            return this;
+        }
+        this.dataQueue.addAll(another.dataQueue);
+        return this;
+    }
+
+    /**
      * 获取原始的操作符和操作数
      *
      * @return 操作符和操作数的结合

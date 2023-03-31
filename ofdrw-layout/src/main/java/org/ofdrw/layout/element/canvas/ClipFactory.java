@@ -14,6 +14,7 @@ import org.ofdrw.core.pageDescription.clips.Clips;
  * @author 权观宇
  * @since 2020-05-04 16:11:55
  */
+@Deprecated
 public class ClipFactory implements Cloneable {
 
     /**

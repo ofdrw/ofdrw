@@ -181,12 +181,12 @@ public final class FontLoader {
          * 默认选择宋体 或 衬体
          */
         String[] arr = new String[]{
-                "SimSun", "MicrosoftYaHei", "Times New Roman",
+                "宋体", "楷体", "仿宋"
         };
         String defFt = null;
         for (String name : arr) {
             defFt = getReplaceSimilarFontPath(name, "");
-            if (loadDefault(defFt)) {
+            if (loadAsDefaultFont(defFt)) {
                 break;
             } else {
                 defFt = null;
@@ -197,7 +197,7 @@ public final class FontLoader {
             Iterator<String> it = fontNamePathMapping.keySet().iterator();
             while (it.hasNext() && defFt == null) {
                 defFt = fontNamePathMapping.get(it.next());
-                if (!loadDefault(defFt)) {
+                if (!loadAsDefaultFont(defFt)) {
                     defFt = null;
                 }
             }
@@ -208,15 +208,16 @@ public final class FontLoader {
     }
 
     /**
-     * 尝试加载默认字体
+     * 尝试加载为默认字体
      *
-     * @param defFt
-     * @return
+     * @param path 字体路径
+     * @return true - 加载成功；false - 加载失败
      */
-    private static boolean loadDefault(String defFt) {
-        DefaultFontPath = Paths.get(defFt);
-        try (InputStream in = Files.newInputStream(DefaultFontPath)) {
+    public static boolean loadAsDefaultFont(String path) {
+        Path loc = Paths.get(path);
+        try (InputStream in = Files.newInputStream(loc)) {
             byte[] buf = IOUtils.toByteArray(in);
+            DefaultFontPath = loc;
             defaultFont = new TrueTypeFont().parse(buf);
             iTextDefaultFont = new com.itextpdf.io.font.TrueTypeFont(buf);
         } catch (IOException ignored) {
@@ -352,6 +353,8 @@ public final class FontLoader {
             if (DEBUG) {
                 log.info("建立字体映射 {} --> {}", fontName, fontFilePath);
             }
+//            System.out.printf("建立字体映射 %s --> %s\n", fontName, fontFilePath);
+
         }
         return this;
     }
@@ -703,7 +706,6 @@ public final class FontLoader {
             }
             return fontProgram;
         } catch (Exception e) {
-
             if (DEBUG) {
                 log.info("字体加载失败 " + fontAbsPath, e);
             }
@@ -767,65 +769,80 @@ public final class FontLoader {
      * @param file 字体文件路径
      */
     public void loadFont(File file) {
-        String fileName = file.getName();
-        int offset = fileName.lastIndexOf('.');
-        String suffix = offset == -1 ? ".ttf" : fileName.substring(offset).toLowerCase();
-        try (TTFDataStream raf = new MemoryTTFDataStream(Files.newInputStream(file.toPath()))) {
-            switch (suffix) {
-                case ".otf":
-                case ".ttf": {
-                    TrueTypeFont font = new TrueTypeFont().parse(raf);
-                    addNormalFont(font, file.getPath());
-                    break;
-                }
-                case ".ttc": {
-                    TrueTypeCollection trueTypeCollection = new TrueTypeCollection().parse(raf);
-                    trueTypeCollection.foreach(font -> addNormalFont(font, file.getPath()));
-                    break;
-                }
-                default:
-                    break;
-            }
-        } catch (Exception e) {
-            if (DEBUG) {
-                log.warn(file.getAbsolutePath() + " 无法解析，忽略错误", e);
-            }
-        }
-    }
-
-    /**
-     * 加入字体
-     *
-     * @param font 字体解析结果
-     * @param path 字体所在路径
-     */
-    private void addNormalFont(TrueTypeFont font, String path) {
-        if (fontNamePathMapping.containsKey(font.fontFamily)) {
-            if (font.fontSubFamily == null || font.fontSubFamily.length() == 0 || font.fontSubFamily.equalsIgnoreCase("Regular")) {
-                addSystemFontMapping(font.fontFamily, path);
-            }
-        } else {
-            addSystemFontMapping(font.fontFamily, path);
-        }
-        if (font.psName != null && font.psName.length() > 0) {
-            addSystemFontMapping(font.psName, path);
-        }
-
         try {
-            Font awtFont = Font.createFont(Font.TRUETYPE_FONT, new File(path));
+            Font awtFont = Font.createFont(Font.TRUETYPE_FONT, file);
             String family = awtFont.getFamily();
             String fontName = awtFont.getFontName();
             if (family != null && family.equals(fontName)) {
-                addSystemFontMapping(family, path);
+                addSystemFontMapping(family, file.getAbsolutePath());
             } else if (family != null) {
-                addSystemFontMapping(fontName, path);
+                addSystemFontMapping(fontName, file.getAbsolutePath());
             }
         } catch (Exception e) {
             if (DEBUG) {
-                log.warn("无法加载AWT字体 " + path, e);
+                log.warn("无法加载AWT字体 " + file.getAbsolutePath(), e);
             }
         }
+
+//        String fileName = file.getName();
+//        int offset = fileName.lastIndexOf('.');
+//        String suffix = offset == -1 ? ".ttf" : fileName.substring(offset).toLowerCase();
+//        try (TTFDataStream raf = new MemoryTTFDataStream(Files.newInputStream(file.toPath()))) {
+//            switch (suffix) {
+//                case ".otf":
+//                case ".ttf": {
+//                    TrueTypeFont font = new TrueTypeFont().parse(raf);
+//                    addNormalFont(font, file.getPath());
+//                    break;
+//                }
+//                case ".ttc": {
+//                    TrueTypeCollection trueTypeCollection = new TrueTypeCollection().parse(raf);
+//                    trueTypeCollection.foreach(font -> addNormalFont(font, file.getPath()));
+//                    break;
+//                }
+//                default:
+//                    break;
+//            }
+//        } catch (Exception e) {
+//            if (DEBUG) {
+//                log.warn(file.getAbsolutePath() + " 无法解析，忽略错误", e);
+//            }
+//        }
     }
+
+//    /**
+//     * 加入字体
+//     *
+//     * @param font 字体解析结果
+//     * @param path 字体所在路径
+//     */
+//    private void addNormalFont(TrueTypeFont font, String path) {
+//        if (fontNamePathMapping.containsKey(font.fontFamily)) {
+//            if (font.fontSubFamily == null || font.fontSubFamily.length() == 0 || font.fontSubFamily.equalsIgnoreCase("Regular")) {
+//                addSystemFontMapping(font.fontFamily, path);
+//            }
+//        } else {
+//            addSystemFontMapping(font.fontFamily, path);
+//        }
+//        if (font.psName != null && font.psName.length() > 0) {
+//            addSystemFontMapping(font.psName, path);
+//        }
+//
+//        try {
+//            Font awtFont = Font.createFont(Font.TRUETYPE_FONT, new File(path));
+//            String family = awtFont.getFamily();
+//            String fontName = awtFont.getFontName();
+//            if (family != null && family.equals(fontName)) {
+//                addSystemFontMapping(family, path);
+//            } else if (family != null) {
+//                addSystemFontMapping(fontName, path);
+//            }
+//        } catch (Exception e) {
+//            if (DEBUG) {
+//                log.warn("无法加载AWT字体 " + path, e);
+//            }
+//        }
+//    }
 
     /**
      * 修复了字体

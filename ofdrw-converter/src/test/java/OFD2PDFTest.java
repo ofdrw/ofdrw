@@ -16,12 +16,11 @@ public class OFD2PDFTest {
 //        Path src = Paths.get("src/test/resources/zsbk.ofd");
 //        Path dst = Paths.get("target/zsbk.pdf");
 
+        FontLoader.DEBUG = true;
         // 为不规范的字体名创建映射
         FontLoader.getInstance()
                 .addAliasMapping("小标宋体", "方正小标宋简体")
                 .addSimilarFontReplaceRegexMapping(".*SimSun.*", "SimSun");
-
-        FontLoader.setSimilarFontReplace(true);
         long start = System.currentTimeMillis();
         try {
 //            ConvertHelper.toPdf(src, dst);

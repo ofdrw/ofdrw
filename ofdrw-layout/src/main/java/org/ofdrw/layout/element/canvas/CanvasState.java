@@ -18,11 +18,6 @@ public class CanvasState implements Cloneable {
     AbbreviatedData path;
 
     /**
-     * 待裁剪区域构造工厂
-     */
-    ClipFactory clipFactory;
-
-    /**
      * 变换矩阵
      */
     ST_Array ctm = null;
@@ -47,6 +42,10 @@ public class CanvasState implements Cloneable {
      */
     DrawParamCache drawParamCache = null;
 
+    /**
+     * 裁剪区域
+     */
+    AbbreviatedData clipArea = null;
 
     public CanvasState() {
         font = new FontSetting(1d, FontName.SimSun.font());
@@ -72,9 +71,6 @@ public class CanvasState implements Cloneable {
         if (path != null) {
             that.path = path.clone();
         }
-        if (clipFactory != null) {
-            that.clipFactory = clipFactory.clone();
-        }
         if (ctm != null) {
             that.ctm = ctm.clone();
         }
@@ -88,7 +84,9 @@ public class CanvasState implements Cloneable {
         if (drawParamCache != null) {
             that.drawParamCache = drawParamCache.clone();
         }
-
+        if (clipArea != null) {
+            that.clipArea = clipArea.clone();
+        }
         return that;
     }
 }

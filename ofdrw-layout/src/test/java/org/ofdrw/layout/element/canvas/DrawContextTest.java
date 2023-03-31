@@ -1,6 +1,9 @@
 package org.ofdrw.layout.element.canvas;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.ofdrw.core.basicType.ST_Array;
+import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 import org.ofdrw.font.FontName;
@@ -228,6 +231,38 @@ class DrawContextTest {
                 // 在 clip() 之后绘制绿色矩形
                 ctx.setFillColor(0, 255, 0);
                 ctx.fillRect(30, 30, 50, 30);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    @Test
+    void clipCTM() throws IOException {
+        Path outP = Paths.get("target/Canvas-clip-ctm.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(new PageLayout(500d, 500d));
+
+            Canvas canvas = new Canvas(400d, 400d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(50d).setY(50d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                // 剪切矩形区域
+                ctx.translate(50, 50);
+                ctx.rect(0, 0, 100, 100);
+                ctx.clip();
+
+                ctx.setFillColor(255, 0, 0);
+                ctx.fill();
+
+                // 在 clip() 之后绘制绿色矩形
+                ctx.rotate(20);
+                ctx.setFillColor(0, 255, 0);
+                ctx.fillRect(0, 0, 100, 100);
             });
             vPage.add(canvas);
 
@@ -975,4 +1010,23 @@ class DrawContextTest {
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath());
     }
+
+    @Test
+    public void testTransform()  {
+        // 平移
+        AbbreviatedData at = new AbbreviatedData();
+        at.moveTo(0, 0);
+
+        ST_Array ctm = new ST_Array(
+                1, 0,
+                0, 1,
+                30, 50
+        );
+        DrawContext.transform(at, ctm);
+        Assertions.assertEquals(30, at.getRawOptVal().get(0).values[0]);
+        Assertions.assertEquals(50, at.getRawOptVal().get(0).values[1]);
+
+    }
+
+
 }

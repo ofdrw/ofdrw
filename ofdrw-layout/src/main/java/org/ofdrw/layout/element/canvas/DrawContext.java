@@ -8,7 +8,11 @@ import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
+import org.ofdrw.core.graph.pathObj.CT_Path;
+import org.ofdrw.core.graph.pathObj.OptVal;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
+import org.ofdrw.core.pageDescription.clips.CT_Clip;
+import org.ofdrw.core.pageDescription.clips.Clips;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 import org.ofdrw.core.text.TextCode;
@@ -18,6 +22,8 @@ import org.ofdrw.core.text.text.Weight;
 import org.ofdrw.font.Font;
 import org.ofdrw.layout.engine.ResManager;
 
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,7 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 2020-05-01 11:29:20
  */
 public class DrawContext implements Closeable {
-
+    static final ST_Array ONE = ST_Array.unitCTM();
     /**
      * 用于容纳所绘制的所有图像的容器
      */
@@ -139,15 +145,11 @@ public class DrawContext implements Closeable {
             return this;
         }
 
-        if (state.clipFactory == null) {
-            state.clipFactory = new ClipFactory();
+        this.state.clipArea = this.state.path.clone();
+        if (this.state.ctm != null && !ONE.equals(this.state.ctm)) {
+            // 受到CTM的影响形变
+            transform( this.state.clipArea, this.state.ctm);
         }
-
-        if (this.state.ctm != null) {
-            state.clipFactory.setCtm(this.state.ctm.clone());
-        }
-        state.clipFactory.setData(this.state.path.clone());
-
         return this;
     }
 
@@ -1076,22 +1078,122 @@ public class DrawContext implements Closeable {
             p.setAlpha((int) (255 * this.state.globalAlpha));
         }
 
-//        // 设置裁剪区域
-//        if (this.state.clipFactory != null) {
-//            // TODO: 裁剪区域的Boundary 以及 CTM
-//            p.setClips(this.state.clipFactory.clips(this.boundary));
-//        }
-
         // 设置变换矩阵 忽略已经设置了变换矩阵的图元
         if (this.state.ctm != null && p.getCTM() == null) {
             p.setCTM(this.state.ctm.clone());
         }
-
-
         // 设置线条绘制参数
         if (this.state.drawParamCache != null) {
             ST_ID paramObjId = this.state.drawParamCache.addToResource(resManager);
             p.setDrawParam(paramObjId.ref());
+        }
+        // 设置裁剪区域
+        if (this.state.clipArea != null) {
+            Clips clips = new Clips();
+            org.ofdrw.core.pageDescription.clips.Area area = new org.ofdrw.core.pageDescription.clips.Area();
+            CT_Path clipObj = new CT_Path().setAbbreviatedData(this.state.clipArea.clone());
+            clipObj.setFill(true);
+            // 裁剪区域与Canvas等大
+            clipObj.setBoundary(new ST_Box(0, 0, this.boundary.getWidth(), boundary.getHeight()));
+            if (this.state.ctm != null && !ONE.equals(this.state.ctm)) {
+                // 由于图元内的裁剪区域受到图元的变换矩阵影响，
+                // 而裁剪区域是位于未受到变换的原始画布上的区域，
+                // 因此在图元内部的裁剪区为需要叠加一个图元内变换的逆变换，
+                // 才可以实现向外部空间的映射。
+                ST_Array inverse = inverse(this.state.ctm);
+                if (inverse == null) {
+                    // 获取获取可逆矩阵时放弃裁剪区
+                    return;
+                }
+                clipObj.setCTM(inverse);
+            }
+            area.setClipObj(clipObj);
+            clips.addClip(new CT_Clip().addArea(area));
+            p.setClips(clips);
+        }
+    }
+
+    /**
+     * 计算可逆矩阵
+     * <p>
+     * 注意：初等变换一定存在可逆矩阵
+     *
+     * @param ctm 变换矩阵
+     * @return 可逆矩阵 或 null
+     */
+    private ST_Array inverse(ST_Array ctm) {
+        if (ctm.size() < 6) {
+            return null;
+        }
+        AffineTransform at = new AffineTransform(
+                ctm.get(0), ctm.get(1),
+                ctm.get(2), ctm.get(3),
+                ctm.get(4), ctm.get(5)
+        );
+        AffineTransform tx = null;
+        try {
+            tx = at.createInverse();
+        } catch (NoninvertibleTransformException e) {
+            return null;
+        }
+        return new ST_Array(tx.getScaleX(), tx.getShearY(), tx.getShearX(), tx.getScaleY(), tx.getTranslateX(), tx.getTranslateY());
+    }
+
+    /**
+     * 对路径应用变换矩阵
+     *
+     * @param data 图形轮廓数据
+     * @param ctm  变换矩阵
+     */
+    public static void transform(AbbreviatedData data, ST_Array ctm) {
+        AffineTransform at = new AffineTransform(
+                ctm.get(0), ctm.get(1),
+                ctm.get(2), ctm.get(3),
+                ctm.get(4), ctm.get(5)
+        );
+
+        for (OptVal optVal : data.getRawOptVal()) {
+            switch (optVal.opt) {
+                case "S":
+                case "M":
+                case "L": {
+                    double[] arr = optVal.expectValues();
+                    double[] dst = new double[2];
+                    at.transform(arr, 0, dst, 0, 1);
+                    optVal.setValues(dst);
+                    continue;
+                }
+                case "Q": {
+                    double[] arr = optVal.expectValues();
+                    double[] dst = new double[4];
+                    at.transform(arr, 0, dst, 0, 2);
+                    optVal.setValues(dst);
+                    continue;
+                }
+                case "B": {
+                    double[] arr = optVal.expectValues();
+                    double[] dst = new double[6];
+                    at.transform(arr, 0, dst, 0, 3);
+                    optVal.setValues(dst);
+                    continue;
+                }
+                case "A": {
+                    // [0]rx [1]ry [2]angle [3]large [4]sweep [5]x [6]y
+                    double[] arr = optVal.expectValues();
+                    double rx = arr[0] * at.getScaleX();
+                    double ry = arr[1] * at.getScaleY();
+
+                    double[] ptDst = new double[2];
+                    at.transform(arr, 5, ptDst, 0, 1);
+                    optVal.setValues(new double[]{
+                            rx, ry,
+                            arr[2], arr[3], arr[4],
+                            ptDst[0], ptDst[1]
+                    });
+                }
+                case "C":
+                default:
+            }
         }
     }
 
