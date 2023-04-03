@@ -47,6 +47,18 @@ public class CanvasState implements Cloneable {
      */
     AbbreviatedData clipArea = null;
 
+    /**
+     * 填充颜色 16进制格式
+     * 如： #000000
+     */
+    String fillStyle;
+
+    /**
+     * 描边颜色 16进制格式
+     * 如： #000000
+     */
+    String strokeStyle;
+
     public CanvasState() {
         font = new FontSetting(1d, FontName.SimSun.font());
     }
@@ -87,6 +99,8 @@ public class CanvasState implements Cloneable {
         if (clipArea != null) {
             that.clipArea = clipArea.clone();
         }
+        that.fillStyle = this.fillStyle;
+        that.strokeStyle = this.strokeStyle;
         return that;
     }
 }

@@ -78,6 +78,18 @@ public class DrawContext implements Closeable {
 
     private LinkedList<CanvasState> stack;
 
+    /**
+     * 填充颜色 16进制格式
+     * 如： #000000
+     */
+    public String fillStyle;
+
+    /**
+     * 描边颜色 16进制格式
+     * 如： #000000
+     */
+    public String strokeStyle;
+
     private DrawContext() {
     }
 
@@ -148,7 +160,7 @@ public class DrawContext implements Closeable {
         this.state.clipArea = this.state.path.clone();
         if (this.state.ctm != null && !ONE.equals(this.state.ctm)) {
             // 受到CTM的影响形变
-            transform( this.state.clipArea, this.state.ctm);
+            transform(this.state.clipArea, this.state.ctm);
         }
         return this;
     }
@@ -363,6 +375,12 @@ public class DrawContext implements Closeable {
         PathObject p = new PathObject(new ST_ID(maxUnitID.incrementAndGet()));
         p.setAbbreviatedData(abData);
         p.setFill(true);
+        if (this.fillStyle != null && this.fillStyle.length() > 0) {
+            int[] rgb = NamedColor.rgb(this.fillStyle);
+            if (rgb != null) {
+                this.setFillColor(rgb);
+            }
+        }
         applyDrawParam(p);
         container.add(p);
         return this;
@@ -424,6 +442,13 @@ public class DrawContext implements Closeable {
     public DrawContext fill() {
         if (this.state.path == null) {
             return this;
+        }
+
+        if (this.fillStyle != null && this.fillStyle.length() > 0) {
+            int[] rgb = NamedColor.rgb(this.fillStyle);
+            if (rgb != null) {
+                this.setFillColor(rgb);
+            }
         }
 
         PathObject p = new PathObject(new ST_ID(maxUnitID.incrementAndGet()));
@@ -577,6 +602,8 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext save() {
+        this.state.strokeStyle = this.strokeStyle;
+        this.state.fillStyle = this.fillStyle;
         stack.push(this.state.clone());
         return this;
     }
@@ -591,6 +618,8 @@ public class DrawContext implements Closeable {
             return this;
         }
         this.state = stack.pop();
+        this.strokeStyle = this.state.strokeStyle;
+        this.fillStyle = this.state.fillStyle;
         return this;
     }
 
@@ -641,6 +670,13 @@ public class DrawContext implements Closeable {
         // 设置文字方向
         if (charDirection != 0) {
             txtObj.setCharDirection(Direction.getInstance(charDirection));
+        }
+
+        if (this.fillStyle != null && this.fillStyle.length() > 0) {
+            int[] rgb = NamedColor.rgb(this.fillStyle);
+            if (rgb != null) {
+                this.setFillColor(rgb);
+            }
         }
 
         // 应用绘制参数
@@ -1196,6 +1232,7 @@ public class DrawContext implements Closeable {
             }
         }
     }
+
 
     /**
      * 结束绘制器绘制工作
