@@ -29,7 +29,7 @@ class DrawContextTest {
     @Test
     public void testFillStyle() throws IOException{
         ElemCup.ENABLE_DEBUG_PRINT = true;
-        Path outP = Paths.get("target/testFillStyle.ofd");
+        Path outP = Paths.get("target/FillStyle.ofd");
         try (OFDDoc ofdDoc = new OFDDoc(outP)) {
             final PageLayout pageLayout = ofdDoc.getPageLayout();
             VirtualPage vPage = new VirtualPage(pageLayout);
@@ -38,6 +38,25 @@ class DrawContextTest {
             canvas.setDrawer(ctx -> {
                 ctx.fillStyle="#FF0000";
                 ctx.fillRect(20,20,150,100);
+            });
+            vPage.add(canvas);
+            ofdDoc.addVPage(vPage);
+        };
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+    }
+
+    @Test
+    public void testStrokeStyle() throws IOException{
+        ElemCup.ENABLE_DEBUG_PRINT = true;
+        Path outP = Paths.get("target/StrokeStyle.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            final PageLayout pageLayout = ofdDoc.getPageLayout();
+            VirtualPage vPage = new VirtualPage(pageLayout);
+            Canvas canvas = new Canvas(pageLayout.getWidth(), pageLayout.getHeight());
+            canvas.setPosition(Position.Absolute).setX(0D).setY(0D);
+            canvas.setDrawer(ctx -> {
+                ctx.strokeStyle="#FF0000";
+                ctx.strokeRect(20,20,150,100);
             });
             vPage.add(canvas);
             ofdDoc.addVPage(vPage);
