@@ -2,6 +2,7 @@ package org.ofdrw.layout.element.canvas;
 
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
+import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.font.FontName;
 
 /**
@@ -36,11 +37,9 @@ public class CanvasState implements Cloneable {
     Double globalAlpha = null;
 
     /**
-     * 绘制参数缓存
-     * <p>
-     * 只有在需要时候才进行创建
+     * 绘制参数
      */
-    DrawParamCache drawParamCache = null;
+    CT_DrawParam drawParam;
 
     /**
      * 裁剪区域
@@ -60,6 +59,7 @@ public class CanvasState implements Cloneable {
     String strokeStyle;
 
     public CanvasState() {
+        drawParam = new CT_DrawParam();
         font = new FontSetting(1d, FontName.SimSun.font());
     }
 
@@ -69,13 +69,22 @@ public class CanvasState implements Cloneable {
      * 如果缓存不存在那么创建
      *
      * @return 绘制参数缓存
+     * @deprecated 采用 {@link #getDrawParam()}
      */
+    @Deprecated
     public DrawParamCache obtainDrawParamCache() {
-        if (drawParamCache == null) {
-            drawParamCache = new DrawParamCache();
-        }
-        return drawParamCache;
+        return  new DrawParamCache();
     }
+
+    /**
+     * 获取绘制参数
+     *
+     * @return 绘制参数
+     */
+    public CT_DrawParam getDrawParam() {
+        return  this.drawParam;
+    }
+
 
     @Override
     public CanvasState clone() {
@@ -86,15 +95,14 @@ public class CanvasState implements Cloneable {
         if (ctm != null) {
             that.ctm = ctm.clone();
         }
-        // that.lineWidth = lineWidth;
         if (font != null) {
             that.font = font.clone();
         }
         if (globalAlpha != null) {
             that.globalAlpha = globalAlpha;
         }
-        if (drawParamCache != null) {
-            that.drawParamCache = drawParamCache.clone();
+        if (this.drawParam != null){
+            this.drawParam = this.drawParam.clone();
         }
         if (clipArea != null) {
             that.clipArea = clipArea.clone();

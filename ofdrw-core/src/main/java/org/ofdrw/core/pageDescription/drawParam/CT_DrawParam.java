@@ -378,6 +378,8 @@ public class CT_DrawParam extends OFDElement {
 
     @Override
     public CT_DrawParam clone() {
-        return new CT_DrawParam((Element) super.clone());
+        CT_DrawParam copy = new CT_DrawParam((Element) super.clone());
+        copy.setParent(null);
+        return copy;
     }
 }

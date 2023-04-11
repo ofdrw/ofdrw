@@ -11,6 +11,7 @@ import org.ofdrw.layout.OFDDoc;
 import org.ofdrw.layout.PageLayout;
 import org.ofdrw.layout.VirtualPage;
 import org.ofdrw.layout.element.Position;
+import org.ofdrw.pkg.tool.ElemCup;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -23,6 +24,26 @@ import java.nio.file.Paths;
  * @since 2020-05-02 18:25:25
  */
 class DrawContextTest {
+
+
+    @Test
+    public void testFillStyle() throws IOException{
+        ElemCup.ENABLE_DEBUG_PRINT = true;
+        Path outP = Paths.get("target/testFillStyle.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            final PageLayout pageLayout = ofdDoc.getPageLayout();
+            VirtualPage vPage = new VirtualPage(pageLayout);
+            Canvas canvas = new Canvas(pageLayout.getWidth(), pageLayout.getHeight());
+            canvas.setPosition(Position.Absolute).setX(0D).setY(0D);
+            canvas.setDrawer(ctx -> {
+                ctx.fillStyle="#FF0000";
+                ctx.fillRect(20,20,150,100);
+            });
+            vPage.add(canvas);
+            ofdDoc.addVPage(vPage);
+        };
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+    }
 
     @Test
     public void testLineTo() throws IOException {

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Canvas测试</title>
+</head>
+<body>
+
+<canvas id="canvas" width="1050" height="1485" style="border:1px solid #c3c3c3;">
+    您的浏览器不支持 HTML5 canvas 标签。
+</canvas>
+
+<script>
+var c=document.getElementById("canvas");
+var ctx=c.getContext("2d");
+ctx.fillStyle="#FF0000";
+ctx.fillRect(20,20,150,100);
+
+</script>
+</body>
+</html>

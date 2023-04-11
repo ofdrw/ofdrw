@@ -13,6 +13,7 @@ import org.ofdrw.core.graph.pathObj.OptVal;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.clips.CT_Clip;
 import org.ofdrw.core.pageDescription.clips.Clips;
+import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 import org.ofdrw.core.text.TextCode;
@@ -76,6 +77,13 @@ public class DrawContext implements Closeable {
      */
     private CanvasState state;
 
+    /**
+     * 绘制参数栈
+     * <p>
+     * save() 时将当前绘制参数压栈
+     * <p>
+     * restore() 时将当前绘制参数出栈
+     */
     private LinkedList<CanvasState> stack;
 
     /**
@@ -111,6 +119,9 @@ public class DrawContext implements Closeable {
         this.resManager = resManager;
         this.state = new CanvasState();
         this.stack = new LinkedList<>();
+        // 初始化颜色默认为黑色
+        this.fillStyle = "#000000";
+        this.strokeStyle = "#000000";
     }
 
     /**
@@ -375,12 +386,6 @@ public class DrawContext implements Closeable {
         PathObject p = new PathObject(new ST_ID(maxUnitID.incrementAndGet()));
         p.setAbbreviatedData(abData);
         p.setFill(true);
-        if (this.fillStyle != null && this.fillStyle.length() > 0) {
-            int[] rgb = NamedColor.rgb(this.fillStyle);
-            if (rgb != null) {
-                this.setFillColor(rgb);
-            }
-        }
         applyDrawParam(p);
         container.add(p);
         return this;
@@ -442,13 +447,6 @@ public class DrawContext implements Closeable {
     public DrawContext fill() {
         if (this.state.path == null) {
             return this;
-        }
-
-        if (this.fillStyle != null && this.fillStyle.length() > 0) {
-            int[] rgb = NamedColor.rgb(this.fillStyle);
-            if (rgb != null) {
-                this.setFillColor(rgb);
-            }
         }
 
         PathObject p = new PathObject(new ST_ID(maxUnitID.incrementAndGet()));
@@ -672,18 +670,6 @@ public class DrawContext implements Closeable {
             txtObj.setCharDirection(Direction.getInstance(charDirection));
         }
 
-        if (this.fillStyle != null && this.fillStyle.length() > 0) {
-            int[] rgb = NamedColor.rgb(this.fillStyle);
-            if (rgb != null) {
-                this.setFillColor(rgb);
-            }
-        }
-
-        // 应用绘制参数
-        if (this.state.drawParamCache != null) {
-            applyDrawParam(txtObj);
-        }
-
         // 测量字间距
         MeasureBody measureBody = TextMeasureTool.measureWithWith(text, state.font);
 
@@ -711,6 +697,11 @@ public class DrawContext implements Closeable {
             tcSTTxt.setDeltaX(measureBody.offset);
         }
         txtObj.addTextCode(tcSTTxt);
+
+
+        // 应用绘制参数
+        applyDrawParam(txtObj);
+
         // 加入容器
         container.addPageBlock(txtObj);
         return this;
@@ -796,7 +787,7 @@ public class DrawContext implements Closeable {
      * @return 描边颜色（只读）
      */
     public int[] getStrokeColor() {
-        return state.obtainDrawParamCache().getStrokeColor();
+        return NamedColor.rgb(this.strokeStyle);
     }
 
     /**
@@ -808,7 +799,7 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext setStrokeColor(int[] strokeColor) {
-        this.state.obtainDrawParamCache().setStrokeColor(strokeColor);
+        this.strokeStyle = String.format("#%02X%02X%02X", strokeColor[0], strokeColor[1], strokeColor[2]);
         return this;
     }
 
@@ -832,7 +823,7 @@ public class DrawContext implements Closeable {
      * @return 填充颜色（只读）
      */
     public int[] getFillColor() {
-        return state.obtainDrawParamCache().getFillColor();
+        return NamedColor.rgb(this.fillStyle);
     }
 
     /**
@@ -844,7 +835,7 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext setFillColor(int[] fillColor) {
-        this.state.obtainDrawParamCache().setFillColor(fillColor);
+        this.fillStyle = String.format("%02X%02X%02X", fillColor[0], fillColor[1], fillColor[2]);
         return this;
     }
 
@@ -869,7 +860,7 @@ public class DrawContext implements Closeable {
      * @return 线宽度（单位毫米mm）
      */
     public double getLineWidth() {
-        return this.state.obtainDrawParamCache().getLineWidth();
+        return this.state.drawParam.getLineWidth();
     }
 
     /**
@@ -879,10 +870,10 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext setLineWidth(double lineWidth) {
-        if (lineWidth <= 0) {
+        if (lineWidth < 0) {
             lineWidth = 0.353;
         }
-        this.state.obtainDrawParamCache().setLineWidth(lineWidth);
+        this.state.drawParam.setLineWidth(lineWidth);
         return this;
     }
 
@@ -954,11 +945,7 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext setLineCap(LineCapType cap) {
-        if (cap == null) {
-            return this;
-        }
-        this.state.obtainDrawParamCache()
-                .setCap(cap);
+        this.state.drawParam.setCap(cap);
         return this;
     }
 
@@ -970,11 +957,7 @@ public class DrawContext implements Closeable {
      * @return 端点样式
      */
     public LineCapType getLineCap() {
-        if (this.state.drawParamCache == null) {
-            return LineCapType.Butt;
-        }
-        LineCapType cap = this.state.drawParamCache.getCap();
-        return cap == null ? LineCapType.Butt : cap;
+        return this.state.drawParam.getCap();
     }
 
     /**
@@ -986,11 +969,7 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext setLineJoin(LineJoinType join) {
-        if (join == null) {
-            return this;
-        }
-        this.state.obtainDrawParamCache()
-                .setJoin(join);
+        this.state.drawParam.setJoin(join);
         return this;
     }
 
@@ -1002,11 +981,7 @@ public class DrawContext implements Closeable {
      * @return 线条连接样式
      */
     public LineJoinType getLineJoin() {
-        if (this.state.drawParamCache == null) {
-            return LineJoinType.Miter;
-        }
-        LineJoinType join = this.state.drawParamCache.getJoin();
-        return join == null ? LineJoinType.Miter : join;
+        return this.state.drawParam.getJoin();
     }
 
     /**
@@ -1020,11 +995,7 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext setMiterLimit(Double miterLimit) {
-        if (miterLimit == null) {
-            return this;
-        }
-        this.state.obtainDrawParamCache()
-                .setMiterLimit(miterLimit);
+        this.state.drawParam.setMiterLimit(miterLimit);
         return this;
     }
 
@@ -1036,11 +1007,7 @@ public class DrawContext implements Closeable {
      * @return 截断值
      */
     public Double getMiterLimit() {
-        if (this.state.drawParamCache == null) {
-            return 3.528;
-        }
-        Double miterLimit = this.state.drawParamCache.getMiterLimit();
-        return miterLimit == null ? 3.528 : miterLimit;
+        return this.state.drawParam.getMiterLimit();
     }
 
 
@@ -1052,16 +1019,18 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext setLineDash(Double dashOffset, Double[] pattern) {
+        if (dashOffset == null && pattern == null) {
+            this.state.drawParam.setDashPattern(null);
+            this.state.drawParam.setDashOffset(null);
+            return this;
+        }
 
         if (pattern == null || pattern.length < 2) {
             throw new IllegalArgumentException("虚线的线段长度和间隔长度(pattern)，不能为空并且需要大于两个以上的值");
         }
 
-        DrawParamCache drawParam = this.state.obtainDrawParamCache()
-                .setDashPattern(new ST_Array(pattern));
-        if (dashOffset != null) {
-            drawParam.setDashOffset(dashOffset);
-        }
+        this.state.drawParam.setDashPattern(new ST_Array(pattern));
+        this.state.drawParam.setDashOffset(dashOffset);
         return this;
     }
 
@@ -1081,10 +1050,7 @@ public class DrawContext implements Closeable {
      * @return 虚线的线段长度和间隔长度, 有两个或多个值，第一个值指定了虚线线段的长度，第二个值制定了线段间隔的长度，依次类推。
      */
     public ST_Array getDashPattern() {
-        if (this.state.drawParamCache == null) {
-            return null;
-        }
-        return this.state.drawParamCache.getDashPattern();
+        return this.state.drawParam.getDashPattern();
     }
 
     /**
@@ -1093,10 +1059,7 @@ public class DrawContext implements Closeable {
      * @return 虚线绘制偏移位置
      */
     public Double getDashOffset() {
-        if (this.state.drawParamCache == null) {
-            return null;
-        }
-        return this.state.drawParamCache.getDashOffset();
+        return this.state.drawParam.getDashOffset();
     }
 
     /**
@@ -1118,11 +1081,25 @@ public class DrawContext implements Closeable {
         if (this.state.ctm != null && p.getCTM() == null) {
             p.setCTM(this.state.ctm.clone());
         }
-        // 设置线条绘制参数
-        if (this.state.drawParamCache != null) {
-            ST_ID paramObjId = this.state.drawParamCache.addToResource(resManager);
-            p.setDrawParam(paramObjId.ref());
+        // 设置填充颜色
+        if (this.fillStyle != null && this.fillStyle.length() > 0) {
+            int[] rgb = NamedColor.rgb(this.fillStyle);
+            if (rgb != null) {
+                this.state.drawParam.setFillColor(CT_Color.rgb(rgb[0], rgb[1], rgb[2]));
+            }
         }
+        // 设置描边颜色
+        if (this.strokeStyle != null && this.strokeStyle.length() > 0) {
+            int[] rgb = NamedColor.rgb(this.strokeStyle);
+            if (rgb != null) {
+                this.state.drawParam.setStrokeColor(CT_Color.rgb(rgb[0], rgb[1], rgb[2]));
+            }
+        }
+
+        // 设置绘制参数
+        ST_ID paramObjId = this.resManager.addDrawParam(this.state.drawParam);
+        p.setDrawParam(paramObjId.ref());
+
         // 设置裁剪区域
         if (this.state.clipArea != null) {
             Clips clips = new Clips();

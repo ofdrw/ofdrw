@@ -15,7 +15,9 @@ import org.ofdrw.layout.engine.ResManager;
  *
  * @author 权观宇
  * @since 2020-05-18 20:45:32
+ * @deprecated 通过资源管理解决绘制参数重复问题，该缓存结构冗余因此弃用。
  */
+@Deprecated
 public class DrawParamCache {
 
 
