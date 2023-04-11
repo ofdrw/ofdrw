@@ -14,6 +14,7 @@ import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.clips.CT_Clip;
 import org.ofdrw.core.pageDescription.clips.Clips;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.pageDescription.color.color.ColorClusterType;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 import org.ofdrw.core.text.TextCode;
@@ -90,13 +91,13 @@ public class DrawContext implements Closeable {
      * 填充颜色 16进制格式
      * 如： #000000
      */
-    public String fillStyle;
+    public Object fillStyle;
 
     /**
      * 描边颜色 16进制格式
      * 如： #000000
      */
-    public String strokeStyle;
+    public Object strokeStyle;
 
     private DrawContext() {
     }
@@ -386,6 +387,7 @@ public class DrawContext implements Closeable {
         PathObject p = new PathObject(new ST_ID(maxUnitID.incrementAndGet()));
         p.setAbbreviatedData(abData);
         p.setFill(true);
+        p.setLineWidth(0d);
         applyDrawParam(p);
         container.add(p);
         return this;
@@ -452,6 +454,7 @@ public class DrawContext implements Closeable {
         PathObject p = new PathObject(new ST_ID(maxUnitID.incrementAndGet()));
         p.setAbbreviatedData(this.state.path.clone());
         p.setFill(true);
+        p.setLineWidth(0d);
         applyDrawParam(p);
         container.add(p);
         return this;
@@ -783,11 +786,17 @@ public class DrawContext implements Closeable {
 
     /**
      * 读取当前描边颜色（只读）
+     * <p>
+     * 若描边颜色非颜色值，则返回null
      *
      * @return 描边颜色（只读）
      */
     public int[] getStrokeColor() {
-        return NamedColor.rgb(this.strokeStyle);
+        if (this.strokeStyle instanceof String) {
+            return NamedColor.rgb((String) this.strokeStyle);
+        }
+
+        return null;
     }
 
     /**
@@ -819,11 +828,16 @@ public class DrawContext implements Closeable {
 
     /**
      * 获取填充颜色（只读）
+     * <p>
+     * 若填充颜色非颜色值，则返回null
      *
      * @return 填充颜色（只读）
      */
     public int[] getFillColor() {
-        return NamedColor.rgb(this.fillStyle);
+        if (this.fillStyle instanceof String) {
+            return NamedColor.rgb((String) this.fillStyle);
+        }
+        return null;
     }
 
     /**
@@ -1063,6 +1077,33 @@ public class DrawContext implements Closeable {
     }
 
     /**
+     * 创建一个线性渐变对象（double）
+     *
+     * @param x0 起始点横坐标
+     * @param y0 起始点纵坐标
+     * @param x1 结束点横坐标
+     * @param y1 结束点纵坐标
+     * @return 线性渐变对象
+     */
+    public CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1) {
+        return new CanvasGradient(x0, y0, x1, y1);
+    }
+
+    /**
+     * 创建一个线性渐变对象（int）
+     *
+     * @param x0 起始点横坐标
+     * @param y0 起始点纵坐标
+     * @param x1 结束点横坐标
+     * @param y1 结束点纵坐标
+     * @return 线性渐变对象
+     */
+    public CanvasGradient createLinearGradient(int x0, int y0, int x1, int y1) {
+        return new CanvasGradient(x0, y0, x1, y1);
+    }
+
+
+    /**
      * 应用当前上下文中的绘制参数到绘制对象
      */
     private void applyDrawParam(CT_GraphicUnit<?> p) {
@@ -1082,18 +1123,14 @@ public class DrawContext implements Closeable {
             p.setCTM(this.state.ctm.clone());
         }
         // 设置填充颜色
-        if (this.fillStyle != null && this.fillStyle.length() > 0) {
-            int[] rgb = NamedColor.rgb(this.fillStyle);
-            if (rgb != null) {
-                this.state.drawParam.setFillColor(CT_Color.rgb(rgb[0], rgb[1], rgb[2]));
-            }
+        CT_Color fillColor = detectColor(this.fillStyle);
+        if (fillColor != null) {
+            this.state.drawParam.setFillColor(fillColor);
         }
         // 设置描边颜色
-        if (this.strokeStyle != null && this.strokeStyle.length() > 0) {
-            int[] rgb = NamedColor.rgb(this.strokeStyle);
-            if (rgb != null) {
-                this.state.drawParam.setStrokeColor(CT_Color.rgb(rgb[0], rgb[1], rgb[2]));
-            }
+        CT_Color strokeColor = detectColor(this.strokeStyle);
+        if (strokeColor != null) {
+            this.state.drawParam.setStrokeColor(strokeColor);
         }
 
         // 设置绘制参数
@@ -1210,6 +1247,38 @@ public class DrawContext implements Closeable {
         }
     }
 
+    /**
+     * 根据颜色类型推断颜色对象
+     * <p>
+     * 若无法推断或参数错误则返回null
+     *
+     * @param color 颜色类型
+     * @return OFD颜色对象
+     */
+    private CT_Color detectColor(Object color) {
+        if (color == null) {
+            return null;
+        }
+        if (color instanceof String) {
+            int[] rgb = NamedColor.rgb((String) color);
+            if (rgb != null) {
+                return CT_Color.rgb(rgb[0], rgb[1], rgb[2]);
+            }
+            return null;
+        } else if (color instanceof ColorClusterType) {
+            CT_Color res = new CT_Color();
+            res.setColor((ColorClusterType) color);
+            return res;
+        } else if (color instanceof CT_Color) {
+            return (CT_Color) color;
+        } else if (color instanceof CanvasGradient) {
+            // 渐变颜色
+            CT_Color res = new CT_Color();
+            res.setColor(((CanvasGradient) color).axialShd);
+            return res;
+        }
+        return null;
+    }
 
     /**
      * 结束绘制器绘制工作

@@ -50,13 +50,13 @@ public class CanvasState implements Cloneable {
      * 填充颜色 16进制格式
      * 如： #000000
      */
-    String fillStyle;
+    Object fillStyle;
 
     /**
      * 描边颜色 16进制格式
      * 如： #000000
      */
-    String strokeStyle;
+    Object strokeStyle;
 
     public CanvasState() {
         drawParam = new CT_DrawParam();

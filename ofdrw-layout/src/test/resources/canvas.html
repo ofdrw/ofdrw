@@ -13,9 +13,14 @@
 <script>
 var c=document.getElementById("canvas");
 var ctx=c.getContext("2d");
-ctx.fillStyle="#FF0000";
-ctx.fillRect(20,20,150,100);
 
+var my_gradient=ctx.createLinearGradient(0,0,170,0);
+my_gradient.addColorStop(0,"black");
+my_gradient.addColorStop(0.5,"red");
+my_gradient.addColorStop(1,"white");
+ctx.fillStyle=my_gradient;
+console.log(my_gradient);
+ctx.fillRect(20,20,150,100);
 </script>
 </body>
 </html>
