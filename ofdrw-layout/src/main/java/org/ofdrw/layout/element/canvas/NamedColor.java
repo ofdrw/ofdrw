@@ -11,9 +11,11 @@ import java.awt.*;
 public final class NamedColor {
 
     /**
-     * 解析颜色名或16进制颜色字符串为RGB参数
+     * 解析颜色名 或 16进制颜色 RGB颜色 字符串为RGB参数
      * <p>
      * 若颜色无法解析则返回null
+     * <p>
+     * 若颜色参数包含透明通道，那个返回参数最后一个元素为透明度值 [0,255] 0表示完全透明，255表示完全不透明。
      *
      * @param hex 颜色16进制值、颜色名称
      * @return RGB颜色数组
@@ -22,8 +24,8 @@ public final class NamedColor {
         if (hex == null || hex.length() == 0) {
             return null;
         }
-
-        switch (hex.toLowerCase()) {
+        hex = hex.toLowerCase().trim();
+        switch (hex) {
             case "aliceblue":
                 return new int[]{240, 248, 255};
             case "antiquewhite":
@@ -311,13 +313,36 @@ public final class NamedColor {
             case "yellowgreen":
                 return new int[]{154, 205, 50};
         }
-        if (hex.charAt(0) == '#' && hex.length() == 4){
+
+        // 如果是 #xxx 格式的颜色值，转换为 #xxxxxx 格式
+        if (hex.charAt(0) == '#' && hex.length() == 4) {
             hex = String.format(
                     "#%c%c%c%c%c%c",
                     hex.charAt(1), hex.charAt(1),
                     hex.charAt(2), hex.charAt(2),
                     hex.charAt(3), hex.charAt(3));
         }
+        // 若是 rgb(x,x,x) 格式的颜色值，返回对应的 int 数组
+        if (hex.startsWith("rgb(") && hex.endsWith(")")) {
+            String[] rgb = hex.substring(4, hex.length() - 1).split(",");
+            return new int[]{
+                    Integer.parseInt(rgb[0].trim()),
+                    Integer.parseInt(rgb[1].trim()),
+                    Integer.parseInt(rgb[2].trim())
+            };
+        }
+        // 若是 rgba(x,x,x,x) 格式的颜色值，返回对应的 int 数组
+        if (hex.startsWith("rgba(") && hex.endsWith(")")) {
+            String[] rgba = hex.substring(5, hex.length() - 1).split(",");
+            return new int[]{
+                    Integer.parseInt(rgba[0].trim()),
+                    Integer.parseInt(rgba[1].trim()),
+                    Integer.parseInt(rgba[2].trim()),
+                    (int) (255 * Double.parseDouble(rgba[3]))
+            };
+        }
+
+        // 尝试解析 #xxxxxx 格式的颜色值
         try {
             Color c = Color.decode(hex);
             return new int[]{c.getRed(), c.getGreen(), c.getBlue()};

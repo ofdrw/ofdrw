@@ -24,8 +24,11 @@ import org.ofdrw.core.text.text.Weight;
 import org.ofdrw.font.Font;
 import org.ofdrw.layout.engine.ResManager;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.awt.image.BufferedImage;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -88,16 +91,43 @@ public class DrawContext implements Closeable {
     private LinkedList<CanvasState> stack;
 
     /**
-     * 填充颜色 16进制格式
-     * 如： #000000
+     * 填充颜色
+     * <p>
+     * 支持：
+     * <p>
+     * {@link String} 16进制颜色值，#000000、rgb(0,0,0)、rgba(0,0,0,1)
+     * <p>
+     * {@link CT_Color} OFD颜色对象
+     * <p>
+     * {@link ColorClusterType} 颜色族
+     * <p>
+     * {@link CanvasPattern} 图案
+     * <p>
+     * {@link CanvasGradient} 渐变
      */
     public Object fillStyle;
 
     /**
-     * 描边颜色 16进制格式
-     * 如： #000000
+     * 描边颜色
+     * <p>
+     * 支持：
+     * <p>
+     * {@link String} 16进制颜色值，#000000、rgb(0,0,0)、rgba(0,0,0,1)
+     * <p>
+     * {@link CT_Color} OFD颜色对象
+     * <p>
+     * {@link ColorClusterType} 颜色族
+     * <p>
+     * {@link CanvasPattern} 图案
+     * <p>
+     * {@link CanvasGradient} 渐变
      */
     public Object strokeStyle;
+
+    /**
+     * 每毫米像素数量 pixel per millimeter
+     */
+    public double PPM;
 
     private DrawContext() {
     }
@@ -110,16 +140,14 @@ public class DrawContext implements Closeable {
      * @param maxUnitID  自增的对象ID
      * @param resManager 资源管理器
      */
-    public DrawContext(CT_PageBlock container,
-                       ST_Box boundary,
-                       AtomicInteger maxUnitID,
-                       ResManager resManager) {
+    public DrawContext(CT_PageBlock container, ST_Box boundary, AtomicInteger maxUnitID, ResManager resManager) {
         this.container = container;
         this.boundary = boundary;
         this.maxUnitID = maxUnitID;
         this.resManager = resManager;
         this.state = new CanvasState();
         this.stack = new LinkedList<>();
+        this.PPM = 15;
         // 初始化颜色默认为黑色
         this.fillStyle = "#000000";
         this.strokeStyle = "#000000";
@@ -238,9 +266,7 @@ public class DrawContext implements Closeable {
      * @param y    结束点的 y 坐标
      * @return this
      */
-    public DrawContext bezierCurveTo(double cp1x, double cp1y,
-                                     double cp2x, double cp2y,
-                                     double x, double y) {
+    public DrawContext bezierCurveTo(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y) {
         if (this.state.path == null) {
             this.state.path = new AbbreviatedData();
         }
@@ -265,11 +291,7 @@ public class DrawContext implements Closeable {
      * @param y     目标点 y
      * @return this
      */
-    public DrawContext arc(double a, double b,
-                           double angle,
-                           boolean large,
-                           boolean sweep,
-                           double x, double y) {
+    public DrawContext arc(double a, double b, double angle, boolean large, boolean sweep, double x, double y) {
         if (this.state.path == null) {
             this.state.path = new AbbreviatedData();
         }
@@ -289,10 +311,7 @@ public class DrawContext implements Closeable {
      * @param counterclockwise 规定应该逆时针还是顺时针绘图。false = 顺时针，true = 逆时针。
      * @return this
      */
-    public DrawContext arc(double x, double y,
-                           double r,
-                           double sAngle, double eAngle,
-                           boolean counterclockwise) {
+    public DrawContext arc(double x, double y, double r, double sAngle, double eAngle, boolean counterclockwise) {
 
         if (this.state.path == null) {
             this.state.path = new AbbreviatedData();
@@ -308,16 +327,12 @@ public class DrawContext implements Closeable {
         if (angle == 360) {
             // 整个圆的时候需要分为两次路径进行绘制
             // 绘制结束位置起始位置
-            this.state.path.arc(r, r, angle, 1, counterclockwise ? 1 : 0, x - r, y)
-                    .arc(r, r, angle, 1, counterclockwise ? 1 : 0, x1, y1);
+            this.state.path.arc(r, r, angle, 1, counterclockwise ? 1 : 0, x - r, y).arc(r, r, angle, 1, counterclockwise ? 1 : 0, x1, y1);
         } else {
             // 绘制结束位置起始位置
             double x2 = x + r * Math.cos(eAngle * Math.PI / 180);
             double y2 = y + r * Math.sin(eAngle * Math.PI / 180);
-            this.state.path.arc(r, r, angle,
-                    angle > 180 ? 1 : 0,
-                    counterclockwise ? 1 : 0,
-                    x2, y2);
+            this.state.path.arc(r, r, angle, angle > 180 ? 1 : 0, counterclockwise ? 1 : 0, x2, y2);
         }
 
         return this;
@@ -335,9 +350,7 @@ public class DrawContext implements Closeable {
      * @param eAngle 结束角，单位度
      * @return this
      */
-    public DrawContext arc(double x, double y,
-                           double r,
-                           double sAngle, double eAngle) {
+    public DrawContext arc(double x, double y, double r, double sAngle, double eAngle) {
         return arc(x, y, r, sAngle, eAngle, true);
     }
 
@@ -356,11 +369,7 @@ public class DrawContext implements Closeable {
             this.state.path = new AbbreviatedData();
         }
 
-        this.state.path.moveTo(x, y)
-                .lineTo(x + width, y)
-                .lineTo(x + width, y + height)
-                .lineTo(x, y + height)
-                .close();
+        this.state.path.moveTo(x, y).lineTo(x + width, y).lineTo(x + width, y + height).lineTo(x, y + height).close();
         return this;
     }
 
@@ -378,11 +387,7 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext fillRect(double x, double y, double width, double height) {
-        AbbreviatedData abData = new AbbreviatedData().moveTo(x, y)
-                .lineTo(x + width, y)
-                .lineTo(x + width, y + height)
-                .lineTo(x, y + height)
-                .close();
+        AbbreviatedData abData = new AbbreviatedData().moveTo(x, y).lineTo(x + width, y).lineTo(x + width, y + height).lineTo(x, y + height).close();
 
         PathObject p = new PathObject(new ST_ID(maxUnitID.incrementAndGet()));
         p.setAbbreviatedData(abData);
@@ -407,11 +412,7 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext strokeRect(double x, double y, double width, double height) {
-        AbbreviatedData abData = new AbbreviatedData().moveTo(x, y)
-                .lineTo(x + width, y)
-                .lineTo(x + width, y + height)
-                .lineTo(x, y + height)
-                .close();
+        AbbreviatedData abData = new AbbreviatedData().moveTo(x, y).lineTo(x + width, y).lineTo(x + width, y + height).lineTo(x, y + height).close();
 
         PathObject p = new PathObject(new ST_ID(maxUnitID.incrementAndGet()));
         p.setAbbreviatedData(abData);
@@ -487,10 +488,7 @@ public class DrawContext implements Closeable {
             this.state.ctm = ST_Array.unitCTM();
         }
         double alpha = angle * Math.PI / 180d;
-        ST_Array r = new ST_Array(
-                Math.cos(alpha), Math.sin(alpha),
-                -Math.sin(alpha), Math.cos(alpha),
-                0, 0);
+        ST_Array r = new ST_Array(Math.cos(alpha), Math.sin(alpha), -Math.sin(alpha), Math.cos(alpha), 0, 0);
         this.state.ctm = r.mtxMul(this.state.ctm);
         return this;
     }
@@ -506,10 +504,7 @@ public class DrawContext implements Closeable {
         if (this.state.ctm == null) {
             this.state.ctm = ST_Array.unitCTM();
         }
-        ST_Array r = new ST_Array(
-                1, 0,
-                0, 1,
-                x, y);
+        ST_Array r = new ST_Array(1, 0, 0, 1, x, y);
         this.state.ctm = r.mtxMul(this.state.ctm);
         return this;
     }
@@ -531,10 +526,7 @@ public class DrawContext implements Closeable {
         if (this.state.ctm == null) {
             this.state.ctm = ST_Array.unitCTM();
         }
-        ST_Array r = new ST_Array(
-                a, b,
-                c, d,
-                e, f);
+        ST_Array r = new ST_Array(a, b, c, d, e, f);
         this.state.ctm = r.mtxMul(this.state.ctm);
         return this;
     }
@@ -553,27 +545,89 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext setTransform(double a, double b, double c, double d, double e, double f) {
-        this.state.ctm = new ST_Array(
-                a, b,
-                c, d,
-                e, f);
+        this.state.ctm = new ST_Array(a, b, c, d, e, f);
         return this;
+    }
+
+
+    /**
+     * 裁剪图片并在OFD上绘制图像
+     * <p>
+     * 主要该方法将会裁剪图片的一部分，然后在OFD上绘制
+     * 该方法所有参数单位都是毫米mm，像素转换毫米需要通过 {@link #PPM} 转换。
+     *
+     * @param img     图像，路径
+     * @param sx      图像内部 x 坐标（单位 毫米mm）
+     * @param sy      图像内部 y 坐标（单位 毫米mm）
+     * @param sWidth  图像内部宽度（单位 像素px）
+     * @param sHeight 图像内部高度（单位 像素px）
+     * @param dx      在画布上放置图像的 x 坐标位置（单位 毫米mm）
+     * @param dy      在画布上放置图像的 y 坐标位置（单位 毫米mm）
+     * @param dWidth  在画布上放置图像的宽度（单位 毫米mm）
+     * @param dHeight 在画布上放置图像的高度（单位 毫米mm）
+     * @return this
+     * @throws IOException 图像读取异常
+     */
+    public DrawContext drawImage(Path img, double sx, double sy, double sWidth, double sHeight, double dx, double dy, double dWidth, double dHeight) throws IOException {
+        if (img == null || Files.notExists(img)) {
+            throw new IllegalArgumentException("图像不存在");
+        }
+        // 加载原图片
+        BufferedImage gImg = ImageIO.read(img.toFile());
+        int w = pixel(sWidth);
+        int h = pixel(sHeight);
+        // 按照区域裁剪图片
+        BufferedImage cutOut = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = cutOut.createGraphics();
+        g2.drawImage(gImg, 0, 0, w, h, pixel(sx), pixel(sy), pixel(sx) + w, pixel(sy) + h, null);
+
+        Path tmpImgCutPath = null;
+        try {
+            // 裁剪后的图片存储到临时文件
+            tmpImgCutPath = Files.createTempFile("", ".png");
+            ImageIO.write(cutOut, "png", tmpImgCutPath.toFile());
+            return drawImage(tmpImgCutPath, dx, dy, dWidth, dHeight);
+        } finally {
+            if (tmpImgCutPath != null) {
+                Files.deleteIfExists(tmpImgCutPath);
+            }
+        }
+    }
+
+    /**
+     * 在OFD上绘制图像
+     * <p>
+     * 图像宽度和高度将按照 {@link #PPM} 进行转换
+     *
+     * @param img 要使用的图像，请避免资源和文档中已经存在的资源重复
+     * @param dx  在画布上放置图像的 x 坐标位置
+     * @param dy  在画布上放置图像的 y 坐标位置
+     * @return this
+     * @throws IOException 图片文件读写异常
+     */
+    public DrawContext drawImage(Path img, double dx, double dy) throws IOException {
+        if (img == null || Files.notExists(img)) {
+            throw new IllegalArgumentException("图像不存在");
+        }
+        // 加载原图片
+        BufferedImage gImg = ImageIO.read(img.toFile());
+        int w = gImg.getWidth();
+        int h = gImg.getHeight();
+        return drawImage(img, dx, dy, mm(w), mm(h));
     }
 
     /**
      * 在OFD上绘制图像
      *
-     * @param img    要使用的图像，请避免资源和文档中已经存在的资源重复
-     * @param x      在画布上放置图像的 x 坐标位置
-     * @param y      在画布上放置图像的 y 坐标位置
-     * @param width  要使用的图像的宽度（伸展或缩小图像）
-     * @param height 要使用的图像的高度（伸展或缩小图像）
+     * @param img     要使用的图像，请避免资源和文档中已经存在的资源重复
+     * @param dx      在画布上放置图像的 x 坐标位置
+     * @param dy      在画布上放置图像的 y 坐标位置
+     * @param dWidth  要使用的图像的宽度（伸展或缩小图像）
+     * @param dHeight 要使用的图像的高度（伸展或缩小图像）
      * @return this
      * @throws IOException 图片文件读写异常
      */
-    public DrawContext drawImage(Path img,
-                                 double x, double y,
-                                 double width, double height) throws IOException {
+    public DrawContext drawImage(Path img, double dx, double dy, double dWidth, double dHeight) throws IOException {
         if (img == null || Files.notExists(img)) {
             throw new IOException("图片(img)不存在");
         }
@@ -586,7 +640,7 @@ public class DrawContext implements Closeable {
 
         // 应用变换矩阵
         ST_Array ctm = this.state.ctm == null ? ST_Array.unitCTM() : this.state.ctm;
-        ctm = new ST_Array(width, 0, 0, height, x, y).mtxMul(ctm);
+        ctm = new ST_Array(dWidth, 0, 0, dHeight, dx, dy).mtxMul(ctm);
         imgObj.setCTM(ctm);
 
         // 应用绘制参数
@@ -647,11 +701,7 @@ public class DrawContext implements Closeable {
         ST_ID id = resManager.addFont(font);
 
         // 新建字体对象
-        TextObject txtObj = new CT_Text()
-                .setBoundary(this.boundary.clone())
-                .setFont(id.ref())
-                .setSize(fontSize)
-                .toObj(new ST_ID(maxUnitID.incrementAndGet()));
+        TextObject txtObj = new CT_Text().setBoundary(this.boundary.clone()).setFont(id.ref()).setSize(fontSize).toObj(new ST_ID(maxUnitID.incrementAndGet()));
 
         // 设置填充
         txtObj.setFill(true);
@@ -689,10 +739,7 @@ public class DrawContext implements Closeable {
                 yy += textFloatFactor(state.font.getTextAlign(), measureBody.width, readDirection);
                 break;
         }
-        TextCode tcSTTxt = new TextCode()
-                .setContent(text)
-                .setX(xx)
-                .setY(yy);
+        TextCode tcSTTxt = new TextCode().setContent(text).setX(xx).setY(yy);
 
         if (readDirection == 90 || readDirection == 270) {
             tcSTTxt.setDeltaY(measureBody.offset);
@@ -1175,11 +1222,7 @@ public class DrawContext implements Closeable {
         if (ctm.size() < 6) {
             return null;
         }
-        AffineTransform at = new AffineTransform(
-                ctm.get(0), ctm.get(1),
-                ctm.get(2), ctm.get(3),
-                ctm.get(4), ctm.get(5)
-        );
+        AffineTransform at = new AffineTransform(ctm.get(0), ctm.get(1), ctm.get(2), ctm.get(3), ctm.get(4), ctm.get(5));
         AffineTransform tx = null;
         try {
             tx = at.createInverse();
@@ -1196,11 +1239,7 @@ public class DrawContext implements Closeable {
      * @param ctm  变换矩阵
      */
     public static void transform(AbbreviatedData data, ST_Array ctm) {
-        AffineTransform at = new AffineTransform(
-                ctm.get(0), ctm.get(1),
-                ctm.get(2), ctm.get(3),
-                ctm.get(4), ctm.get(5)
-        );
+        AffineTransform at = new AffineTransform(ctm.get(0), ctm.get(1), ctm.get(2), ctm.get(3), ctm.get(4), ctm.get(5));
 
         for (OptVal optVal : data.getRawOptVal()) {
             switch (optVal.opt) {
@@ -1235,11 +1274,7 @@ public class DrawContext implements Closeable {
 
                     double[] ptDst = new double[2];
                     at.transform(arr, 5, ptDst, 0, 1);
-                    optVal.setValues(new double[]{
-                            rx, ry,
-                            arr[2], arr[3], arr[4],
-                            ptDst[0], ptDst[1]
-                    });
+                    optVal.setValues(new double[]{rx, ry, arr[2], arr[3], arr[4], ptDst[0], ptDst[1]});
                 }
                 case "C":
                 default:
@@ -1262,7 +1297,12 @@ public class DrawContext implements Closeable {
         if (color instanceof String) {
             int[] rgb = NamedColor.rgb((String) color);
             if (rgb != null) {
-                return CT_Color.rgb(rgb[0], rgb[1], rgb[2]);
+                CT_Color c = CT_Color.rgb(rgb[0], rgb[1], rgb[2]);
+                if (rgb.length > 3) {
+                    // 颜色参数包含透明度，设置透明度
+                    c.setAlpha(rgb[3]);
+                }
+                return c;
             }
             return null;
         } else if (color instanceof ColorClusterType) {
@@ -1278,6 +1318,26 @@ public class DrawContext implements Closeable {
             return res;
         }
         return null;
+    }
+
+    /**
+     * 像素转换为毫米
+     *
+     * @param pixel 像素
+     * @return 毫米
+     */
+    public double mm(int pixel) {
+        return (double) pixel / PPM;
+    }
+
+    /**
+     * 毫米转换为像素
+     *
+     * @param mm 毫米
+     * @return 像素
+     */
+    public int pixel(double mm) {
+        return (int) (mm * PPM);
     }
 
     /**

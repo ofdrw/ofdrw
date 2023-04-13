@@ -13,7 +13,7 @@ import org.ofdrw.core.pageDescription.color.color.Segment;
  * @since 2023-4-11 22:53:00
  */
 public class CanvasGradient {
-    final CT_AxialShd axialShd;
+    public final CT_AxialShd axialShd;
 
     /**
      * 创建一个线性渐变
@@ -40,7 +40,13 @@ public class CanvasGradient {
         if (rgb == null) {
             return;
         }
-        axialShd.addSegment(new Segment(offset, CT_Color.rgb(rgb[0], rgb[1], rgb[2])));
+
+        CT_Color c = CT_Color.rgb(rgb[0], rgb[1], rgb[2]);
+        if (rgb.length > 3) {
+            // 颜色参数包含透明度
+            c.setAlpha(rgb[3]);
+        }
+        axialShd.addSegment(new Segment(offset, c));
     }
 
 }

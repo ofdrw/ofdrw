@@ -497,6 +497,53 @@ class DrawContextTest {
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
 
+
+    @Test
+    void drawImagePart() throws IOException {
+        Path outP = Paths.get("target/drawImage_part.ofd");
+        Path imgPath = Paths.get("src/test/resources/rhino.jpg");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            PageLayout pageLayout = ofdDoc.getPageLayout();
+            VirtualPage vPage = new VirtualPage(pageLayout);
+            Canvas canvas = new Canvas(pageLayout.getWidth(), pageLayout.getHeight());
+            canvas.setPosition(Position.Absolute).setXY(0d, 0d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.PPM = 1d;
+                ctx.drawImage(imgPath,
+                        ctx.mm(33), ctx.mm(71), ctx.mm(104), ctx.mm(124),
+                        ctx.mm(21), ctx.mm(20), ctx.mm(87), ctx.mm(104)
+                );
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath());
+    }
+
+    @Test
+    void drawImageLeftTop() throws IOException {
+        Path outP = Paths.get("target/drawImage_left_top.ofd");
+        Path imgPath = Paths.get("src/test/resources/rhino.jpg");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            PageLayout pageLayout = ofdDoc.getPageLayout();
+            VirtualPage vPage = new VirtualPage(pageLayout);
+            Canvas canvas = new Canvas(pageLayout.getWidth(), pageLayout.getHeight());
+            canvas.setPosition(Position.Absolute).setXY(0d, 0d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.PPM = 3d;
+                ctx.drawImage(imgPath, 0, 0);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath());
+    }
+
+
     @Test
     void drawImage2() throws IOException {
         Path outP = Paths.get("target/Canvas-drawImage2.ofd");
