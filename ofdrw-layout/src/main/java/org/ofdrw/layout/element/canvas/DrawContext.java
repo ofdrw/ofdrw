@@ -392,7 +392,6 @@ public class DrawContext implements Closeable {
         PathObject p = new PathObject(new ST_ID(maxUnitID.incrementAndGet()));
         p.setAbbreviatedData(abData);
         p.setFill(true);
-        p.setLineWidth(0d);
         applyDrawParam(p);
         container.add(p);
         return this;
@@ -1149,6 +1148,34 @@ public class DrawContext implements Closeable {
         return new CanvasGradient(x0, y0, x1, y1);
     }
 
+    /**
+     * 创建一个重复底纹
+     *
+     * @param img        底纹图片路径
+     * @param repetition 重复方式，支持 repeat、column、row、row-column
+     * @return 底纹对象
+     * @throws IOException 图片读取异常
+     */
+    public CanvasPattern createPattern(Path img, String repetition) throws IOException {
+        img = img.toAbsolutePath();
+        if (Files.notExists(img)) {
+            throw new IllegalArgumentException("底纹图片不存在：" + img);
+        }
+        ST_ID id = resManager.addImage(img);
+
+        // 加载原图片
+        BufferedImage gImg = ImageIO.read(img.toFile());
+        double w = mm(gImg.getWidth());
+        double h = mm(gImg.getHeight());
+        // 在公共资源中加入图片
+        ImageObject imgObj = new ImageObject(maxUnitID.incrementAndGet());
+        imgObj.setResourceID(id.ref());
+        imgObj.setBoundary(new ST_Box(0, 0, w, h));
+        imgObj.setCTM(new ST_Array(w, 0, 0, h, 0, 0));
+
+        return new CanvasPattern(img, repetition, imgObj);
+    }
+
 
     /**
      * 应用当前上下文中的绘制参数到绘制对象
@@ -1315,6 +1342,11 @@ public class DrawContext implements Closeable {
             // 渐变颜色
             CT_Color res = new CT_Color();
             res.setColor(((CanvasGradient) color).axialShd);
+            return res;
+        } else if (color instanceof CanvasPattern) {
+            // 图案颜色
+            CT_Color res = new CT_Color();
+            res.setColor(((CanvasPattern) color).pattern);
             return res;
         }
         return null;

@@ -110,6 +110,26 @@ public class ST_Array extends STBase implements Cloneable {
         }
     }
 
+    /**
+     * 创建变换矩阵
+     *
+     * @param a X轴缩放倍数
+     * @param b Y轴斜切系数
+     * @param c X轴斜切系数
+     * @param d Y轴缩放倍数
+     * @param e X偏移量（距原点）
+     * @param f Y偏移量（距原点）
+     */
+    public ST_Array(double a, double b, double c, double d, double e, double f) {
+        array = new ArrayList<>(6);
+        array.add(Double.toString(a));
+        array.add(Double.toString(b));
+        array.add(Double.toString(c));
+        array.add(Double.toString(d));
+        array.add(Double.toString(e));
+        array.add(Double.toString(f));
+    }
+
 
     public ST_Array add(String item) {
         this.array.add(item);
@@ -205,9 +225,9 @@ public class ST_Array extends STBase implements Cloneable {
 
     public void printMtx() {
         double[][] m = toMtx();
-        for (int i = 0; i < m.length; i++) {
-            for (int j = 0; j < m[i].length; j++) {
-                System.out.print(fmt(m[i][j]) + "\t");
+        for (double[] doubles : m) {
+            for (double aDouble : doubles) {
+                System.out.print(fmt(aDouble) + "\t");
             }
             System.out.println();
         }

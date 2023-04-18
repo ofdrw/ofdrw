@@ -37,7 +37,7 @@ public class CT_Pattern extends OFDElement implements ColorClusterType {
         if (width == null) {
             throw new IllegalArgumentException("底纹单元宽度不能为空");
         }
-        this.addAttribute("Width", width.toString());
+        this.addAttribute("Width", STBase.fmt(width));
         return this;
     }
 

@@ -14,13 +14,14 @@
 var c=document.getElementById("canvas");
 var ctx=c.getContext("2d");
 
-var my_gradient=ctx.createLinearGradient(0,0,170,0);
-my_gradient.addColorStop(0,"black");
-my_gradient.addColorStop(0.5,"red");
-my_gradient.addColorStop(1,"white");
-ctx.fillStyle=my_gradient;
-console.log(my_gradient);
-ctx.fillRect(20,20,150,100);
+const img = new Image();
+img.src = "https://www.runoob.com/images/lamp.jpg";
+
+img.onload = () => {
+  const pattern = ctx.createPattern(img, "no-repeat");
+  ctx.fillStyle = pattern;
+  ctx.fillRect(0, 0, 300, 300);
+};
 </script>
 </body>
 </html>
