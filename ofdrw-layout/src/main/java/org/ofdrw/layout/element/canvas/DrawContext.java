@@ -147,7 +147,7 @@ public class DrawContext implements Closeable {
         this.resManager = resManager;
         this.state = new CanvasState();
         this.stack = new LinkedList<>();
-        this.PPM = 15;
+        this.PPM = 3.78;
         // 初始化颜色默认为黑色
         this.fillStyle = "#000000";
         this.strokeStyle = "#000000";

@@ -48,6 +48,28 @@ class DrawContextTest {
     }
 
     @Test
+    public void testCreatePatternSize() throws IOException{
+        ElemCup.ENABLE_DEBUG_PRINT = true;
+        Path outP = Paths.get("target/CreatePatternSize.ofd");
+        Path img = Paths.get("src/test/resources/lamp.jpg");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            final PageLayout pageLayout = ofdDoc.getPageLayout();
+            VirtualPage vPage = new VirtualPage(pageLayout);
+            Canvas canvas = new Canvas(pageLayout.getWidth(), pageLayout.getHeight());
+            canvas.setPosition(Position.Absolute).setX(0D).setY(0D);
+            canvas.setDrawer(ctx -> {
+                CanvasPattern pattern = ctx.createPattern(img, "repeat");
+                pattern.setImageSize(10, 10);
+                ctx.fillStyle = pattern;
+                ctx.fillRect(0, 0, 30, 30);
+            });
+            vPage.add(canvas);
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+    }
+
+    @Test
     public void testCreatePatternStyle2() throws IOException{
         ElemCup.ENABLE_DEBUG_PRINT = true;
         Path outP = Paths.get("target/CreatePattern2.ofd");
