@@ -28,6 +28,11 @@ public class CanvasPattern {
     public final Path img;
 
     /**
+     * 图形对象
+     */
+    public final ImageObject imgObj;
+
+    /**
      * 创建一个Canvas底纹
      *
      * @param img        底纹图片路径
@@ -37,7 +42,7 @@ public class CanvasPattern {
     public CanvasPattern(Path img, String repetition, ImageObject imgObj) {
         this.pattern = new CT_Pattern();
         this.img = img.toAbsolutePath();
-
+        this.imgObj = imgObj;
         /*
          * "repeat" == "normal" 支持
          * "repeat-x" 不支持
@@ -102,6 +107,19 @@ public class CanvasPattern {
         */
         ST_Array ctm = new ST_Array(tx.getScaleX(), tx.getShearY(), tx.getShearX(), tx.getScaleY(), tx.getTranslateX(), tx.getTranslateY());
         pattern.setCTM(ctm);
+    }
+
+    /**
+     * 设置图片的尺寸（每个重复单元尺寸）
+     *
+     * @param w 宽度
+     * @param h 高度
+     */
+    public void setImageSize(double w, double h) {
+        pattern.setWidth(w);
+        pattern.setHeight(h);
+        imgObj.setBoundary(new ST_Box(0, 0, w, h));
+        imgObj.setCTM(new ST_Array(w, 0, 0, h, 0, 0));
     }
 
 }

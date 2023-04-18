@@ -1150,6 +1150,9 @@ public class DrawContext implements Closeable {
 
     /**
      * 创建一个重复底纹
+     * <p>
+     * 注意：默认情况下使用 {@link #mm(int)} 将图片像素转换为OFD的单位毫米。
+     * 若有自定义重复图片大小设置可以使用 {@link CanvasPattern#setImageSize(double, double)}
      *
      * @param img        底纹图片路径
      * @param repetition 重复方式，支持 repeat、column、row、row-column
