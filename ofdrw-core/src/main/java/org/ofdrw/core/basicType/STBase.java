@@ -32,6 +32,9 @@ public abstract class STBase implements Serializable {
      * 如果浮点数为整数，则省略小数
      * <p>
      * 浮点数含有小数，那么对保留3位有效小数
+     * <p>
+     * 可以通过 {@link #MAX_KEEP_DECIMAL} 修改最大保留小数位数，非特殊情况不建议修改。
+     * 若数值小于10^-8，那么则认为为0
      *
      * @param d 浮点数
      * @return 数字字符串
