@@ -2,6 +2,7 @@ package org.ofdrw.core.text.text;
 
 import org.dom4j.Element;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
+import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.graph.pathObj.FillColor;
@@ -109,7 +110,7 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
         if (size == null) {
             throw new IllegalArgumentException("字号（Size）不能为空");
         }
-        this.addAttribute("Size", size.toString());
+        this.addAttribute("Size", STBase.fmt(size));
         return this;
     }
 
@@ -211,7 +212,7 @@ public class CT_Text extends CT_GraphicUnit<CT_Text> implements ClipAble {
             this.removeAttr("HScale");
             return this;
         }
-        this.addAttribute("HScale", hScale.toString());
+        this.addAttribute("HScale", STBase.fmt(hScale));
         return this;
     }
 

@@ -4,6 +4,7 @@ import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
+import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_RefID;
 
@@ -55,7 +56,7 @@ public class CT_VectorG extends OFDElement {
         if (width == null) {
             throw new IllegalArgumentException("矢量图像的宽度（Width）不能为空");
         }
-        this.addAttribute("Width", width.toString());
+        this.addAttribute("Width", STBase.fmt(width));
         return this;
     }
 
@@ -88,7 +89,7 @@ public class CT_VectorG extends OFDElement {
         if (height == null) {
             throw new IllegalArgumentException("矢量图像的高度（Height）不能为空");
         }
-        this.addAttribute("Height", height.toString());
+        this.addAttribute("Height", STBase.fmt(height));
         return this;
     }
 

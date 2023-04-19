@@ -2,6 +2,7 @@ package org.ofdrw.core.pageDescription.color.color;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_Pos;
 
 import java.util.ArrayList;
@@ -82,7 +83,7 @@ public class CT_AxialShd extends OFDElement implements ColorClusterType {
             this.removeAttr("MapUnit");
             return this;
         }
-        this.addAttribute("MapUnit", mapUnit.toString());
+        this.addAttribute("MapUnit", STBase.fmt(mapUnit));
         return this;
     }
 

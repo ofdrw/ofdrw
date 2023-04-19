@@ -13,6 +13,10 @@ import java.util.function.Function;
  */
 public abstract class STBase implements Serializable {
 
+    /**
+     * 最大保留小数有效位数
+     */
+    public static int MAX_KEEP_DECIMAL = 3;
 
     /**
      * 使用简单类型创建一个指定名称的元素
@@ -47,14 +51,14 @@ public abstract class STBase implements Serializable {
                 if (c - '0' <= 0) {
                     continue;
                 }
-                if (i + 3 <= len) {
-                    return str.substring(0, i + 3);
+                if (i + MAX_KEEP_DECIMAL <= len) {
+                    return str.substring(0, i + MAX_KEEP_DECIMAL);
                 }
                 return str.substring(0, len);
             }
             return str;
-        }  else {
-            return String.format("%.3f", d);
+        } else {
+            return String.format("%." + MAX_KEEP_DECIMAL + "f", d);
         }
     }
 

@@ -2,6 +2,7 @@ package org.ofdrw.core.pageDescription.color.color;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicType.STBase;
 
 /**
  * 颜色段
@@ -23,6 +24,8 @@ public class Segment extends OFDElement {
     }
 
     /**
+     * 构造段颜色
+     *
      * @param color 段颜色
      */
     public Segment(CT_Color color) {
@@ -31,6 +34,8 @@ public class Segment extends OFDElement {
     }
 
     /**
+     * 构造段颜色
+     *
      * @param position 段坐标
      * @param color    段颜色
      */
@@ -64,7 +69,7 @@ public class Segment extends OFDElement {
             this.removeAttr("Position");
             return this;
         }
-        this.addAttribute("Position", position.toString());
+        this.addAttribute("Position", STBase.fmt(position));
         return this;
     }
 

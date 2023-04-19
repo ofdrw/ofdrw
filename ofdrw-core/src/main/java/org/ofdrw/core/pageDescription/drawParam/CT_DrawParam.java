@@ -206,7 +206,7 @@ public class CT_DrawParam extends OFDElement {
             this.removeAttr("DashOffset");
             return this;
         }
-        this.addAttribute("DashOffset", dashOffset.toString());
+        this.addAttribute("DashOffset", STBase.fmt(dashOffset));
         return this;
     }
 
@@ -283,7 +283,7 @@ public class CT_DrawParam extends OFDElement {
             this.removeAttr("MiterLimit");
             return this;
         }
-        this.addAttribute("MiterLimit", miterLimit.toString());
+        this.addAttribute("MiterLimit", STBase.fmt(miterLimit));
         return this;
     }
 

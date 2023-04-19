@@ -2,6 +2,7 @@ package org.ofdrw.core.image;
 
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 
@@ -38,7 +39,7 @@ public class Border extends OFDElement {
             this.removeAttr("LineWidth");
             return this;
         }
-        this.addAttribute("LineWidth", lineWidth.toString());
+        this.addAttribute("LineWidth", STBase.fmt(lineWidth));
         return this;
     }
 
@@ -74,7 +75,7 @@ public class Border extends OFDElement {
             this.removeAttr("HorizonalCornerRadius");
             return this;
         }
-        this.addAttribute("HorizonalCornerRadius", horizonalCornerRadius.toString());
+        this.addAttribute("HorizonalCornerRadius", STBase.fmt(horizonalCornerRadius));
         return this;
     }
 
@@ -108,7 +109,7 @@ public class Border extends OFDElement {
             this.removeAttr("VerticalCornerRadius");
             return this;
         }
-        this.addAttribute("VerticalCornerRadius", verticalCornerRadius.toString());
+        this.addAttribute("VerticalCornerRadius", STBase.fmt(verticalCornerRadius));
         return this;
     }
 
@@ -144,7 +145,7 @@ public class Border extends OFDElement {
             this.removeAttr("DashOffset");
             return this;
         }
-        this.addAttribute("DashOffset", dashOffset.toString());
+        this.addAttribute("DashOffset", STBase.fmt(dashOffset));
         return this;
     }
 
