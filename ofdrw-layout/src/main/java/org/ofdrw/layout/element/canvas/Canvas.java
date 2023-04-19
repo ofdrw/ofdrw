@@ -50,6 +50,17 @@ public class Canvas extends Div<Canvas> {
     }
 
     /**
+     * 在指定位置 创建Canvas对象
+     * @param x 画布左上角的x坐标
+     * @param y 画布左上角的y坐标
+     * @param w 画布的宽度
+     * @param h 画布的高度
+     */
+    public Canvas(double x, double y, double w, double h) {
+        super(x, y, w, h);
+    }
+
+    /**
      * 创建Canvas对象
      *
      * @param style 页面样式属性

@@ -104,6 +104,8 @@ public class DrawContext implements Closeable {
      * {@link CanvasPattern} 图案
      * <p>
      * {@link CanvasGradient} 渐变
+     * <p>
+     * {@link CanvasRadialGradient} 径向渐变
      */
     public Object fillStyle;
 
@@ -121,6 +123,8 @@ public class DrawContext implements Closeable {
      * {@link CanvasPattern} 图案
      * <p>
      * {@link CanvasGradient} 渐变
+     * <p>
+     * {@link CanvasRadialGradient} 径向渐变
      */
     public Object strokeStyle;
 
@@ -1179,6 +1183,21 @@ public class DrawContext implements Closeable {
         return new CanvasPattern(img, repetition, imgObj);
     }
 
+    /**
+     * 创建径向渐变颜色
+     *
+     * @param x0 渐变的开始圆的 x 坐标
+     * @param y0 渐变的开始圆的 y 坐标
+     * @param r0 开始圆的半径
+     * @param x1 渐变的结束圆的 x 坐标
+     * @param y1 渐变的结束圆的 y 坐标
+     * @param r1 结束圆的半径
+     * @return 径向渐变颜色
+     */
+    public CanvasRadialGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1) {
+        return new CanvasRadialGradient(x0, y0, r0, x1, y1, r1);
+    }
+
 
     /**
      * 应用当前上下文中的绘制参数到绘制对象
@@ -1350,6 +1369,11 @@ public class DrawContext implements Closeable {
             // 图案颜色
             CT_Color res = new CT_Color();
             res.setColor(((CanvasPattern) color).pattern);
+            return res;
+        } else if (color instanceof CanvasRadialGradient) {
+            // 径向渐变颜色
+            CT_Color res = new CT_Color();
+            res.setColor(((CanvasRadialGradient) color).radialShd);
             return res;
         }
         return null;

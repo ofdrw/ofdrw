@@ -27,7 +27,28 @@ import java.nio.file.Paths;
 class DrawContextTest {
 
     @Test
-    public void testCreatePattern() throws IOException{
+    public void testCreateRadialGradient() throws IOException {
+        ElemCup.ENABLE_DEBUG_PRINT = true;
+        Path outP = Paths.get("target/CreateRadialGradient.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(1000d, 1000d);
+            Canvas canvas = new Canvas(350, 50, 200, 150);
+            canvas.setDrawer(ctx -> {
+                CanvasRadialGradient gradient = ctx.createRadialGradient(40, 70, 10, 140, 70, 50);
+                gradient.addColorStop(0, "rgb(255,255,0)");
+                gradient.addColorStop(1, "rgb(0,0,255)");
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 200, 150);
+            });
+            vPage.add(canvas);
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+    }
+
+
+    @Test
+    public void testCreatePattern() throws IOException {
         ElemCup.ENABLE_DEBUG_PRINT = true;
         Path outP = Paths.get("target/CreatePattern.ofd");
         Path img = Paths.get("src/test/resources/lamp.jpg");
@@ -48,7 +69,7 @@ class DrawContextTest {
     }
 
     @Test
-    public void testCreatePatternSize() throws IOException{
+    public void testCreatePatternSize() throws IOException {
         ElemCup.ENABLE_DEBUG_PRINT = true;
         Path outP = Paths.get("target/CreatePatternSize.ofd");
         Path img = Paths.get("src/test/resources/lamp.jpg");
@@ -70,7 +91,7 @@ class DrawContextTest {
     }
 
     @Test
-    public void testCreatePatternStyle2() throws IOException{
+    public void testCreatePatternStyle2() throws IOException {
         ElemCup.ENABLE_DEBUG_PRINT = true;
         Path outP = Paths.get("target/CreatePattern2.ofd");
         Path img = Paths.get("src/test/resources/lamp.jpg");
@@ -91,7 +112,7 @@ class DrawContextTest {
     }
 
     @Test
-    public void testCreatePatternCTM() throws IOException{
+    public void testCreatePatternCTM() throws IOException {
         ElemCup.ENABLE_DEBUG_PRINT = true;
         Path outP = Paths.get("target/CreatePatternCTM.ofd");
         Path img = Paths.get("src/test/resources/lamp.jpg");
@@ -104,7 +125,7 @@ class DrawContextTest {
                 AffineTransform matrix = new AffineTransform();
                 CanvasPattern pattern = ctx.createPattern(img, "repeat");
                 matrix.rotate(-45);
-                matrix.scale(5d,5d);
+                matrix.scale(5d, 5d);
                 pattern.setTransform(matrix);
                 ctx.fillStyle = pattern;
                 ctx.fillRect(0, 0, 30, 30);
