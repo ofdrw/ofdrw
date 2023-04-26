@@ -18,6 +18,7 @@ import org.ofdrw.core.pageDescription.color.color.ColorClusterType;
 import org.ofdrw.core.pageDescription.drawParam.LineCapType;
 import org.ofdrw.core.pageDescription.drawParam.LineJoinType;
 import org.ofdrw.core.text.TextCode;
+import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.core.text.text.CT_Text;
 import org.ofdrw.core.text.text.Direction;
 import org.ofdrw.core.text.text.Weight;
@@ -127,6 +128,30 @@ public class DrawContext implements Closeable {
      * {@link CanvasRadialGradient} 径向渐变
      */
     public Object strokeStyle;
+
+    /**
+     * 字体描述 格式与CSS3格式一致
+     * <p>
+     * [font-style] [font-weight] font-size font-family
+     * <p>
+     * 它必需包含 font-size font-family，[]内容为可选
+     * <p>
+     * 详见 {@code https://developer.mozilla.org/en-US/docs/Web/CSS/font}
+     * <p>
+     * <p>
+     * font-style: normal | italic | oblique
+     * <p>
+     * font-weight: normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
+     * <p>
+     * font-size: 12px | 3.17mm
+     * <p>
+     * font-family: 宋体 | SimSun | Times New Roman | Times | serif | sans-serif | monospace | cursive | fantasy
+     * <p>
+     * font-family 为必选项，其他为可选项
+     * <p>
+     * font-size 和 line-height 可以使用 px 或 mm 作为单位，若不指定单位则默认为 mm
+     */
+    public String font;
 
     /**
      * 每毫米像素数量 pixel per millimeter
@@ -695,9 +720,6 @@ public class DrawContext implements Closeable {
             return this;
         }
 
-        int readDirection = state.font.getReadDirection();
-        int charDirection = state.font.getCharDirection();
-
         Font font = state.font.getFont();
         Double fontSize = state.font.getFontSize();
 
@@ -716,6 +738,9 @@ public class DrawContext implements Closeable {
         if (state.font.isItalic()) {
             txtObj.setItalic(true);
         }
+
+        int readDirection = state.font.getReadDirection();
+        int charDirection = state.font.getCharDirection();
 
         // 设置阅读方向
         if (readDirection != 0) {
@@ -750,7 +775,6 @@ public class DrawContext implements Closeable {
             tcSTTxt.setDeltaX(measureBody.offset);
         }
         txtObj.addTextCode(tcSTTxt);
-
 
         // 应用绘制参数
         applyDrawParam(txtObj);
@@ -1377,6 +1401,122 @@ public class DrawContext implements Closeable {
             return res;
         }
         return null;
+    }
+
+    /**
+     * 解析字体配置字符串为字体配置对象
+     * 若存在字体配置则返回解析后的字体配置对象，否则返回null
+     *
+     * @return 字体配置对象 或 null
+     */
+    private void detectFontSetting() {
+        if (this.font == null) {
+            return;
+        }
+
+        // 解析 font 字符串，格式为：[font-style] [font-weight] font-size font-family [] 表示可选
+        // font-style: normal | italic
+        // font-weight: normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
+        // font-size: 12px | 3.17mm
+        // font-family: 宋体 | SimSun | Times New Roman | Times | serif | sans-serif | monospace | cursive | fantasy
+        // font-family 为必选项，其他为可选项
+        // font-size 可以使用 px 或 mm 作为单位，若不指定单位则默认为 mm
+        this.font = this.font.trim();
+        String[] arr = this.font.split(" ");
+        if (arr.length < 2) {
+            return;
+        }
+        int off = arr.length - 1;
+        String fontFamily = arr[off].trim();
+        if (fontFamily.isEmpty()) {
+            return;
+        }
+
+        CT_Font ctFont = resManager.getFont(fontFamily);
+        if (ctFont == null) {
+            throw new IllegalArgumentException("字体不存在 " + fontFamily + "，请先加载字体");
+        }
+
+        off--;
+        // 解析font-size 单位可能是 px 或 mm 或 空
+        String fontSizeStr = arr[off].trim();
+        double fontSize = 3.17;
+        double fontWeight = 400;
+        if (fontSizeStr.endsWith("px")) {
+            fontSizeStr = fontSizeStr.substring(0, fontSizeStr.length() - 2).trim();
+            fontSize = Double.parseDouble(fontSizeStr) / PPM;
+        } else if (fontSizeStr.endsWith("mm")) {
+            fontSizeStr = fontSizeStr.substring(0, fontSizeStr.length() - 2).trim();
+            fontSize = Double.parseDouble(fontSizeStr);
+        } else {
+            fontSize = Double.parseDouble(fontSizeStr);
+        }
+        off--;
+        if (off < 0) {
+            return;
+        }
+
+        if (off >= 0) {
+            // 解析font-weight
+            // normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
+            switch (arr[off].trim().toLowerCase()) {
+                case "lighter":
+                case "100":
+                    fontWeight = 100;
+                    off--;
+                    break;
+                case "200":
+                    fontWeight = 200;
+                    off--;
+                    break;
+                case "300":
+                    fontWeight = 300;
+                    off--;
+                    break;
+                case "normal":
+                case "400":
+                    fontWeight = 400;
+                    off--;
+                    break;
+                case "500":
+                    fontWeight = 500;
+                    off--;
+                    break;
+                case "600":
+                    fontWeight = 600;
+                    off--;
+                    break;
+                case "bold":
+                case "700":
+                    fontWeight = 700;
+                    off--;
+                    break;
+                case "800":
+                    fontWeight = 800;
+                    off--;
+                    break;
+                case "bolder":
+                case "900":
+                    fontWeight = 900;
+                    off--;
+                    break;
+                default:
+                    // 非字体宽度配置，忽略
+            }
+        }
+        if (off < 0) {
+            return;
+        }
+
+        // 解析 font-style: normal | italic
+        switch (arr[off].trim()) {
+            case "normal":
+                break;
+            case "italic":
+                break;
+            default:
+                // 非字体样式配置，忽略
+        }
     }
 
     /**
