@@ -435,4 +435,48 @@ public class ResManager {
         }
         return objId;
     }
+
+    /**
+     * 通过字族名获取字体对象，如果无法找到则返还null
+     *
+     * @param name 字体名称
+     * @return 字体对象 或 null
+     */
+    public CT_Font getFont(String name) {
+        if ("".equals(name)) {
+            return null;
+        }
+        name = name.toLowerCase();
+
+        // 尝试从公共资源中获取 字体清单
+        Res resMenu = pubRes();
+        List<Fonts> fontsList = resMenu.getFonts();
+        for (Fonts fonts : fontsList) {
+            List<CT_Font> arr = fonts.getFonts();
+            for (CT_Font ctFont : arr) {
+                // 忽略大小写的比较
+                String fontName = ctFont.getFontName().toLowerCase();
+                String familyName = ctFont.getFamilyName().toLowerCase();
+                if (fontName.equals(name) || familyName.equals(name)) {
+                    return ctFont;
+                }
+            }
+        }
+
+        // 尝试从文档资源中获取 字体清单
+        resMenu = docRes();
+        fontsList = resMenu.getFonts();
+        for (Fonts fonts : fontsList) {
+            List<CT_Font> arr = fonts.getFonts();
+            for (CT_Font ctFont : arr) {
+                // 忽略大小写的比较
+                String fontName = ctFont.getFontName().toLowerCase();
+                String familyName = ctFont.getFamilyName().toLowerCase();
+                if (fontName.equals(name) || familyName.equals(name)) {
+                    return ctFont;
+                }
+            }
+        }
+        return null;
+    }
 }

@@ -1,5 +1,7 @@
 package org.ofdrw.font;
 
+import java.awt.*;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -29,6 +31,10 @@ public class Font {
      * 可打印字符宽度映射
      */
     private double[] printableAsciiWidthMap = null;
+    /**
+     * 缓存的AWT字体
+     */
+    private java.awt.Font fontObj;
 
     private Font() {
     }
@@ -46,8 +52,7 @@ public class Font {
         if (fontFile == null || Files.notExists(fontFile)) {
             throw new IllegalArgumentException("字体文件(fontFile)不存在");
         }
-
-        this.fontFile = fontFile;
+        this.setFontFile(fontFile);
     }
 
     public Font(String name, String familyName) {
@@ -60,7 +65,7 @@ public class Font {
         if (fontFile == null || Files.notExists(fontFile)) {
             throw new IllegalArgumentException("字体文件(fontFile)不存在");
         }
-        this.fontFile = fontFile;
+        this.setFontFile(fontFile);
 
     }
 
@@ -168,8 +173,28 @@ public class Font {
         return fontFile.getFileName().toString();
     }
 
+    /**
+     * 设置字体文件
+     *
+     * @param fontFile 字体文件
+     * @return this
+     */
     public Font setFontFile(Path fontFile) {
         this.fontFile = fontFile;
+        try {
+            this.fontObj = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, fontFile.toFile());
+        } catch (FontFormatException | IOException e) {
+            throw new IllegalArgumentException("字体文件(fontFile)格式错误");
+        }
         return this;
+    }
+
+    /**
+     * 获取AWT字体对象，该对象可能为空（当前没有提供字体路径时为空）
+     *
+     * @return 字体对象 或  null
+     */
+    public java.awt.Font getFontObj(){
+        return this.fontObj;
     }
 }

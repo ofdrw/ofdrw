@@ -21,6 +21,7 @@ public final class EnvFont {
      */
     private static Map<String, java.awt.Font> fMap;
 
+
     /**
      * 字体渲染上线文
      */
@@ -132,6 +133,24 @@ public final class EnvFont {
         }
         font = font.deriveFont((float) size);
         return font.getStringBounds(str, frCtx);
+    }
+
+
+    /**
+     * 获取默认字体
+     *
+     * @return 默认字体
+     */
+    public static Font getDefaultFont() {
+        return defaultFont;
+    }
+
+    /**
+     * 获取默认字体绘制上下文
+     * @return 上下文
+     */
+    public static FontRenderContext FRCtx() {
+        return frCtx;
     }
 
 }

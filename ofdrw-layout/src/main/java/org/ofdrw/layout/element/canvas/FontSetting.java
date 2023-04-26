@@ -64,6 +64,13 @@ public class FontSetting implements Cloneable, TextFontInfo {
     private TextAlign textAlign = TextAlign.start;
 
     /**
+     * Java字体对象缓存，用于减少字体加载次数
+     * <p>
+     * 缓存对象不clone
+     */
+    private java.awt.Font awtFont;
+
+    /**
      * 简化构造提供默认的字体配置
      * <p>
      * 字体类型为宋体
@@ -89,6 +96,7 @@ public class FontSetting implements Cloneable, TextFontInfo {
     public FontSetting(double fontSize, Font fontObj) {
         this.fontObj = fontObj;
         this.fontSize = fontSize;
+        this.awtFont = null;
     }
 
     private FontSetting() {
@@ -135,6 +143,7 @@ public class FontSetting implements Cloneable, TextFontInfo {
      */
     public FontSetting setFont(Font fontObj) {
         this.fontObj = fontObj;
+        this.awtFont = null;
         return this;
     }
 
@@ -157,6 +166,7 @@ public class FontSetting implements Cloneable, TextFontInfo {
      */
     public FontSetting setFontSize(double fontSize) {
         this.fontSize = fontSize;
+        this.awtFont = null;
         return this;
     }
 
@@ -308,12 +318,25 @@ public class FontSetting implements Cloneable, TextFontInfo {
      * @return 宽度单位毫米
      */
     public Double charWidth(char c) {
-        if (fontObj.hasWidthMath()){
+        if (fontObj.hasWidthMath()) {
             // 如果存在预设的字符映射表那么查表计算
             return fontObj.getCharWidthScale(c) * fontSize;
         }
-        // 从环境变量中加载字体并计算字体边界大小
-        return EnvFont.strBounds(fontObj.getName(), fontObj.getFamilyName(), String.valueOf(c), fontSize).getWidth();
+        // 如果字体缓存为空，则加载字体
+        if (awtFont == null) {
+            // 尝试从字体中获取AWT字体对象
+            awtFont = fontObj.getFontObj();
+            if (awtFont == null) {
+                // 尝试从环境变量中加载字体
+                awtFont = EnvFont.getFont(fontObj.getName(), fontObj.getFamilyName());
+            }
+            if (awtFont == null) {
+                awtFont = EnvFont.getDefaultFont();
+            }
+            awtFont = awtFont.deriveFont((float) fontSize);
+        }
+
+        return awtFont.getStringBounds(String.valueOf(c), EnvFont.FRCtx()).getWidth();
     }
 
 
