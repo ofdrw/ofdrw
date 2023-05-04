@@ -112,23 +112,23 @@ public class Img extends Div<Img> {
      * @author zwd
      */
     public static BufferedImage readImage(File imageFile) throws IOException {
-        final ImageInputStream input = ImageIO.createImageInputStream(imageFile);
-        Iterator<?> readers = ImageIO.getImageReaders(input);
-        if (readers == null || !readers.hasNext()) {
-            return null;
+        try (ImageInputStream input = ImageIO.createImageInputStream(imageFile);) {
+            Iterator<?> readers = ImageIO.getImageReaders(input);
+            if (readers == null || !readers.hasNext()) {
+                return null;
+            }
+            ImageReader reader = (ImageReader) readers.next();
+            reader.setInput(input);
+            BufferedImage image;
+            try {
+                // 尝试读取图片 (包括颜色的转换).RGB
+                image = reader.read(0);
+            } catch (IIOException e) {
+                // 尝试将CMYK转换为RGB
+                image = convertCMYK2RGB(reader);
+            }
+            return image;
         }
-        ImageReader reader = (ImageReader) readers.next();
-        reader.setInput(input);
-        BufferedImage image;
-        try {
-            // 尝试读取图片 (包括颜色的转换).RGB
-            image = reader.read(0);
-        } catch (IIOException e) {
-//            System.err.println(">> 无法解析图片格式尝试CMYK格式转换");
-            // 尝试将CMYK转换为RGB
-            image = convertCMYK2RGB(reader);
-        }
-        return image;
     }
 
     /**
