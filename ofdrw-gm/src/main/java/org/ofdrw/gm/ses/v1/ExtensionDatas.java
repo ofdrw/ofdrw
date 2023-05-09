@@ -55,6 +55,8 @@ public class ExtensionDatas extends ASN1Object
             return (ExtensionDatas) obj;
         } else if (obj instanceof DEROctetString) {
             return new ExtensionDatas(ASN1Sequence.getInstance(((DEROctetString) obj).getOctets()));
+        }  else if (obj instanceof ASN1TaggedObject) {
+            return new ExtensionDatas(ASN1Sequence.getInstance(ASN1TaggedObject.getInstance(obj), true));
         } else if (obj != null) {
             return new ExtensionDatas(ASN1Sequence.getInstance(obj));
         }
