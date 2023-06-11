@@ -36,12 +36,8 @@ public class WatermarkTest {
             Double height = ofdDoc.getPageLayout().getHeight();
 
             Annotation annotation = new Annotation(new ST_Box(0d, 0d, width, height), AnnotType.Watermark, ctx -> {
-                FontSetting setting = new FontSetting(8, FontName.SimSun.font());
-
-                ctx.setFillColor(170, 160, 165)
-                        .setFont(setting)
-                        .setGlobalAlpha(0.4);
-
+                ctx.font = "8mm 宋体";
+                ctx.fillStyle = "rgba(170, 160, 165, 0.4)";
                 for (int i = 0; i <= 8; i++) {
                     for (int j = 0; j <= 8; j++) {
                         ctx.save();
