@@ -151,6 +151,33 @@ public class OFDMerger implements Closeable {
         return this;
     }
 
+    /**
+     * 向合并文件中添加页面
+     * <p>
+     * 通过该方法可以详细设置页面迁移时的属性参数
+     *
+     * @param pages 页面对象
+     * @return this
+     */
+    public OFDMerger add(PageEntry... pages) {
+        if (pages == null) {
+            return this;
+        }
+        for (PageEntry page : pages) {
+            if (page.docCtx == null || page.docCtx.filepath == null) {
+                continue;
+            }
+            String key = page.docCtx.filepath.toAbsolutePath().getFileName().toString();
+            // 缓存中没有该文件映射
+            if (!docCtxMap.containsKey(key)) {
+                docCtxMap.put(key, page.docCtx);
+            }
+
+            pageArr.add(page);
+        }
+
+        return this;
+    }
 
     /**
      * 执行合并
@@ -189,12 +216,14 @@ public class OFDMerger implements Closeable {
                 // 创建页面容器
                 final PageDir pageDir = newPage(pages, pagesDir);
 
-                // 页面模板的迁移的替换
-                final List<Template> pageTplArr = page.getTemplates();
-                for (Template tplObj : pageTplArr) {
-                    // 迁移页面
-                    ST_RefID tplNewId = pageTplMigrate(pageEntry.docCtx, tplObj);
-                    tplObj.setTemplateID(tplNewId);
+                if (pageEntry.copyTemplate) {
+                    // 页面模板的迁移的替换
+                    final List<Template> pageTplArr = page.getTemplates();
+                    for (Template tplObj : pageTplArr) {
+                        // 迁移页面
+                        ST_RefID tplNewId = pageTplMigrate(pageEntry.docCtx, tplObj);
+                        tplObj.setTemplateID(tplNewId);
+                    }
                 }
 
                 // 通过XML 选中与资源有关对象，并实现资源迁移和引用替换

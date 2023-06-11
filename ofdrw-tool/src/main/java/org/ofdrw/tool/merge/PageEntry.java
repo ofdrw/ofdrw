@@ -19,6 +19,13 @@ public class PageEntry {
      */
     public Integer pageIndex;
 
+    /**
+     * 是否复制模板
+     * <p>
+     * 默认：true 复制模板
+     */
+    public boolean copyTemplate = true;
+
 
     public PageEntry(Integer pageIndex, DocContext docCtx) {
         this.docCtx = docCtx;
