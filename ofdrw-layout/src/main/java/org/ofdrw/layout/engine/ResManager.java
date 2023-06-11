@@ -17,6 +17,7 @@ import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.font.Font;
 import org.ofdrw.pkg.container.DocDir;
+import org.ofdrw.pkg.container.OFDDir;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -35,10 +36,18 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ResManager {
 
+
     /**
      * 自增的ID生成器
      */
     private AtomicInteger maxUnitID;
+
+    /**
+     * OFD文档对象
+     */
+    private OFDDir root;
+
+
     /**
      * 文档容器
      */
@@ -168,6 +177,19 @@ public class ResManager {
      * @throws IOException 文件复制异常
      */
     public ST_ID addFont(Font font) throws IOException {
+        return addFontRet(font).getID();
+    }
+
+    /**
+     * 增加字体资源 并获取 添加的字体对象
+     * <p>
+     * 如果字体已经被加入，那么不会重复加入
+     *
+     * @param font 字体描述对象
+     * @return 字体的对象
+     * @throws IOException 文件复制异常
+     */
+    public CT_Font addFontRet(Font font) throws IOException {
         // 获取字体全名
         String familyName = font.getFamilyName();
         // 新建一个OFD字体对象
@@ -198,7 +220,8 @@ public class ResManager {
                     break;
             }
         }
-        return addRawWithCache(ctFont);
+        addRawWithCache(ctFont);
+        return ctFont;
     }
 
     /**
@@ -442,12 +465,12 @@ public class ResManager {
      * @param name 字体名称
      * @return 字体对象 或 null
      */
-    public CT_Font getFont(String name) {
-        if ("".equals(name)) {
+    public ExistCTFont getFont(String name) {
+        if ("".equals(name) || name == null) {
             return null;
         }
         name = name.toLowerCase();
-
+        CT_Font res = null;
         // 尝试从公共资源中获取 字体清单
         Res resMenu = pubRes();
         List<Fonts> fontsList = resMenu.getFonts();
@@ -455,28 +478,100 @@ public class ResManager {
             List<CT_Font> arr = fonts.getFonts();
             for (CT_Font ctFont : arr) {
                 // 忽略大小写的比较
-                String fontName = ctFont.getFontName().toLowerCase();
-                String familyName = ctFont.getFamilyName().toLowerCase();
-                if (fontName.equals(name) || familyName.equals(name)) {
-                    return ctFont;
+                String fontName = ctFont.getFontName();
+                if (fontName != null) {
+                    fontName = fontName.toLowerCase();
+                }
+
+                String familyName = ctFont.getFamilyName();
+                if (familyName != null) {
+                    familyName = familyName.toLowerCase();
+                }
+
+                if (name.equals(fontName) || name.equals(familyName)) {
+                    // 找到最后一个匹配的字体
+                    res = ctFont;
+                }
+            }
+        }
+        if (res == null) {
+            // 尝试从文档资源中获取 字体清单
+            resMenu = docRes();
+            fontsList = resMenu.getFonts();
+            for (Fonts fonts : fontsList) {
+                List<CT_Font> arr = fonts.getFonts();
+                for (CT_Font ctFont : arr) {
+                    // 忽略大小写的比较
+                    String fontName = ctFont.getFontName();
+                    if (fontName != null) {
+                        fontName = fontName.toLowerCase();
+                    }
+
+                    String familyName = ctFont.getFamilyName();
+                    if (familyName != null) {
+                        familyName = familyName.toLowerCase();
+                    }
+                    if (name.equals(fontName) || name.equals(familyName)) {
+                        res = ctFont;
+                    }
                 }
             }
         }
 
-        // 尝试从文档资源中获取 字体清单
-        resMenu = docRes();
-        fontsList = resMenu.getFonts();
-        for (Fonts fonts : fontsList) {
-            List<CT_Font> arr = fonts.getFonts();
-            for (CT_Font ctFont : arr) {
-                // 忽略大小写的比较
-                String fontName = ctFont.getFontName().toLowerCase();
-                String familyName = ctFont.getFamilyName().toLowerCase();
-                if (fontName.equals(name) || familyName.equals(name)) {
-                    return ctFont;
-                }
+        if (res == null) {
+            // 无法找到字体
+            return null;
+        }
+
+        // 获取字体文件的绝对路径
+        ST_Loc loc = res.getFontFile();
+        Path p = null;
+        if (loc != null && root != null) {
+            ST_Loc abs = abs(resMenu, loc);
+            try {
+                p = root.getFile(abs.getFileName());
+            } catch (FileNotFoundException e) {
+                // ignore
             }
         }
-        return null;
+
+        return new ExistCTFont(res, p);
+    }
+
+    /**
+     * 设置文档的根节点
+     *
+     * @param root 根节点
+     */
+    public void setRoot(OFDDir root) {
+        this.root = root;
+    }
+
+    public OFDDir getRoot() {
+        return root;
+    }
+
+    /**
+     * 资源完整路径
+     *
+     * @param res    资源清单
+     * @param target 目标路径
+     * @return 相对于文件的绝对路径
+     */
+    private ST_Loc abs(Res res, ST_Loc target) {
+        if (target.isRootPath()) {
+            // 绝对路径
+            return target;
+        }
+        ST_Loc absLoc = null;
+        ST_Loc base = res.getBaseLoc();
+        if (base != null && base.isRootPath()) {
+            // 资源文件的通用存储路径 为根路径时直接在此基础上拼接
+            absLoc = base;
+        } else {
+            // 资源文件的通用存储路径 为相对路径时，拼接当前文档路径
+            absLoc = docDir.getAbsLoc().cat(base);
+        }
+        return absLoc.cat(target);
     }
 }

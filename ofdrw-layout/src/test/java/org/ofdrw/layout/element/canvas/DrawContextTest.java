@@ -26,6 +26,100 @@ import java.nio.file.Paths;
  */
 class DrawContextTest {
 
+    /**
+     * 字体样式设置
+     */
+    @Test
+    void testExternalFont() throws IOException {
+        Path outP = Paths.get("target/Canvas-ExternalFont.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                // 添加外部字体
+                ctx.addFont("仿宋_裁剪", Paths.get("src/test/resources/仿宋_GB2312_subset.ttf"));
+
+                ctx.font = "italic 400 5mm 仿宋_裁剪";
+                ctx.fillStyle = "#0000FF";
+                String text = "你好 Hello World!";
+                double width = ctx.measureText(text).width;
+                System.out.println(">> 文字宽度: " + width + "mm");
+                ctx.fillText(text, 10, 50);
+                ctx.fillText(text, 10 + width, 50);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+
+    /**
+     * 字体样式设置 完整参数
+     */
+    @Test
+    void testFontStyle1() throws IOException {
+        Path outP = Paths.get("target/Canvas-fontstyle-1.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                // 斜体 400粗 5mm字号 宋体
+                ctx.font = "italic 400 5mm 宋体";
+                ctx.fillStyle = "#0000FF";
+                String text = "你好 Hello World!";
+                double width = ctx.measureText(text).width;
+                System.out.println(">> 文字宽度: " + width + "mm");
+                ctx.fillText(text, 10, 50);
+                ctx.fillText(text, 10 + width, 50);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+    /**
+     * 字体样式设置 必要参数
+     */
+    @Test
+    void testFontStyle2() throws IOException {
+        Path outP = Paths.get("target/Canvas-fontstyle-2.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                ctx.font = "5mm 黑体";
+                ctx.fillStyle = "#0000FF";
+                String text = "你好 Hello World!";
+                double width = ctx.measureText(text).width;
+                ctx.fillText(text, 10, 50);
+                ctx.fillText(text, 10 + width, 50);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
     @Test
     public void testCreateRadialGradient() throws IOException {
         ElemCup.ENABLE_DEBUG_PRINT = true;

@@ -58,6 +58,11 @@ public class CanvasState implements Cloneable {
      */
     Object strokeStyle;
 
+    /**
+     * 字体样式
+     */
+    String fontStyle;
+
     public CanvasState() {
         drawParam = new CT_DrawParam();
         font = new FontSetting(1d, FontName.SimSun.font());
@@ -109,6 +114,7 @@ public class CanvasState implements Cloneable {
         }
         that.fillStyle = this.fillStyle;
         that.strokeStyle = this.strokeStyle;
+        that.fontStyle = this.fontStyle;
         return that;
     }
 }

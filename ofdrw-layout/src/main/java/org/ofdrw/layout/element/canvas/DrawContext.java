@@ -23,6 +23,7 @@ import org.ofdrw.core.text.text.CT_Text;
 import org.ofdrw.core.text.text.Direction;
 import org.ofdrw.core.text.text.Weight;
 import org.ofdrw.font.Font;
+import org.ofdrw.layout.engine.ExistCTFont;
 import org.ofdrw.layout.engine.ResManager;
 
 import javax.imageio.ImageIO;
@@ -139,17 +140,22 @@ public class DrawContext implements Closeable {
      * 详见 {@code https://developer.mozilla.org/en-US/docs/Web/CSS/font}
      * <p>
      * <p>
-     * font-style: normal | italic | oblique
+     * font-style: normal | italic
      * <p>
      * font-weight: normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
      * <p>
-     * font-size: 12px | 3.17mm
+     * font-size: 12px | 3.17mm （默认单位为 mm）
      * <p>
      * font-family: 宋体 | SimSun | Times New Roman | Times | serif | sans-serif | monospace | cursive | fantasy
      * <p>
      * font-family 为必选项，其他为可选项
      * <p>
      * font-size 和 line-height 可以使用 px 或 mm 作为单位，若不指定单位则默认为 mm
+     * <p>
+     * <p>
+     * 锚点：
+     * - fillText
+     * - measureText
      */
     public String font;
 
@@ -687,6 +693,7 @@ public class DrawContext implements Closeable {
     public DrawContext save() {
         this.state.strokeStyle = this.strokeStyle;
         this.state.fillStyle = this.fillStyle;
+        this.state.fontStyle = this.font;
         stack.push(this.state.clone());
         return this;
     }
@@ -703,6 +710,7 @@ public class DrawContext implements Closeable {
         this.state = stack.pop();
         this.strokeStyle = this.state.strokeStyle;
         this.fillStyle = this.state.fillStyle;
+        this.font = this.state.fontStyle;
         return this;
     }
 
@@ -720,13 +728,21 @@ public class DrawContext implements Closeable {
             return this;
         }
 
-        Font font = state.font.getFont();
-        Double fontSize = state.font.getFontSize();
-
-        ST_ID id = resManager.addFont(font);
+        ST_ID fontID = null;
+        // 转换字体样式 为 字体设置
+        CT_Font existFont = fontStyleToSetting(this.font, this.state.font);
+        if (existFont != null) {
+            fontID = existFont.getID();
+        } else {
+            fontID = resManager.addFont(state.font.getFont());
+        }
 
         // 新建字体对象
-        TextObject txtObj = new CT_Text().setBoundary(this.boundary.clone()).setFont(id.ref()).setSize(fontSize).toObj(new ST_ID(maxUnitID.incrementAndGet()));
+        TextObject txtObj = new CT_Text()
+                .setBoundary(this.boundary.clone())
+                .setFont(fontID.ref())
+                .setSize(state.font.getFontSize())
+                .toObj(new ST_ID(maxUnitID.incrementAndGet()));
 
         // 设置填充
         txtObj.setFill(true);
@@ -844,6 +860,9 @@ public class DrawContext implements Closeable {
      * @return 测量文本信息
      */
     public TextMetrics measureText(String text) {
+        // 转换字体样式 为 字体设置
+        fontStyleToSetting(this.font, this.state.font);
+
         TextMetrics tm = new TextMetrics();
         tm.readDirection = state.font.getReadDirection();
         tm.fontSize = state.font.getFontSize();
@@ -982,6 +1001,8 @@ public class DrawContext implements Closeable {
      */
     public DrawContext setFont(FontSetting font) {
         this.state.font = font;
+        // 清空字体样式
+        this.font = "";
         return this;
     }
 
@@ -1405,118 +1426,144 @@ public class DrawContext implements Closeable {
 
     /**
      * 解析字体配置字符串为字体配置对象
-     * 若存在字体配置则返回解析后的字体配置对象，否则返回null
+     * <p>
+     * 解析 font 字符串，格式为：[font-style] [font-weight] font-size font-family [] 表示可选
+     * <p>
+     * font-style: normal | italic
+     * font-weight: normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
+     * font-size: 12px | 3.17mm
+     * font-family: 宋体 | SimSun | Times New Roman | Times | serif | sans-serif | monospace | cursive | fantasy
+     * font-family 为必选项，其他为可选项
+     * <p>
+     * font-size 可以使用 px 或 mm 作为单位，若不指定单位则默认为 mm
      *
-     * @return 字体配置对象 或 null
+     * @param fontSettingStr 字体配置字符串
+     * @param fs             字体配置对象
+     * @return 若文档已经存在字体，那么返回它的字体对象，若不存咋那么只设置 FontSetting 并返还null
      */
-    private void detectFontSetting() {
-        if (this.font == null) {
-            return;
+    private CT_Font fontStyleToSetting(String fontSettingStr, FontSetting fs) {
+        if (fontSettingStr == null || fontSettingStr.isEmpty() || fs == null) {
+            return null;
+        }
+        String[] arr = fontSettingStr.trim().split(" ");
+        if (arr.length < 2) {
+            return null;
         }
 
-        // 解析 font 字符串，格式为：[font-style] [font-weight] font-size font-family [] 表示可选
-        // font-style: normal | italic
-        // font-weight: normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
-        // font-size: 12px | 3.17mm
-        // font-family: 宋体 | SimSun | Times New Roman | Times | serif | sans-serif | monospace | cursive | fantasy
-        // font-family 为必选项，其他为可选项
-        // font-size 可以使用 px 或 mm 作为单位，若不指定单位则默认为 mm
-        this.font = this.font.trim();
-        String[] arr = this.font.split(" ");
-        if (arr.length < 2) {
-            return;
-        }
+        /*
+         * 设置 字体 名称
+         */
         int off = arr.length - 1;
         String fontFamily = arr[off].trim();
-        if (fontFamily.isEmpty()) {
-            return;
-        }
+        Font nameFont = new Font(fontFamily, fontFamily);
 
-        CT_Font ctFont = resManager.getFont(fontFamily);
-        if (ctFont == null) {
-            throw new IllegalArgumentException("字体不存在 " + fontFamily + "，请先加载字体");
+        CT_Font ctFont = null;
+        ExistCTFont existCTFont = resManager.getFont(fontFamily);
+        if (existCTFont != null) {
+            ctFont = existCTFont.font;
+            if (existCTFont.absPath != null) {
+                nameFont = new Font(ctFont.getFontName(), ctFont.getFamilyName(), existCTFont.absPath);
+            } else {
+                nameFont = new Font(ctFont.getFontName(), ctFont.getFamilyName());
+            }
         }
+        fs.setFont(nameFont);
 
+        /*
+         * 设置 字号
+         */
         off--;
         // 解析font-size 单位可能是 px 或 mm 或 空
         String fontSizeStr = arr[off].trim();
-        double fontSize = 3.17;
-        double fontWeight = 400;
-        if (fontSizeStr.endsWith("px")) {
-            fontSizeStr = fontSizeStr.substring(0, fontSizeStr.length() - 2).trim();
-            fontSize = Double.parseDouble(fontSizeStr) / PPM;
-        } else if (fontSizeStr.endsWith("mm")) {
-            fontSizeStr = fontSizeStr.substring(0, fontSizeStr.length() - 2).trim();
-            fontSize = Double.parseDouble(fontSizeStr);
-        } else {
-            fontSize = Double.parseDouble(fontSizeStr);
+        double fontSize = 1;
+        try {
+            if (fontSizeStr.endsWith("px")) {
+                fontSizeStr = fontSizeStr.substring(0, fontSizeStr.length() - 2).trim();
+                fontSize = Double.parseDouble(fontSizeStr) / PPM;
+            } else if (fontSizeStr.endsWith("mm")) {
+                fontSizeStr = fontSizeStr.substring(0, fontSizeStr.length() - 2).trim();
+                fontSize = Double.parseDouble(fontSizeStr);
+            } else {
+                fontSize = Double.parseDouble(fontSizeStr);
+            }
+        } catch (NumberFormatException e) {
+            fontSize = 1;
         }
+        fs.setFontSize(fontSize);
+
         off--;
         if (off < 0) {
-            return;
+            return ctFont;
         }
-
-        if (off >= 0) {
-            // 解析font-weight
-            // normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
-            switch (arr[off].trim().toLowerCase()) {
-                case "lighter":
-                case "100":
-                    fontWeight = 100;
-                    off--;
-                    break;
-                case "200":
-                    fontWeight = 200;
-                    off--;
-                    break;
-                case "300":
-                    fontWeight = 300;
-                    off--;
-                    break;
-                case "normal":
-                case "400":
-                    fontWeight = 400;
-                    off--;
-                    break;
-                case "500":
-                    fontWeight = 500;
-                    off--;
-                    break;
-                case "600":
-                    fontWeight = 600;
-                    off--;
-                    break;
-                case "bold":
-                case "700":
-                    fontWeight = 700;
-                    off--;
-                    break;
-                case "800":
-                    fontWeight = 800;
-                    off--;
-                    break;
-                case "bolder":
-                case "900":
-                    fontWeight = 900;
-                    off--;
-                    break;
-                default:
-                    // 非字体宽度配置，忽略
-            }
-        }
-        if (off < 0) {
-            return;
-        }
-
-        // 解析 font-style: normal | italic
-        switch (arr[off].trim()) {
-            case "normal":
+        /*
+         * 设置 字体粗细
+         */
+        int fontWeight = 400;
+        // 解析font-weight
+        // normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
+        switch (arr[off].trim().toLowerCase()) {
+            case "lighter":
+            case "100":
+                fontWeight = 100;
+                off--;
                 break;
-            case "italic":
+            case "200":
+                fontWeight = 200;
+                off--;
+                break;
+            case "300":
+                fontWeight = 300;
+                off--;
+                break;
+            case "normal":
+            case "400":
+                fontWeight = 400;
+                off--;
+                break;
+            case "500":
+                fontWeight = 500;
+                off--;
+                break;
+            case "600":
+                fontWeight = 600;
+                off--;
+                break;
+            case "bold":
+            case "700":
+                fontWeight = 700;
+                off--;
+                break;
+            case "800":
+                fontWeight = 800;
+                off--;
+                break;
+            case "bolder":
+            case "900":
+                fontWeight = 900;
+                off--;
                 break;
             default:
+                // 非字体宽度配置，忽略
+        }
+        fs.setFontWeight(fontWeight);
+        if (off < 0) {
+            return ctFont;
+        }
+        /*
+         * 设置 是否斜体
+         */
+        // 解析 font-style: normal | italic
+        switch (arr[off].trim()) {
+            case "italic":
+                fs.setItalic(true);
+                break;
+            case "normal":
+            default:
+                fs.setItalic(false);
                 // 非字体样式配置，忽略
         }
+
+        return ctFont;
     }
 
     /**
@@ -1537,6 +1584,19 @@ public class DrawContext implements Closeable {
      */
     public int pixel(double mm) {
         return (int) (mm * PPM);
+    }
+
+    /**
+     * 添加字体至文档资源中
+     *
+     * @param name 字体名称
+     * @param p    字体文件路径
+     * @return this
+     * @throws IOException 字体解析异常
+     */
+    public DrawContext addFont(String name, Path p) throws IOException {
+        resManager.addFont(new Font(name, p));
+        return this;
     }
 
     /**

@@ -128,6 +128,7 @@ public class BareOFDDoc implements Closeable {
         this.docDir = docDir;
         docDir.setDocument(document);
         prm = new ResManager(docDir, MaxUnitID);
+        prm.setRoot(ofdDir);
     }
 
 

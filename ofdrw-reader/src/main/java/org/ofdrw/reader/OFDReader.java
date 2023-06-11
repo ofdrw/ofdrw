@@ -779,15 +779,16 @@ public class OFDReader implements Closeable {
                         final Path signedValueFile = rl.getFile(signedValueLoc);
                         // 解析电子印章
                         SESVersionHolder v = VersionParser.parseSES_SignatureVersion(Files.readAllBytes(signedValueFile));
-                        SESVersionHolder sealHolder = null;
-                        if (sigDesp.getSignedInfo().getSeal() != null) {
-                            ST_Loc sealLoc = sigDesp.getSignedInfo().getSeal().getBaseLoc();
-                            rl.cd(signatureBaseLoc.parent());
-                            rl.cd(sealLoc.parent());
-                            final Path sealFile = rl.getFile(sealLoc);
-                            sealHolder = VersionParser.parseSES_SealVersion(Files.readAllBytes(sealFile));
-                        }
-                        res.add(new StampAnnotEntity(v, sealHolder, sigDesp.getSignedInfo()));
+                        res.add(new StampAnnotEntity(v, sigDesp.getSignedInfo()));
+//                        SESVersionHolder sealHolder = null;
+//                        if (sigDesp.getSignedInfo().getSeal() != null) {
+//                            ST_Loc sealLoc = sigDesp.getSignedInfo().getSeal().getBaseLoc();
+//                            rl.cd(signatureBaseLoc.parent());
+//                            rl.cd(sealLoc.parent());
+//                            final Path sealFile = rl.getFile(sealLoc);
+//                            sealHolder = VersionParser.parseSES_SealVersion(Files.readAllBytes(sealFile));
+//                        }
+//                        res.add(new StampAnnotEntity(v, sealHolder, sigDesp.getSignedInfo()));
                     } finally {
                         rl.restore();
                     }

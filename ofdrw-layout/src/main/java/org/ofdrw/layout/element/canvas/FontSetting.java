@@ -64,7 +64,7 @@ public class FontSetting implements Cloneable, TextFontInfo {
     private TextAlign textAlign = TextAlign.start;
 
     /**
-     * Java字体对象缓存，用于减少字体加载次数
+     * 不同字号的字体每次都需要重新加载AWT字体对象
      * <p>
      * 缓存对象不clone
      */
@@ -94,6 +94,9 @@ public class FontSetting implements Cloneable, TextFontInfo {
     }
 
     public FontSetting(double fontSize, Font fontObj) {
+        if (fontObj == null) {
+            throw new IllegalArgumentException("字体对象(fontObj)为空");
+        }
         this.fontObj = fontObj;
         this.fontSize = fontSize;
         this.awtFont = null;
@@ -142,6 +145,9 @@ public class FontSetting implements Cloneable, TextFontInfo {
      * @return this
      */
     public FontSetting setFont(Font fontObj) {
+        if (fontObj == null) {
+            throw new IllegalArgumentException("字体对象(fontObj)为空");
+        }
         this.fontObj = fontObj;
         this.awtFont = null;
         return this;

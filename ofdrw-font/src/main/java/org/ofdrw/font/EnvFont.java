@@ -121,18 +121,13 @@ public final class EnvFont {
      * @return 字符所占区域大小
      */
     public static Rectangle2D strBounds(String name, String family, String str, double size) {
-        if (frCtx == null) {
-            synchronized (EnvFont.class) {
-                frCtx = new FontRenderContext(new AffineTransform(), true, true);
-            }
-        }
         Font font = getFont(name, family);
         if (font == null) {
             // 找不到字体时使用默认字体计算，防止NPE
             font = defaultFont;
         }
         font = font.deriveFont((float) size);
-        return font.getStringBounds(str, frCtx);
+        return font.getStringBounds(str, FRCtx());
     }
 
 
@@ -150,6 +145,11 @@ public final class EnvFont {
      * @return 上下文
      */
     public static FontRenderContext FRCtx() {
+        if (frCtx == null) {
+            synchronized (EnvFont.class) {
+                frCtx = new FontRenderContext(new AffineTransform(), true, true);
+            }
+        }
         return frCtx;
     }
 

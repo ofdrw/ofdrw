@@ -92,10 +92,6 @@ public class SESVersionHolder {
         return this.SESObject();
     }
 
-    public org.ofdrw.gm.ses.v1.SESeal getInstanceV1Seal() {
-        return this.SealObject();
-    }
-
     /**
      * 强制获取v4版本的电子签章数据
      *
@@ -105,6 +101,18 @@ public class SESVersionHolder {
         return this.SESObject();
     }
 
+
+    /**
+     * 强制获取v1版本的电子印章数据
+     */
+    public org.ofdrw.gm.ses.v1.SESeal getInstanceV1Seal() {
+        return this.SealObject();
+    }
+    /**
+     * 强制获取v4版本的电子印章数据
+     *
+     * @return v4电子印章数据
+     */
     public org.ofdrw.gm.ses.v4.SESeal getInstanceV4Seal() {
         return this.SealObject();
     }

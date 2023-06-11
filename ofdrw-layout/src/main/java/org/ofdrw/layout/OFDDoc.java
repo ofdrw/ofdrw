@@ -286,6 +286,7 @@ public class OFDDoc implements Closeable {
         operateDocDir = docDir;
         docDir.setDocument(ofdDocument);
         prm = new ResManager(docDir, MaxUnitID);
+        prm.setRoot(ofdDir);
     }
 
     /**
@@ -312,6 +313,7 @@ public class OFDDoc implements Closeable {
         MaxUnitID = new AtomicInteger(maxUnitID.getId().intValue());
         operateDocDir = ofdDir.obtainDocDefault();
         prm = new ResManager(ofdDir.obtainDocDefault(), MaxUnitID);
+        prm.setRoot(ofdDir);
     }
 
     /**
