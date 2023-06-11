@@ -44,6 +44,11 @@ public class StampAnnotEntity {
      */
     private SESVersionHolder sesVersionHolder;
 
+    /**
+     * 多版本seal印章
+     */
+    private SESVersionHolder sealVersionHolder;
+
     private StampAnnotEntity() {
     }
 
@@ -53,9 +58,10 @@ public class StampAnnotEntity {
      * @param signedInfo       签名要保护的原文及本次签名相关的信息
      * @param sesVersionHolder 多版本电子签章数据
      */
-    public StampAnnotEntity(SESVersionHolder sesVersionHolder, SignedInfo signedInfo) {
+    public StampAnnotEntity(SESVersionHolder sesVersionHolder,SESVersionHolder sealHolder, SignedInfo signedInfo) {
         this.signedInfo = signedInfo;
         this.sesVersionHolder = sesVersionHolder;
+        this.sealVersionHolder = sealHolder;
         init();
     }
 
@@ -72,6 +78,20 @@ public class StampAnnotEntity {
             final SES_ESPictrueInfo picture = toSign.getEseal().getEsealInfo().getPicture();
             this.imgType = picture.getType().getString();
             this.imageByte = picture.getData().getOctets();
+        }
+
+        if (sealVersionHolder != null) {
+            if (sealVersionHolder.getVersion() == SESVersion.v4) {
+                org.ofdrw.gm.ses.v4.SESeal eSeal = sealVersionHolder.getInstanceV4Seal();
+                final SES_ESPictrueInfo picture = eSeal.geteSealInfo().getPicture();
+                this.imgType = picture.getType().getString();
+                this.imageByte = picture.getData().getOctets();
+            } else {
+                org.ofdrw.gm.ses.v1.SESeal eSeal = sealVersionHolder.getInstanceV1Seal();
+                final SES_ESPictrueInfo picture = eSeal.getEsealInfo().getPicture();
+                this.imgType = picture.getType().getString();
+                this.imageByte = picture.getData().getOctets();
+            }
         }
     }
 

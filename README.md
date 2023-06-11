@@ -116,10 +116,6 @@ HTML5前端预览解决方案： [DLTech21/ofd.js . https://github.com/DLTech21/
 - 基于cairo库渲染OFD。
 - Windows客户端阅读器
 
-#### OFD R&W Android
-
-OFD Reader and Writer 安卓平台解决方案： [DLTech21/ofdrw-aar . https://github.com/DLTech21/ofdrw-aar](https://github.com/DLTech21/ofdrw-aar)
-
 #### 图片转换
 
 > 目前已经被合并到`ofdrw-converter` 模块
