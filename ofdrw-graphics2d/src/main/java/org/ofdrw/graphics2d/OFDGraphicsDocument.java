@@ -198,7 +198,7 @@ public class OFDGraphicsDocument implements Closeable {
         }
         pageDir.setContent(pageObj);
 
-        return new OFDPageGraphics2D(this,pageID, pageDir, pageObj, pageSize.getBox());
+        return new OFDPageGraphics2D(this, pageID, pageDir, pageObj, pageSize.getBox());
     }
 
     /**
@@ -351,7 +351,8 @@ public class OFDGraphicsDocument implements Closeable {
 
     @Override
     public void close() throws IOException {
-        if (this.closed) {
+        // 文档已经 close 或者 MaxUnitID == 0 说明没有添加任何对象，不需要生成OFD文档
+        if (this.closed || MaxUnitID.get() == 0) {
             return;
         } else {
             closed = true;
