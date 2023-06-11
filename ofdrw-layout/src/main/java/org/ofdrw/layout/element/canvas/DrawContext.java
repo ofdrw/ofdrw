@@ -139,7 +139,6 @@ public class DrawContext implements Closeable {
      * <p>
      * 详见 {@code https://developer.mozilla.org/en-US/docs/Web/CSS/font}
      * <p>
-     * <p>
      * font-style: normal | italic
      * <p>
      * font-weight: normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
@@ -151,7 +150,6 @@ public class DrawContext implements Closeable {
      * font-family 为必选项，其他为可选项
      * <p>
      * font-size 和 line-height 可以使用 px 或 mm 作为单位，若不指定单位则默认为 mm
-     * <p>
      * <p>
      * 锚点：
      * - fillText

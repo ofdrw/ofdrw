@@ -27,7 +27,7 @@ import java.nio.file.Paths;
 class DrawContextTest {
 
     /**
-     * 字体样式设置
+     * 外部字体测试
      */
     @Test
     void testExternalFont() throws IOException {

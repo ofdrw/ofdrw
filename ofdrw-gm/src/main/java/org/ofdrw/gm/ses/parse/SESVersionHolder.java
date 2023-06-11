@@ -104,10 +104,13 @@ public class SESVersionHolder {
 
     /**
      * 强制获取v1版本的电子印章数据
+     *
+     * @return v1电子印章数据
      */
     public org.ofdrw.gm.ses.v1.SESeal getInstanceV1Seal() {
         return this.SealObject();
     }
+
     /**
      * 强制获取v4版本的电子印章数据
      *
