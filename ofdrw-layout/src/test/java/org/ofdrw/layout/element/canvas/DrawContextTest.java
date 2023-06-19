@@ -1346,4 +1346,28 @@ class DrawContextTest {
     }
 
 
+    @Test
+    public void testCanvas() throws IOException {
+        Path out = Paths.get("target/first_canvas.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(out)) {
+            VirtualPage vPage = new VirtualPage(210d, 297d);
+            Canvas canvas = new Canvas(0, 0, 210d, 297d);
+            canvas.setDrawer(ctx -> {
+                ctx.fillStyle = "rgba(255, 0, 0, 0.8)";
+                ctx.font = "8mm 宋体";
+                for (int i = 0; i <= 8; i++) {
+                    for (int j = 0; j <= 8; j++) {
+                        ctx.save();
+                        ctx.translate(22.4 * i, j * 50);
+                        ctx.rotate(45);
+                        ctx.fillText("保密资料", 10, 10);
+                        ctx.restore();
+                    }
+                }
+            });
+            vPage.add(canvas);
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + out.toAbsolutePath());
+    }
 }

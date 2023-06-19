@@ -250,7 +250,7 @@ public class OFDMerger implements Closeable {
         CT_TemplatePage templatePage = tplPageMap.get(oldId);
         if (templatePage != null) {
             // 页面已经复制过
-        	//如果模板ID一样，但是模板内容不一样
+        	// 如果模板ID一样，但是模板内容不一样
         	if(templatePage.asXML().equals(tplObj.asXML())) {
         		return templatePage.getID().ref();
         	}
