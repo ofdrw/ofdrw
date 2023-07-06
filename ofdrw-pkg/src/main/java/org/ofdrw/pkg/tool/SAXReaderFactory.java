@@ -38,7 +38,7 @@ public class SAXReaderFactory {
      */
     public static SAXReader create() {
         if (null == CustomizeProducer) {
-            return SAXReader.createDefault();
+            return new SAXReader;()
         } else {
             return CustomizeProducer.get();
         }
