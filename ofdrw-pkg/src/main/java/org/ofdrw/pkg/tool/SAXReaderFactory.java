@@ -3,6 +3,7 @@ package org.ofdrw.pkg.tool;
 import java.util.function.Supplier;
 
 import org.dom4j.io.SAXReader;
+import org.xml.sax.SAXException;
 
 /**
  * SAXReader 工厂
@@ -38,7 +39,7 @@ public class SAXReaderFactory {
      */
     public static SAXReader create() {
         if (null == CustomizeProducer) {
-            return new SAXReader;()
+            return new SAXReader();
         } else {
             return CustomizeProducer.get();
         }
