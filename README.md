@@ -111,7 +111,13 @@ HTML5前端预览解决方案： [DLTech21/ofd.js . https://github.com/DLTech21/
 
 #### 开源阅读器
 
-推荐开源客户端预览解决方案： [roy19831015/OfdiumEx . https://github.com/roy19831015/OfdiumEx](https://github.com/roy19831015/OfdiumEx)
+
+**XilouReader** *New*：[chingliu/XilouReader . https://gitee.com/chingliu/XilouReader](https://gitee.com/chingliu/XilouReader)
+
+- 基于pdfium的ofd/pdf双引擎版式阅读器。
+
+
+**OfdiumEx**：[roy19831015/OfdiumEx . https://github.com/roy19831015/OfdiumEx](https://github.com/roy19831015/OfdiumEx)
 
 - 基于cairo库渲染OFD。
 - Windows客户端阅读器
