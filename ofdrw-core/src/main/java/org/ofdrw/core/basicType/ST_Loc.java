@@ -182,4 +182,31 @@ public class ST_Loc extends STBase {
         return loc;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof String) {
+            return loc.equals(obj);
+        }
+        if (obj instanceof ST_Loc) {
+            return loc.equals(((ST_Loc) obj).loc);
+        }
+        return loc.equals(obj.toString());
+    }
+
+    /**
+     * 比较两个路径是否相等
+     *
+     * @return true - 相等，false - 不相等
+     */
+    public static boolean equal(Object a, Object b) {
+        if (a == null || b == null) {
+            return false;
+        }
+        if (a instanceof ST_Loc && b instanceof ST_Loc) {
+            return ((ST_Loc) a).loc.equals(((ST_Loc) b).loc);
+        }
+        String aStr = a.toString();
+        String bStr = b.toString();
+        return aStr.equals(bStr);
+    }
 }

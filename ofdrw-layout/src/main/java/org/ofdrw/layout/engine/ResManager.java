@@ -91,6 +91,16 @@ public class ResManager {
 
 
     /**
+     * 文档资源
+     */
+    private Res documentRes;
+
+    /**
+     * 公共资源
+     */
+    private Res publicRes;
+
+    /**
      * 绘制参数Hash
      * <p>
      * KEY: 资源对象的去除ID后的XML字符串的hashCode
@@ -118,7 +128,8 @@ public class ResManager {
         // 如果存在公共资源，尝试加载
         if (docDir.exist(DocDir.PublicResFileName)) {
             try {
-                reloadRes(docDir.getPublicRes());
+                this.publicRes = docDir.getPublicRes();
+                reloadRes(publicRes);
             } catch (FileNotFoundException e) {
                 // ignore 文件不存在，不解析
             } catch (DocumentException e) {
@@ -128,7 +139,8 @@ public class ResManager {
         // 如果存在文档资源，尝试加载
         if (docDir.exist(DocDir.DocumentResFileName)) {
             try {
-                reloadRes(docDir.getDocumentRes());
+                this.documentRes = docDir.getDocumentRes();
+                reloadRes(documentRes);
             } catch (FileNotFoundException e) {
                 // ignore 文件不存在，不解析
             } catch (DocumentException e) {
@@ -200,7 +212,13 @@ public class ResManager {
         if (fontFile != null) {
             // 将字体文件加入到文档容器中
             fontFile = docDir.addResourceWithPath(fontFile);
-            ctFont.setFontFile(fontFile.getFileName().toString());
+
+            String filename = fontFile.getFileName().toString();
+            // 若资源文件中的相对路径不是Res，那么采用绝对路径
+            if (publicRes != null && !ST_Loc.equal("Res", publicRes.getBaseLoc())) {
+                filename = docDir.getAbsLoc().cat("Res").cat(filename).toString();
+            }
+            ctFont.setFontFile(filename);
         }
 
         // 设置特殊字族属性
@@ -237,16 +255,19 @@ public class ResManager {
         // 将文件加入资源容器中，并获取资源在文件中的绝对路径
         Path imgCtnPath = docDir.addResourceWithPath(imgPath);
         // 获取在容器中的文件名称
-        String fileName = imgCtnPath.getFileName().toString();
-
+        String filename = imgCtnPath.getFileName().toString();
+        // 若资源文件中的相对路径不是Res，那么采用绝对路径
+        if (documentRes != null && !ST_Loc.equal("Res", documentRes.getBaseLoc())) {
+            filename = docDir.getAbsLoc().cat("Res").cat(filename).toString();
+        }
 
         // 获取图片文件后缀名称
-        String fileSuffix = pictureFormat(fileName);
+        String fileSuffix = pictureFormat(filename);
         // 创建图片对象
         CT_MultiMedia multiMedia = new CT_MultiMedia()
                 .setType(MediaType.Image)
                 .setFormat(fileSuffix)
-                .setMediaFile(ST_Loc.getInstance(fileName));
+                .setMediaFile(ST_Loc.getInstance(filename));
         // 添加到资源列表中
         return addRawWithCache(multiMedia);
     }
@@ -289,15 +310,15 @@ public class ResManager {
      * @return 公共资源清单
      */
     public Res pubRes() {
-        try {
-            return docDir.getPublicRes();
-        } catch (FileNotFoundException | DocumentException e) {
-            // 如果不存在那么创建一个公共资源清单，容器目录为文档根目录下的Res目录
-            Res publicRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
-            docDir.setPublicRes(publicRes);
-            document().getCommonData().addPublicRes(ST_Loc.getInstance("PublicRes.xml"));
+        if (publicRes != null) {
             return publicRes;
         }
+        // 如果不存在那么创建一个公共资源清单，容器目录为文档根目录下的Res目录
+        Res pubRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
+        docDir.setPublicRes(pubRes);
+        document().getCommonData().addPublicRes(ST_Loc.getInstance("PublicRes.xml"));
+        this.publicRes = pubRes;
+        return publicRes;
     }
 
     /**
@@ -308,15 +329,16 @@ public class ResManager {
      * @return 文档资源清单
      */
     public Res docRes() {
-        try {
-            return docDir.getDocumentRes();
-        } catch (FileNotFoundException | DocumentException e) {
-            // 如果不存在那么创建一个公共资源清单，容器目录为文档根目录下的Res目录
-            Res docRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
-            docDir.setDocumentRes(docRes);
-            document().getCommonData().addDocumentRes(ST_Loc.getInstance("DocumentRes.xml"));
-            return docRes;
+        if (documentRes != null) {
+            return documentRes;
         }
+
+        // 如果不存在那么创建一个公共资源清单，容器目录为文档根目录下的Res目录
+        Res docRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
+        docDir.setDocumentRes(docRes);
+        document().getCommonData().addDocumentRes(ST_Loc.getInstance("DocumentRes.xml"));
+        documentRes = docRes;
+        return documentRes;
     }
 
     /**

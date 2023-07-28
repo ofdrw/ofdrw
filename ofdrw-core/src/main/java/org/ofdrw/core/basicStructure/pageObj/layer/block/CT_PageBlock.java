@@ -57,9 +57,15 @@ public class CT_PageBlock extends OFDElement implements PageBlockType {
      * @return 当前页块内的所有页块
      */
     public List<PageBlockType> getPageBlocks() {
-        return this.elements().stream()
-                .map(PageBlockType::getInstance)
-                .collect(Collectors.toList());
+        List<Element> elements = this.elements();
+        List<PageBlockType> res = new ArrayList<>(elements.size());
+        for (Element element : elements) {
+            PageBlockType pb = PageBlockType.getInstance(element);
+            if (pb != null){
+                res.add(pb);
+            }
+        }
+        return res;
     }
 
 
