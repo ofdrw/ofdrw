@@ -214,14 +214,23 @@ public final class FontLoader {
      * @return true - 加载成功；false - 加载失败
      */
     public static boolean loadAsDefaultFont(String path) {
-        Path loc = Paths.get(path);
-        try (InputStream in = Files.newInputStream(loc)) {
+        InputStream in = null;
+        try {
+            Path loc = Paths.get(path);
+            in = Files.newInputStream(loc);
             byte[] buf = IOUtils.toByteArray(in);
             DefaultFontPath = loc;
             defaultFont = new TrueTypeFont().parse(buf);
             iTextDefaultFont = new com.itextpdf.io.font.TrueTypeFont(buf);
         } catch (IOException ignored) {
             return false;
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException ignored) {
+                }
+            }
         }
         return true;
     }
