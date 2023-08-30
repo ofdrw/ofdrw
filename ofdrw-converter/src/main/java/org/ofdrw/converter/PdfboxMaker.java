@@ -30,6 +30,7 @@ import org.ofdrw.core.graph.pathObj.FillColor;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
 import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.pageDescription.color.color.ColorClusterType;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.signatures.appearance.StampAnnot;
 import org.ofdrw.core.text.font.CT_Font;
@@ -389,10 +390,12 @@ public class PdfboxMaker {
     }
 
     private void setShadingFill(PDPageContentStream contentStream, CT_Color ctColor, boolean isFill) throws IOException {
-        CT_AxialShd ctAxialShd = ctColor.getColorByType();
-        if (ctAxialShd == null) {
+        ColorClusterType color = ctColor.getColor();
+        if (!(color instanceof CT_AxialShd)) {
             return;
         }
+        CT_AxialShd ctAxialShd = (CT_AxialShd) color;
+
         ST_Array start = ctAxialShd.getSegments().get(0).getColor().getValue();
         ST_Array end = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor().getValue();
         ST_Pos startPos = ctAxialShd.getStartPoint();
@@ -644,7 +647,7 @@ public class PdfboxMaker {
         try {
             // 加载字体
             InputStream in = FontLoader.getInstance().loadFontSimilarStream(reader.getResourceLocator(), ctFont);
-            PDFont  font = PDType0Font.load(pdf, in, true);
+            PDFont font = PDType0Font.load(pdf, in, true);
             fontCache.put(key, font);
             return font;
         } catch (Exception e) {
