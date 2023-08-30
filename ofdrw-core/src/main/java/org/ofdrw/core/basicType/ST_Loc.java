@@ -196,6 +196,8 @@ public class ST_Loc extends STBase {
     /**
      * 比较两个路径是否相等
      *
+     * @param a 比较对象a
+     * @param b 比较对象b
      * @return true - 相等，false - 不相等
      */
     public static boolean equal(Object a, Object b) {
