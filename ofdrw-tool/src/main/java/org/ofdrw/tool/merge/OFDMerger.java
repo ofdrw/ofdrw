@@ -88,6 +88,7 @@ public class OFDMerger implements Closeable {
      * - Layer 的 DrawParam
      * - 每个图像对象都可能含有 DrawParam 引用
      * - Color 中 Pattern CellContent Thumbnail 引用
+     * - Color 中 ColorSpace 引用
      * - Image 中 ResourceID、Substitution、ImageMask
      * - Text 中 Font
      * - Composite 复合对象 中 ResourceID
@@ -100,6 +101,7 @@ public class OFDMerger implements Closeable {
         this.put("ImageMask", DocumentHelper.createXPath("//*[@ImageMask]"));
         this.put("Thumbnail", DocumentHelper.createXPath("//*[@Thumbnail]"));
         this.put("DrawParam", DocumentHelper.createXPath("//*[@DrawParam]"));
+        this.put("ColorSpace", DocumentHelper.createXPath("//*[@ColorSpace]"));
     }};
 
     public OFDMerger(Path dest) {
