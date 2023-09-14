@@ -562,6 +562,7 @@ public class OFDPageGraphics2D extends Graphics2D {
         CT_Path pathObj = new CT_Path();
         pathObj.setBoundary(this.size);
         pathObj.setFill(true);
+        pathObj.setStroke(false);
         pathObj.setAbbreviatedData(pData);
         // 如果存在裁剪区域，设置裁剪
         if (this.drawParam.clip != null) {
