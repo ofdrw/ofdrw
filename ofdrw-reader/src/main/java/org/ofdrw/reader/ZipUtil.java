@@ -5,33 +5,20 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
+/**
+ * ZIP 文件解压工具
+ */
 public class ZipUtil {
-    /**
-     * 解压许可最大字节数，为了防止 ZIP炸弹攻击
-     * <p>
-     * 默认值： 100M
-     */
-    private static long MaxSize = 100 * 1024 * 1024;
-
-
     /**
      * 设置 解压许可最大字节数
      *
+     * @deprecated 采用apache compress 默认策略
      * @param size 压缩文件解压最大大小,默认值： 100M
      */
+    @Deprecated
     public static void setMaxSize(long size) {
-        if (size <= 0) {
-            size = 100 * 1024 * 1024;
-        }
-        MaxSize = size;
     }
 
     /**
@@ -53,50 +40,7 @@ public class ZipUtil {
      * @throws IOException 文件操作IO异常
      */
     public static void unZipFiles(InputStream src, String descDir) throws IOException {
-        File pathFile = new File(descDir).getCanonicalFile();
-        if (!pathFile.exists()) {
-            pathFile.mkdirs();
-        }
-
-        int countByteNumber = 0;
-
-        // 解决zip文件中有中文目录或者中文文件
-        ZipInputStream zip = new ZipInputStream(src, Charset.forName("GBK"));
-        ZipEntry entry;
-        while ((entry = zip.getNextEntry()) != null) {
-            String name = entry.getName();
-
-            File file = new File(pathFile, name).getCanonicalFile();
-
-            //校验路径合法性
-            pathValid(pathFile.getAbsolutePath(), file.getAbsolutePath());
-
-            if (entry.isDirectory()) {
-                file.mkdirs();
-            } else {
-                File dir = file.getParentFile();
-                if (!dir.exists()) {
-                    dir.mkdirs();
-                }
-
-
-                byte[] buf = new byte[1024];
-                int num;
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                while ((num = zip.read(buf, 0, buf.length)) != -1) {
-
-                    //写入字节数超出限制则抛出异常
-                    if (countByteNumber + num > MaxSize) {
-                        throw new IOException(String.format("写入数据超出ZIP解压最大字节数(%s)限制！", MaxSize));
-                    }
-
-                    bos.write(buf, 0, num);
-
-                    countByteNumber += num;
-                }
-                Files.write(Paths.get(file.getAbsolutePath()), bos.toByteArray());
-            }
-        }
+        unZipFileByApacheCommonCompress(src, descDir);
     }
 
     /**
@@ -124,20 +68,35 @@ public class ZipUtil {
 
     /**
      * 使用apache common compress库 解压zipFile，能支持更多zip包解压的特性
+     *
      * @param srcFile 带解压的源文件
      * @param descDir 解压到目录
      * @throws IOException IO异常
      */
     public static void unZipFileByApacheCommonCompress(File srcFile, String descDir) throws IOException {
+        if (srcFile == null || srcFile.exists() == false) {
+            throw new IOException("解压文件不存在: " + srcFile);
+        }
+        try (FileInputStream fin = new FileInputStream(srcFile)) {
+            unZipFileByApacheCommonCompress(fin, descDir);
+        }
+    }
+
+    /**
+     * apache common compress库 解压zipFile
+     *
+     * @param src     带解压的源文件流
+     * @param descDir 解压到目录
+     * @throws IOException IO异常
+     */
+    public static void unZipFileByApacheCommonCompress(InputStream src, String descDir) throws IOException {
         File pathFile = new File(descDir).getCanonicalFile();
         if (!pathFile.exists() && !pathFile.mkdirs()) {
             throw new IOException("解压目录创建失败: " + pathFile);
         }
-        try (ZipFile zipFile = new ZipFile(srcFile)) {
-            ZipEntry entry = null;
-            Enumeration<? extends ZipEntry> entries = zipFile.entries();
-            while (entries.hasMoreElements()) {
-                entry = entries.nextElement();
+        try (ZipArchiveInputStream zipFile = new ZipArchiveInputStream(src)) {
+            ArchiveEntry entry = null;
+            while ((entry = zipFile.getNextEntry()) != null) {
                 File f = new File(pathFile, entry.getName()).getCanonicalFile();
 
                 //校验路径合法性
@@ -153,7 +112,7 @@ public class ZipUtil {
                         throw new IOException("failed to create directory " + parent);
                     }
                     try (OutputStream o = Files.newOutputStream(f.toPath())) {
-                        IOUtils.copy(zipFile.getInputStream(entry), o);
+                        IOUtils.copy(zipFile, o);
                     }
                 }
             }

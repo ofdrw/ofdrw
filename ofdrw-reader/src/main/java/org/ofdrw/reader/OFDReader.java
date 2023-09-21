@@ -134,7 +134,7 @@ public class OFDReader implements Closeable {
         }
         workDir = Files.createTempDirectory("ofd-tmp-");
         // 解压文档，到临时的工作目录
-        ZipUtil.unZipFiles(stream, workDir.toAbsolutePath().toString() + File.separator);
+        ZipUtil.unZipFileByApacheCommonCompress(stream, workDir.toAbsolutePath().toString() + File.separator);
         ofdDir = new OFDDir(workDir);
         // 创建资源定位器
         rl = new ResourceLocator(ofdDir);

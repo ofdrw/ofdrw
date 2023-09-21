@@ -57,10 +57,9 @@ class OFDDocStreamTest {
      * 加入印章类型注释对象
      *
      * @throws IOException
-     * @throws DocumentException
      */
     @Test
-    void addAnnotationStamp() throws IOException, DocumentException {
+    void addAnnotationStamp() throws IOException {
         Path srcP = Paths.get("src/test/resources", "AddWatermarkAnnot.ofd");
         Path outP = Paths.get("target/AddAnnotationStamp.ofd");
         Path imgPath = Paths.get("src/test/resources", "StampImg.png");
@@ -84,11 +83,10 @@ class OFDDocStreamTest {
     /**
      * 加入水印类型注释对象
      *
-     * @throws IOException
-     * @throws DocumentException
+     * @throws Exception 异常
      */
     @Test
-    void addAnnotation() throws IOException {
+    void addAnnotation() throws Exception {
         Path srcP = Paths.get("src/test/resources", "拿来主义_page6.ofd");
         Path outP = Paths.get("target/AddWatermarkAnnot.ofd");
         Path imgPath = Paths.get("src/test/resources", "eg_tulip.jpg");
