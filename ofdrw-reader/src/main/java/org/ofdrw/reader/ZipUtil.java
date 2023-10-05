@@ -1,7 +1,10 @@
 package org.ofdrw.reader;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipExtraField;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.*;
@@ -14,12 +17,28 @@ public class ZipUtil {
     /**
      * 设置 解压许可最大字节数
      *
-     * @deprecated 采用apache compress 默认策略
      * @param size 压缩文件解压最大大小,默认值： 100M
+     * @deprecated 采用apache compress 默认策略
      */
     @Deprecated
     public static void setMaxSize(long size) {
     }
+
+    /**
+     * 设置解压默认字符集
+     * <p>
+     * 用于解决中文字符集乱码问题
+     *
+     * @param charset 字符集，如 GBK、UTF8 等
+     */
+    public static void setDefaultCharset(String charset) {
+        ZipUtil.charset = charset;
+    }
+
+    /**
+     * 默认字符集：UTF8
+     */
+    private static String charset = "UTF8";
 
     /**
      * 解压到指定目录
@@ -94,11 +113,11 @@ public class ZipUtil {
         if (!pathFile.exists() && !pathFile.mkdirs()) {
             throw new IOException("解压目录创建失败: " + pathFile);
         }
-        try (ZipArchiveInputStream zipFile = new ZipArchiveInputStream(src)) {
-            ArchiveEntry entry = null;
-            while ((entry = zipFile.getNextEntry()) != null) {
-                File f = new File(pathFile, entry.getName()).getCanonicalFile();
 
+        try (ZipArchiveInputStream zipFile = new ZipArchiveInputStream(src,charset)) {
+            ZipArchiveEntry entry = null;
+            while ((entry = (ZipArchiveEntry)zipFile.getNextEntry()) != null) {
+                File f = new File(pathFile, entry.getName()).getCanonicalFile();
                 //校验路径合法性
                 pathValid(pathFile.getAbsolutePath(), f.getAbsolutePath());
 

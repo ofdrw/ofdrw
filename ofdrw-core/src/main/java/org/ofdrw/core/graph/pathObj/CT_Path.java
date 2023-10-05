@@ -1,6 +1,8 @@
 package org.ofdrw.core.graph.pathObj;
 
 import org.dom4j.Element;
+import org.dom4j.QName;
+import org.ofdrw.core.Const;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
@@ -144,18 +146,19 @@ public class CT_Path extends CT_GraphicUnit<CT_Path> implements ClipAble {
      * <p>
      * 默认为黑色
      *
-     * @param strokeColor 沟边颜色，颜色定义请参考 8.3.2 基本颜色
+     * @param strokeColor 沟边颜色，颜色定义请参考 8.3.2 基本颜色，只读 颜色对象将被复制。
      * @return this
      */
     public CT_Path setStrokeColor(CT_Color strokeColor) {
         if (strokeColor == null) {
             return this;
         }
+        Element copy = (Element) strokeColor.clone();
         if (!(strokeColor instanceof StrokeColor)) {
-            strokeColor.setOFDName("StrokeColor");
+            copy.setQName(new QName("StrokeColor", Const.OFD_NAMESPACE));
         }
         this.removeOFDElemByNames("StrokeColor");
-        this.add(strokeColor);
+        this.add(copy);
         return this;
     }
 
@@ -178,18 +181,19 @@ public class CT_Path extends CT_GraphicUnit<CT_Path> implements ClipAble {
      * <p>
      * 默认为透明色
      *
-     * @param fillColor 填充颜色，颜色定义请参考 8.3.2 基本颜色
+     * @param fillColor 填充颜色，颜色定义请参考 8.3.2 基本颜色，只读 颜色对象将被复制。
      * @return this
      */
     public CT_Path setFillColor(CT_Color fillColor) {
         if (fillColor == null) {
             return this;
         }
+        Element copy = (Element) fillColor.clone();
         if (!(fillColor instanceof FillColor)) {
-            fillColor.setOFDName("FillColor");
+            copy.setQName(new QName("FillColor", Const.OFD_NAMESPACE));
         }
         this.removeOFDElemByNames("FillColor");
-        this.add(fillColor);
+        this.add(copy);
         return this;
     }
 
