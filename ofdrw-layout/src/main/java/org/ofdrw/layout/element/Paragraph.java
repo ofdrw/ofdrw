@@ -9,6 +9,8 @@ import java.util.List;
 /**
  * 段落
  *
+ * 绘制行为详见渲染器：{@link org.ofdrw.layout.engine.render.ParagraphRender}
+ *
  * @author 权观宇
  * @since 2020-02-03 01:27:20
  */

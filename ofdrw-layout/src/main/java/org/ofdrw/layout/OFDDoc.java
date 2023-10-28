@@ -365,7 +365,7 @@ public class OFDDoc implements Closeable {
      * <p>
      * 并且追加到虚拟页面列表中
      *
-     * @param pageNum 页码
+     * @param pageNum 页码，从1起。
      * @return 追加页面对象
      */
     public AdditionVPage getAVPage(int pageNum) {
@@ -373,12 +373,18 @@ public class OFDDoc implements Closeable {
             throw new RuntimeException("仅在修改模式下允许获取追加页面对象（AdditionVPage）");
         }
         // 获取页面的OFD对象
-        Page page = reader.getPage(pageNum);
-        // 构造追加页面对象
-        AdditionVPage avp = new AdditionVPage(page);
-        // 自动加入到虚拟页面列表中
-        this.addVPage(avp);
-        return avp;
+        ST_Loc pageAbsLoc = reader.getPageAbsLoc(pageNum);
+        ResourceLocator rl = reader.getResourceLocator();
+        try {
+            Page page = rl.get(pageAbsLoc, Page::new);
+            // 构造追加页面对象
+            AdditionVPage avp = new AdditionVPage(page, pageAbsLoc);
+            // 自动加入到虚拟页面列表中
+            this.addVPage(avp);
+            return avp;
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
+        }
     }
 
 

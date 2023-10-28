@@ -12,6 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Canvas 渲染器
+ * <p>
+ * {@link org.ofdrw.layout.element.canvas.Canvas} 的渲染器
  *
  * @author 权观宇
  * @since 2020-05-01 17:44:41
@@ -36,10 +38,17 @@ public class CanvasRender {
         if (drawer == null) {
             return;
         }
-
-        CT_PageBlock block = new CT_PageBlock();
-        block.setObjID(maxUnitID.incrementAndGet());
-        layer.addPageBlock(block);
+        // 尝试获取Canvas中的页块
+        CT_PageBlock block = canvas.getPreferBlock();
+        if (block == null) {
+            // 若页块为空，则创建新的页块
+            block = new CT_PageBlock();
+            block.setObjID(maxUnitID.incrementAndGet());
+            canvas.setPreferBlock(block);
+            // 添加到图层中
+            layer.addPageBlock(block);
+        }
+       
 
         ST_Box boundary = new ST_Box(canvas.getX(), canvas.getY(), canvas.getWidth(), canvas.getHeight());
         // 构建上下文

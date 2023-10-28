@@ -1,16 +1,19 @@
 package org.ofdrw.layout.engine;
 
 import org.dom4j.DocumentException;
+import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.pageObj.Content;
 import org.ofdrw.core.basicStructure.pageObj.Template;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
+import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.layout.PageLayout;
 import org.ofdrw.layout.VirtualPage;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.element.*;
+import org.ofdrw.layout.element.AreaHolderBlock;
 import org.ofdrw.layout.element.canvas.Canvas;
 import org.ofdrw.layout.engine.render.*;
 import org.ofdrw.pkg.container.DocDir;
@@ -77,10 +80,11 @@ public class VPageParseEngine {
         resManager = prm;
 
         try {
-            pages = docDir.getDocument().getPages();
+            Document document = docDir.getDocument();
+            pages = document.getPages();
             if (pages == null) {
                 pages = new Pages();
-                docDir.getDocument().setPages(pages);
+                document.setPages(pages);
             }
             // 如果存在Pages那么获取，不存在那么创建
             pagesDir = docDir.obtainPages();
@@ -115,8 +119,9 @@ public class VPageParseEngine {
                 } else {
                     pageDir = addNewPage(virtualPage.getPageNum() - 1);
                 }
+                ST_Loc pageLoc = pageDir.getAbsLoc().cat(PageDir.ContentFileName);
                 // 解析虚拟页面，并加入到容器中
-                convertPageContent(virtualPage, pageDir);
+                convertPageContent(pageLoc, virtualPage, pageDir);
             }
         }
     }
@@ -124,10 +129,11 @@ public class VPageParseEngine {
     /**
      * 转化虚拟页面的内容为实际OFD元素
      *
+     * @param pageLoc
      * @param vPage   虚拟页面
      * @param pageDir 虚拟页面目录
      */
-    private void convertPageContent(VirtualPage vPage, PageDir pageDir) {
+    private void convertPageContent(ST_Loc pageLoc, VirtualPage vPage, PageDir pageDir) {
         // 底层的OFD页面对象
         org.ofdrw.core.basicStructure.pageObj.Page page = new org.ofdrw.core.basicStructure.pageObj.Page();
         PageLayout vPageStyle = vPage.getStyle();
@@ -137,7 +143,7 @@ public class VPageParseEngine {
         }
         // 如果存在，则设置页面模板
         final List<Template> templates = vPage.getTemplates();
-        if (templates != null && !templates.isEmpty()){
+        if (templates != null && !templates.isEmpty()) {
             for (Template tpl : templates) {
                 page.addTemplate(tpl);
             }
@@ -163,7 +169,7 @@ public class VPageParseEngine {
             ctlayer.setObjID(maxUnitID.incrementAndGet());
             content.addLayer(ctlayer);
             // 执行转换
-            convert2Layer(ctlayer, layerContent);
+            convert2Layer(pageLoc, ctlayer, layerContent);
         }
         page.setContent(content);
     }
@@ -175,6 +181,7 @@ public class VPageParseEngine {
      * @param virtualPage 专用于编辑的虚拟页面
      */
     private void pageEdit(AdditionVPage virtualPage) {
+        ST_Loc pageLoc = virtualPage.getPageLoc();
         // 获取不同层的内容
         List<List<Div>> layerArr = virtualPage.getLayerContent();
         for (List<Div> layerContent : layerArr) {
@@ -188,7 +195,7 @@ public class VPageParseEngine {
             ctlayer.setType(type);
             ctlayer.setObjID(maxUnitID.incrementAndGet());
             // 像图层中些转化的元素对象
-            convert2Layer(ctlayer, layerContent);
+            convert2Layer(pageLoc, ctlayer, layerContent);
         }
     }
 
@@ -196,10 +203,11 @@ public class VPageParseEngine {
     /**
      * 将虚拟页面中的元素转为OFD元素加入图层中
      *
+     * @param pageLoc
      * @param to      图形元素将要写入到的页面图层
      * @param content 需要加入图层得到元素
      */
-    private void convert2Layer(CT_Layer to, List<Div> content) {
+    private void convert2Layer(ST_Loc pageLoc, CT_Layer to, List<Div> content) {
         // 处理页面中的元素为OFD的图元
         for (Div elem : content) {
             // 忽略占位符和对象
@@ -219,6 +227,9 @@ public class VPageParseEngine {
             } else if (elem instanceof Canvas) {
                 // 渲染Canvas
                 CanvasRender.render(to, resManager, (Canvas) elem, maxUnitID);
+            } else if (elem instanceof AreaHolderBlock) {
+                // 渲染区域占位符 不进行任何绘制
+                AreaHolderBlockRender.render(this.docDir, pageLoc, to, (AreaHolderBlock) elem, maxUnitID);
             }
         }
     }

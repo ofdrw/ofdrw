@@ -177,6 +177,14 @@ public class ST_Loc extends STBase {
         return loc.startsWith("/");
     }
 
+    /**
+     * 是否为空或空串
+     * @return true - 空；false - 非空
+     */
+    public boolean isEmpty() {
+        return loc == null || loc.trim().length() == 0;
+    }
+
     @Override
     public String toString() {
         return loc;

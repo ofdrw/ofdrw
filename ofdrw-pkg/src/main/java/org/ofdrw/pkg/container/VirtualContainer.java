@@ -453,6 +453,27 @@ public class VirtualContainer implements Closeable {
     }
 
     /**
+     * 删除文件
+     * <p>
+     * 注意该方法只能删除当前容器中的文件，不能删除子容器中的文件。
+     *
+     * @param fileName 文件名称
+     */
+    public void deleteFile(String fileName) throws IOException {
+        if (fileName == null || fileName.length() == 0) {
+            return;
+        }
+        fileCache.remove(fileName);
+        Path res = Paths.get(fullPath, fileName);
+        // 检查是否具有相同前缀，防止路径攻击
+        if (res.toAbsolutePath().toString().startsWith(fullPath)) {
+            // 删除文件
+            Files.delete(res);
+        }
+    }
+
+
+    /**
      * 删除整个虚拟容器
      */
     public void clean() {

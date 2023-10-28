@@ -18,6 +18,8 @@ import java.util.Iterator;
  * 图片对象
  * <p>
  * 为了防止与Image对象命名冲突采用Img缩写
+ * <p>
+ * 绘制行为详见渲染器 {@link org.ofdrw.layout.engine.render.ImgRender}
  *
  * @author 权观宇
  * @since 2020-02-03 03:34:31

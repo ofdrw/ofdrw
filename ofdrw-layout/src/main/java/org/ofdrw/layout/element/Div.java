@@ -12,6 +12,8 @@ import java.util.Arrays;
  * 盒式模型基础
  * <p>
  * 每个继承Div的对象都不必须提供泛型参数T,用于简化链式调用。
+ * <p>
+ * 绘制行为详见渲染器：{@link org.ofdrw.layout.engine.render.DivRender}
  *
  * @param <T> 链式调用返还值，Div的子类
  * @author 权观宇
@@ -153,9 +155,9 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
     /**
      * 创建绝对定位的Div对象
      *
-     * @param x 固定布局的盒式模型左上角X坐标
-     * @param y 固定布局的盒式模型左上角y坐标
-     * @param width 宽度
+     * @param x      固定布局的盒式模型左上角X坐标
+     * @param y      固定布局的盒式模型左上角y坐标
+     * @param width  宽度
      * @param height 高度
      */
     public Div(double x, double y, double width, double height) {

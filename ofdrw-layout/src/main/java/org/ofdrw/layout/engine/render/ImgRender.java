@@ -14,6 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 图片渲染对象
+ * <p>
+ * {@link org.ofdrw.layout.element.Img} 的渲染器
  *
  * @author 权观宇
  * @since 2020-03-22 13:17:52

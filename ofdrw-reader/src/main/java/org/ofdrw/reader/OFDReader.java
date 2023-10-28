@@ -519,8 +519,27 @@ public class OFDReader implements Closeable {
      *
      * @param pageNum 页码，从1起
      * @return 页面对象
+     * @throws NumberFormatException 页码小于1
+     * @throws RuntimeException      路径不存在，或文档解析异常
      */
     public Page getPage(int pageNum) {
+        ST_Loc pageLoc = getPageAbsLoc(pageNum);
+        try {
+            return rl.get(pageLoc, Page::new);
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 获取制定页码页面文件的在文档中的绝对路径 （以 "/" 开头）
+     *
+     * @param pageNum 页码
+     * @return 页面文件的在文档中的绝对路径
+     * @throws NumberFormatException 页码小于1
+     * @throws RuntimeException      路径不存在
+     */
+    public ST_Loc getPageAbsLoc(int pageNum) {
         if (pageNum <= 0) {
             throw new NumberFormatException("页码(pageNum)不能小于0");
         }
@@ -536,7 +555,8 @@ public class OFDReader implements Closeable {
             }
             // 获取页面的路径
             ST_Loc pageLoc = pageList.get(index).getBaseLoc();
-            return rl.get(pageLoc, Page::new);
+            String absolutePath = rl.toAbsolutePath(pageLoc);
+            return ST_Loc.getInstance(absolutePath);
         } catch (FileNotFoundException | DocumentException e) {
             throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
         } finally {

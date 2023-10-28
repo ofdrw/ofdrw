@@ -12,6 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 盒式模型渲染器
+ * <p>
+ * {@link org.ofdrw.layout.element.Div} 的渲染器
  *
  * @author 权观宇
  * @since 2020-03-21 14:18:40
@@ -37,10 +39,13 @@ public class DivRender {
             alpha = (int) (e.getOpacity() * 255);
         }
 
+        if (e.getHeight() == null) {
+            throw new IllegalArgumentException("Div元素的高度必须指定");
+        }
         /*
-         基础的盒式模型绘制：
-         1. 首先绘制背景颜色
-         2. 绘制边框
+           基础的盒式模型绘制：
+            1. 首先绘制背景颜色
+            2. 绘制边框
          */
         // 背景颜色 (又背景颜色并且，内容存在高度)
         double eleContentHeight = e.getPaddingTop() + e.getHeight() + e.getPaddingBottom();

@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 段落渲染器
+ * <p>
+ * {@link org.ofdrw.layout.element.Paragraph} 的渲染器
  *
  * @author 权观宇
  * @since 2020-03-24 04:31:37

@@ -1,6 +1,7 @@
 package org.ofdrw.layout.engine;
 
 import org.ofdrw.layout.PageLayout;
+import org.ofdrw.layout.element.BR;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.Position;
 
@@ -45,6 +46,16 @@ public class SegmentationEngine {
         while (!seq.isEmpty()) {
             Div div = seq.pop();
             if (div.getPosition() == Position.Absolute) {
+                continue;
+            }
+            if (div instanceof BR) {
+                if (segment.isEmpty()) {
+                    // 如果段为空，那么不需要换行
+                    continue;
+                }
+                // 换行符
+                res.add(segment);
+                segment = new Segment(width);
                 continue;
             }
             // 尝试将元素加入段中

@@ -222,7 +222,7 @@ public final class FontLoader {
             DefaultFontPath = loc;
             defaultFont = new TrueTypeFont().parse(buf);
             iTextDefaultFont = new com.itextpdf.io.font.TrueTypeFont(buf);
-        } catch (IOException|NullPointerException ignored) {
+        } catch (Exception ignored) {
             return false;
         } finally {
             if (in != null) {
