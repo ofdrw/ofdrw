@@ -405,9 +405,27 @@ public abstract class AWTMaker {
 
     }
 
+    /**
+     * 获取字号 ，若无法获取则设置为默认值 0.353。
+     * @param textObject 文字对象
+     * @return 字号。
+     */
+    private double getTextObjectSize(TextObject textObject) {
+        double fontSize = 0.353;
+        if (textObject == null) {
+            return fontSize;
+        }
+        try {
+            fontSize = textObject.getSize();
+        } catch (Exception e) {
+            fontSize = 0.353;
+        }
+        return fontSize;
+    }
+
     private void writeText(Graphics2D graphics, TextObject textObject, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
         logger.debug("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━TextObject━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓");
-        final Double fontSize = textObject.getSize();
+        Double fontSize = getTextObjectSize(textObject);
         Color strokeColor = getStrokeColor(textObject.getStrokeColor(), null, drawParams);
         Color fillColor = getFillColor(textObject.getFillColor(), null, drawParams);
         if (fillColor == null) fillColor = Color.black;
@@ -462,7 +480,7 @@ public abstract class AWTMaker {
                         // 通过字符编码获取字形
                         GlyphData glyphData = typeFont.getUnicodeGlyph(c);
                         tbDrawChars.add(glyphData.getPath());
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         tbDrawChars.add(null);
                         logger.debug(String.format("找不到字形 unicode: %c", c));
                     }
@@ -786,7 +804,7 @@ public abstract class AWTMaker {
      * @param ppm 每毫米像素数量(Pixels per millimeter)
      */
     public void setPPM(double ppm) {
-        if (ppm <= 0){
+        if (ppm <= 0) {
             return;
         }
         this.ppm = ppm;

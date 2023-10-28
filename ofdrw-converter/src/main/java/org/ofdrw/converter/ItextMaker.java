@@ -594,8 +594,27 @@ public class ItextMaker {
         canvas.close();
     }
 
+    /**
+     * 获取字号 ，若无法获取则设置为默认值 0.353。
+     *
+     * @param textObject 文字对象
+     * @return 字号。
+     */
+    private double getTextObjectSize(TextObject textObject) {
+        double fontSize = 0.353;
+        if (textObject == null) {
+            return fontSize;
+        }
+        try {
+            fontSize = textObject.getSize();
+        } catch (Exception e) {
+            fontSize = 0.353;
+        }
+        return fontSize;
+    }
+
     private void writeText(ResourceManage resMgt, PdfCanvas pdfCanvas, ST_Box box, ST_Box sealBox, ST_Box annotBox, TextObject textObject, Color fillColor, int alpha, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
-        float fontSize = textObject.getSize().floatValue();
+        float fontSize = (float) getTextObjectSize(textObject);
         pdfCanvas.setFillColor(fillColor);
         if (textObject.getFillColor() != null) {
             Element e = textObject.getFillColor().getOFDElement("AxialShd");

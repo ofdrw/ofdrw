@@ -30,9 +30,9 @@ OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、
 - [**ofdrw-gm**](./ofdrw-gm) 用于支持签章模块需要的国密电子签章数据结构。
 - [**ofrw-crypto**](./ofdrw-crypto) 用于实现《GM/T 0099-2020 开放版式文档密码应用技术规范》对OFD的密码相关功能。
 - [**ofdrw-gv**](./ofdrw-gv) OFDRW 所有模块所共用的全局变量。
-- [**ofdrw-converter**](./ofdrw-converter) OFD文档转换。 ***New***
+- [**ofdrw-converter**](./ofdrw-converter) OFD文档转换。
 - [**ofdrw-tool**](./ofdrw-tool) OFD文档工具，文档合并、裁剪、重组。
-- [**ofdrw-graphics2d**](./ofdrw-graphics2d) 实现了AWT Graphics2D接口，生成OFD文档内容。 ***New***
+- [**ofdrw-graphics2d**](./ofdrw-graphics2d) 实现了AWT Graphics2D接口，生成OFD文档内容。
 - [**ofdrw-full**](./ofdrw-full) 上述所有模块整合包，用于简化依赖引入。
 
 注：
@@ -96,7 +96,7 @@ public class HelloWorld {
 - [OFD R&W 转换OFD/OFD导出 ](./ofdrw-converter/README.md)
 - [OFD R&W 字形数据解析](./ofdrw-converter/src/main/java/org/ofdrw/converter/font/README.md)
 - [OFD R&W 文档合并](./ofdrw-tool/README.md)
-
+- [OFD R&W 区域占位区块（类表单效果） ***New***](./ofdrw-layout/doc/areaholderblock/README.md)
 
 ### 相关解决方案
 
@@ -112,7 +112,7 @@ HTML5前端预览解决方案： [DLTech21/ofd.js . https://github.com/DLTech21/
 #### 开源阅读器
 
 
-**XilouReader** *New*：[chingliu/XilouReader . https://gitee.com/chingliu/XilouReader](https://gitee.com/chingliu/XilouReader)
+**XilouReader**：[chingliu/XilouReader . https://gitee.com/chingliu/XilouReader](https://gitee.com/chingliu/XilouReader)
 
 - 基于pdfium的ofd/pdf双引擎版式阅读器。
 
