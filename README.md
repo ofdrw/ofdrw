@@ -89,7 +89,7 @@ public class HelloWorld {
 
 相关文档目录：
 
-- [OFD R&W 布局设计](./ofdrw-layout/doc/README.md)
+- [OFD R&W 布局设计](./ofdrw-layout/doc/layout/README.md)
 - [OFD R&W Canvas](./ofdrw-layout/doc/canvas/README.md)
 - [OFD R&W 签名签章快速入门](./ofdrw-sign/doc/quickstart/README.md)
 - [OFD R&W 加密 完整性保护协议](./ofdrw-crypto/README.md)
