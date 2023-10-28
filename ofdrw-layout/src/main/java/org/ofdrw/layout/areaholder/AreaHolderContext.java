@@ -46,6 +46,7 @@ public class AreaHolderContext {
      *
      * @param doc 文档上下文
      * @param n   文档序号
+     * @throws FileNotFoundException 文档不存在
      */
     public AreaHolderContext(OFDDoc doc, int n) throws FileNotFoundException {
         this.rl = new ResourceLocator(doc.getOfdDir());

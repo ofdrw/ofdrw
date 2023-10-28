@@ -6,13 +6,14 @@ import org.ofdrw.layout.Rectangle;
 /**
  * 区域占位区块
  * <p>
+ * 该元素属性与Div属性一致，也就是说可以绘制边框等内容。
+ * <p>
  * 用于构造页面中一个用于容纳将来可能出现的页面元素的结构，该结构不做任何事情仅仅是占位。
  * <p>
  * 被添加到页面中的 区域占位区块 将会生成一个特别定位坐标到 AreaHolderBlocks.xml 文件，详见 {@link org.ofdrw.layout.areaholder.AreaHolderBlocks
  * <p>
  * 绘制行为详见渲染器：{@link AreaHolderBlock}
  * <p>
- * 该元素属性与Div属性一致，也就是说可以绘制边框等内容。
  *
  * @author 权观宇
  * @since 2023-10-28 12:24:06

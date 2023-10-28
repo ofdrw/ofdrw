@@ -35,6 +35,7 @@ public class AdditionVPage extends VirtualPage {
     /**
      * 已经过时，仅为兼容行保留，使用 {@link #AdditionVPage(Page, ST_Loc)}
      *
+     * @param pageObj 页面对象
      * @deprecated {@link #AdditionVPage(Page, ST_Loc)}
      */
     @Deprecated
