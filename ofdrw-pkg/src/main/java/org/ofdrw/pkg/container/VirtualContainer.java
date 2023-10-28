@@ -458,6 +458,7 @@ public class VirtualContainer implements Closeable {
      * 注意该方法只能删除当前容器中的文件，不能删除子容器中的文件。
      *
      * @param fileName 文件名称
+     * @throws IOException 文件删除异常
      */
     public void deleteFile(String fileName) throws IOException {
         if (fileName == null || fileName.length() == 0) {
