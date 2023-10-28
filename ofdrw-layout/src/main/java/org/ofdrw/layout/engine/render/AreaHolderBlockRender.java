@@ -33,6 +33,7 @@ public class AreaHolderBlockRender {
      *
      * @param docDir    文档目录，用于设置位置信息
      * @param pageLoc   页面位置
+     * @param ahBlock   区域占位区块
      * @param layer     将要渲染到的图层
      * @param maxUnitID 最大ID
      * @throws RenderException 渲染发生错误
