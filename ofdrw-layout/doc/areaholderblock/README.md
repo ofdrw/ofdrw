@@ -23,14 +23,14 @@
 
 ```java
 OFDDoc ofdDoc = new OFDDoc(out);
-AdditionVPage avPage = ofdDoc.getAVPage(1);
 // ...
 
-AreaHolderBlock field = new AreaHolderBlock("name", 40.7d, 40d,100d, 10d);
-avPage.add(field);
+AreaHolderBlock field = new AreaHolderBlock("name", 100d, 10d);
+ofdDoc.add(field);
 
 // ...
 ofdDoc.close();
+
 ```
 
 完整示例代码见：[AreaHolderBlockTest.java #testStreamDocAddArea](../../src/test/java/org/ofdrw/layout/element/AreaHolderBlockTest.java)
@@ -40,10 +40,11 @@ ofdDoc.close();
 
 ```java
 OFDDoc ofdDoc = new OFDDoc(out);
+AdditionVPage avPage = ofdDoc.getAVPage(1);
 // ...
 
-AreaHolderBlock field = new AreaHolderBlock("name", 100d, 10d);
-ofdDoc.add(field);
+AreaHolderBlock field = new AreaHolderBlock("name", 40.7d, 40d,100d, 10d);
+avPage.add(field);
 
 // ...
 ofdDoc.close();
