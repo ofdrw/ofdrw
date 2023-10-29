@@ -75,7 +75,7 @@ public class HelloWorld {
 
 效果如下：
 
-![示例](./ofdrw-layout/doc/示例.png)
+![示例](./ofdrw-layout/doc/layout/示例.png)
 
 - [文档生成API示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/OFDDocTest.java)
 - [文档布局示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/LayoutTest.java)
