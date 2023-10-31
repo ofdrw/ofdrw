@@ -75,11 +75,11 @@ public class ST_Array extends STBase implements Cloneable {
     /**
      * 获取 ST_Array 实例如果参数非法则返还null
      *
-     * @param arrStr 数字字符串
+     * @param arrStr 数字字符串或者字符串null
      * @return 实例 或 null
      */
     public static ST_Array getInstance(String arrStr) {
-        if (arrStr == null || arrStr.trim().length() == 0) {
+        if (arrStr == null || "null".equals(arrStr) || arrStr.trim().length() == 0) {
             return null;
         }
         return new ST_Array(arrStr.trim().split("\\s+"));
