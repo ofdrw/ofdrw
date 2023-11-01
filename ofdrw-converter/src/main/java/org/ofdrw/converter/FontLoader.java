@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.ofdrw.converter.font.*;
 import org.ofdrw.converter.utils.OSinfo;
+import org.ofdrw.converter.utils.StringUtils;
 import org.ofdrw.core.Holder;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.text.font.CT_Font;
@@ -186,7 +187,7 @@ public final class FontLoader {
         String defFt = null;
         for (String name : arr) {
             defFt = getReplaceSimilarFontPath(name, "");
-            if (loadAsDefaultFont(defFt)) {
+            if (!StringUtils.isBlank(defFt) && loadAsDefaultFont(defFt)) {
                 break;
             } else {
                 defFt = null;
