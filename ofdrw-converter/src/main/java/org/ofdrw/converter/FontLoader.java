@@ -61,6 +61,7 @@ public final class FontLoader {
     private static final String DEFAULT_FONT_DIR_MAC = "/System/Library/Fonts";
     private static final String DEFAULT_FONT_DIR_WINDOWS = "C:/Windows/Fonts";
     private static final String DEFAULT_FONT_DIR_LINUX = "/usr/share/fonts";
+    private static String CUSTOM_FONT_DIR = null;
 
     /**
      * 默认字体
@@ -136,6 +137,20 @@ public final class FontLoader {
     }
 
     /**
+     * 获取字体加载器实例并加载程序
+     * 可手动提前调用
+     * @param customFontDir 客制化字体路径
+     * @return 字体加载器
+     */
+    public static FontLoader getInstance(String customFontDir) {
+        if (instance == null) {
+            FontLoader.CUSTOM_FONT_DIR = customFontDir;
+            syncInit();
+        }
+        return instance;
+    }
+
+    /**
      * 预加载字体
      * <p>
      * 扫描操作系统内字体,功能与{@link #getInstance()} 一致
@@ -151,6 +166,9 @@ public final class FontLoader {
      * 加载系统字体
      * */
     public void init() {
+        if (!StringUtils.isBlank(CUSTOM_FONT_DIR)) {
+            scanFontDir(new File(CUSTOM_FONT_DIR));
+        }
         if (OSinfo.isWindows()) {
             scanFontDir(new File(DEFAULT_FONT_DIR_WINDOWS));
             // 扫描用户字体目录
