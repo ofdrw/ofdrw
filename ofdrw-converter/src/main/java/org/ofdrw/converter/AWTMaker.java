@@ -240,7 +240,7 @@ public abstract class AWTMaker {
 
             if (pageBlock instanceof CT_Layer) {
                 ST_RefID drawParamRef = ((CT_Layer) pageBlock).getDrawParam();
-                addDrawParams(drawParams, drawParamRef);
+                drawParams = addDrawParams(drawParams, drawParamRef);
             }
 
             if (pageBlock.attribute("Boundary") != null) {
@@ -251,34 +251,34 @@ public abstract class AWTMaker {
 
             for (PageBlockType object : pageBlock.getPageBlocks()) {
                 try {
-
+                    List<CT_DrawParam> subDrawParams = drawParams;
                     if (object instanceof CT_GraphicUnit) {
-                        drawParams = addDrawParams(drawParams, (CT_GraphicUnit) object);
+                        subDrawParams = addDrawParams(subDrawParams, (CT_GraphicUnit) object);
                     }
 
                     if (object instanceof TextObject) {
                         TextObject textObject = (TextObject) object;
-                        writeText(graphics, textObject, drawParams, parentMatrix);
+                        writeText(graphics, textObject, subDrawParams, parentMatrix);
                     } else if (object instanceof ImageObject) {
                         ImageObject imageObject = (ImageObject) object;
-                        writeImage(graphics, imageObject, drawParams, parentMatrix);
+                        writeImage(graphics, imageObject, subDrawParams, parentMatrix);
                     } else if (object instanceof PathObject) {
                         PathObject pathObject = (PathObject) object;
-                        writePath(graphics, pathObject, drawParams, parentMatrix);
+                        writePath(graphics, pathObject, subDrawParams, parentMatrix);
                     } else if (object instanceof CompositeObject) {
                         CompositeObject compositeObject = (CompositeObject) object;
-                        writeComposite(graphics, compositeObject, drawParams, parentMatrix);
+                        writeComposite(graphics, compositeObject, subDrawParams, parentMatrix);
                     } else if (object instanceof CT_PageBlock) {
                         CT_PageBlock block = (CT_PageBlock) object;
-                        writeContent(graphics, block, drawParams, parentMatrix);
+                        writeContent(graphics, block, subDrawParams, parentMatrix);
                     } else if (object instanceof CT_Layer) {
                         CT_Layer layer = (CT_Layer) object;
                         ST_RefID drawParamRef = layer.getDrawParam();
                         if (drawParamRef != null) {
                             CT_DrawParam ctDrawParam = resourceManage.getDrawParam(drawParamRef.getRefId().toString());
-                            drawParams.add(ctDrawParam);
+                            subDrawParams.add(ctDrawParam);
                         }
-                        writeContent(graphics, layer, drawParams, parentMatrix);
+                        writeContent(graphics, layer, subDrawParams, parentMatrix);
                     }
                 } catch (Exception e) {
                     logger.warn("PageBlock无法渲染:", e);
