@@ -398,6 +398,8 @@ public final class FontLoader {
         if (name != null && fontNamePathMapping.containsKey(name)) {
             return fontNamePathMapping.get(name);
         }
+
+        if (familyName == null) return null;
         name = fontNameAliasMapping.get(familyName);
         if (name != null && fontNamePathMapping.containsKey(name)) {
             return fontNamePathMapping.get(name);
