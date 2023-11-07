@@ -7,6 +7,7 @@ import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.pageDescription.color.colorSpace.CV;
+import org.ofdrw.core.pageDescription.color.colorSpace.OFDColorSpaceType;
 import org.ofdrw.core.pageDescription.color.colorSpace.Palette;
 import org.ofdrw.reader.ResourceManage;
 
@@ -118,7 +119,7 @@ final public class ColorConvert {
             if (colorValues == null) {
                 return new int[]{0, 0, 0};
             }
-            return colorValues.expectIntArr(3);
+            cs = new CT_ColorSpace(OFDColorSpaceType.RGB);
         }
 
         // 颜色索引，存在时从索引位置获取颜色数值
@@ -130,16 +131,26 @@ final public class ColorConvert {
             final List<CV> cVs = palette.getCVs();
             colorValues = cVs.get(index).getColor();
         }
+        if (colorValues == null) return null;
+        int[] color = new int[colorValues.size()];
+        for (int i = 0; i < colorValues.size(); i++) {
+            String s = colorValues.getArray().get(i);
+            if (s.startsWith("#")) {
+                color[i] = Integer.parseInt(s.replaceAll("#", ""), 16);
+            } else if (s.indexOf('.') != -1) {
+                color[i] = (int) Float.parseFloat(s);
+            } else {
+                color[i] = Integer.parseInt(s);
+            }
+        }
         // 根据颜色空间类型，转换颜色为RGB
         switch (cs.getType()) {
             case RGB:
-                return colorValues.expectIntArr(3);
+                return color;
             case CMYK:
-                final int[] cmyk = colorValues.expectIntArr(4);
-                return cmykToRgb(cmyk[0], cmyk[1], cmyk[2], cmyk[3]);
+                return cmykToRgb(color[0], color[1], color[2], color[3]);
             case GRAY:
-                final int[] gray = colorValues.expectIntArr(1);
-                return new int[]{gray[0], gray[0], gray[0]};
+                return new int[]{color[0], color[0], color[0]};
         }
         return new int[]{0, 0, 0};
     }
