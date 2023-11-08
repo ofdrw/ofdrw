@@ -777,11 +777,10 @@ public abstract class AWTMaker {
             String s = array.getArray().get(i);
             if (s.startsWith("#")) {
                 color[i] = Integer.parseInt(s.replaceAll("#", ""), 16);
+            } else if (s.indexOf('.') != -1) {
+                color[i] = (int) Float.parseFloat(s);
             } else {
-                if ("0.0".equals(s))
-                    color[i] = 0;
-                else
-                    color[i] = Integer.parseInt(s);
+                color[i] = Integer.parseInt(s);
             }
         }
         switch (type) {
