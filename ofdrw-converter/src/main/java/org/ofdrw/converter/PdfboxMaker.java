@@ -522,8 +522,26 @@ public class PdfboxMaker {
         contentStream.restoreGraphicsState();
     }
 
+    /**
+     * 获取字号 ，若无法获取则设置为默认值 0.353。
+     * @param textObject 文字对象
+     * @return 字号。
+     */
+    private float getTextObjectSize(TextObject textObject) {
+    	float fontSize = 0.353f;
+        if (textObject == null) {
+            return fontSize;
+        }
+        try {
+            fontSize = textObject.getSize().floatValue();
+        } catch (Exception e) {
+            fontSize = 0.353f;
+        }
+        return fontSize;
+    }
+
     private void writeText(ResourceManage resMgt, PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, TextObject textObject, PDColor fillColor, int alpha) throws IOException {
-        float fontSize = textObject.getSize().floatValue();
+        float fontSize = getTextObjectSize(textObject);
 
         if (sealBox != null && textObject.getBoundary() != null) {
             textObject.setBoundary(textObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
