@@ -114,7 +114,7 @@ public class ZipUtil {
             throw new IOException("解压目录创建失败: " + pathFile);
         }
 
-        try (ZipArchiveInputStream zipFile = new ZipArchiveInputStream(src,charset)) {
+        try (ZipArchiveInputStream zipFile = new ZipArchiveInputStream(src,charset,false,true)) {
             ZipArchiveEntry entry = null;
             while ((entry = (ZipArchiveEntry)zipFile.getNextEntry()) != null) {
                 File f = new File(pathFile, entry.getName()).getCanonicalFile();
