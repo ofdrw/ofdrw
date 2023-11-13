@@ -25,6 +25,7 @@ class AreaHolderContextTest {
             if (canvas == null) {
                 return;
             }
+            System.out.printf(">> Area [name] (%.2f, %.2f, %.2f, %.2f)\n",  canvas.getX(), canvas.getY(), canvas.getWidth(), canvas.getHeight());
             canvas.setDrawer((ctx) -> {
                 ctx.font = "6mm 黑体";
                 ctx.fillStyle = "#0000FF";
@@ -36,6 +37,7 @@ class AreaHolderContextTest {
             if (canvas == null) {
                 return;
             }
+            System.out.printf(">> Area [birthday] (%.2f, %.2f, %.2f, %.2f)\n", canvas.getX(), canvas.getY(), canvas.getWidth(), canvas.getHeight());
             canvas.setDrawer((ctx) -> {
                 ctx.font = "6mm 黑体";
                 ctx.fillStyle = "#0000FF";
