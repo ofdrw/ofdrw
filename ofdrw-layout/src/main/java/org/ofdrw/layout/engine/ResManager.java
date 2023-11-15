@@ -275,13 +275,19 @@ public class ResManager {
     /**
      * 加入一个绘制参数
      * <p>
-     * 如果图片已经存在那么不会重复加入
+     * 如果存在相同或类似的绘制参数则不会重复添加。
      *
      * @param param 绘制参数
      * @return 资源ID
      */
     public ST_ID addDrawParam(CT_DrawParam param) {
-        return addRawWithCache(param);
+        if (param == null) {
+            return null;
+        }
+        // 复制绘制参数，防止出现节点重复添加问题。
+        param = param.clone();
+
+        return addRawWithCache(param.clone());
     }
 
     /**

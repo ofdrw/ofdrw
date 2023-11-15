@@ -685,6 +685,8 @@ public class DrawContext implements Closeable {
 
     /**
      * 保存当前绘图状态
+     * <p>
+     * 与 {@link #restore()} 总是成对出现。
      *
      * @return this
      */
@@ -698,6 +700,8 @@ public class DrawContext implements Closeable {
 
     /**
      * 还原绘图状态
+     * <p>
+     * 与 {@link #save()} 总是成对出现。
      *
      * @return this
      */

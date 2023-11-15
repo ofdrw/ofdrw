@@ -301,6 +301,13 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
         return (T) this;
     }
 
+    /**
+     * 获取内边距
+     * <p>
+     * 一定返回4个元素的数组
+     *
+     * @return 内边距数组，[上,右,下,左]
+     */
     public Double[] getPadding() {
         return padding;
     }

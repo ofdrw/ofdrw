@@ -48,9 +48,15 @@ public class CanvasRender {
             // 添加到图层中
             layer.addPageBlock(block);
         }
-       
 
-        ST_Box boundary = new ST_Box(canvas.getX(), canvas.getY(), canvas.getWidth(), canvas.getHeight());
+        Double[] border = canvas.getBorder();
+        Double[] padding = canvas.getPadding();
+        // 根据盒式模型计算出加上  边框 和 内边距
+        ST_Box boundary = new ST_Box(
+                canvas.getX() + border[0] + padding[0],
+                canvas.getY() + border[1] + padding[1],
+                canvas.getWidth(),
+                canvas.getHeight());
         // 构建上下文
         try (DrawContext ctx = new DrawContext(block, boundary, maxUnitID, resManager)) {
             // 执行绘制工作
