@@ -45,10 +45,17 @@ public class AreaHolderBlockRender {
         layer.addPageBlock(block);
 
         try {
+            Double[] border = ahBlock.getBorder();
+            Double[] padding = ahBlock.getPadding();
             // 获取区域占位区块列表文件
             AreaHolderBlocks blocks = AreaHolderBlocksProcess.obtian(docDir);
             // 构造占位区域位置以及大小
-            ST_Box boundary = new ST_Box(ahBlock.getX(), ahBlock.getY(), ahBlock.getWidth(), ahBlock.getHeight());
+            ST_Box boundary = new ST_Box(
+                    ahBlock.getX() + border[0] + padding[0],
+                    ahBlock.getY() + border[1] + padding[1],
+                    ahBlock.getWidth(),
+                    ahBlock.getHeight()
+            );
             // 创建 区域占位区块
             CT_AreaHolderBlock obj = new CT_AreaHolderBlock(ahBlock.getAreaName())
                     .setBoundary(boundary)

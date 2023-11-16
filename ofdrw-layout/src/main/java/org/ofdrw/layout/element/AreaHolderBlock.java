@@ -12,6 +12,8 @@ import org.ofdrw.layout.Rectangle;
  * 被添加到页面中的 区域占位区块 将会生成一个特别定位坐标到 AreaHolderBlocks.xml 文件，详见 {@link org.ofdrw.layout.areaholder.AreaHolderBlocks}
  * <p>
  * 绘制行为详见渲染器：{@link AreaHolderBlock}
+ * <p>
+ * 注意AreaHolderBlock将会受到 Border 与 Padding的影响，可绘制区域仅为去除了Border与Padding的内的区域。
  *
  * @author 权观宇
  * @since 2023-10-28 12:24:06
