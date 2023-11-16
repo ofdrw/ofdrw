@@ -869,12 +869,12 @@ public class DrawContext implements Closeable {
         tm.readDirection = state.font.getReadDirection();
         tm.fontSize = state.font.getFontSize();
         // 测量字间距
-        Double[] offset = TextMeasureTool.measure(text, state.font);
-        if (offset.length == 0) {
+        MeasureBody measureBody = TextMeasureTool.measureWithWith(text, state.font);
+        tm.width = measureBody.width;
+        tm.offset = measureBody.offset;
+        if (tm.offset == null || tm.offset.length == 0) {
             tm.width = 0d;
-            return tm;
         }
-        tm.width = TextMeasureTool.measureWithWith(text, state.font).width;
         return tm;
     }
 
