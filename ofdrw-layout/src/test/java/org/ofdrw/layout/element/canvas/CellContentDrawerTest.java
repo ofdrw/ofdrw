@@ -254,4 +254,70 @@ class CellContentDrawerTest {
         }
         System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
     }
+
+    /**
+     * 设置字间距
+     */
+    @Test
+    void cellImg() throws IOException {
+        Path outP = Paths.get("target/cell-img.ofd");
+        Path img = Paths.get("src/test/resources/rhino.jpg");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+            CellContentDrawer.DEBUG = true;
+            CellContentDrawer cell = new CellContentDrawer(50, 50,100d, 50d);
+            cell.setValue(img,40, 30);
+
+            Canvas canvas = cell.getCanvas();
+            vPage.add(canvas);
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+    }
+
+    /**
+     * 图片居中
+     */
+    @Test
+    void cellImgCenter() throws IOException {
+        Path outP = Paths.get("target/cell-img-center.ofd");
+        Path img = Paths.get("src/test/resources/rhino.jpg");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+            CellContentDrawer.DEBUG = true;
+            CellContentDrawer cell = new CellContentDrawer(50, 50,100d, 50d);
+            cell.setValue(img,40, 30);
+            cell.setTextAlign(TextAlign.center);
+
+            Canvas canvas = cell.getCanvas();
+            vPage.add(canvas);
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+    }
+
+    /**
+     * 图片右下角
+     */
+    @Test
+    void cellImgBottomRight() throws IOException {
+        Path outP = Paths.get("target/cell-img-bottom-right.ofd");
+        Path img = Paths.get("src/test/resources/rhino.jpg");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+            CellContentDrawer.DEBUG = true;
+            CellContentDrawer cell = new CellContentDrawer(50, 50,100d, 50d);
+            cell.setValue(img,40, 30);
+            cell.setTextAlign(TextAlign.right);
+            cell.setVerticalAlign(VerticalAlign.bottom);
+
+            Canvas canvas = cell.getCanvas();
+            vPage.add(canvas);
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+    }
 }

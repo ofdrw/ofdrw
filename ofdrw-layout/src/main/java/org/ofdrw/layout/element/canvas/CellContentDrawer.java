@@ -2,7 +2,10 @@ package org.ofdrw.layout.element.canvas;
 
 import org.ofdrw.core.basicType.STBase;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.LinkedList;
 
 /**
@@ -93,6 +96,11 @@ public class CellContentDrawer implements Drawer {
      */
     private Double letterSpacing = 0d;
 
+    /**
+     * 图片
+     */
+    private Img img = null;
+
 
     /**
      * 通过已有Canvas构造单元格
@@ -122,6 +130,9 @@ public class CellContentDrawer implements Drawer {
         this.canvas.setDrawer(this);
     }
 
+    /**
+     * 文字行
+     */
     private static class TextLine {
         /**
          * 文本内容
@@ -141,6 +152,31 @@ public class CellContentDrawer implements Drawer {
         }
     }
 
+    /**
+     * 图片
+     */
+    private static class Img {
+        /**
+         * 图片路径
+         */
+        public Path path;
+        /**
+         * 图片宽度
+         */
+        public double width;
+
+        /**
+         * 图片高度
+         */
+        public double height;
+
+        public Img(Path path, double width, double height) {
+            this.path = path;
+            this.width = width;
+            this.height = height;
+        }
+    }
+
 
     /**
      * 单元格内部绘制
@@ -150,6 +186,81 @@ public class CellContentDrawer implements Drawer {
      */
     @Override
     public void draw(DrawContext ctx) throws IOException {
+        if (this.img != null) {
+            // 绘制图片
+            drawImg(ctx);
+        } else {
+            // 绘制文字
+            drawText(ctx);
+        }
+    }
+
+    /**
+     * 单元格图片绘制
+     *
+     * @param ctx 绘制上下文
+     * @throws IOException 图片绘制异常
+     */
+    private void drawImg(DrawContext ctx) throws IOException {
+        if (this.img == null) {
+            return;
+        }
+        if (this.img.width <= 0 || this.img.height <= 0) {
+            // 若未对图片进行宽高设置，则从图片中获取宽高
+            BufferedImage gImg = ImageIO.read(img.path.toFile());
+            this.img.width = ctx.mm(gImg.getWidth());
+            this.img.height = ctx.mm(gImg.getHeight());
+            if (DEBUG) {
+                System.out.printf(">> 从图片中获取宽高 img.width:%.2f img.height:%.2f\n", img.width, img.height);
+            }
+        }
+
+        double x = 0;
+        switch (this.textAlign) {
+
+            case right:
+            case end:
+                // 右浮动
+                x = canvas.getWidth() - img.width;
+                break;
+            case center:
+                // 居中
+                x = (canvas.getWidth() - img.width) / 2d;
+                break;
+            case start:
+            case left:
+            default:
+                // 左浮动
+                x = 0d;
+                break;
+        }
+        double y = 0;
+        switch (this.verticalAlign) {
+            case bottom:
+                y = canvas.getHeight() - img.height;
+                break;
+            case center:
+                y = (canvas.getHeight() - img.height) / 2d;
+                break;
+            case top:
+            default:
+                y = 0d;
+                break;
+        }
+        ctx.drawImage(img.path, x, y, img.width, img.height);
+
+        if (DEBUG) {
+            debugBorder(ctx);
+        }
+    }
+
+    /**
+     * 单元格文字内容绘制
+     *
+     * @param ctx 绘制上下文
+     * @throws IOException 文字绘制异常
+     */
+    private void drawText(DrawContext ctx) throws IOException {
         if (this.value == null || this.value.isEmpty()) {
             return;
         }
@@ -247,17 +358,33 @@ public class CellContentDrawer implements Drawer {
         }
 
         if (DEBUG) {
-            ctx.save();
-            double lineWidth = 0.353d;
-            ctx.setLineWidth(lineWidth);
-            ctx.strokeStyle = "rgb(255,0,0)";
-            ctx.moveTo(0, 0);
-            ctx.lineTo(width, height);
-            ctx.moveTo(width, 0);
-            ctx.lineTo(0, height);
-            ctx.stroke();
-            ctx.restore();
+            debugBorder(ctx);
         }
+    }
+
+    /**
+     * 绘制辅助线
+     * @param ctx 绘制上下文
+     */
+    private void debugBorder(DrawContext ctx){
+
+        double width = canvas.getWidth();
+        double height = canvas.getHeight();
+
+        ctx.save();
+        double lineWidth = 0.353d;
+        ctx.setLineDash(1.5d, 1.5d);
+        ctx.setLineWidth(lineWidth);
+        ctx.setGlobalAlpha(0.53);
+        ctx.strokeStyle = "rgb(255,0,0)";
+        ctx.moveTo(0, 0);
+        ctx.lineTo(width, height);
+        ctx.moveTo(width, 0);
+        ctx.lineTo(0, height);
+        ctx.rect(0, 0, width, height);
+        ctx.stroke();
+
+        ctx.restore();
     }
 
     /**
@@ -277,6 +404,33 @@ public class CellContentDrawer implements Drawer {
      */
     public CellContentDrawer setValue(String value) {
         this.value = value;
+        return this;
+    }
+
+    /**
+     * 设置图片
+     *
+     * @param imgPath 图片路径，仅支持png、jpg、jpeg、gif、bmp格式
+     * @param w       图片宽度，单位：毫米
+     * @param h       图片高度，单位：毫米
+     * @return this
+     */
+    public CellContentDrawer setValue(Path imgPath, double w, double h) {
+        this.img = new Img(imgPath, w, h);
+        return this;
+    }
+
+    /**
+     * 设置图片
+     * <p>
+     * 图片宽度与高度通过 {@link DrawContext#mm(int)} } 方法转换为毫米
+     *
+     * @param imgPath 图片路径，仅支持png、jpg、jpeg、gif、bmp格式
+     * @return this
+     * @throws IOException 图片加载异常
+     */
+    public CellContentDrawer setValue(Path imgPath) throws IOException {
+        this.img = new Img(imgPath, 0, 0);
         return this;
     }
 
@@ -476,5 +630,41 @@ public class CellContentDrawer implements Drawer {
     public CellContentDrawer setLetterSpacing(Double letterSpacing) {
         this.letterSpacing = letterSpacing;
         return this;
+    }
+
+    /**
+     * 获取图片路径
+     *
+     * @return 图片路径，可能为空。
+     */
+    public Path getImgPath() {
+        if (img == null) {
+            return null;
+        }
+        return img.path;
+    }
+
+    /**
+     * 获取图片高度
+     *
+     * @return 图片高度，可能为0。
+     */
+    public double getImgWidth() {
+        if (img == null) {
+            return 0;
+        }
+        return img.width;
+    }
+
+    /**
+     * 获取图片宽度
+     *
+     * @return 图片宽度，可能为0。
+     */
+    public double getImgHeight() {
+        if (img == null) {
+            return 0;
+        }
+        return img.height;
     }
 }
