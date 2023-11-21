@@ -872,9 +872,6 @@ public class DrawContext implements Closeable {
         MeasureBody measureBody = TextMeasureTool.measureWithWith(text, state.font);
         tm.width = measureBody.width;
         tm.offset = measureBody.offset;
-        if (tm.offset == null || tm.offset.length == 0) {
-            tm.width = 0d;
-        }
         return tm;
     }
 

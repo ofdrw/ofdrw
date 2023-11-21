@@ -116,6 +116,60 @@ public final class TextMeasureTool {
         return measureWithWith(text, fontSetting).offset;
     }
 
+//
+//    /**
+//     * 计算 每个文字所占空间大小
+//     *
+//     * @param text        文本
+//     * @param fontSetting 文字设置
+//     * @return 文档所占区域大小
+//     */
+//    public static Rectangle2D[] measureSpace(String text, FontSetting fontSetting) {
+//
+//        if (text.length() == 0) {
+//            return new Rectangle2D[]{};
+//        }
+//
+//        int readDirection = fontSetting.getReadDirection();
+//        int charDirection = fontSetting.getCharDirection();
+//
+//        double width = 0d;
+//        double height = 0d;
+//        for (int i = 0; i < text.length(); i++) {
+//            char c = text.charAt(i);
+//            Rectangle2D box = fontSetting.box(c);
+//            if (readDirection == 0 || readDirection == 180) {
+//                if (charDirection == 0 || charDirection == 180) {
+//                    if (i != 0) {
+//                        width += fontSetting.getLetterSpacing();
+//                    }
+//                    width += box.getWidth();
+//                    height = Math.max(height, box.getHeight());
+//                } else if (charDirection == 90 || charDirection == 270) {
+//                    if (i != 0) {
+//                        width += fontSetting.getLetterSpacing();
+//                    }
+//                    width += box.getHeight();
+//                    height = Math.max(height, box.getWidth());
+//                }
+//            } else if (readDirection == 90 || readDirection == 270) {
+//                if (charDirection == 0 || charDirection == 180) {
+//                    if (i != 0) {
+//                        height += fontSetting.getLetterSpacing();
+//                    }
+//                    height += box.getHeight();
+//                    width = Math.max(width, box.getWidth());
+//                } else if (charDirection == 90 || charDirection == 270) {
+//                    if (i != 0) {
+//                        height += fontSetting.getLetterSpacing();
+//                    }
+//                    height += box.getWidth();
+//                    width = Math.max(width, box.getHeight());
+//                }
+//            }
+//        }
+//        return new Rectangle2D.Double(0, 0, width, height);
+//    }
 
     /**
      * 获取字符偏移量

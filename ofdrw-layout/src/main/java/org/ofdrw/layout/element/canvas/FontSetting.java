@@ -5,6 +5,8 @@ import org.ofdrw.font.Font;
 import org.ofdrw.font.FontName;
 import org.ofdrw.layout.element.TextFontInfo;
 
+import java.awt.geom.Rectangle2D;
+
 /**
  * 字体设置
  *
@@ -48,6 +50,8 @@ public class FontSetting implements Cloneable, TextFontInfo {
      * 字符方向
      * <p>
      * 指定了文字放置的方式（基线方向）
+     * <p>
+     * 允许值：0、90、180、270
      */
     private int charDirection = 0;
 
@@ -55,6 +59,8 @@ public class FontSetting implements Cloneable, TextFontInfo {
      * 阅读方向
      * <p>
      * 指定了文字排列的方向
+     * <p>
+     * 允许值：0、90、180、270
      */
     private int readDirection = 0;
 
@@ -324,9 +330,19 @@ public class FontSetting implements Cloneable, TextFontInfo {
      * @return 宽度单位毫米
      */
     public Double charWidth(char c) {
+        return box(c).getWidth();
+    }
+
+    /**
+     * 返回文字所占空间
+     *
+     * @param c 文字
+     * @return 文字所占空间
+     */
+    public Rectangle2D box(char c) {
         if (fontObj.hasWidthMath()) {
             // 如果存在预设的字符映射表那么查表计算
-            return fontObj.getCharWidthScale(c) * fontSize;
+            return new Rectangle2D.Double(0, 0, fontObj.getCharWidthScale(c) * fontSize, fontSize);
         }
         // 如果字体缓存为空，则加载字体
         if (awtFont == null) {
@@ -342,7 +358,7 @@ public class FontSetting implements Cloneable, TextFontInfo {
             awtFont = awtFont.deriveFont((float) fontSize);
         }
 
-        return awtFont.getStringBounds(String.valueOf(c), EnvFont.FRCtx()).getWidth();
+        return awtFont.getStringBounds(String.valueOf(c), EnvFont.FRCtx());
     }
 
 

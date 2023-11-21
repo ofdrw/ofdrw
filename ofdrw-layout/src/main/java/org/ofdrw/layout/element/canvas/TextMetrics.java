@@ -26,4 +26,10 @@ public class TextMetrics {
      * 文本字体大小（单位毫米mm）
      */
     public Double fontSize;
+
+
+    /**
+     * 后一个字对前一个字的偏移量
+     */
+    public Double[] offset;
 }
