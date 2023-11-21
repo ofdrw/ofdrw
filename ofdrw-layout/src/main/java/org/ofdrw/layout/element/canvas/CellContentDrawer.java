@@ -615,9 +615,6 @@ public class CellContentDrawer implements Drawer {
      * @return 文字之间的间距，默认为：0
      */
     public Double getLetterSpacing() {
-        if (letterSpacing < 0) {
-            return 0d;
-        }
         return letterSpacing;
     }
 
