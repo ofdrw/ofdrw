@@ -11,7 +11,7 @@ import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.layout.OFDDoc;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.element.canvas.Canvas;
-import org.ofdrw.layout.element.canvas.Cell;
+import org.ofdrw.layout.element.canvas.CellContentDrawer;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.reader.ResourceLocator;
 
@@ -73,12 +73,12 @@ public class AreaHolderContext {
      * @param areaName 区域名称
      * @return 区域单元格对象，区域名称若不存在则返回null。
      */
-    public Cell getCell(String areaName) {
+    public CellContentDrawer getCell(String areaName) {
         if (areaName == null) {
             return null;
         }
         Canvas canvas = get(areaName);
-        return new Cell(canvas);
+        return new CellContentDrawer(canvas);
     }
 
 
