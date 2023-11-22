@@ -4,6 +4,7 @@ package org.ofdrw.layout.element;
 import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.layout.Rectangle;
 import org.ofdrw.layout.RenderPrepare;
+import org.ofdrw.layout.element.canvas.NamedColor;
 import org.ofdrw.layout.engine.ElementSplit;
 
 import java.util.Arrays;
@@ -231,17 +232,51 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
         return (T) this;
     }
 
+    /**
+     * 获取 边框颜色
+     *
+     * @return 边框颜色 RGB值，null 表示无色。
+     */
     public int[] getBorderColor() {
         return borderColor;
     }
 
+    /**
+     * 设置边框颜色
+     *
+     * @param r 红色值（0~255）
+     * @param g 绿色值（0~255）
+     * @param b 蓝色值（0~255）
+     * @return this
+     */
     public T setBorderColor(int r, int g, int b) {
         this.borderColor = new int[]{r, g, b};
         return (T) this;
     }
 
+    /**
+     * 设置 边框颜色
+     *
+     * @param rgb RGB数组，null 表示无色。
+     * @return this
+     */
     public T setBorderColor(int[] rgb) {
         this.borderColor = rgb;
+        return (T) this;
+    }
+
+    /**
+     * 设置 边框颜色
+     *
+     * @param color 颜色值，可以是 16进制值 "#FFFFFF"、 16进制值缩写 "#FF"F、RGB "rgb(255,255,255)"、颜色名称 "white"
+     * @return this
+     */
+    public T setBorderColor(String color) {
+        int[] c = NamedColor.rgb(color);
+        if (c == null || c.length < 3) {
+            throw new IllegalArgumentException("边框颜色 颜色值错误：" + color);
+        }
+        this.setBorderColor(c);
         return (T) this;
     }
 
@@ -267,10 +302,34 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
         return backgroundColor;
     }
 
+    /**
+     * 设置背景颜色 RGB
+     *
+     * @param r 红色值（0~255）
+     * @param g 绿色值（0~255）
+     * @param b 蓝色值（0~255）
+     * @return this
+     */
     public T setBackgroundColor(int r, int g, int b) {
         this.backgroundColor = new int[]{r, g, b};
         return (T) this;
     }
+
+    /**
+     * 设置 背景颜色
+     *
+     * @param color 颜色值，可以是 16进制值 "#FFFFFF"、 16进制值缩写 "#FF"F、RGB "rgb(255,255,255)"、颜色名称 "white"
+     * @return this
+     */
+    public T setBackgroundColor(String color) {
+        int[] c = NamedColor.rgb(color);
+        if (c == null || c.length < 3) {
+            throw new IllegalArgumentException("背景颜色 颜色值错误：" + color);
+        }
+        this.setBackgroundColor(c);
+        return (T) this;
+    }
+
 
     /**
      * 设置背景颜色 RGB
@@ -278,9 +337,9 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
      * @param backgroundColor RGB数组
      * @return this
      */
-    Div setBackgroundColor(int[] backgroundColor) {
+    public T setBackgroundColor(int[] backgroundColor) {
         this.backgroundColor = backgroundColor;
-        return this;
+        return (T) this;
     }
 
     public Double getWidth() {
@@ -688,10 +747,49 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
         return placeholder;
     }
 
+    /**
+     * 设置是否为 占位符
+     *
+     * @param placeholder true 占位符，不参与渲染， false - 非占位符
+     * @return this
+     */
     public T setPlaceholder(boolean placeholder) {
         this.placeholder = placeholder;
         return (T) this;
     }
+
+    /**
+     * 设置 显示样式
+     *
+     * @param display 显示样式 {@link Display#inlineBlock} 行内联 或 {@link Display#block} 块级
+     * @return this
+     */
+    public T setDisplay(Display display) {
+        switch (display) {
+            case inlineBlock:
+                return setClear(Clear.none);
+            case block:
+            default:
+                return setClear(Clear.both);
+        }
+    }
+
+    /**
+     * 获取 显示样式
+     *
+     * @return 显示样式 {@link Display#inlineBlock} 行内联 或 {@link Display#block} 块级
+     */
+    public Display getDisplay() {
+        if (isBlockElement()) {
+            return Display.block;
+        }
+
+        if (this.clear == Clear.none) {
+            return Display.inlineBlock;
+        }
+        return Display.block;
+    }
+
 
     /**
      * 空间占位符
