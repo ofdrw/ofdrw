@@ -451,6 +451,10 @@ public abstract class AWTMaker {
                 logger.warn("解析加载异常", e);
             }
         }
+        if (typeFont == null) {
+            logger.warn("无法加载字体ID：" + textObject.getFont() + "无法渲染 textObject:" + textObject);
+            return;
+        }
 
         // 创建字形变换映射
         CGTransformMap tsfMap = new CGTransformMap(textObject);

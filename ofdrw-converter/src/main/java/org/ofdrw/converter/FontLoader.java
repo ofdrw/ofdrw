@@ -181,7 +181,7 @@ public final class FontLoader {
          * 默认选择宋体 或 衬体
          */
         String[] arr = new String[]{
-                "宋体", "楷体", "仿宋"
+                "宋体", "楷体", "仿宋", "STHeiti-Light" /* MAC OS默认字体 */
         };
         String defFt = null;
         for (String name : arr) {
