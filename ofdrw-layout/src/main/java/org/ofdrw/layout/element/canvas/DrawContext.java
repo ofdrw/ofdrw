@@ -941,7 +941,7 @@ public class DrawContext implements Closeable {
      * @return this
      */
     public DrawContext setFillColor(int[] fillColor) {
-        this.fillStyle = String.format("%02X%02X%02X", fillColor[0], fillColor[1], fillColor[2]);
+        this.fillStyle = String.format("#%02X%02X%02X", fillColor[0], fillColor[1], fillColor[2]);
         return this;
     }
 
