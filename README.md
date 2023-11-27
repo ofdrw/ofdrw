@@ -97,6 +97,7 @@ public class HelloWorld {
 - [OFD R&W 字形数据解析](./ofdrw-converter/src/main/java/org/ofdrw/converter/font/README.md)
 - [OFD R&W 文档合并](./ofdrw-tool/README.md)
 - [OFD R&W 区域占位区块（类表单效果） ***New***](./ofdrw-layout/doc/areaholderblock/README.md)
+- [OFD R&W 单元格元素 使用指南 ***New***](./ofdrw-layout/doc/cell/README.md)
 
 ### 相关解决方案
 

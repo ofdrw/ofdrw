@@ -54,14 +54,16 @@ ofdDoc.close();
 
 ### 1.2 使用
 
+在OFDRW 2.2.0 区域占位区块支持类似单元格Cell的占位区块填充功能，极大简化了使用方式。
+
 若您的OFD文件中包含了 **区域占位区块列表（AreaHolderBlocks.xml）** ，那么您就可以使用OFDRW在这些预留的空间位置生成OFD内容。
 
 方法如下：
 
 1. 打开文档。
 2. 构造 AreaHolderContext 对象。
-3. 通过 AreaHolderContext 获取指定区域的 Canvas 对象。
-4. 通过Canvas绘制内容。
+3. 通过 AreaHolderContext 获取指定区域的Cell绘制器对象。
+4. 设置单元格内容。
 5. 关闭文档。
 
 示例如下：
@@ -75,18 +77,27 @@ OFDDoc ofdDoc = new OFDDoc(reader, dst);
 AreaHolderContext holderCtx = new AreaHolderContext(ofdDoc);
 
 // 3. 通过 AreaHolderContext 获取指定区域的 Canvas 对象
-Canvas canvas = holderCtx.get("name");
-if (canvas == null) {
+CellContentDrawer nameCell = holderCtx.get("name");
+if (nameCell == null) {
     return;
 }
-// 4. 通过Canvas绘制内容
-canvas.setDrawer((ctx) -> { /* ... */ });
+// 4. 填充单元格内容
+nameCell.setValue("OFD读写库 OFD R&W");
 
 // 5. 关闭文档
 reader.close();
 ofdDoc.close();
 ```
-完整示例代码见：[AreaHolderContextTest.java #testGet](../../src/test/java/org/ofdrw/layout/areaholder/AreaHolderContextTest.java)
+
+
+完整示例代码见：[AreaHolderContextTest.java #getCell](../../src/test/java/org/ofdrw/layout/areaholder/AreaHolderContextTest.java)
+
+> `CellContentDrawer` 基本与 `Cell` 元素相同，您可以参考 [OFDRW Layout模块 单元格元素 使用指南](../cell/README.md) 了解更多。
+
+
+若您需要对占位区域进行更加精细的绘制控制，请使用 `AreaHolderContext` 的 `getCanvas` 方法获取 `Canvas` 对象，然后使用 `Canvas` API 进行绘制。
+
+
 
 ## 2. 工作原理
 
