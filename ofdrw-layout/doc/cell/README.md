@@ -73,9 +73,7 @@ class Main {
 
 ![1row2col.png](1row2col.png)
 
-
 - 完整示例见：[Col2Row1.java](../../src/test/java/org/ofdrw/layout/cases/cell/Col2Row1.java)
-
 
 除上述方式外您依然可以使用虚拟页面使用固定布局使用Cell元素。
 
@@ -95,7 +93,7 @@ Cell元素除了继承自Div元素，除了常规的Div元素设置，Cell元素
 | setFontSize(double fontSize)                  | 设置文本字体大小   |
 | setVerticalAlign(VerticalAlign verticalAlign) | 设置文本垂直对齐方式 |
 | setLineSpace(Double lineSpace)                | 设置文本行间距    |
-| setBlob(Boolean blob)                         | 设置文本是否为粗体  |
+| setBold(Boolean bold)                         | 设置文本是否为粗体  |
 | setItalic(Boolean italic)                     | 设置文本是否为斜体  |
 | setLetterSpacing(Double letterSpacing)        | 设置文本字间距    |
 
@@ -105,11 +103,10 @@ Cell元素除了继承自Div元素，除了常规的Div元素设置，Cell元素
 
 若您对AreaHolderBlock元素不了解，可以参考：[区域占位区块](../areaholderblock/README.md)
 
-
 表单生成示例，如下所示：
 
 ```java
-class Main{
+class Main {
     public static void main(String[] args) throws IOException {
         Path outP = Paths.get("cell-col2row1-form.ofd");
         try (OFDDoc ofdDoc = new OFDDoc(outP)) {
@@ -123,7 +120,7 @@ class Main{
             cell1.setBackgroundColor("#CDD0D6");
 
 
-            AreaHolderBlock cell2 = new AreaHolderBlock("name",50d, 10d);
+            AreaHolderBlock cell2 = new AreaHolderBlock("name", 50d, 10d);
             cell2.setBorder(0.353);
             cell2.setPadding(1d, 3d, 1d, 3d);
             cell2.setMarginLeft(-0.353);
@@ -137,7 +134,8 @@ class Main{
 
 ```
 
-上述代码使用“流式布局”创建了一个表格，表格为1行2列构成，第1格单元格设置了背景颜色作为单元格的标签，第2个单元格使用 AreaHolderBlock 元素设置边框，并且标记了一个名为`name`的占位区域。
+上述代码使用“流式布局”创建了一个表格，表格为1行2列构成，第1格单元格设置了背景颜色作为单元格的标签，第2个单元格使用
+AreaHolderBlock 元素设置边框，并且标记了一个名为`name`的占位区域。
 
 效果如下所示：
 
@@ -145,4 +143,5 @@ class Main{
 
 完整实例代码见：[Col2Row1Form.java](../../src/test/java/org/ofdrw/layout/cases/cell/Col2Row1Form.java)
 
-在生成的OFD文件后，您便可以使用OFDRW Layout模块的 AreaHolderContext 对象，向指定的区域填入内容，详见：[区域占位区块](../areaholderblock/README.md)
+在生成的OFD文件后，您便可以使用OFDRW Layout模块的 AreaHolderContext
+对象，向指定的区域填入内容，详见：[区域占位区块](../areaholderblock/README.md)
