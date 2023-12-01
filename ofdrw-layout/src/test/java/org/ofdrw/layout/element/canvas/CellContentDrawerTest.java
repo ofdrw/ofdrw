@@ -193,8 +193,8 @@ class CellContentDrawerTest {
      * 加粗
      */
     @Test
-    void cellBlob() throws IOException {
-        Path outP = Paths.get("target/cell-blob.ofd");
+    void cellBold() throws IOException {
+        Path outP = Paths.get("target/cell-bold.ofd");
         try (OFDDoc ofdDoc = new OFDDoc(outP)) {
             VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
             CellContentDrawer.DEBUG = true;
@@ -203,7 +203,7 @@ class CellContentDrawerTest {
             Canvas canvas = cell.getCanvas();
             canvas.setBorder(0.353d);
             cell.setValue("OFD Reader And Writer OFD Reader And Writer OFD Reader And Writer OFD Reader And Writer");
-            cell.setBlob(true);
+            cell.setBold(true);
 
             vPage.add(canvas);
             ofdDoc.addVPage(vPage);

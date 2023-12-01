@@ -84,7 +84,7 @@ public class CellContentDrawer implements Drawer {
     /**
      * 是否加粗
      */
-    private Boolean blob = false;
+    private Boolean bold = false;
 
     /**
      * 是否斜体
@@ -270,7 +270,7 @@ public class CellContentDrawer implements Drawer {
         if (italic) {
             fontStr += "italic ";
         }
-        if (blob) {
+        if (bold) {
             fontStr += "bold ";
         }
         ctx.font = fontStr + STBase.fmt(fontSize) + "mm " + fontName;
@@ -570,22 +570,47 @@ public class CellContentDrawer implements Drawer {
     }
 
     /**
+     * @deprecated 单词错误 {@link #getBold()}
      * 是否加粗
      *
      * @return 是否加粗，默认：不加粗
      */
+    @Deprecated
     public Boolean getBlob() {
-        return blob;
+        return bold;
+    }
+
+    /**
+     * @deprecated 单词错误 {@link #setBold(Boolean)}
+     *
+     * 设置 是否加粗
+     *
+     * @param bolb 是否加粗
+     * @return this
+     */
+    @Deprecated
+    public CellContentDrawer setBlob(Boolean bolb) {
+        this.bold = bolb;
+        return this;
+    }
+
+    /**
+     * 是否加粗
+     *
+     * @return 是否加粗，默认：不加粗
+     */
+    public Boolean getBold() {
+        return bold;
     }
 
     /**
      * 设置 是否加粗
      *
-     * @param blob 是否加粗
+     * @param bold 是否加粗
      * @return this
      */
-    public CellContentDrawer setBlob(Boolean blob) {
-        this.blob = blob;
+    public CellContentDrawer setBold(Boolean bold) {
+        this.bold = bold;
         return this;
     }
 

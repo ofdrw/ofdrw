@@ -240,12 +240,34 @@ public class Cell extends Canvas {
     }
 
     /**
+     * @deprecated 单词错误 {@link #getBold()}
+     * 是否加粗
+     * @return 是否加粗，默认：不加粗
+     */
+    @Deprecated
+    public Boolean getBlob() {
+        return this.cellDrawer.getBlob();
+    }
+
+    /**
+     * @deprecated 单词错误 {@link #getBold()}
+     * 设置 是否加粗
+     * @param blob 是否加粗
+     * @return this
+     */
+    @Deprecated
+    public Cell setBlob(Boolean blob) {
+        this.cellDrawer.setBlob(blob);
+        return this;
+    }
+
+    /**
      * 是否加粗
      *
      * @return 是否加粗，默认：不加粗
      */
-    public Boolean getBlob() {
-        return this.cellDrawer.getBlob();
+    public Boolean getBold() {
+        return this.cellDrawer.getBold();
     }
 
     /**
@@ -254,10 +276,11 @@ public class Cell extends Canvas {
      * @param blob 是否加粗
      * @return this
      */
-    public Cell setBlob(Boolean blob) {
-        this.cellDrawer.setBlob(blob);
+    public Cell setBold(Boolean blob) {
+        this.cellDrawer.setBold(blob);
         return this;
     }
+
 
     /**
      * 是否斜体
