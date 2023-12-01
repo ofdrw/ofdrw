@@ -17,6 +17,11 @@ import java.util.Map;
 public final class EnvFont {
 
     /**
+     * 是否初始化完成
+     */
+    private static volatile boolean isInitialized = false;
+
+    /**
      * 字体缓存
      */
     private static Map<String, java.awt.Font> fMap;
@@ -41,12 +46,21 @@ public final class EnvFont {
      * @return 指定名称字体，若不存在则返回空。
      */
     public static java.awt.Font getFont(String name) {
-        if (fMap != null) {
-            return fMap.get(name);
+        if (name == null || name.equals("")) {
+            return null;
         }
-        defaultFont = null;
-        // 静态初始化锁防止多线程初始化字体映射异常
-        synchronized (EnvFont.class) {
+        initialize();
+        name = name.toLowerCase();
+        return fMap.get(name);
+    }
+
+    /**
+     * 字体加载初始化块，仅在首次执行时加载，防止由于并发读取字体造成的NPE。
+     */
+    private synchronized static void initialize() {
+        if (!isInitialized) {
+            defaultFont = null;
+            // 静态初始化锁防止多线程初始化字体映射异常
             fMap = new HashMap<>();
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
             java.awt.Font[] allFonts = ge.getAllFonts();
@@ -65,12 +79,14 @@ public final class EnvFont {
                 defaultFont = fMap.get("SimSun");
             } else if (fMap.get("MicrosoftYaHei") != null) {
                 defaultFont = fMap.get("MicrosoftYaHei");
+            } else if (fMap.get("STHeiti-Light") != null) {
+                defaultFont = fMap.get("STHeiti-Light");
             } else if (fMap.get("Times New Roman") != null) {
                 defaultFont = fMap.get("Times New Roman");
             } else if (fMap.get("serif") != null) {
                 defaultFont = fMap.get("serif");
             }
-            return fMap.get(name);
+            isInitialized = true;
         }
     }
 
@@ -84,13 +100,13 @@ public final class EnvFont {
     public static java.awt.Font getFont(String name, String family) {
         Font res = null;
         if (name != null) {
-            res = getFont(name.toLowerCase());
+            res = getFont(name);
         }
         if (res != null) {
             return res;
         }
         if (family != null) {
-            res = getFont(family.toLowerCase());
+            res = getFont(family);
         }
         return res;
     }
@@ -142,6 +158,7 @@ public final class EnvFont {
 
     /**
      * 获取默认字体绘制上下文
+     *
      * @return 上下文
      */
     public static FontRenderContext FRCtx() {
