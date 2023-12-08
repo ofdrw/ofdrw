@@ -1034,6 +1034,37 @@ class DrawContextTest {
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
 
+    /**
+     * 测量字体所占空间
+     */
+    @Test
+    void measureTextArea() throws IOException {
+        Path outP = Paths.get("target/Canvas-measureTextArea.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vPage = new VirtualPage(ofdDoc.getPageLayout());
+
+            Canvas canvas = new Canvas(200d, 200d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(5d).setY(45d)
+                    .setBorder(1d);
+
+            canvas.setDrawer(ctx -> {
+                FontSetting fontSetting = new FontSetting(5, FontName.SimSun.font());
+                ctx.setFont(fontSetting);
+
+                String text = "你好 Hello World!";
+                TextMetricsArea area = ctx.measureTextArea(text);
+                System.out.println(">> 文字宽度: " + area.width + "mm");
+                ctx.fillText(text, 10, 50);
+                ctx.fillText(text, 10, 50 + area.height);
+            });
+            vPage.add(canvas);
+
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
     @Test
     void fillTextAllDirection() throws IOException {
         int[] readDirect = {0, 180, 90, 270};

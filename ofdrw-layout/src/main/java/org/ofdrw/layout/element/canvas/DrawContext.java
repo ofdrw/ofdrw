@@ -877,6 +877,19 @@ public class DrawContext implements Closeable {
 
 
     /**
+     * 测量文本所占空间大小
+     *
+     * @param text 带测量文本
+     * @return 文件所占空间信息
+     */
+    public TextMetricsArea measureTextArea(String text) {
+        // 转换字体样式 为 字体设置
+        fontStyleToSetting(this.font, this.state.font);
+        // 测量字间距
+        return TextMeasureTool.measureArea(text, state.font);
+    }
+
+    /**
      * 读取当前描边颜色（只读）
      * <p>
      * 若描边颜色非颜色值，则返回null

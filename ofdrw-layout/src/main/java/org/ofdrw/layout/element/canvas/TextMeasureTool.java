@@ -1,6 +1,9 @@
 package org.ofdrw.layout.element.canvas;
 
 
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+
 /**
  * 字体测量工具
  *
@@ -116,60 +119,69 @@ public final class TextMeasureTool {
         return measureWithWith(text, fontSetting).offset;
     }
 
-//
-//    /**
-//     * 计算 每个文字所占空间大小
-//     *
-//     * @param text        文本
-//     * @param fontSetting 文字设置
-//     * @return 文档所占区域大小
-//     */
-//    public static Rectangle2D[] measureSpace(String text, FontSetting fontSetting) {
-//
-//        if (text.length() == 0) {
-//            return new Rectangle2D[]{};
-//        }
-//
-//        int readDirection = fontSetting.getReadDirection();
-//        int charDirection = fontSetting.getCharDirection();
-//
-//        double width = 0d;
-//        double height = 0d;
-//        for (int i = 0; i < text.length(); i++) {
-//            char c = text.charAt(i);
-//            Rectangle2D box = fontSetting.box(c);
-//            if (readDirection == 0 || readDirection == 180) {
-//                if (charDirection == 0 || charDirection == 180) {
-//                    if (i != 0) {
-//                        width += fontSetting.getLetterSpacing();
-//                    }
-//                    width += box.getWidth();
-//                    height = Math.max(height, box.getHeight());
-//                } else if (charDirection == 90 || charDirection == 270) {
-//                    if (i != 0) {
-//                        width += fontSetting.getLetterSpacing();
-//                    }
-//                    width += box.getHeight();
-//                    height = Math.max(height, box.getWidth());
-//                }
-//            } else if (readDirection == 90 || readDirection == 270) {
-//                if (charDirection == 0 || charDirection == 180) {
-//                    if (i != 0) {
-//                        height += fontSetting.getLetterSpacing();
-//                    }
-//                    height += box.getHeight();
-//                    width = Math.max(width, box.getWidth());
-//                } else if (charDirection == 90 || charDirection == 270) {
-//                    if (i != 0) {
-//                        height += fontSetting.getLetterSpacing();
-//                    }
-//                    height += box.getWidth();
-//                    width = Math.max(width, box.getHeight());
-//                }
-//            }
-//        }
-//        return new Rectangle2D.Double(0, 0, width, height);
-//    }
+
+    /**
+     * 计算文本所占空间大小
+     *
+     * @param text        文本
+     * @param fontSetting 文字设置
+     * @return 文档所占区域大小
+     */
+    public static TextMetricsArea measureArea(String text, FontSetting fontSetting) {
+        TextMetricsArea area = new TextMetricsArea();
+        area.charAreas = new ArrayList<>(text.length());
+        area.width = 0d;
+        area.height = 0d;
+
+
+        int readDirection = fontSetting.getReadDirection();
+        int charDirection = fontSetting.getCharDirection();
+
+        double width = 0d;
+        double height = 0d;
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            Rectangle2D box = fontSetting.box(c);
+            if (readDirection == 0 || readDirection == 180) {
+                if (charDirection == 0 || charDirection == 180) {
+                    if (i != 0) {
+                        width += fontSetting.getLetterSpacing();
+                    }
+                    width += box.getWidth();
+                    height = Math.max(height, box.getHeight());
+                    area.charAreas.add(new Rectangle2D.Double(0, 0, box.getWidth(), box.getHeight()));
+                } else if (charDirection == 90 || charDirection == 270) {
+                    if (i != 0) {
+                        width += fontSetting.getLetterSpacing();
+                    }
+                    width += box.getHeight();
+                    height = Math.max(height, box.getWidth());
+                    area.charAreas.add(new Rectangle2D.Double(0, 0, box.getHeight(), box.getWidth()));
+                }
+            } else if (readDirection == 90 || readDirection == 270) {
+                if (charDirection == 0 || charDirection == 180) {
+                    if (i != 0) {
+                        height += fontSetting.getLetterSpacing();
+                    }
+                    height += box.getHeight();
+                    width = Math.max(width, box.getWidth());
+                    area.charAreas.add(new Rectangle2D.Double(0, 0, box.getWidth(), box.getHeight()));
+                } else if (charDirection == 90 || charDirection == 270) {
+                    if (i != 0) {
+                        height += fontSetting.getLetterSpacing();
+                    }
+                    height += box.getWidth();
+                    width = Math.max(width, box.getHeight());
+                    area.charAreas.add(new Rectangle2D.Double(0, 0, box.getHeight(), box.getWidth()));
+                }
+            }
+        }
+        area.height = height;
+        area.width = width;
+        area.letterSpacing = fontSetting.getLetterSpacing();
+
+        return area;
+    }
 
     /**
      * 获取字符偏移量
