@@ -85,28 +85,28 @@ for (var i = 0; i <= 8; i++) {
 [3] 调整JS代码适应OFDRW Canvas Java API接口，注意：上面的字体配置和`rotate`的角度参数与js略有不同，调整后代码如下：
 
 ```java
-Path out = Paths.get("target/first_canvas.ofd");
-try (OFDDoc ofdDoc = new OFDDoc(out)) {
-    VirtualPage vPage = new VirtualPage(300d, 150d);
-    Canvas canvas = new Canvas(0, 0, 300d, 150d);
-    canvas.setDrawer(ctx -> {
-        ctx.fillStyle = "rgba(255, 0, 0, 0.8)";
-        ctx.font = "8px 宋体";
-        for (int i = 0; i <= 8; i++) {
-            for (int j = 0; j <= 8; j++) {
-                ctx.save();
-                ctx.translate(22.4 * i, j * 50);
-                ctx.rotate(45);
-                ctx.fillText("保密资料", 10, 10);
-                ctx.restore();
-            }
+Path out=Paths.get("target/first_canvas.ofd");
+        try(OFDDoc ofdDoc=new OFDDoc(out)){
+        VirtualPage vPage=new VirtualPage(300d,150d);
+        Canvas canvas=new Canvas(0,0,300d,150d);
+        canvas.setDrawer(ctx->{
+        ctx.fillStyle="rgba(255, 0, 0, 0.8)";
+        ctx.font="8px 宋体";
+        for(int i=0;i<=8;i++){
+        for(int j=0;j<=8;j++){
+        ctx.save();
+        ctx.translate(22.4*i,j*50);
+        ctx.rotate(45);
+        ctx.fillText("保密资料",10,10);
+        ctx.restore();
+        }
         }
 
-    });
-    vPage.add(canvas);
-    ofdDoc.addVPage(vPage);
-}
-System.out.println("生成文档位置：" + out.toAbsolutePath());
+        });
+        vPage.add(canvas);
+        ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置："+out.toAbsolutePath());
 
 ```
 
@@ -149,11 +149,12 @@ System.out.println("生成文档位置：" + out.toAbsolutePath());
 
 ### 文字
 
-| 方法 或 变量       | 意义                                                  |
-|---------------|-----------------------------------------------------|
-| `fillText`    | 填充文字                                                |
-| `measureText` | 测量文本的宽度或高度                                          |
-| `font`        | 字体样式，格式为 `[字体样式] [字体粗细] 字号 字形`，例如：`"italic 8mm 宋体"` |
+| 方法 或 变量           | 意义                                                  |
+|-------------------|-----------------------------------------------------|
+| `fillText`        | 填充文字                                                |
+| `measureText`     | 测量文本的宽度或高度                                          |
+| `measureTextArea` | 测量文本的宽度或高度，以及每个文字的宽度高度。                             |
+| `font`            | 字体样式，格式为 `[字体样式] [字体粗细] 字号 字形`，例如：`"italic 8mm 宋体"` |
 
 ### 图形图像
 

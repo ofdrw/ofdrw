@@ -240,9 +240,9 @@ public class Cell extends Canvas {
     }
 
     /**
+     * @return 是否加粗，默认：不加粗
      * @deprecated 单词错误 {@link #getBold()}
      * 是否加粗
-     * @return 是否加粗，默认：不加粗
      */
     @Deprecated
     public Boolean getBlob() {
@@ -250,10 +250,10 @@ public class Cell extends Canvas {
     }
 
     /**
-     * @deprecated 单词错误 {@link #getBold()}
-     * 设置 是否加粗
      * @param blob 是否加粗
      * @return this
+     * @deprecated 单词错误 {@link #getBold()}
+     * 设置 是否加粗
      */
     @Deprecated
     public Cell setBlob(Boolean blob) {
@@ -320,6 +320,45 @@ public class Cell extends Canvas {
     public Cell setLetterSpacing(Double letterSpacing) {
         this.cellDrawer.setLetterSpacing(letterSpacing);
         return this;
+    }
+
+    /**
+     * 设置是否开启下划线
+     *
+     * @param underline true - 启下划线，false - 禁用下划线
+     * @return this
+     */
+    public Cell setUnderline(boolean underline) {
+        this.cellDrawer.setUnderline(underline);
+        return this;
+    }
+
+    /**
+     * 获取是否开启下划线
+     *
+     * @return true - 启下划线，false - 不启用下划线
+     */
+    public boolean getUnderline() {
+        return this.cellDrawer.getUnderline();
+    }
+
+    /**
+     * 设置是否开启删除线
+     *
+     * @param deleteLine true - 启删除线，false - 禁用删除线
+     * @return this
+     */
+    public Cell setDeleteLine(boolean deleteLine) {
+        this.cellDrawer.setDeleteLine(deleteLine);
+        return this;
+    }
+
+    /**
+     * 获取是否开启删除线
+     * @return true - 启删除线，false - 禁用删除线
+     */
+    public boolean getDeleteLine() {
+        return this.cellDrawer.getDeleteLine();
     }
 
     /**

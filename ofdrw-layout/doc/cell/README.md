@@ -96,6 +96,8 @@ Cell元素除了继承自Div元素，除了常规的Div元素设置，Cell元素
 | setBold(Boolean bold)                         | 设置文本是否为粗体  |
 | setItalic(Boolean italic)                     | 设置文本是否为斜体  |
 | setLetterSpacing(Double letterSpacing)        | 设置文本字间距    |
+| setUnderline(Boolean underline)               | 设置文本是否有下划线 |
+| setDeleteLine(Boolean deleteLine)             | 设置文本是否有删除线 |
 
 ## 类表单填入效果实例
 

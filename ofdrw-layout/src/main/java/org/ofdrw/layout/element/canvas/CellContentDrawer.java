@@ -101,6 +101,16 @@ public class CellContentDrawer implements Drawer {
      */
     private Img img = null;
 
+    /**
+     * 是否有下划线
+     */
+    private boolean underline = false;
+
+    /**
+     * 是否删除线
+     */
+    private boolean deleteLine = false;
+
 
     /**
      * 通过已有Canvas构造单元格
@@ -348,10 +358,41 @@ public class CellContentDrawer implements Drawer {
             if (!"".equals(line.text)) {
                 ctx.fillText(line.text, offsetX, offsetY);
             }
+            // 文字装饰线条宽度
+            // 比例系数由经验指定无特定规则
+            double fontLineWidth = fontSize / 30;
+            double underlineOffset = fontLineWidth * 3.2;
+            // 下划线
+            if (this.underline) {
+                ctx.save();
+                ctx.setLineWidth(fontLineWidth);
+                ctx.beginPath();
+                ctx.moveTo(offsetX, offsetY + underlineOffset);
+                ctx.lineTo(offsetX + line.width, offsetY + underlineOffset);
+                ctx.stroke();
+                ctx.restore();
+            }
+            // 删除线
+            if (this.deleteLine) {
+                ctx.save();
+                ctx.setLineWidth(fontLineWidth);
+                ctx.beginPath();
+                // 由于文字定位在基线位置，此处以 5/18 比例计算出删除线位置，5/18为经验值，无特殊意义。
+                ctx.moveTo(offsetX, offsetY - fontSize * 5/18 );
+                ctx.lineTo(offsetX + line.width, offsetY - fontSize * 5/18);
+                ctx.stroke();
+                ctx.restore();
+            }
 
             if (DEBUG) {
+                ctx.save();
+                ctx.setLineDash(1.5d, 1.5d);
+                ctx.setLineWidth(0.1);
+                ctx.setGlobalAlpha(0.53);
+                ctx.strokeStyle = "rgb(255,0,0)";
                 ctx.strokeRect(offsetX, offsetY - fontSize, line.width, fontSize + lineSpace);
                 ctx.stroke();
+                ctx.restore();
             }
             // 绘制完上一行后将offsetY移动到下一行
             offsetY += this.fontSize + this.lineSpace;
@@ -364,9 +405,10 @@ public class CellContentDrawer implements Drawer {
 
     /**
      * 绘制辅助线
+     *
      * @param ctx 绘制上下文
      */
-    private void debugBorder(DrawContext ctx){
+    private void debugBorder(DrawContext ctx) {
 
         double width = canvas.getWidth();
         double height = canvas.getHeight();
@@ -570,10 +612,9 @@ public class CellContentDrawer implements Drawer {
     }
 
     /**
+     * @return 是否加粗，默认：不加粗
      * @deprecated 单词错误 {@link #getBold()}
      * 是否加粗
-     *
-     * @return 是否加粗，默认：不加粗
      */
     @Deprecated
     public Boolean getBlob() {
@@ -581,12 +622,11 @@ public class CellContentDrawer implements Drawer {
     }
 
     /**
-     * @deprecated 单词错误 {@link #setBold(Boolean)}
-     *
-     * 设置 是否加粗
-     *
      * @param bolb 是否加粗
      * @return this
+     * @deprecated 单词错误 {@link #setBold(Boolean)}
+     * <p>
+     * 设置 是否加粗
      */
     @Deprecated
     public CellContentDrawer setBlob(Boolean bolb) {
@@ -688,5 +728,45 @@ public class CellContentDrawer implements Drawer {
             return 0;
         }
         return img.height;
+    }
+
+    /**
+     * 设置是否开启下划线
+     *
+     * @param underline true - 启下划线，false - 禁用下划线
+     * @return this
+     */
+    public CellContentDrawer setUnderline(boolean underline) {
+        this.underline = underline;
+        return this;
+    }
+
+    /**
+     * 获取是否开启下划线
+     *
+     * @return true - 启下划线，false - 不启用下划线
+     */
+    public boolean getUnderline() {
+        return this.underline;
+    }
+
+    /**
+     * 设置是否开启删除线
+     *
+     * @param deleteLine true - 启删除线，false - 禁用删除线
+     * @return this
+     */
+    public CellContentDrawer setDeleteLine(boolean deleteLine) {
+        this.deleteLine = deleteLine;
+        return this;
+    }
+
+    /**
+     * 获取是否开启删除线
+     *
+     * @return true - 启删除线，false - 禁用删除线
+     */
+    public boolean getDeleteLine() {
+        return this.deleteLine;
     }
 }

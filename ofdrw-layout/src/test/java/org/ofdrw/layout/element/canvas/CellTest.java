@@ -234,4 +234,65 @@ class CellTest {
         }
         System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
     }
+
+
+
+    /**
+     * 设置下划线
+     */
+    @Test
+    void setUnderline() throws IOException {
+        Path outP = Paths.get("target/cell-underline.ofd");
+//        CellContentDrawer.DEBUG = true;
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            Cell cell1 = new Cell(40d, 80d);
+            cell1.setBorder(0.353);
+            cell1.setTextAlign(TextAlign.center);
+            cell1.setPadding(1d, 3d, 1d, 3d);
+            cell1.setValue("OFD Reader & Writer OFD Reader & Writer OFD Reader & Writer OFD Reader & Writer OFD Reader & Writer OFD Reader & Writer");
+            cell1.setUnderline(true);
+
+            Cell cell2 = new Cell(120d, 80d);
+            cell2.setBorder(0.353);
+            cell2.setTextAlign(TextAlign.center);
+            cell2.setPadding(1d, 3d, 1d, 3d);
+            cell2.setFontSize(14d);
+            cell2.setValue("你好你好你好你好你好你好你");
+            cell2.setUnderline(true);
+
+            ofdDoc.add(cell1);
+            ofdDoc.add(cell2);
+        }
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+    }
+
+    /**
+     * 设置删除线
+     */
+    @Test
+    void setDeleteLine() throws IOException {
+        Path outP = Paths.get("target/cell-deleteline.ofd");
+//        CellContentDrawer.DEBUG = true;
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            Cell cell1 = new Cell(40d, 80d);
+            cell1.setBorder(0.353);
+            cell1.setTextAlign(TextAlign.center);
+            cell1.setPadding(1d, 3d, 1d, 3d);
+            cell1.setValue("OFD Reader & Writer OFD Reader & Writer OFD Reader & Writer");
+            cell1.setDeleteLine(true);
+
+            Cell cell2 = new Cell(120d, 80d);
+            cell2.setBorder(0.353);
+            cell2.setTextAlign(TextAlign.center);
+            cell2.setPadding(1d, 3d, 1d, 3d);
+            cell2.setFontSize(14d);
+            cell2.setValue("你好你好你好你好你好你好你");
+            cell2.setDeleteLine(true);
+
+            ofdDoc.add(cell1);
+            ofdDoc.add(cell2);
+        }
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+    }
+
 }
