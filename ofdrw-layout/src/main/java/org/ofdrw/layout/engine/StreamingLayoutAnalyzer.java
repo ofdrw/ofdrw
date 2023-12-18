@@ -59,7 +59,7 @@ public class StreamingLayoutAnalyzer {
             return Collections.emptyList();
         }
         LinkedList<Segment> seq = new LinkedList<>(segmentSequence);
-        if(vPageList.isEmpty()){
+        if (vPageList.isEmpty()) {
             // 初始化页面
             addNewPage();
         }
@@ -95,11 +95,15 @@ public class StreamingLayoutAnalyzer {
                 continue;
             }
             // 段可以拆分，那么通过剩余空间对段分块，这个分块只会分为两块
-            List<Segment> blocks = segmentBlocking(segment, remainArea.clone());
-            // 因为是栈的原因，需要把最后一个元素最新压到栈顶。
-            Collections.reverse(blocks);
-            // 重新进入队列中
-            blocks.forEach(seq::push);
+            Segment[] blocks = segmentBlocking(segment, remainArea.clone());
+            if (blocks != null && blocks.length > 0) {
+                // 因为是栈的原因，需要把最后一个元素最新压到栈顶。
+                // blocks 逆序加入 seq
+                for (int i = blocks.length - 1; i >= 0; i--) {
+                    // 逆序重新进入队列中
+                    seq.push(blocks[i]);
+                }
+            }
         }
         return vPageList;
     }
@@ -111,11 +115,10 @@ public class StreamingLayoutAnalyzer {
      *
      * @param segment 段
      * @param area    剩余空间
-     * @return 分块后的段序列
+     * @return 分块后的段序列，含两个Segment元素。
      */
-    private List<Segment> segmentBlocking(Segment segment, Rectangle area) {
+    private Segment[] segmentBlocking(Segment segment, Rectangle area) {
         // 分为两块
-        LinkedList<Segment> res = new LinkedList<>();
         Segment sgm1 = new Segment(segment.getWidth());
         Segment sgmNext = new Segment(segment.getWidth());
         for (Map.Entry<Div, Rectangle> item : segment) {
@@ -143,9 +146,7 @@ public class StreamingLayoutAnalyzer {
             sgm1.tryAdd(split[0]);
             sgmNext.tryAdd(split[1]);
         }
-        res.add(sgm1);
-        res.add(sgmNext);
-        return res;
+        return new Segment[]{sgm1, sgmNext};
     }
 
     /**

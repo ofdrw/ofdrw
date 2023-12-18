@@ -30,6 +30,7 @@ import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.converter.utils.PointUtil;
 import org.ofdrw.converter.utils.StringUtils;
 import org.ofdrw.core.annotation.pageannot.Annot;
+import org.ofdrw.core.annotation.pageannot.Appearance;
 import org.ofdrw.core.attachment.CT_Attachment;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
@@ -242,9 +243,13 @@ public class ItextMaker {
                 continue;
             }
             for (Annot annot : annotList) {
-                List<PageBlockType> pageBlockTypeList = annot.getAppearance().getPageBlocks();
+                Appearance appearance = annot.getAppearance();
+                if (appearance == null) {
+                    continue;
+                }
+                List<PageBlockType> pageBlockTypeList = appearance.getPageBlocks();
                 //注释的boundary
-                ST_Box annotBox = annot.getAppearance().getBoundary();
+                ST_Box annotBox = appearance.getBoundary();
                 writePageBlock(resMgt, pdfCanvas, box, null, pageBlockTypeList, null, annotBox, null, null, null);
             }
         }

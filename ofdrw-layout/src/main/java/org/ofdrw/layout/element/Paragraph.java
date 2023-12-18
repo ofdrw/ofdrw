@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * 段落
- *
+ * <p>
  * 绘制行为详见渲染器：{@link org.ofdrw.layout.engine.render.ParagraphRender}
  *
  * @author 权观宇
@@ -609,7 +609,11 @@ public class Paragraph extends Div<Paragraph> {
         // 文字内容或是Bottom 耗尽了空间 分段的情况
         LinkedList<TxtLineBlock> seq2 = new LinkedList<>(this.lines);
         LinkedList<TxtLineBlock> seq1 = new LinkedList<>();
-        double remainHeight = sHeight - getMarginTop() - getBorderTop() - getPaddingTop();
+
+        // 可用空间高度
+        double availableHeight = sHeight - getMarginTop() - getBorderTop() - getPaddingTop();
+        // 在加入行后，剩余可用空间高度，依次递减直至放不下一行。
+        double remainHeight = availableHeight;
         while (!seq2.isEmpty()) {
             TxtLineBlock line = seq2.pop();
             if (remainHeight < line.getHeight()) {
@@ -645,7 +649,7 @@ public class Paragraph extends Div<Paragraph> {
                 .setMarginBottom(0d)
                 .setBorderBottom(0d)
                 .setPaddingBottom(0d)
-                .setHeight(sHeight);
+                .setHeight(availableHeight);
         p2.setLines(seq2)
                 .setMarginTop(0d)
                 .setBorderTop(0d)

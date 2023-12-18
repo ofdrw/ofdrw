@@ -12,7 +12,7 @@ import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.layout.edit.Annotation;
-import org.ofdrw.layout.edit.Attachment;
+import org.ofdrw.layout.element.AFloat;
 import org.ofdrw.layout.element.Paragraph;
 import org.ofdrw.layout.element.Span;
 import org.ofdrw.pkg.container.DocDir;
@@ -165,4 +165,57 @@ class OFDDocStreamTest {
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }
 
+    /**
+     * 流式文档段落分割死锁
+     * <p>
+     * github issue #228
+     */
+    @Test
+    void testSplitParagraph() throws Exception {
+
+        Path srcP = Paths.get("src/test/resources", "SplitParagraph.ofd");
+        //段落内容数组
+        try (OFDDoc ofdDoc = new OFDDoc(srcP)) {
+            PageLayout pageLayOut = PageLayout.A4();
+            pageLayOut.setMarginLeft(0.0);
+            pageLayOut.setMarginRight(0.0);
+            pageLayOut.setMarginTop(0.0);
+            ofdDoc.setDefaultPageLayout(pageLayOut);
+            Span report = new Span("报告：").setBold(false).setFontSize(6d);
+            Paragraph pReport = new Paragraph().add(report);
+            pReport.setMarginLeft(10.0);
+            pReport.setMargin(5.0);
+            ofdDoc.add(pReport);
+
+            String textTitle = "“超长文档“裁切测试";
+            Span title = new Span(textTitle).setBold(true).setFontSize(8d);
+            Paragraph p = new Paragraph().add(title);
+            p.setMargin(2.0);
+            p.setFloat(AFloat.center);
+            ofdDoc.add(p);
+
+
+            String contentStr1 = "第一段：K*区区区位南Z数”((南Z*区划划，位别别K划S，”位BB区D判*结KZ划区区D”区有，别位)*S位，目别目别”位南(南B判，D位有B别南”有，区，，K南判别位*Z目区”)区区较较目”位”南K较较S区K别有判S别较，KZ判过划南过”S，区D区区区ZD*”数位过区)有南南目，*BZB”位)区区有过*判结位B南数S结)位南区别位划过()南S南过结K*别B区数南ZB”D区别)目结)(数结D，区位南D”D()划判区数判，S别别有Z南区(S别”结较SZB*位南较南有*目，*(”结K划”区目*位南南别”区，*B有D较较)数(位)”别有”别南划数较别结，南*划位划*区”目过数*数判Z别结别Z南区S”，目目，)K判S别位*过KD目判K较数判，*(位区数过过过别””区有*，较*，*位，区，，B*(区*别D有区位结过位结区划”(";
+            Span content1 = new Span(contentStr1).setFontSize(5.0);
+            Paragraph p1 = new Paragraph().add(content1).setFirstLineIndent(2).setMargin(2.0).setMarginLeft(15.0).setMarginRight(15.0);
+            ofdDoc.add(p1);
+
+            String contentStr2 = "第二段：K*区区区位南Z数”((南Z*区划划，位别别K划S，”位BB区D判*结KZ划区区D”区有，别位)*S位，目别目别”位南(南B判，D位有B别南”有，区，，K南判别位*Z目区”)区区较较目”位”南K较较S区K别有判S别较，KZ判过划南过”S，区D区区区ZD*”数位过区)有南南目，*BZB”位)区区有过*判结位B南数S结)位南区别位划过()南S南过结K*别B区数南ZB”D区别)目结)(数结D，区位南D”D()划判区数判，S别别有Z南区(S别”结较SZB*位南较南有*目，*(”结K划”区目*位南南别”区，*B有D较较)数(位)”别有”别南划数较别结，南*划位划*区”目过数*数判Z别结别Z南区S”，目目，)K判S别位*过KD目判K较数判，*(位区数过过过别””区有*，较*，*位，区，，B*(区*别D有区位结过位结区划”(";
+            Span content2 = new Span(contentStr2).setFontSize(5.0);
+            Paragraph p2 = new Paragraph().add(content2).setFirstLineIndent(2).setMargin(2.0).setMarginLeft(15.0).setMarginRight(15.0);
+            ofdDoc.add(p2);
+
+            String contentStr3 = "第三段：K*区区区位南Z数”((南Z*区划划，位别别K划S，”位BB区D判*结KZ划区区D”区有，别位)*S位，目别目别”位南(南B判，D位有B别南”有，区，，K南判别位*Z目区”)区区较较目”位”南K较较S区K别有判S别较，KZ判过划南过”S，区D区区区ZD*”数位过区)有南南目，*BZB”位)区区有过*判结位B南数S结)位南区别位划过()南S南过结K*别B区数南ZB”D区别)目结)(数结D，区位南D”D()划判区数判，S别别有Z南区(S别”结较SZB*位南较南有*目，*(”结K划”区目*位南南别”区，*B有D较较)数(位)”别有”别南划数较别结，南*划位划*区”目过数*数判Z别结别Z南区S”，目目，)K判S别位*过KD目判K较数判，*(位区数过过过别””区有*，较*，*位，区，，B*(区*别D有区位结过位结区划”(";
+            Span content3 = new Span(contentStr3).setFontSize(5.0);
+            Paragraph p3 = new Paragraph().add(content3).setFirstLineIndent(2).setMargin(2.0).setMarginLeft(15.0).setMarginRight(15.0);
+            ofdDoc.add(p3);
+
+
+            String contentStr4 = "第四段：K*区区区位南Z数”((南Z*区划划，位别别K划S，”位BB区D判*结KZ划区区D”区有，别位)*S位，目别目别”位南(南B判，D位有B别南”有，区，，K南判别位*Z目区”)区区较较目”位”南K较较S区K别有判S别较，KZ判过划南过”S，区D区区区ZD*”数位过区)有南南目，*BZB”位)区区有过*判结位B南数S结)位南区别位划过()南S南过结K*别B区数南ZB”D区别)目结)(数结D，区位南D”D()划判区数判，S别别有Z南区(S别”结较SZB*位南较南有*目，*(”结K划”区目*位南南别”区，*B有D较较)数(位)”别有”别南划数较别结，南*划位划*区”目过数*数判Z别结别Z南区S”，目目，)K判S别位*过KD目判K较数判，*(位区数过过过别””区有*，较*，*位，区，，B*(区*别D有区位结过位结区划”(";
+            Span content4 = new Span(contentStr4).setFontSize(5.0);
+            Paragraph p4 = new Paragraph().add(content4).setFirstLineIndent(2).setMargin(2.0).setMarginLeft(15.0).setMarginRight(15.0);
+            ofdDoc.add(p4);
+        }
+        System.out.println("生成文档位置: " + srcP.toAbsolutePath());
+    }
 }

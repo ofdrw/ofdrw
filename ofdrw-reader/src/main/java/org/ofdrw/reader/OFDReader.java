@@ -460,15 +460,54 @@ public class OFDReader implements Closeable {
      * <p>
      * 如果页面没有定义页面区域，则使用文件 CommonData中的定义
      *
-     * @param page 页面对象
-     * @return 页面大小
+     * @param page 页面对象，null 表示获取默认物理页面大小。
+     * @return 页面物理大小
      */
     public ST_Box getPageSize(Page page) {
-        if (page == null) {
-            return null;
+        CT_PageArea pageArea = getPageArea(page);
+        if (pageArea == null) {
+            // 找不到就返回 A4
+            return new ST_Box(0, 0, 210d, 297d);
         }
-        CT_PageArea pageArea = page.getArea();
-        if (pageArea == null || pageArea.getBox() == null) {
+        return pageArea.getBox();
+    }
+
+
+    /**
+     * 获取 页面区域
+     *
+     * @param num 页码，从1起，若页码存在或超过最大最小页码则返还默认页面区域。
+     * @return 页面区域
+     */
+    public CT_PageArea getPageArea(int num) {
+        final Page page = getPage(num);
+        return getPageArea(page);
+    }
+
+    /**
+     * 获取页面物理大小
+     *
+     * @param num 页码，从1起，当页码不存在时返回文档中的默认 页面物理大小。
+     * @return 页面物理尺寸
+     */
+    public ST_Box getPageSize(int num) {
+        final Page page = getPage(num);
+        return getPageSize(page);
+    }
+
+    /**
+     * 获取 页面区域
+     *
+     * @param page 页面对象，若为null 则返回文档默认页面区域大小。
+     * @return 页面区域
+     */
+    public CT_PageArea getPageArea(Page page) {
+        CT_PageArea res = null;
+        if (page != null) {
+            // 页面存在时，从页面中读取区域信息，
+            if (page.getArea() != null) {
+                return page.getArea();
+            }
             CT_PageArea tplArea = null;
             int biggestOrder = -1;
             // 从模板中获取
@@ -483,35 +522,25 @@ public class OFDReader implements Closeable {
                     biggestOrder = order;
                 }
             }
-            pageArea = tplArea;
-            // 从文档信息中获取
-            if (pageArea == null) {
-                Document document;
-                try {
-                    document = ofdDir.obtainDocDefault().getDocument();
-                } catch (FileNotFoundException | DocumentException e) {
-                    throw new BadOFDException("OFD解析失败，原因:" + e.getMessage(), e);
-                }
-                CT_CommonData commonData = document.getCommonData();
-                pageArea = commonData.getPageArea();
-            }
+            res = tplArea;
         }
-        if (pageArea == null) {
-            // 当无法找到区域时，使用A4大小，以兼容防止后续解析NPE。
-            return new ST_Box(0, 0, 210d, 297d);
-        }
-        return pageArea.getBox();
-    }
 
-    /**
-     * 获取页面物理大小
-     *
-     * @param num 页码，从1起
-     * @return 页面物理尺寸
-     */
-    public ST_Box getPageSize(int num) {
-        final Page page = getPage(num);
-        return getPageSize(page);
+        // 若不存在则通过解析文档中的默认参数获取，从文档信息中获取。
+        if (res == null) {
+            Document document;
+            try {
+                document = ofdDir.obtainDocDefault().getDocument();
+            } catch (FileNotFoundException | DocumentException e) {
+                throw new BadOFDException("OFD解析失败，原因:" + e.getMessage(), e);
+            }
+            CT_CommonData commonData = document.getCommonData();
+            res = commonData.getPageArea();
+        }
+        if (res == null) {
+            // 当无法找到区域时，使用A4大小，以兼容防止后续解析NPE。
+            return new CT_PageArea(0, 0, 210d, 297d);
+        }
+        return res;
     }
 
     /**
