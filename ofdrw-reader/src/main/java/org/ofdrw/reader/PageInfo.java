@@ -148,7 +148,7 @@ public class PageInfo {
         // 获取排好序的页面列表（包含页面模板和页面本身）
         for (Page page : getOrderRelatedPageList()) {
             if (page.getContent() != null) {
-                layerList.addAll(page.getContent().getLayers());
+                layerList.addAll(page.getContent().getOrderedLayers());
             }
         }
         return layerList;
