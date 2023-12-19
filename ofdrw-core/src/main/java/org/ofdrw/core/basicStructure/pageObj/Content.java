@@ -7,6 +7,7 @@ import org.ofdrw.core.basicType.ST_ID;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -59,5 +60,27 @@ public class Content extends OFDElement {
      */
     public List<CT_Layer> getLayers() {
         return this.getOFDElements("Layer", CT_Layer::new);
+    }
+
+    /**
+     * 【必选】
+     * 获取 排序后的层节点列表
+     * <p>
+     * 一页可以包含一个或多个层
+     * <p>
+     * 注意：每个加入的层节点必须设置 ID属性，排序如下：
+     * 背景模板
+     * 背景层
+     * 正文模板
+     * 正文层
+     * 前景模板
+     * 前景层
+     *
+     * @return 层节点
+     */
+    public List<CT_Layer> getOrderedLayers() {
+        List<CT_Layer> listLayers = this.getOFDElements("Layer", CT_Layer::new);
+        listLayers.sort(Comparator.comparingInt(p -> p.getType().order()));
+        return listLayers;
     }
 }
