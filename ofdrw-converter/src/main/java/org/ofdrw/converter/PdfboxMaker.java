@@ -669,7 +669,9 @@ public class PdfboxMaker {
             fontCache.put(key, font);
             return font;
         } catch (Exception e) {
-            logger.info("无法使用字体: {} {} {}", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile().toString());
+            if (ctFont != null && ctFont.getFontFile() != null) {
+                logger.info("无法使用字体: {} {} {}", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile().toString());
+            }
             return PDType1Font.HELVETICA_BOLD;
         }
     }
