@@ -725,11 +725,35 @@ public abstract class AWTMaker {
         return 0.4;
     }
 
+    private CT_Color getStrokeColorRelative(CT_DrawParam drawParam){
+        CT_Color c = drawParam.getStrokeColor();
+        if (c != null)
+        {
+            return c;
+        }
+        if (drawParam.getRelative() != null && resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()) != null){
+            return getStrokeColorRelative(resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()));
+        }
+        return null;
+    }
+
+    private CT_Color getFillColorRelative(CT_DrawParam drawParam){
+        CT_Color c = drawParam.getFillColor();
+        if (c != null)
+        {
+            return c;
+        }
+        if (drawParam.getRelative() != null && resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()) != null){
+            return getFillColorRelative(resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()));
+        }
+        return null;
+    }
+
     private Color getStrokeColor(CT_Color color, CT_Color defaultColor, List<CT_DrawParam> drawParams) {
         CT_Color c = color;
         if (c == null) {
             for (CT_DrawParam drawParam : drawParams) {
-                c = drawParam.getStrokeColor();
+                c = getStrokeColorRelative(drawParam);
                 if (c != null)
                     break;
             }
@@ -744,7 +768,7 @@ public abstract class AWTMaker {
         CT_Color c = color;
         if (c == null) {
             for (CT_DrawParam drawParam : drawParams) {
-                c = drawParam.getFillColor();
+                c = getFillColorRelative(drawParam);
                 if (c != null)
                     break;
             }
