@@ -586,7 +586,7 @@ public class OFDDoc implements Closeable {
      * @throws IOException 文档操作异常
      */
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         if (this.closed) {
             return;
         } else {

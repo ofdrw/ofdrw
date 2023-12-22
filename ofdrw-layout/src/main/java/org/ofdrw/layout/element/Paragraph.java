@@ -571,9 +571,13 @@ public class Paragraph extends Div<Paragraph> {
             lines.add(line);
         }
         // 合并所有行的高度
-        double height = lines.stream()
-                .mapToDouble(TxtLineBlock::getHeight)
-                .sum();
+        double  height = 0;
+        for (TxtLineBlock txtLineBlock : lines) {
+            height += txtLineBlock.getHeight();
+        }
+        // 为了防止Double 类型精度导致部分情况不准确，导致元素高度不够容纳文字
+        // 添加 0.0001 以弥补精度损失
+        height += 0.0001;
         // 设置元素高度，如果元素已经预设高度那么则不设置
         setHeightIfNotExist(height);
         //  - 宽度 = null: 最长行宽度
