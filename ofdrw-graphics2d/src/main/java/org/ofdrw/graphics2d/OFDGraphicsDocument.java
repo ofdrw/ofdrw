@@ -376,8 +376,10 @@ public class OFDGraphicsDocument implements Closeable {
             // final. 执行打包程序
             if (outPath != null) {
                 ofdDir.jar(outPath.toAbsolutePath());
-            } else {
+            } else if (outputStream != null) {
                 ofdDir.jar(outputStream);
+            } else {
+                throw new IllegalArgumentException("OFD文档输出地址错误或没有设置输出流");
             }
         } finally {
             if (ofdDir != null) {
