@@ -21,10 +21,7 @@ import org.ofdrw.pkg.container.*;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -44,6 +41,11 @@ public class OFDGraphicsDocument implements Closeable {
      * 打包后OFD文档存放路径
      */
     private Path outPath;
+
+    /**
+     * 打包后OFD文档流
+     */
+    private OutputStream outputStream;
 
     /**
      * 文档是否已经关闭
@@ -112,6 +114,16 @@ public class OFDGraphicsDocument implements Closeable {
             throw new IllegalArgumentException("OFD文件存储路径(outPath)上级目录 [" + outPath.getParent().toAbsolutePath() + "] 不存在");
         }
         this.outPath = outPath;
+    }
+
+    /**
+     * 在指定路径位置上创建一个OFD文件流
+     *
+     * @param outputStream OFD输出流
+     */
+    public OFDGraphicsDocument(OutputStream outputStream) {
+        this();
+        this.outputStream = outputStream;
     }
 
     /**
@@ -364,6 +376,8 @@ public class OFDGraphicsDocument implements Closeable {
             // final. 执行打包程序
             if (outPath != null) {
                 ofdDir.jar(outPath.toAbsolutePath());
+            } else if (outputStream != null) {
+                ofdDir.jar(outputStream);
             } else {
                 throw new IllegalArgumentException("OFD文档输出地址错误或没有设置输出流");
             }
@@ -371,6 +385,9 @@ public class OFDGraphicsDocument implements Closeable {
             if (ofdDir != null) {
                 // 清除在生成OFD过程中的工作区产生的文件
                 ofdDir.clean();
+            }
+            if (outputStream != null) {
+                outputStream.close();
             }
         }
     }
