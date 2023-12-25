@@ -292,6 +292,8 @@ public class OFDDir extends VirtualContainer {
      * 打包OFD文件
      *
      * @param workDirPath OFD虚拟容器目录
+     * @param dir         压缩包内根目录
+     * @param fileTime    文件时间
      * @param zip         输出流
      * @throws IOException IO异常
      */

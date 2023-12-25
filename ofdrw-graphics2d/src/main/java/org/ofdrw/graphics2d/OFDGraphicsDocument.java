@@ -119,10 +119,13 @@ public class OFDGraphicsDocument implements Closeable {
     /**
      * 在指定路径位置上创建一个OFD文件流
      *
-     * @param outputStream OFD输出流
+     * @param outputStream OFD输出流，应由调用者负责关闭。
      */
     public OFDGraphicsDocument(OutputStream outputStream) {
         this();
+        if (outputStream == null) {
+            throw new IllegalArgumentException("OFD文件流(outputStream)为空");
+        }
         this.outputStream = outputStream;
     }
 
@@ -385,9 +388,6 @@ public class OFDGraphicsDocument implements Closeable {
             if (ofdDir != null) {
                 // 清除在生成OFD过程中的工作区产生的文件
                 ofdDir.clean();
-            }
-            if (outputStream != null) {
-                outputStream.close();
             }
         }
     }
