@@ -52,7 +52,7 @@ public class OFD2IMGTest {
         Path src = Paths.get(filename);
 
         try (OFDReader reader = new OFDReader(src);) {
-            ImageMaker imageMaker = new ImageMaker(reader, 15);
+            ImageMaker imageMaker = new ImageMaker(reader, 3.78);
             imageMaker.config.setDrawBoundary(false);
             for (int i = 0; i < imageMaker.pageSize(); i++) {
                 BufferedImage image = imageMaker.makePage(i);
