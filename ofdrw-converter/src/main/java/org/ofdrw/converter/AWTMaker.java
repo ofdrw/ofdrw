@@ -202,6 +202,10 @@ public abstract class AWTMaker {
      * @param matrix   变换矩阵
      */
     protected void writePage(Graphics2D graphics, PageInfo pageInfo, Matrix matrix) {
+        graphics.setRenderingHint(
+                RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+
         // 获取页面内容出现的所有图层，包含模板页（所有页面均按照定义ZOrder排列）
         final List<CT_Layer> layerList = pageInfo.getAllLayer();
         for (CT_Layer layer : layerList) {
