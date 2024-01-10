@@ -196,12 +196,17 @@ public class CellContentDrawer implements Drawer {
      */
     @Override
     public void draw(DrawContext ctx) throws IOException {
-        if (this.img != null) {
-            // 绘制图片
-            drawImg(ctx);
-        } else {
-            // 绘制文字
-            drawText(ctx);
+        ctx.save();
+        try {
+            if (this.img != null) {
+                // 绘制图片
+                drawImg(ctx);
+            } else {
+                // 绘制文字
+                drawText(ctx);
+            }
+        } finally {
+            ctx.restore();
         }
     }
 
@@ -287,6 +292,11 @@ public class CellContentDrawer implements Drawer {
         if (this.letterSpacing != 0) {
             // 设置字间距
             ctx.getFont().setLetterSpacing(this.letterSpacing);
+        }
+
+        // 设置字体颜色
+        if (this.color != null && !this.color.isEmpty()) {
+            ctx.fillStyle = this.color;
         }
 
         double width = canvas.getWidth();
@@ -378,8 +388,8 @@ public class CellContentDrawer implements Drawer {
                 ctx.setLineWidth(fontLineWidth);
                 ctx.beginPath();
                 // 由于文字定位在基线位置，此处以 5/18 比例计算出删除线位置，5/18为经验值，无特殊意义。
-                ctx.moveTo(offsetX, offsetY - fontSize * 5/18 );
-                ctx.lineTo(offsetX + line.width, offsetY - fontSize * 5/18);
+                ctx.moveTo(offsetX, offsetY - fontSize * 5 / 18);
+                ctx.lineTo(offsetX + line.width, offsetY - fontSize * 5 / 18);
                 ctx.stroke();
                 ctx.restore();
             }

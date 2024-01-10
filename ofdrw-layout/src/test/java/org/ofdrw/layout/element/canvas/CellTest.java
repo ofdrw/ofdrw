@@ -295,4 +295,25 @@ class CellTest {
         System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
     }
 
+    /**
+     * 设置单元格字体颜色
+     */
+    @Test
+    void setFontColor()throws Exception{
+        Path outP = Paths.get("target/font-color.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            Cell cell1 = new Cell(20d,10d);
+            cell1.setBorder(0.353);
+            cell1.setTextAlign(TextAlign.center);
+            cell1.setPadding(1d,3d,1d,3d);
+            cell1.setValue("名 称");
+            cell1.setFontSize(5d);
+            cell1.setDisplay(Display.inlineBlock);
+            cell1.setColor("#FF0000");
+
+            ofdDoc.add(cell1);
+        }
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+    }
+
 }
