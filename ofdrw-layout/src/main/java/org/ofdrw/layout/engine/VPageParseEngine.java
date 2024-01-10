@@ -203,7 +203,7 @@ public class VPageParseEngine {
     /**
      * 将虚拟页面中的元素转为OFD元素加入图层中
      *
-     * @param pageLoc
+     * @param pageLoc 页面xml绝对路径
      * @param to      图形元素将要写入到的页面图层
      * @param content 需要加入图层得到元素
      */

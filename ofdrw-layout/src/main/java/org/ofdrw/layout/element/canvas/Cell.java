@@ -6,6 +6,8 @@ import java.nio.file.Path;
 
 /**
  * 单元对象
+ * <p>
+ * 绘制行为详见渲染器：{@link org.ofdrw.layout.element.canvas.CellContentDrawer}
  *
  * @author 权观宇
  * @since 2023-11-21 19:22:28
@@ -355,6 +357,7 @@ public class Cell extends Canvas {
 
     /**
      * 获取是否开启删除线
+     *
      * @return true - 启删除线，false - 禁用删除线
      */
     public boolean getDeleteLine() {

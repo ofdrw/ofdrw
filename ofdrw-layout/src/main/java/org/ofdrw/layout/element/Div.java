@@ -74,6 +74,13 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
     private Double[] margin = {0d, 0d, 0d, 0d};
 
     /**
+     * 边框虚线样式
+     * <p>
+     * 数组中个元素意义：[偏移量, 虚线长,空白长, 虚线长,空白长, 虚线长,空白长, 虚线长,空白长, ...]
+     */
+    private Double[] borderDash = null;
+
+    /**
      * 固定布局的盒式模型左上角X坐标
      */
     private Double x = null;
@@ -413,6 +420,56 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
     public T setBorder(Double... border) {
         this.border = ArrayParamTool.arr4p(border);
         return (T) this;
+    }
+
+    /**
+     * 设置 边框虚线样式
+     * <p>
+     * 取消虚线：{@code setBorderDash(null)}
+     * <p>
+     * 设置虚线 与 空白相同 3：{@code setBorderDash(3d)}
+     * <p>
+     * 设置虚线的 长度 3 与空白 2： {@code setBorderDash(3d, 2d)}
+     * <p>
+     * 设置虚线的长度 3、空白 2、偏移量 1：{@code setBorderDash(1d, 3d, 2d)}
+     *
+     * @param dash 虚线样式，
+     * @return this
+     */
+    public T setBorderDash(Double... dash) {
+        if (dash == null || dash.length == 0 || (dash.length == 1 && dash[0] == null)) {
+            this.borderDash = null;
+            return (T) this;
+        }
+        if (dash.length == 1) {
+            // 单个参数，设置虚线长度与空白相同
+            this.borderDash = new Double[]{0.0, dash[0], dash[0]};
+            return (T) this;
+        }
+
+        Double[] arr = null;
+        if (dash.length % 2 == 1) {
+            // 奇数个参数 第一个参数为 虚线偏移量
+            arr = dash;
+        } else {
+            // 偶数参数 补充一个0作为 虚线偏移量
+            arr = new Double[dash.length + 1];
+            arr[0] = 0.0;
+            System.arraycopy(dash, 0, arr, 1, dash.length);
+        }
+        this.borderDash = arr;
+        return (T) this;
+    }
+
+    /**
+     * 获取 边框虚线样式
+     * <p>
+     * 数组中个元素意义：[虚线偏移量,虚线长度,虚线间隔 ...重复]
+     *
+     * @return 边框虚线样式，null表示无虚线
+     */
+    public Double[] getBorderDash() {
+        return borderDash;
     }
 
     public Double[] getMargin() {

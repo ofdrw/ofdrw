@@ -2,10 +2,47 @@ package org.ofdrw.layout.element;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.ofdrw.layout.OFDDoc;
+import org.ofdrw.layout.element.canvas.Cell;
+import org.ofdrw.layout.element.canvas.TextAlign;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class DivTest {
+
+    /**
+     * Div边框样式测试
+     */
+    @Test
+    void setBorderDash() throws Exception {
+        Path outP = Paths.get("target/div-border-dash.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            Div div = new Div(160d, 90d);
+            div.setBorderColor("#FF00000");
+            div.setBorder(3d);
+
+            // 设置边框虚线 虚线长度 1 空白长度 1
+            div.setBorderDash(1d);
+
+//            // 设置 偏移量 5 虚线长度 2 空白长度 2
+//            div.setBorderDash(5d, 2d, 2d);
+
+//            // 设置边框虚线 虚线长度 1 空白长度 2
+//            div.setBorderDash(1d, 2d);
+
+//            // 设置边框虚线 虚线长度 1 空白长度 2 虚线长度 8 空白长度 4
+//            div.setBorderDash(1d, 2d, 8d, 4d);
+
+            // 设置边框虚线
+
+            ofdDoc.add(div);
+        }
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+
+    }
 
     @Test
     void split() {
@@ -23,7 +60,7 @@ class DivTest {
         Div d2 = sDivs[1];
         int h1 = 100 - 1 - 15 - 8;
         assertEquals(d1.getHeight(), h1);
-        assertEquals(d2.getHeight(),800d-h1 );
+        assertEquals(d2.getHeight(), 800d - h1);
 
         assertEquals(d1.getPaddingBottom(), 0);
         assertEquals(d1.getBorderBottom(), 0);
