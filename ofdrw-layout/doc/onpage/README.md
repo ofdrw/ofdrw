@@ -50,7 +50,7 @@ class Main {
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             // 1. 使用匿名类实现 RenderFinishHandler 接口
             // 2. 注册事件处理器
-            ofdDoc.onRenderFinish((doc) -> {
+            ofdDoc.onRenderFinish((maxUnitID, ofdDir, index) -> {
                 // 对 doc 追加内容
             });
             // ...
