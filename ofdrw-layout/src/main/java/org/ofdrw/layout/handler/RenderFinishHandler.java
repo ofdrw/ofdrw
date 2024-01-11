@@ -12,5 +12,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @FunctionalInterface
 public interface RenderFinishHandler {
+    /**
+     * 文件渲染结束时触发的回调函数
+     * @param maxUnitID 最大的对象ID
+     * @param ofdDir OFD虚拟容器
+     * @param index 文件索引
+     */
     void handle(AtomicInteger maxUnitID, OFDDir ofdDir, int index);
 }

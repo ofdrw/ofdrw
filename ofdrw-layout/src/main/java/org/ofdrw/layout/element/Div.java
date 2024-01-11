@@ -982,10 +982,13 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
                     .setBorderTop(deltaB);
         } else if (getMarginTop() + getBorderTop() + getPaddingTop() >= sHeight) {
             double deltaP = getPaddingTop() - (sHeight - getMarginTop() - getBorderTop());
+            // 裁剪后剩余：margin top + border top + 部分 padding top  + 0 + 0 + 0 + 0
             div1.setPaddingTop(sHeight - getMarginTop() - getBorderTop())
                     .setHeight(0d)
                     .setPaddingBottom(0d)
+                    .setBorderBottom(0d)
                     .setMarginBottom(0d);
+            // 裁剪后剩余：0 + 0 + 部分 padding top  + content height + padding bottom + border bottom + margin bottom
             div2.setMarginTop(0d)
                     .setBorderTop(0d)
                     .setPaddingTop(deltaP);

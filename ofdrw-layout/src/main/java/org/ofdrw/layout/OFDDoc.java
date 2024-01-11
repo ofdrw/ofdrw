@@ -22,6 +22,7 @@ import org.ofdrw.layout.engine.*;
 import org.ofdrw.layout.engine.render.RenderException;
 import org.ofdrw.layout.exception.DocReadException;
 import org.ofdrw.layout.handler.RenderFinishHandler;
+import org.ofdrw.layout.handler.VPageHandler;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.reader.OFDReader;
@@ -144,6 +145,12 @@ public class OFDDoc implements Closeable {
      * 渲染结束时回调函数（可选）
      */
     private RenderFinishHandler renderingEndHandler;
+
+
+    /**
+     * 页面解析前处理器
+     */
+    private VPageHandler onPageHandler = null;
 
 
     /**
@@ -379,6 +386,7 @@ public class OFDDoc implements Closeable {
             Page page = rl.get(pageAbsLoc, Page::new);
             // 构造追加页面对象
             AdditionVPage avp = new AdditionVPage(page, pageAbsLoc);
+            avp.setPageNum(pageNum);
             // 自动加入到虚拟页面列表中
             this.addVPage(avp);
             return avp;
@@ -578,6 +586,28 @@ public class OFDDoc implements Closeable {
     }
 
     /**
+     * 获取 当前解析页面的回调
+     *
+     * @return 当前解析页面的回调，可能为 null 。
+     */
+    public VPageHandler getOnPage() {
+        return this.onPageHandler;
+    }
+
+    /**
+     * 设置 当前解析页面的回调函数
+     * <p>
+     * 通过回调函数可在页面变为OFD内容前向页面追加内容，例如：添加页头、添加页脚。
+     *
+     * @param handler 页面解析前处理器
+     * @return this
+     */
+    public OFDDoc setOnPage(VPageHandler handler) {
+        this.onPageHandler = handler;
+        return this;
+    }
+
+    /**
      * 关闭文档，生成OFD
      * <p>
      * 注所有文档操作均在close方法执行完成后才会写入文件，打包生成OFD文档。
@@ -619,6 +649,7 @@ public class OFDDoc implements Closeable {
                 DocDir docDefault = ofdDir.obtainDocDefault();
                 // 创建虚拟页面解析引擎，并持有文档上下文。
                 VPageParseEngine parseEngine = new VPageParseEngine(pageLayout, docDefault, prm, MaxUnitID);
+                parseEngine.setBeforePageParseHandler(onPageHandler);
                 // 解析虚拟页面
                 parseEngine.process(vPageList);
             }

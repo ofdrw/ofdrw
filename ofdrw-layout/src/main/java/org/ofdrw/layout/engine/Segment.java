@@ -267,8 +267,9 @@ public class Segment implements Iterable<Map.Entry<Div, Rectangle>>, Iterator<Ma
 
     @Override
     public Map.Entry<Div, Rectangle> next() {
-        if (cnt == content.size())
+        if (cnt == content.size()) {
             throw new NoSuchElementException();
+        }
         cnt++;
         return new HashMap.SimpleEntry<>(
                 content.get(cnt - 1), sizeList.get(cnt - 1)

@@ -16,6 +16,7 @@ import org.ofdrw.layout.element.*;
 import org.ofdrw.layout.element.AreaHolderBlock;
 import org.ofdrw.layout.element.canvas.Canvas;
 import org.ofdrw.layout.engine.render.*;
+import org.ofdrw.layout.handler.VPageHandler;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.PageDir;
 import org.ofdrw.pkg.container.PagesDir;
@@ -61,6 +62,12 @@ public class VPageParseEngine {
      * 公共资源管理器
      */
     private ResManager resManager;
+
+    /**
+     * 页面解析前处理器
+     */
+    private VPageHandler beforePageParseHandler = null;
+
 
     /**
      * 创建虚拟页面解析器
@@ -109,6 +116,11 @@ public class VPageParseEngine {
                 continue;
             }
             if (virtualPage instanceof AdditionVPage) {
+
+                if (beforePageParseHandler != null) {
+                    beforePageParseHandler.handle(virtualPage);
+                }
+
                 // 执行页面编辑
                 pageEdit((AdditionVPage) virtualPage);
             } else {
@@ -116,10 +128,17 @@ public class VPageParseEngine {
                 // 创建一个全新的页面容器对象
                 if (virtualPage.getPageNum() == null) {
                     pageDir = newPage();
+                    // 设置虚拟页面页码
+                    int size = pages.getSize();
+                    virtualPage.setPageNum(size);
                 } else {
                     pageDir = addNewPage(virtualPage.getPageNum() - 1);
                 }
                 ST_Loc pageLoc = pageDir.getAbsLoc().cat(PageDir.ContentFileName);
+
+                if (beforePageParseHandler != null) {
+                    beforePageParseHandler.handle(virtualPage);
+                }
                 // 解析虚拟页面，并加入到容器中
                 convertPageContent(pageLoc, virtualPage, pageDir);
             }
@@ -129,7 +148,7 @@ public class VPageParseEngine {
     /**
      * 转化虚拟页面的内容为实际OFD元素
      *
-     * @param pageLoc
+     * @param pageLoc 页面xml绝对路径
      * @param vPage   虚拟页面
      * @param pageDir 虚拟页面目录
      */
@@ -271,5 +290,21 @@ public class VPageParseEngine {
         return pageDir;
     }
 
+    /**
+     * 获取页面解析前处理器
+     *
+     * @return 页面解析前处理器，可能为 null。
+     */
+    public VPageHandler getBeforePageParseHandler() {
+        return beforePageParseHandler;
+    }
 
+    /**
+     * 设置页面解析前处理器
+     *
+     * @param beforePageParseHandler 页面解析前处理器
+     */
+    public void setBeforePageParseHandler(VPageHandler beforePageParseHandler) {
+        this.beforePageParseHandler = beforePageParseHandler;
+    }
 }
