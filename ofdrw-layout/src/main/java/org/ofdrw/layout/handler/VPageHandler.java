@@ -10,6 +10,7 @@ import org.ofdrw.layout.VirtualPage;
  * @author 权观宇
  * @since 2024-1-11 18:43:55
  */
+@FunctionalInterface
 public interface VPageHandler {
     /**
      * 执行处理

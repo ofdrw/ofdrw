@@ -602,7 +602,7 @@ public class OFDDoc implements Closeable {
      * @param handler 页面解析前处理器
      * @return this
      */
-    public OFDDoc setOnPage(VPageHandler handler) {
+    public OFDDoc onPage(VPageHandler handler) {
         this.onPageHandler = handler;
         return this;
     }

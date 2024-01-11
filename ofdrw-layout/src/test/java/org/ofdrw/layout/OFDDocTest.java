@@ -760,7 +760,7 @@ class OFDDocTest {
         Path path = Paths.get("target/auto-page-number.ofd");
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             // 添加页码
-            ofdDoc.setOnPage((page) -> {
+            ofdDoc.onPage((page) -> {
                 System.out.println("第 " + page.getPageNum() + " 页");
 
                 // 210mm x 297mm
@@ -795,7 +795,7 @@ class OFDDocTest {
         Path path = Paths.get("target/auto-page-number-2.ofd");
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             // 添加页码
-            ofdDoc.setOnPage((page) -> {
+            ofdDoc.onPage((page) -> {
                 System.out.println("第 " + page.getPageNum() + " 页");
                 PageLayout style = page.getStyle();
                 Canvas canvas = new Canvas(0, 0, style.getWidth(), style.getHeight());
