@@ -19,6 +19,7 @@
 ```java
 class Main {
     public static void main(String[] args) {
+        // path ...
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             // 1. 使用匿名类实现 VPageHandler 接口
             // 2. 注册事件处理器
@@ -45,6 +46,7 @@ class Main {
 ```java
 class Main {
     public static void main(String[] args) {
+        // path ...
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             // 1. 使用匿名类实现 RenderFinishHandler 接口
             // 2. 注册事件处理器
