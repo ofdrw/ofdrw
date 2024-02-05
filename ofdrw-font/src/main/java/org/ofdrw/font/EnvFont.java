@@ -75,14 +75,14 @@ public final class EnvFont {
             }
             if (fMap.get("宋体") != null) {
                 defaultFont = fMap.get("宋体");
-            } else if (fMap.get("SimSun") != null) {
-                defaultFont = fMap.get("SimSun");
-            } else if (fMap.get("MicrosoftYaHei") != null) {
-                defaultFont = fMap.get("MicrosoftYaHei");
-            } else if (fMap.get("STHeiti-Light") != null) {
-                defaultFont = fMap.get("STHeiti-Light");
-            } else if (fMap.get("Times New Roman") != null) {
-                defaultFont = fMap.get("Times New Roman");
+            } else if (fMap.get("simsun") != null) {
+                defaultFont = fMap.get("simsun");
+            } else if (fMap.get("microsoftyahei") != null) {
+                defaultFont = fMap.get("microsoftyahei");
+            } else if (fMap.get("stheiti-light") != null) {
+                defaultFont = fMap.get("stheiti-light");
+            } else if (fMap.get("times new roman") != null) {
+                defaultFont = fMap.get("times new roman");
             } else if (fMap.get("serif") != null) {
                 defaultFont = fMap.get("serif");
             }
