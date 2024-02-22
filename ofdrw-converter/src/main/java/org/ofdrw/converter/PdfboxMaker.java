@@ -9,6 +9,7 @@ import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
@@ -21,6 +22,7 @@ import org.ofdrw.core.attachment.CT_Attachment;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
+import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_Pos;
@@ -486,7 +488,14 @@ public class PdfboxMaker {
             return;
         }
         contentStream.saveGraphicsState();
-        PDImageXObject pdfImageObject = LosslessFactory.createFromImage(pdf, bufferedImage);
+        // 根据图片格式决定图片使用哪种创建方式
+        PDImageXObject pdfImageObject;
+        CT_MultiMedia multiMedia = resMgt.getMultiMedia(resourceID.toString());
+        if(multiMedia != null && "JPEG".equals(multiMedia.getFormat())){
+            pdfImageObject = JPEGFactory.createFromImage(pdf, bufferedImage);
+        }else {
+            pdfImageObject = LosslessFactory.createFromImage(pdf, bufferedImage);
+        }
 
         if (annotBox != null) {
             float x = annotBox.getTopLeftX().floatValue();

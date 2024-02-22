@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.ConvertHelper;
 import org.ofdrw.converter.FontLoader;
@@ -89,4 +90,18 @@ public class OFD2PDFTest {
             exporter.export();
         }
     }
+
+    /**
+     * 验证包含 JPEG 图片的 OFD 文件转换为 PDF 后文件大小是否正常
+     */
+    @Test
+    void testExportContainsJpeg() throws Exception{
+        Path dst = Paths.get("src/test/resources/containsJPEG.ofd");
+        Assertions.assertNotNull(dst);
+        Path pdfPath = Paths.get("target/containsJPEG.pdf");
+        try (OFDExporter exporter = new PDFExporterPDFBox(dst, pdfPath)) {
+            exporter.export();
+        }
+    }
+
 }
