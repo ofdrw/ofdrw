@@ -1,11 +1,9 @@
 # OFDRW 附件操作
 
-OFDRW提供了对OFD文档中附件的操作支持，包括文档中附件列表的查询、附件获取、附件的添加。
-
-操作类型包括：
+OFDRW提供了对OFD文档中附件的操作支持，包括文档中附件查询与编辑。
 
 - 查询：`OFDReader`实现，包括附件列表查询、附件文件获取。
-- 编辑：`OFDDoc`实现，包括附件的添加、替换。
+- 编辑：`OFDDoc`实现，包括附件的添加、替换、删除。
 
 ## 附件查询
 
@@ -90,8 +88,7 @@ class Main {
 完整示例代码见：
 
 - 添加附件：[AttachmentTest.java #addAttachmentTest](../../src/test/java/org/ofdrw/layout/AttachmentTest.java)
--
-向指定位置添加附件：[AttachmentTest.java #addAttachmentToDirTest](../../src/test/java/org/ofdrw/layout/AttachmentTest.java)
+- 向指定位置添加附件：[AttachmentTest.java #addAttachmentToDirTest](../../src/test/java/org/ofdrw/layout/AttachmentTest.java)
 - 替换附件：[AttachmentTest.java #replaceAttachmentTest](../../src/test/java/org/ofdrw/layout/AttachmentTest.java)
 
 ### 附件删除
