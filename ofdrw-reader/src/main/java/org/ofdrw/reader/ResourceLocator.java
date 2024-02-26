@@ -78,6 +78,9 @@ public class ResourceLocator {
         while (p != p.getParent()) {
             p = p.getParent();
         }
+        if ((p instanceof OFDDir) == false) {
+            throw new IllegalArgumentException("根路径不是 OFDDir");
+        }
         this.ofdDir = (OFDDir) p;
         this.cd(vc.getAbsLoc().getLoc());
     }

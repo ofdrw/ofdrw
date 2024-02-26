@@ -25,6 +25,7 @@ import org.ofdrw.layout.handler.RenderFinishHandler;
 import org.ofdrw.layout.handler.VPageHandler;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
+import org.ofdrw.pkg.container.VirtualContainer;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.ResourceLocator;
@@ -437,7 +438,7 @@ public class OFDDoc implements Closeable {
     /**
      * 向文档中添加附件文件
      * <p>
-     * 如果名称相同原有附件将会被替换
+     * 如果名称相同原有附件将会被替换，附件文件将被放置于文档的默认资源目录下"/Doc_0/Res/"。
      *
      * @param attachment 附件文件对象
      * @return this
@@ -448,10 +449,40 @@ public class OFDDoc implements Closeable {
             return this;
         }
         DocDir docDefault = ofdDir.obtainDocDefault();
+        String resAbsPath = docDefault.getRes().getAbsLoc().toString();
+
+        return this.addAttachment(resAbsPath, attachment);
+    }
+
+    /**
+     * 向文档中添加附件文件
+     * <p>
+     * 如果名称相同原有附件将会被替换，附件文件将被放置于指定目录下。
+     *
+     * @param absPath    附件在OFD容器内的绝对位置，若不存在则创建，例如 "/Doc_0/Res/
+     * @param attachment 附件文件对象
+     * @return this
+     * @throws IOException 文件操作异常
+     */
+    public OFDDoc addAttachment(String absPath, Attachment attachment) throws IOException {
+        if (attachment == null) {
+            return this;
+        }
+        if (absPath == null || absPath.startsWith("/") == false) {
+            throw new IllegalArgumentException("附件在OFD容器内的绝对位置(absPath)不能为空或不合法");
+        }
         Path file = attachment.getFile();
-        file = docDefault.addResourceWithPath(file);
+        if (file == null || Files.notExists(file)) {
+            return null;
+        }
+
+        DocDir docDefault = ofdDir.obtainDocDefault();
+
+        VirtualContainer resParentDir = ofdDir.obtainContainer(absPath, VirtualContainer::new);
+        resParentDir.putFileWithPath(file);
+
         // 构造附件文件存放路径
-        ST_Loc loc = docDefault.getRes().getAbsLoc()
+        ST_Loc loc = resParentDir.getAbsLoc()
                 .cat(file.getFileName().toString());
         // 计算附件所占用的空间，单位KB。
         double size = Files.size(file) / 1024d;
@@ -461,13 +492,31 @@ public class OFDDoc implements Closeable {
                 .setSize(size)
                 .setFileLoc(loc);
         ResourceLocator rl = new ResourceLocator(docDefault);
-        //这边应该加个Doc_0目录,不然后面读取document中Attachments如果写的相对路径还是从根目录找就会找不到的。add by daiwf
+
         // 获取附件目录，并切换目录到与附件列表文件同级
         Attachments attachments = obtainAttachments(docDefault, rl);
         // 清理已经存在的同名附件
         cleanOldAttachment(rl, attachments, attachment.getName());
         // 加入附件记录
         attachments.addAttachment(ctAttachment);
+        return this;
+    }
+
+    /**
+     * 删除指定名称的附件
+     *
+     * @param name 附件名称，若附件不存在则忽略。
+     * @return this
+     * @throws IOException 文件操作异常
+     */
+    public OFDDoc deleteAttachment(String name) throws IOException {
+        if (name == null || name.trim().isEmpty()) {
+            return this;
+        }
+        DocDir docDefault = ofdDir.obtainDocDefault();
+        ResourceLocator rl = new ResourceLocator(docDefault);
+        Attachments attachments = obtainAttachments(docDefault, rl);
+        cleanOldAttachment(rl, attachments, name);
         return this;
     }
 

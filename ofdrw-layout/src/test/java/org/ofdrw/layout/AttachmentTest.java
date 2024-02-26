@@ -37,6 +37,27 @@ public class AttachmentTest {
     }
 
     /**
+     * 向文件指定位置中加入附件文件
+     */
+    @Test
+    void addAttachmentToDirTest() throws IOException {
+        Path outP = Paths.get("target/AddAttachment_specif_ABS.ofd");
+        Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
+
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            Paragraph p = new Paragraph();
+            Span span = new Span("这是一个带有附件的OFD文件").setFontSize(10d);
+            p.add(span);
+            ofdDoc.add(p);
+
+            // 加入附件文件
+            ofdDoc.addAttachment("/Doc_0/MY_DIR/MY_PATH/",new Attachment("Gao", file));
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+
+
+    /**
      * 向文件中加入附件文件
      */
     @Test
@@ -68,8 +89,7 @@ public class AttachmentTest {
         Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
         Path file2 = Paths.get("src/test/resources", "NotoSerifCJKsc-Regular.otf");
 
-        BufferedOutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(outP));
-        try (OFDDoc ofdDoc = new OFDDoc(outputStream)) {
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
             Paragraph p = new Paragraph();
             Span span = new Span("这是一个带有附件的OFD文件").setFontSize(10d);
             p.add(span);
@@ -93,10 +113,8 @@ public class AttachmentTest {
         Path inP = Paths.get("src/test/resources/AddAttachment_relativepathversion.ofd");
         Path file = Paths.get("src/test/resources", "testimg.png");
         Path file2 = Paths.get("src/test/resources", "eg_tulip.jpg");
-        BufferedInputStream inputStream = new BufferedInputStream(Files.newInputStream(inP));
-        BufferedOutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(outP));
-        try (OFDReader reader = new OFDReader(inputStream);
-             OFDDoc ofdDoc = new OFDDoc(reader, outputStream)) {
+        try (OFDReader reader = new OFDReader(inP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
             // 加入附件文件
             ofdDoc.addAttachment(new Attachment("testimg", file));
             ofdDoc.addAttachment(new Attachment("eg_tulip", file2));
@@ -145,8 +163,7 @@ public class AttachmentTest {
     @Test
     void getAttachment() throws IOException {
         Path src = Paths.get("src/test/resources/AddAttachment.ofd");
-
-        try (OFDReader reader = new OFDReader(new ByteArrayInputStream(Files.readAllBytes(src)))) {
+        try (OFDReader reader = new OFDReader(src)) {
             CT_Attachment attachment = reader.getAttachment("AAABBB");
             Assertions.assertNull(attachment);
 
@@ -158,5 +175,20 @@ public class AttachmentTest {
         }
     }
 
+    /**
+     * 删除附件
+     */
+    @Test
+    void deleteAttachment()throws Exception {
+        Path srcP = Paths.get("src/test/resources/AddAttachment.ofd");
+        Path outP = Paths.get("target/DeleteAttachment.ofd");
+
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+            // 加入附件文件
+            ofdDoc.deleteAttachment("Gao");
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath());
+    }
 
 }

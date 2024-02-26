@@ -84,7 +84,6 @@ public class HelloWorld {
 - [水印示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/cases/watermark/WatermarkTest.java)
 - [段落布局示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/ParagraphLayoutDemo.java)
 - [文档编辑示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/DocEditDemos.java)
-- [附件操作示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/AttachmentTest.java)
 - [数字签名清理示例](./ofdrw-sign/src/test/java/org/ofdrw/sign/SignCleanerTest.java)
 
 相关文档目录：
@@ -99,6 +98,7 @@ public class HelloWorld {
 - [OFD R&W 区域占位区块（类表单效果）](./ofdrw-layout/doc/areaholderblock/README.md)
 - [OFD R&W 单元格元素 使用指南](./ofdrw-layout/doc/cell/README.md)
 - [OFD R&W 内容生成 事件处理 ***New***](./ofdrw-layout/doc/onpage/README.md)
+- [OFD R&W 附件操作](./ofdrw-layout/doc/attachment/README.md)
 
 ### 相关解决方案
 
