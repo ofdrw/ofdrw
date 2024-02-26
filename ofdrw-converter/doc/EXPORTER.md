@@ -15,7 +15,7 @@ OFDRW提供了将OFD文档导出为其他格式文档的能力，如导出为图
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-converter</artifactId>
-    <version>2.2.6</version>
+    <version>2.2.7</version>
 </dependency>
 ```
 
