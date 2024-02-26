@@ -97,8 +97,8 @@ public class HelloWorld {
 - [OFD R&W 文档合并](./ofdrw-tool/README.md)
 - [OFD R&W 区域占位区块（类表单效果）](./ofdrw-layout/doc/areaholderblock/README.md)
 - [OFD R&W 单元格元素 使用指南](./ofdrw-layout/doc/cell/README.md)
-- [OFD R&W 内容生成 事件处理 ***New***](./ofdrw-layout/doc/onpage/README.md)
-- [OFD R&W 附件操作](./ofdrw-layout/doc/attachment/README.md)
+- [OFD R&W 内容生成 事件处理](./ofdrw-layout/doc/onpage/README.md)
+- [OFD R&W 附件操作 ***New***](./ofdrw-layout/doc/attachment/README.md)
 
 ### 相关解决方案
 
