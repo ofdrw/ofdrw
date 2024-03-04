@@ -157,9 +157,24 @@ public class PDFConverter implements DocConverter {
             PDDocumentOutline pdfOutline = pdfDoc.getDocumentCatalog().getDocumentOutline();
 
             for (Integer index : targetPages) {
-                PDRectangle pdfPageSize = pdfDoc.getPage(index).getBBox();
+                // 获取PDF页面（page）对象
+                PDPage page = pdfDoc.getPage(index);
+                // 获取当前页面“旋转角度”的值
+                int rotation = page.getRotation();
+                // 获取页面尺寸对象
+                PDRectangle pdfPageSize = page.getBBox();
+                // 获取页面的宽度、高度
+                float width = pdfPageSize.getWidth();
+                float height = pdfPageSize.getHeight();
+                // 如果页面“旋转角度”值为90度或270度，则页面显示为“横向”，需要将获取到的宽度、高度值互换。
+                if (rotation == 90 || rotation == 270){
+                    float tmp = width;
+                    width = height;
+                    height = tmp;
+                }
+
                 // 将PDF页面尺寸缩放至OFD尺寸
-                OFDPageGraphics2D ofdPageG2d = ofdDoc.newPage(pdfPageSize.getWidth() / uuPmm, pdfPageSize.getHeight() / uuPmm);
+                OFDPageGraphics2D ofdPageG2d = ofdDoc.newPage(width / uuPmm, height/ uuPmm);
                 pdfRender.renderPageToGraphics(index, ofdPageG2d, (float) (1d / uuPmm));
                 if (enableCopyBookmarks) {
                     exportBookmark(pdfDoc, pdfOutline, ofdPageG2d.pageID, index);
