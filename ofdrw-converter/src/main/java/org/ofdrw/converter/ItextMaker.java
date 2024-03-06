@@ -54,6 +54,8 @@ import org.ofdrw.reader.ResourceManage;
 import org.ofdrw.reader.model.AnnotionEntity;
 import org.ofdrw.reader.model.StampAnnotEntity;
 import org.ofdrw.reader.tools.ImageUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -76,6 +78,8 @@ import static org.ofdrw.converter.utils.CommonUtil.converterDpi;
  */
 public class ItextMaker {
 
+	private final static Logger logger = LoggerFactory.getLogger(ItextMaker.class);
+	
     private Map<String, FontWrapper<PdfFont>> fontCache = new HashMap<>();
 
     private final OFDReader ofdReader;
@@ -545,7 +549,16 @@ public class ItextMaker {
         if (resourceID == null) {
             return;
         }
-        byte[] imageByteArray = resMgt.getImageByteArray(resourceID.toString());
+        byte[] imageByteArray = null;
+		try {
+			imageByteArray = resMgt.getImageByteArray(resourceID.toString());
+		} catch (Exception e) {
+			if (logger.isErrorEnabled()) {
+				logger.error(String.format("图片解析失败！[resourceId: %s][%s]", resourceID.toString(), e.getMessage()));
+			} else {
+				logger.warn(String.format("图片解析失败！[resourceId: %s]", resourceID.toString()), e);
+			}
+		}
         if (imageByteArray == null) {
             return;
         }
