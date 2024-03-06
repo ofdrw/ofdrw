@@ -1,9 +1,12 @@
 package org.ofdrw.converter.export;
 
 import org.junit.jupiter.api.Test;
+import org.ofdrw.converter.ConvertHelper;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PDFExporterITextTest {
 
@@ -19,4 +22,18 @@ class PDFExporterITextTest {
         }
         System.out.println(">> " + pdfPath.toAbsolutePath());
     }
+
+
+    /**
+     * 忽略无法解析图片
+     */
+    @Test
+    void testErrImgResource() {
+        ConvertHelper.useIText();
+        Path ofdIn = Paths.get("src/test/resources/testImageNotFound.ofd");
+        Path pdfOut = Paths.get("target/testImageNotFound.pdf");
+        ConvertHelper.toPdf(ofdIn, pdfOut);
+        assertTrue(true);
+    }
+
 }

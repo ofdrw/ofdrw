@@ -78,8 +78,6 @@ import static org.ofdrw.converter.utils.CommonUtil.converterDpi;
  */
 public class ItextMaker {
 
-	private final static Logger logger = LoggerFactory.getLogger(ItextMaker.class);
-	
     private Map<String, FontWrapper<PdfFont>> fontCache = new HashMap<>();
 
     private final OFDReader ofdReader;
@@ -550,15 +548,11 @@ public class ItextMaker {
             return;
         }
         byte[] imageByteArray = null;
-		try {
-			imageByteArray = resMgt.getImageByteArray(resourceID.toString());
-		} catch (Exception e) {
-			if (logger.isErrorEnabled()) {
-				logger.error(String.format("图片解析失败！[resourceId: %s][%s]", resourceID.toString(), e.getMessage()));
-			} else {
-				logger.warn(String.format("图片解析失败！[resourceId: %s]", resourceID.toString()), e);
-			}
-		}
+        try {
+            imageByteArray = resMgt.getImageByteArray(resourceID.toString());
+        } catch (Exception e) {
+            System.err.println("图片ID: " + resourceID + " 解析失败 跳过，原因 " + e.getMessage());
+        }
         if (imageByteArray == null) {
             return;
         }
