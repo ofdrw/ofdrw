@@ -47,7 +47,7 @@ Maven项目引入依赖
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>2.2.7</version>
+  <version>2.2.8</version>
 </dependency>
 ```
 
@@ -98,7 +98,7 @@ public class HelloWorld {
 - [OFD R&W 区域占位区块（类表单效果）](./ofdrw-layout/doc/areaholderblock/README.md)
 - [OFD R&W 单元格元素 使用指南](./ofdrw-layout/doc/cell/README.md)
 - [OFD R&W 内容生成 事件处理](./ofdrw-layout/doc/onpage/README.md)
-- [OFD R&W 附件操作 ***New***](./ofdrw-layout/doc/attachment/README.md)
+- [OFD R&W 附件操作](./ofdrw-layout/doc/attachment/README.md)
 
 ### 相关解决方案
 

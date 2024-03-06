@@ -1,5 +1,7 @@
 # 发布记录和特性
 
+***自1.20.2以后 OFDRW发布记录和特性在项目Release中发布。***
+
 ## Version 1.20.2 2022-12-12 18:29:38
 
 > Alias: Chainsaw Man
