@@ -15,7 +15,7 @@ public class PageEntry {
     public DocContext docCtx;
 
     /**
-     * 页面索引号
+     * 页面索引号（页码从1开始）
      */
     public Integer pageIndex;
 
@@ -26,7 +26,20 @@ public class PageEntry {
      */
     public boolean copyTemplate = true;
 
+    /**
+     * 是否复注释
+     * <p>
+     * 默认：true 复制注释
+     */
+    public boolean copyAnnotations = true;
 
+
+    /**
+     * 创建迁移页面对象
+     *
+     * @param pageIndex 页面索引号（页码从1开始）
+     * @param docCtx    上下文
+     */
     public PageEntry(Integer pageIndex, DocContext docCtx) {
         this.docCtx = docCtx;
         this.pageIndex = pageIndex;

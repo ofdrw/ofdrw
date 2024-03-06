@@ -5,6 +5,9 @@ import org.bouncycastle.jcajce.provider.digest.SM3;
 import org.bouncycastle.util.encoders.Hex;
 import org.dom4j.*;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.annotation.Annotations;
+import org.ofdrw.core.annotation.pageannot.AnnPage;
+import org.ofdrw.core.annotation.pageannot.PageAnnot;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.pageObj.CT_TemplatePage;
 import org.ofdrw.core.basicStructure.pageObj.Template;
@@ -18,13 +21,12 @@ import org.ofdrw.core.compositeObj.CT_VectorG;
 import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.text.font.CT_Font;
-import org.ofdrw.pkg.container.PageDir;
-import org.ofdrw.pkg.container.PagesDir;
-import org.ofdrw.pkg.container.ResDir;
+import org.ofdrw.pkg.container.*;
 import org.ofdrw.reader.ResourceLocator;
 import org.ofdrw.reader.model.TemplatePageEntity;
 
 import java.io.Closeable;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -65,6 +67,16 @@ public class OFDMerger implements Closeable {
      * 在合并完成后将会被打包存储
      */
     private BareOFDDoc ofdDoc;
+
+    /**
+     * 注释入口文件
+     */
+    private Annotations newDocAnnotations = null;
+    /**
+     * 注释目录
+     */
+    private AnnotsDir annotsDir = null;
+
 
     /**
      * 资源文件哈希表
@@ -199,8 +211,13 @@ public class OFDMerger implements Closeable {
                 // 取0文档对象
                 final CT_PageArea docDefaultArea = new CT_PageArea((Element) pageEntry.docCtx.getDefaultArea(0).clone());
                 org.ofdrw.core.basicStructure.pageObj.Page page = null;
+                ST_ID oldPageID = null;
+                ST_ID newPageID = null;
                 // 解析原OFD页面的Content.xml 为Page对象
                 try {
+                    // 获取页面在原文档中的对象ID
+                    oldPageID = pageEntry.docCtx.reader.getPageObjectId(pageEntry.pageIndex);
+
                     Element copy = (Element) pageEntry.docCtx.reader.getPage(pageEntry.pageIndex).clone();
                     final Document document = DocumentHelper.createDocument();
                     document.add(copy);
@@ -212,12 +229,19 @@ public class OFDMerger implements Closeable {
 
                 // 若当前页面的页面区域的大小和位置为空，则使用文档默认的尺寸
                 if (page.getArea() == null) {
-
                     page.setArea(docDefaultArea);
                 }
-                // 创建页面容器
-                final PageDir pageDir = newPage(pages, pagesDir);
 
+                // 创建页面容器
+                PageDir pageDir = pagesDir.newPageDir();
+                String pageLoc = String.format("Pages/Page_%d/Content.xml", pageDir.getIndex());
+                // 将创建的页面加入 Document.xml 中的 Pages 内
+                final Page newPageItem = new Page(this.ofdDoc.MaxUnitID.incrementAndGet(), pageLoc);
+                pages.addPage(newPageItem);
+                // 获取页面在新文档中的ID
+                newPageID = newPageItem.getID();
+
+                // 迁移页面模板
                 if (pageEntry.copyTemplate) {
                     // 页面模板的迁移的替换
                     final List<Template> pageTplArr = page.getTemplates();
@@ -232,8 +256,79 @@ public class OFDMerger implements Closeable {
                 domMigrate(pageEntry.docCtx, page);
                 // 把替换后得到页面放入页面容器中
                 pageDir.setContent(page);
+
+                // 迁移注释
+                if (pageEntry.copyAnnotations && oldPageID != null && newPageID != null) {
+                    String pageDirName = pageDir.getContainerName();
+                    pageAnnotationMigrate(pageEntry.docCtx, oldPageID, newPageID, pageDirName);
+                }
+            }
+        }
+    }
+
+    /**
+     * 页面注释迁移到新文档，若页面无注释则跳过。
+     *
+     * @param docCtx           文档上下文
+     * @param oldPageID        原页面ID
+     * @param newPageID        迁移后页面ID
+     * @param pageAnnotDirName 页面所处容器名称，格式为Page_N
+     */
+    private void pageAnnotationMigrate(DocContext docCtx, ST_ID oldPageID, ST_ID newPageID, String pageAnnotDirName) throws IOException {
+        final ResourceLocator rl = docCtx.reader.getResourceLocator();
+        try {
+            rl.save();
+            org.ofdrw.core.basicStructure.doc.Document srcDoc = docCtx.reader.cdDefaultDoc();
+            // 获取 注释入口文件 Annotations.xml
+            ST_Loc srcAnnotListPath = srcDoc.getAnnotations();
+            if (srcAnnotListPath == null || !(rl.exist(srcAnnotListPath.toString()))) {
+                return;
+            }
+            Annotations annotList = rl.get(srcAnnotListPath, Annotations::new);
+            if (annotList == null) {
+                return;
+            }
+            // 获取指定页面的注释
+            AnnPage annPage = annotList.getByPageId(oldPageID.toString());
+            if (annPage == null || annPage.getFileLoc() == null) {
+                return;
+            }
+            // 进入 注释入口文件 所在目录
+            rl.cd(srcAnnotListPath.parent());
+            // 解析并获取 分页注释文件
+            PageAnnot pageAnnot = rl.get(annPage.getFileLoc(), PageAnnot::new);
+            if (pageAnnot == null) {
+                return;
+            }
+            Element copy = (Element) pageAnnot.clone();;
+            final Document document = DocumentHelper.createDocument();
+            document.add(copy);
+            pageAnnot = new PageAnnot(copy);
+
+            if (this.newDocAnnotations == null) {
+                // 创建注释目录 /Doc_0/Annots/
+                this.annotsDir = this.ofdDoc.docDir.obtainAnnots();
+                // 创建注释入口文件 /Doc_0/Annots/Annotations.xml
+                this.newDocAnnotations = new Annotations();
+                this.annotsDir.setAnnotations(this.newDocAnnotations);
+                this.ofdDoc.document.setAnnotations(this.annotsDir.getAbsLoc().cat(DocDir.AnnotationsFileName));
             }
 
+            // 获取页面注释容器 /Doc_0/Annots/Page_N/ ，不存在则创建
+            PageDir pageDir = annotsDir.obtainContainer(pageAnnotDirName, PageDir::new);
+            // 向容器中加入 分页注释文件 /Doc_0/Annots/Page_N/Annot_N.xml
+            ST_Loc pageAnnotPath = pageDir.addAnnot(pageAnnot);
+            // 设置新文档中的页面ID
+            AnnPage annotItem = new AnnPage().setPageID(newPageID).setFileLoc(pageAnnotPath);
+            this.newDocAnnotations.addPage(annotItem);
+
+            // 迁移注释中资源
+            domMigrate(docCtx, pageAnnot);
+        } catch (FileNotFoundException | DocumentException e) {
+            System.err.println("页面注释迁移失败：" + e.getMessage());
+        } finally {
+            // 还原原有工作区
+            rl.restore();
         }
     }
 
@@ -252,15 +347,21 @@ public class OFDMerger implements Closeable {
         CT_TemplatePage templatePage = tplPageMap.get(oldId);
         if (templatePage != null) {
             // 页面已经复制过
-        	// 如果模板ID一样，但是模板内容不一样
-        	if(templatePage.asXML().equals(tplObj.asXML())) {
-        		return templatePage.getID().ref();
-        	}
+            // 如果模板ID一样，但是模板内容不一样
+            if (templatePage.asXML().equals(tplObj.asXML())) {
+                return templatePage.getID().ref();
+            }
         }
 
         // 从文档中加载模板页面实体
         final TemplatePageEntity entity = docCtx.reader.getTemplate(oldId);
-        final org.ofdrw.core.basicStructure.pageObj.Page pageObj = entity.getPage();
+        // 复制模板页面
+        org.ofdrw.core.basicStructure.pageObj.Page pageObj = entity.getPage();
+        Element copy = (Element) pageObj.clone();
+        final Document document = DocumentHelper.createDocument();
+        document.add(copy);
+        pageObj = new org.ofdrw.core.basicStructure.pageObj.Page(copy);
+
         templatePage = entity.getTplInfo();
         templatePage.setParent(null);
 
@@ -445,22 +546,6 @@ public class OFDMerger implements Closeable {
         // 缓存，返回文件名称（基于Res容器的相对路径）
         resFileHashTable.put(hash, res);
         return res;
-    }
-
-    /**
-     * 创建新页面
-     *
-     * @param pages    页面对象
-     * @param pagesDir 页面容器
-     * @return 新页面容器
-     */
-    private PageDir newPage(Pages pages, PagesDir pagesDir) {
-        // 设置页面index与页面定位路径一致
-        PageDir pageDir = pagesDir.newPageDir();
-        String pageLoc = String.format("Pages/Page_%d/Content.xml", pageDir.getIndex());
-        final Page page = new Page(this.ofdDoc.MaxUnitID.incrementAndGet(), pageLoc);
-        pages.addPage(page);
-        return pageDir;
     }
 
     @Override

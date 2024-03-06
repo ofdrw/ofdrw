@@ -17,6 +17,24 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class OFDMergerTest {
 
+    /**
+     * 测试水印迁移
+     */
+    @Test
+    void testMergerWatermark() throws IOException {
+        Path dst = Paths.get("target/merge_watermark.ofd");
+        Path d1Path = Paths.get("src/test/resources", "hello_watermark.ofd");
+        Path d2Path = Paths.get("src/test/resources", "Page5.ofd");
+
+        try (OFDMerger ofdMerger = new OFDMerger(dst)) {
+            ofdMerger.add(d1Path);
+            ofdMerger.add(d2Path);
+            ofdMerger.add(d1Path);
+        }
+        System.out.println(dst.toAbsolutePath());
+    }
+
+
     @Test
     void add() throws IOException {
         Path dst = Paths.get("target/n1.ofd");
@@ -37,7 +55,7 @@ class OFDMergerTest {
         Path d2Path = Paths.get("../ofdrw-converter/src/test/resources/", "发票示例.ofd");
 
         try (OFDMerger ofdMerger = new OFDMerger(dst)) {
-            ofdMerger.add(d1Path,1,1);
+            ofdMerger.add(d1Path, 1, 1);
             ofdMerger.add(d2Path);
             ofdMerger.add(d1Path);
         }

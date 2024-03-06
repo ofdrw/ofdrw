@@ -197,6 +197,8 @@ public class DocDir extends VirtualContainer {
 
     /**
      * 设置注释列表对象
+     * <p>
+     * 推荐使用 {@link  org.ofdrw.pkg.container.AnnotsDir#setAnnotations(Annotations)}
      *
      * @param annotations 注释列表对象
      * @return 注释列表对象

@@ -1,6 +1,7 @@
 package org.ofdrw.pkg.container;
 
-import java.io.File;
+import org.ofdrw.core.annotation.Annotations;
+
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
 
@@ -19,6 +20,16 @@ public class AnnotsDir extends VirtualContainer {
         super(fullDir);
     }
 
+    /**
+     * 设置注释列表对象
+     *
+     * @param annotations 注释列表对象
+     * @return 注释列表对象
+     */
+    public AnnotsDir setAnnotations(Annotations annotations) {
+        this.putObj(DocDir.AnnotationsFileName, annotations);
+        return this;
+    }
 
     /**
      * 通过索引获取 页面文件

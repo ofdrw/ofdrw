@@ -601,7 +601,31 @@ public class OFDReader implements Closeable {
      * @return 对象ID
      */
     public ST_ID getPageObjectId(int pageNum) {
-        return getPageInfo(pageNum).getId();
+        if (pageNum <= 0) {
+            throw new NumberFormatException("页码(pageNum)不能小于0");
+        }
+        try {
+            rl.save();
+            int index = pageNum - 1;
+            // 路径解析对象获取并缓存虚拟容器
+            Document document = cdDefaultDoc();
+            Pages pages = document.getPages();
+            List<org.ofdrw.core.basicStructure.pageTree.Page> pageList = pages.getPages();
+            if (index >= pageList.size()) {
+                throw new NumberFormatException(pageNum + "超过最大页码:" + pageList.size());
+            }
+            // 获取页面的路径
+            org.ofdrw.core.basicStructure.pageTree.Page page = pageList.get(index);
+            if (page.getID() == null) {
+                return null;
+            }
+            return page.getID();
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new RuntimeException("OFD解析失败，原因:" + e.getMessage(), e);
+        } finally {
+            // 还原原有工作区
+            rl.restore();
+        }
     }
 
     /**
