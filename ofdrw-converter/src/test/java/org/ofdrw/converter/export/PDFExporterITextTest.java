@@ -33,7 +33,19 @@ class PDFExporterITextTest {
         Path ofdIn = Paths.get("src/test/resources/testImageNotFound.ofd");
         Path pdfOut = Paths.get("target/testImageNotFound.pdf");
         ConvertHelper.toPdf(ofdIn, pdfOut);
-        assertTrue(true);
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
+    /**
+     * 图片覆盖整个页面
+     */
+    @Test
+    void testImageOverridePage() {
+        ConvertHelper.useIText();
+        Path ofdIn = Paths.get("src/test/resources/testImageOverridePage.ofd");
+        Path pdfOut = Paths.get("target/testImageOverridePage.pdf");
+        ConvertHelper.toPdf(ofdIn, pdfOut);
+        System.out.println(">> " + pdfOut.toAbsolutePath());
     }
 
 }
