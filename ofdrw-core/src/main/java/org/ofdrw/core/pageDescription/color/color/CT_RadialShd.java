@@ -190,7 +190,7 @@ public class CT_RadialShd extends OFDElement implements ColorClusterType {
         if (startPoint == null) {
             throw new IllegalArgumentException("起始椭圆的的中心点（startPoint）不能为空");
         }
-        this.addAttribute("startPoint", startPoint.toString());
+        this.addAttribute("StartPoint", startPoint.toString());
         return this;
     }
 
