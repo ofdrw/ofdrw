@@ -40,8 +40,11 @@ import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.compositeObj.CT_VectorG;
+import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.graph.pathObj.FillColor;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
+import org.ofdrw.core.pageDescription.clips.Area;
+import org.ofdrw.core.pageDescription.clips.CT_Clip;
 import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
@@ -523,6 +526,10 @@ public class ItextMaker {
                     pathObject.getBoundary().getWidth(),
                     pathObject.getBoundary().getHeight());
         }
+
+        // 裁剪
+        clip(pdfCanvas, box, pathObject);
+        
         List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), compositeObjectBoundary, compositeObjectCTM, true);
         for (int i = 0; i < listPoint.size(); i++) {
             if (listPoint.get(i).type.equals("M") || listPoint.get(i).type.equals("S")) {
@@ -541,7 +548,44 @@ public class ItextMaker {
             }
         }
     }
-    
+
+    private void clip(PdfCanvas pdfCanvas, ST_Box box, PathObject pathObject) {
+		if (pathObject.getClips() == null) {
+			return;
+		}
+
+		List<CT_Clip> clips = pathObject.getClips().getClips();
+		for (int k = 0; k < clips.size(); k++) {
+			CT_Clip clip = clips.get(k);
+			for (Area area : clip.getAreas()) {
+				Element elePath = area.getOFDElement("Path");
+				CT_Path path = new CT_Path(elePath);
+				List<PathPoint> points = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(),
+						pathObject.getBoundary(),
+						PointUtil.convertPathAbbreviatedDatatoPoint(path.getAbbreviatedData()), area.getCTM() != null,
+						area.getCTM(), null, null, true);
+				pdfCanvas.clip();
+				for (int i = 0; i < points.size(); i++) {
+					PathPoint pathPoint = points.get(i);
+					if (pathPoint.type.equals("M") || pathPoint.type.equals("S")) {
+						pdfCanvas.moveTo(pathPoint.x1, pathPoint.y1);
+					} else if (pathPoint.type.equals("L")) {
+						pdfCanvas.lineTo(pathPoint.x1, pathPoint.y1);
+					} else if (pathPoint.type.equals("B")) {
+						pdfCanvas.curveTo(pathPoint.x1, pathPoint.y1, pathPoint.x2, pathPoint.y2, pathPoint.x3,
+								pathPoint.y3);
+					} else if (pathPoint.type.equals("Q")) {
+						pdfCanvas.curveTo(pathPoint.x1, pathPoint.y1, pathPoint.x2, pathPoint.y2);
+					} else if (pathPoint.type.equals("C")) {
+						pdfCanvas.closePath();
+					}
+				}
+				pdfCanvas.endPath();
+			}
+		}
+
+	}
+
 	private boolean equals(ST_Box box1, ST_Box box2) {
 		if (null == box1 || null == box2) {
 			return false;
