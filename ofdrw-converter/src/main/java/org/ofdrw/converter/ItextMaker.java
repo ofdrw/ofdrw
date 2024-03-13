@@ -42,6 +42,7 @@ import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.compositeObj.CT_VectorG;
 import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.graph.pathObj.FillColor;
+import org.ofdrw.core.graph.pathObj.Rule;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
 import org.ofdrw.core.pageDescription.clips.Area;
 import org.ofdrw.core.pageDescription.clips.CT_Clip;
@@ -503,7 +504,11 @@ public class ItextMaker {
                 pdfCanvas.setFillColor(defaultFillColor);
             }
             path(pdfCanvas, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
-            pdfCanvas.fill();
+			if (null != pathObject.getRule() && pathObject.getRule().equals(Rule.Even_Odd)) {
+				pdfCanvas.eoFill();
+			} else {
+				pdfCanvas.fill();
+			}
             pdfCanvas.restoreState();
         }
     }
