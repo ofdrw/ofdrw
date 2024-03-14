@@ -6,6 +6,7 @@ import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.colors.PatternColor;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.geom.AffineTransform;
 import com.itextpdf.kernel.geom.PageSize;
@@ -48,6 +49,7 @@ import org.ofdrw.core.pageDescription.clips.Area;
 import org.ofdrw.core.pageDescription.clips.CT_Clip;
 import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.pageDescription.color.color.CT_RadialShd;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.signatures.appearance.StampAnnot;
 import org.ofdrw.core.text.font.CT_Font;
@@ -347,6 +349,64 @@ public class ItextMaker {
         }
     }
 
+	private Color parseAxial(Element eleAxialShd, ResourceManage resMgt, ST_Box box, PathObject pathObject) {
+		Color result = null;
+		if (eleAxialShd == null) {
+			return result;
+		}
+
+		CT_AxialShd ctAxialShd = new CT_AxialShd(eleAxialShd);
+		Color startColor = ColorConvert.pdfRGB(resMgt, ctAxialShd.getSegments().get(0).getColor());
+		Color endColor = ColorConvert.pdfRGB(resMgt,
+				ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor());
+		ST_Pos startPos = ctAxialShd.getStartPoint();
+		ST_Pos endPos = ctAxialShd.getEndPoint();
+		double x1 = startPos.getX(), y1 = startPos.getY();
+		double x2 = endPos.getX(), y2 = endPos.getY();
+		double[] realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x1, y1, pathObject.getBoundary());
+		x1 = realPos[0];
+		y1 = box.getHeight() - realPos[1];
+		realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, pathObject.getBoundary());
+		x2 = realPos[0];
+		y2 = box.getHeight() - realPos[1];
+		PdfShading.Axial axial = new PdfShading.Axial(new PdfDeviceCs.Rgb(), (float) CommonUtil.converterDpi(x1),
+				(float) CommonUtil.converterDpi(y1), startColor.getColorValue(), (float) CommonUtil.converterDpi(x2),
+				(float) CommonUtil.converterDpi(y2), endColor.getColorValue());
+		PdfPattern.Shading shading = new PdfPattern.Shading(axial);
+		result = new PatternColor(shading);
+
+		return result;
+	}
+	
+	private Color parseRadial(Element eleRadialShd, ResourceManage resMgt, ST_Box box, PathObject pathObject) {
+		Color result = null;
+		if (eleRadialShd == null) {
+			return result;
+		}
+
+		CT_RadialShd ctRadialShd = new CT_RadialShd(eleRadialShd);
+		Color startColor = ColorConvert.pdfRGB(resMgt, ctRadialShd.getSegments().get(0).getColor());
+		Color endColor = ColorConvert.pdfRGB(resMgt,
+				ctRadialShd.getSegments().get(ctRadialShd.getSegments().size() - 1).getColor());
+		ST_Pos startPos = ctRadialShd.getStartPoint();
+		ST_Pos endPos = ctRadialShd.getEndPoint();
+		double x1 = startPos.getX(), y1 = startPos.getY();
+		double x2 = endPos.getX(), y2 = endPos.getY();
+		double[] realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x1, y1, pathObject.getBoundary());
+		x1 = realPos[0];
+		y1 = box.getHeight() - realPos[1];
+		realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, pathObject.getBoundary());
+		x2 = realPos[0];
+		y2 = box.getHeight() - realPos[1];
+		PdfShading.Radial radial = new PdfShading.Radial(new PdfDeviceCs.Rgb(), (float) CommonUtil.converterDpi(x1),
+				(float) CommonUtil.converterDpi(y1), (float) CommonUtil.converterDpi(ctRadialShd.getStartRadius()),
+				startColor.getColorValue(), (float) CommonUtil.converterDpi(x2), (float) CommonUtil.converterDpi(y2),
+				(float) CommonUtil.converterDpi(ctRadialShd.getEndRadius()), endColor.getColorValue());
+		PdfPattern.Shading shading = new PdfPattern.Shading(radial);
+		result = new PatternColor(shading);
+
+		return result;
+	}
 
     private void writePath(ResourceManage resMgt,
                            PdfCanvas pdfCanvas,
@@ -383,38 +443,16 @@ public class ItextMaker {
             if (strokeColor.getValue() != null) {
                 pdfCanvas.setStrokeColor(ColorConvert.pdfRGB(resMgt, strokeColor));
             }
-            Element e = strokeColor.getOFDElement("AxialShd");
-            if (e != null) {
-                CT_AxialShd ctAxialShd = new CT_AxialShd(e);
-                final CT_Color startColor = ctAxialShd.getSegments().get(0).getColor();
-                final CT_Color endColor = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor();
-                ST_Array start = startColor.getValue();
-                ST_Array end = endColor.getValue();
-                ST_Pos startPos = ctAxialShd.getStartPoint();
-                ST_Pos endPos = ctAxialShd.getEndPoint();
-                double x1 = startPos.getX(), y1 = startPos.getY();
-                double x2 = endPos.getX(), y2 = endPos.getY();
-                if (pathObject.getCTM() != null) {
-                    double[] newPoint = PointUtil.ctmCalPoint(startPos.getX(), startPos.getY(), pathObject.getCTM().toDouble());
-                    x1 = newPoint[0];
-                    y1 = newPoint[1];
-                    newPoint = PointUtil.ctmCalPoint(x2, y2, pathObject.getCTM().toDouble());
-                    x2 = newPoint[0];
-                    y2 = newPoint[1];
-                }
-                double[] realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x1, y1, pathObject.getBoundary());
-                x1 = realPos[0];
-                y1 = box.getHeight() - realPos[1];
-                realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, pathObject.getBoundary());
-                x2 = realPos[0];
-                y2 = box.getHeight() - realPos[1];
-                PdfShading.Axial axial = new PdfShading.Axial(new PdfDeviceCs.Rgb(), 0, 0, ColorConvert.pdfRGB(resMgt, startColor).getColorValue(),
-                        box.getWidth().floatValue(), box.getHeight().floatValue(), ColorConvert.pdfRGB(resMgt, endColor).getColorValue());
-                PdfPattern.Shading shading = new PdfPattern.Shading(axial);
-                pdfCanvas.setStrokeColorShading(shading);
-                defaultStrokeColor = ColorConvert.pdfRGB(resMgt, endColor);
-                pdfCanvas.setStrokeColor(defaultStrokeColor);
-            }
+            Color axialShdColor = parseAxial(strokeColor.getOFDElement("AxialShd"), resMgt, box, pathObject);
+			if (axialShdColor != null) {
+				pdfCanvas.setStrokeColor(axialShdColor);
+			}
+
+			Color radialShdColor = parseRadial(strokeColor.getOFDElement("RadialShd"), resMgt, box, pathObject);
+			if (radialShdColor != null) {
+				pdfCanvas.setStrokeColor(radialShdColor);
+			}
+			
         } else {
             pdfCanvas.setStrokeColor(defaultStrokeColor);
         }
@@ -468,38 +506,16 @@ public class ItextMaker {
                 if (fillColor.getValue() != null) {
                     pdfCanvas.setFillColor(ColorConvert.pdfRGB(resMgt, fillColor));
                 }
-                Element e = fillColor.getOFDElement("AxialShd");
-                if (e != null) {
-                    CT_AxialShd ctAxialShd = new CT_AxialShd(e);
-                    final CT_Color startColor = ctAxialShd.getSegments().get(0).getColor();
-                    final CT_Color endColor = ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor();
-                    ST_Array start = startColor.getValue();
-                    ST_Array end = endColor.getValue();
-                    ST_Pos startPos = ctAxialShd.getStartPoint();
-                    ST_Pos endPos = ctAxialShd.getEndPoint();
-//                    double x1 = startPos.getX(), y1 = startPos.getY();
-//                    double x2 = endPos.getX(), y2 = endPos.getY();
-//                    if (pathObject.getCTM() != null) {
-//                        double[] newPoint = PointUtil.ctmCalPoint(startPos.getX(), startPos.getY(), pathObject.getCTM().toDouble());
-//                        x1 = newPoint[0];
-//                        y1 = newPoint[1];
-//                        newPoint = PointUtil.ctmCalPoint(x2, y2, pathObject.getCTM().toDouble());
-//                        x2 = newPoint[0];
-//                        y2 = newPoint[1];
-//                    }
-//                    double[] realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x1, y1, pathObject.getBoundary());
-//                    x1 = realPos[0];
-//                    y1 = box.getHeight() - realPos[1];
-//                    realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, pathObject.getBoundary());
-//                    x2 = realPos[0];
-//                    y2 = box.getHeight() - realPos[1];
-//                    PdfShading.Axial axial = new PdfShading.Axial(new PdfDeviceCs.Rgb(), (float) x1, (float) y1, convertOfdColor(start).getColorValue(),
-//                            (float) x2, (float) y2, convertOfdColor(end).getColorValue());
-//                    PdfPattern.Shading shading = new PdfPattern.Shading(axial);
-//                    pdfCanvas.setFillColorShading(shading);
-                    defaultFillColor = ColorConvert.pdfRGB(resMgt, endColor);
-                    pdfCanvas.setFillColor(defaultFillColor);
-                }
+                Color axialShdColor = parseAxial(fillColor.getOFDElement("AxialShd"), resMgt, box, pathObject);
+				if (axialShdColor != null) {
+					pdfCanvas.setFillColor(axialShdColor);
+				}
+
+				Color radialShdColor = parseRadial(fillColor.getOFDElement("RadialShd"), resMgt, box, pathObject);
+				if (radialShdColor != null) {
+					pdfCanvas.setFillColor(radialShdColor);
+				}
+				
             } else {
                 pdfCanvas.setFillColor(defaultFillColor);
             }

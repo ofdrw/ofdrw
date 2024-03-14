@@ -72,4 +72,16 @@ class PDFExporterITextTest {
         System.out.println(">> " + pdfOut.toAbsolutePath());
     }
 
+    /**
+     * 优化Path颜色逻辑(国徽处)
+     */
+    @Test
+    void testFillColor() {
+        ConvertHelper.useIText();
+        Path ofdIn = Paths.get("src/test/resources/testPathClip.ofd");
+        Path pdfOut = Paths.get("target/testPathColor.pdf");
+        ConvertHelper.toPdf(ofdIn, pdfOut);
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
 }
