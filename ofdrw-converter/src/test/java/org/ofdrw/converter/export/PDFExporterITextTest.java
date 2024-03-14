@@ -48,4 +48,28 @@ class PDFExporterITextTest {
         System.out.println(">> " + pdfOut.toAbsolutePath());
     }
 
+    /**
+     * 增加Path裁剪逻辑
+     */
+    @Test
+    void testPathClip() {
+        ConvertHelper.useIText();
+        Path ofdIn = Paths.get("src/test/resources/testPathClip.ofd");
+        Path pdfOut = Paths.get("target/testPathClip.pdf");
+        ConvertHelper.toPdf(ofdIn, pdfOut);
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
+    /**
+     * 补充填充规则逻辑
+     */
+    @Test
+    void testFillRule() {
+        ConvertHelper.useIText();
+        Path ofdIn = Paths.get("src/test/resources/testImageNotFound.ofd");
+        Path pdfOut = Paths.get("target/testFillRule.pdf");
+        ConvertHelper.toPdf(ofdIn, pdfOut);
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
 }
