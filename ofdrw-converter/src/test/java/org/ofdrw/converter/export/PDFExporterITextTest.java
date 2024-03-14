@@ -6,8 +6,6 @@ import org.ofdrw.converter.ConvertHelper;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 class PDFExporterITextTest {
 
     /**
@@ -68,6 +66,30 @@ class PDFExporterITextTest {
         ConvertHelper.useIText();
         Path ofdIn = Paths.get("src/test/resources/testImageNotFound.ofd");
         Path pdfOut = Paths.get("target/testFillRule.pdf");
+        ConvertHelper.toPdf(ofdIn, pdfOut);
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
+    /**
+     * 优化Path颜色逻辑(国徽处)
+     */
+    @Test
+    void testFillColor() {
+        ConvertHelper.useIText();
+        Path ofdIn = Paths.get("src/test/resources/testPathClip.ofd");
+        Path pdfOut = Paths.get("target/testPathColor.pdf");
+        ConvertHelper.toPdf(ofdIn, pdfOut);
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
+    /**
+     * 优化线宽和文字的比例(印章处)
+     */
+    @Test
+    void testScaleOfLineWidthAndTextPoint() {
+        ConvertHelper.useIText();
+        Path ofdIn = Paths.get("src/test/resources/SignScaleError.ofd");
+        Path pdfOut = Paths.get("target/testScaleOfLineWidthAndTextPoint.pdf");
         ConvertHelper.toPdf(ofdIn, pdfOut);
         System.out.println(">> " + pdfOut.toAbsolutePath());
     }

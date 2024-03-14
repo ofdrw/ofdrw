@@ -158,6 +158,10 @@ public class PointUtil {
     }
 
     public static List<PathPoint> calPdfPathPoint(double width, double height, ST_Box boundary, List<PathPoint> abbreviatedPoint, boolean hasCtm, ST_Array ctm, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM, boolean fixOriginToPdf) {
+    	return calPdfPathPoint(width, height, boundary, abbreviatedPoint, hasCtm, ctm, compositeObjectBoundary, compositeObjectCTM, fixOriginToPdf, 1.0);
+    }
+    
+    public static List<PathPoint> calPdfPathPoint(double width, double height, ST_Box boundary, List<PathPoint> abbreviatedPoint, boolean hasCtm, ST_Array ctm, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM, boolean fixOriginToPdf, double scale) {
         List<PathPoint> pointList = new ArrayList<>();
         for (PathPoint point : abbreviatedPoint) {
             if (point.type.equals("M") || point.type.equals("L") || point.type.equals("C") || point.type.equals("S")) {
@@ -170,7 +174,7 @@ public class PointUtil {
                     x = newPoint[0];
                     y = newPoint[1];
                 }
-                double[] realPos = adjustPos(width, height, x, y, boundary);
+                double[] realPos = adjustPos(width, height, x * scale, y * scale, boundary);
                 point.x1 = (float) converterDpi(realPos[0]);
                 point.y1 = (float) converterDpi(fixOriginToPdf ? (height - realPos[1]) : realPos[1]);
                 if (compositeObjectBoundary != null) {
@@ -197,13 +201,13 @@ public class PointUtil {
                     x3 = newPoint[0];
                     y3 = newPoint[1];
                 }
-                double[] realPos = adjustPos(width, height, x1, y1, boundary);
+                double[] realPos = adjustPos(width, height, x1 * scale, y1 * scale, boundary);
                 x1 = realPos[0];
                 y1 = realPos[1];
-                realPos = adjustPos(width, height, x2, y2, boundary);
+                realPos = adjustPos(width, height, x2 * scale, y2 * scale, boundary);
                 x2 = realPos[0];
                 y2 = realPos[1];
-                realPos = adjustPos(width, height, x3, y3, boundary);
+                realPos = adjustPos(width, height, x3 * scale, y3 * scale, boundary);
                 x3 = realPos[0];
                 y3 = realPos[1];
                 PathPoint realPoint = new PathPoint("B", (float) converterDpi(x1), (float) converterDpi(fixOriginToPdf ? (height - y1) : y1),
@@ -221,10 +225,10 @@ public class PointUtil {
                     x2 = newPoint[0];
                     y2 = newPoint[1];
                 }
-                double[] realPos = adjustPos(width, height, x1, y1, boundary);
+                double[] realPos = adjustPos(width, height, x1 * scale, y1 * scale, boundary);
                 x1 = realPos[0];
                 y1 = realPos[1];
-                realPos = adjustPos(width, height, x2, y2, boundary);
+                realPos = adjustPos(width, height, x2 * scale, y2 * scale, boundary);
                 x2 = realPos[0];
                 y2 = realPos[1];
                 PathPoint realPoint = new PathPoint("Q", (float) converterDpi(x1), (float) converterDpi(fixOriginToPdf ? (height - y1) : y1),
@@ -240,7 +244,7 @@ public class PointUtil {
                     x = newPoint[0];
                     y = newPoint[1];
                 }
-                double[] realPos = adjustPos(width, height, x, y, boundary);
+                double[] realPos = adjustPos(width, height, x * scale, y * scale, boundary);
                 x = realPos[0];
                 y = realPos[1];
                 PathPoint realPoint = new PathPoint("A", (float) converterDpi(rx), (float) converterDpi(ry),
@@ -337,6 +341,10 @@ public class PointUtil {
     }
 
     public static List<TextCodePoint> calPdfTextCoordinate(double width, double height, ST_Box boundary, float fontSize, List<TextCode> textCodes, List<CT_CGTransform> cgTransforms, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM, boolean hasCtm, ST_Array ctm, boolean fixOriginToPdf) {
+    	return calPdfTextCoordinate(width, height, boundary, fontSize, textCodes, cgTransforms, compositeObjectBoundary, compositeObjectCTM, hasCtm, ctm, fixOriginToPdf, 1.0);
+    }
+    
+    public static List<TextCodePoint> calPdfTextCoordinate(double width, double height, ST_Box boundary, float fontSize, List<TextCode> textCodes, List<CT_CGTransform> cgTransforms, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM, boolean hasCtm, ST_Array ctm, boolean fixOriginToPdf, double scale) {
         double x = 0, y = 0;
         List<TextCodePoint> textCodePointList = new ArrayList<>();
         for (TextCode textCode : textCodes) {
@@ -449,7 +457,7 @@ public class PointUtil {
 //                    y += keepSameDY ? 0 : dy;
                     y += dy;
                 }
-                double[] realPos = adjustPos(width, height, x, y, boundary);
+                double[] realPos = adjustPos(width, height, x * scale, y * scale, boundary);
                 if (compositeObjectCTM != null) {
                     realPos = ctmCalPoint(realPos[0], realPos[1], compositeObjectCTM.toDouble());
                 }
