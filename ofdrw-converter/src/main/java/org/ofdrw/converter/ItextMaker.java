@@ -421,6 +421,7 @@ public class ItextMaker {
                            ST_Box compositeObjectBoundary,
                            ST_Array compositeObjectCTM) {
         pdfCanvas.saveState();
+        double scale = scaling(sealBox, pathObject.getBoundary());
         CT_DrawParam ctDrawParam = resMgt.superDrawParam(pathObject);
         if (ctDrawParam != null) {
             // 使用绘制参数补充缺省的颜色
@@ -457,7 +458,11 @@ public class ItextMaker {
             pdfCanvas.setStrokeColor(defaultStrokeColor);
         }
 
-        float lineWidth = pathObject.getLineWidth() != null ? pathObject.getLineWidth().floatValue() : defaultLineWidth;
+        float lineWidth = defaultLineWidth;
+        if (pathObject.getLineWidth() != null && pathObject.getLineWidth() > 0) {
+			lineWidth = Double.valueOf(converterDpi(pathObject.getLineWidth()) * scale).floatValue();
+		}
+        pdfCanvas.setLineWidth(lineWidth);
         if (pathObject.getCTM() != null && pathObject.getLineWidth() != null) {
             Double[] ctm = pathObject.getCTM().toDouble();
             double a = ctm[0].doubleValue();
@@ -481,15 +486,6 @@ public class ItextMaker {
             pdfCanvas.setLineCapStyle(pathObject.getCap().ordinal());
             pdfCanvas.setMiterLimit(pathObject.getMiterLimit().floatValue());
             path(pdfCanvas, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
-
-//            System.out.println(pathObject.getLineWidth()+"="+lineWidth+"-"+converterDpi(lineWidth)+"-"+defaultLineWidth);
-
-            //TODO 如果转换又可能过粗
-            if (compositeObjectBoundary != null) {
-                pdfCanvas.setLineWidth(lineWidth);
-            } else {
-                pdfCanvas.setLineWidth((float) converterDpi(lineWidth));
-            }
 
             pdfCanvas.stroke();
             pdfCanvas.restoreState();
@@ -533,6 +529,7 @@ public class ItextMaker {
         if (pathObject.getBoundary() == null) {
             return;
         }
+        double scale = scaling(sealBox, pathObject.getBoundary());
         if (sealBox != null) {
             pathObject.setBoundary(pathObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
                     pathObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
@@ -551,7 +548,7 @@ public class ItextMaker {
         // 裁剪
         clip(pdfCanvas, box, pathObject);
         
-        List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), compositeObjectBoundary, compositeObjectCTM, true);
+        List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), compositeObjectBoundary, compositeObjectCTM, true, scale);
         for (int i = 0; i < listPoint.size(); i++) {
             if (listPoint.get(i).type.equals("M") || listPoint.get(i).type.equals("S")) {
                 pdfCanvas.moveTo(listPoint.get(i).x1, listPoint.get(i).y1);
@@ -584,7 +581,7 @@ public class ItextMaker {
 				List<PathPoint> points = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(),
 						pathObject.getBoundary(),
 						PointUtil.convertPathAbbreviatedDatatoPoint(path.getAbbreviatedData()), area.getCTM() != null,
-						area.getCTM(), null, null, true);
+						area.getCTM(), null, null, true, 1.0);
 				pdfCanvas.clip();
 				for (int i = 0; i < points.size(); i++) {
 					PathPoint pathPoint = points.get(i);
@@ -605,6 +602,22 @@ public class ItextMaker {
 			}
 		}
 
+	}
+
+	/**
+	 * 计算当前盒子到目标盒子的缩放比例
+	 * 
+	 * @param targetBox
+	 * @param currentBox
+	 * @return 缩放比例
+	 */
+	private double scaling(ST_Box targetBox, ST_Box currentBox) {
+		double scale = 1.0;
+		if (targetBox != null && currentBox != null) {
+			scale = Math.min(targetBox.getWidth() / currentBox.getWidth(),
+					targetBox.getHeight() / currentBox.getHeight());
+		}
+		return scale;
 	}
 
 	private boolean equals(ST_Box box1, ST_Box box2) {
@@ -699,7 +712,8 @@ public class ItextMaker {
     }
 
     private void writeText(ResourceManage resMgt, PdfCanvas pdfCanvas, ST_Box box, ST_Box sealBox, ST_Box annotBox, TextObject textObject, Color fillColor, int alpha, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
-        float fontSize = (float) getTextObjectSize(textObject);
+    	double scale = scaling(sealBox, textObject.getBoundary());
+    	float fontSize = Double.valueOf(textObject.getSize() * scale).floatValue();
         pdfCanvas.setFillColor(fillColor);
         if (textObject.getFillColor() != null) {
             Element e = textObject.getFillColor().getOFDElement("AxialShd");
@@ -794,7 +808,7 @@ public class ItextMaker {
         FontWrapper<PdfFont> pdfFontWrapper = getFont(resMgt.getOfdReader().getResourceLocator(), ctFont);
         PdfFont font = pdfFontWrapper.getFont();
 
-        List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCGTransforms(), compositeObjectBoundary, compositeObjectCTM, textObject.getCTM() != null, textObject.getCTM(), true);
+        List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCGTransforms(), compositeObjectBoundary, compositeObjectCTM, textObject.getCTM() != null, textObject.getCTM(), true, scale);
         double rx = 0, ry = 0;
         for (int i = 0; i < textCodePointList.size(); i++) {
             TextCodePoint textCodePoint = textCodePointList.get(i);
