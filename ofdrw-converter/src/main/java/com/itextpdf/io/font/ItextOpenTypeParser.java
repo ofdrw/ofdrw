@@ -1,8 +1,6 @@
 /**
  * 源码来自于Itext 7.1.13 的OpenTypeParser类</br>
- * 增加的代码使用注释标识了"代码增加"
- * 修改的代码使用注释标识了"代码修改"
- * 删掉的代码使用注释标识了"代码删除"
+ * 增加的代码使用注释标识了"代码增加" 修改的代码使用注释标识了"代码修改" 删掉的代码使用注释标识了"代码删除"
  */
 package com.itextpdf.io.font;
 
@@ -21,31 +19,31 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
     private static final long serialVersionUID = 3399061674525229738L;
 
     public ItextOpenTypeParser(byte[] ttf) throws java.io.IOException {
-    	super(ttf);
+        super(ttf);
     }
 
     public ItextOpenTypeParser(byte[] ttc, int ttcIndex) throws java.io.IOException {
-    	super(ttc, ttcIndex);
+        super(ttc, ttcIndex);
     }
 
     public ItextOpenTypeParser(String ttcPath, int ttcIndex) throws java.io.IOException {
-    	super(ttcPath, ttcIndex);
+        super(ttcPath, ttcIndex);
     }
 
     public ItextOpenTypeParser(String name) throws java.io.IOException {
-    	super(name);
+        super(name);
     }
 
-	@Override
-	public String getPsFontName() {
-		try {
-			return super.getPsFontName();
-		} catch (Exception e) {
-			return "Font";
-		}
-	}
-    
-	@Override
+    @Override
+    public String getPsFontName() {
+        try {
+            return super.getPsFontName();
+        } catch (Exception e) {
+            return "Font";
+        }
+    }
+
+    @Override
     protected void loadTables(boolean all) throws java.io.IOException {
         readNameTable();
         readHeadTable();
@@ -63,27 +61,24 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
      * Extracts the names of the font in all the languages available.
      *
      * @throws IOException on error
-     * @throws java.io.IOException  on error
+     * @throws java.io.IOException on error
      */
     private void readNameTable() throws java.io.IOException {
         int[] table_location = tables.get("name");
         if (table_location == null) {
-        	/***********代码删除****************/
-        	/***********************************
-            if (fileName != null) {
-                throw new IOException(IOException.TableDoesNotExistsIn).setMessageParams("name", fileName);
-            } else {
-                throw new IOException(IOException.TableDoesNotExist).setMessageParams("name");
-            }
-            ***********************************/
+            /*********** 代码删除 ****************/
+            /***********************************
+             * if (fileName != null) { throw new IOException(IOException.TableDoesNotExistsIn).setMessageParams("name",
+             * fileName); } else { throw new IOException(IOException.TableDoesNotExist).setMessageParams("name"); }
+             ***********************************/
         }
         allNameEntries = new LinkedHashMap<>();
-        /***********代码修改****************/
+        /*********** 代码修改 ****************/
         /**********************************/
         if (table_location != null) {
-			raf.seek(table_location[0] + 2);
-		}
-		/**********************************/
+            raf.seek(table_location[0] + 2);
+        }
+        /**********************************/
         int numRecords = raf.readUnsignedShort();
         int startOfStorage = raf.readUnsignedShort();
         for (int k = 0; k < numRecords; ++k) {
@@ -99,11 +94,11 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
             } else {
                 allNameEntries.put(nameID, names = new ArrayList<>());
             }
-            int pos = (int) raf.getPosition();
-            /***********代码修改****************/
+            int pos = (int)raf.getPosition();
+            /*********** 代码修改 ****************/
             /**********************************/
-            if(table_location!=null) {
-            	raf.seek(table_location[0] + startOfStorage + offset);	
+            if (table_location != null) {
+                raf.seek(table_location[0] + startOfStorage + offset);
             }
             /**********************************/
             String name;
@@ -112,12 +107,8 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
             } else {
                 name = readStandardString(length);
             }
-            names.add(new String[]{
-                    Integer.toString(platformID),
-                    Integer.toString(platformEncodingID),
-                    Integer.toString(languageID),
-                    name
-            });
+            names.add(new String[] {Integer.toString(platformID), Integer.toString(platformEncodingID),
+                Integer.toString(languageID), name});
             raf.seek(pos);
         }
     }
@@ -126,7 +117,7 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
      * Read horizontal header, table 'hhea'.
      *
      * @throws IOException the font is invalid.
-     * @throws java.io.IOException  the font file could not be read.
+     * @throws java.io.IOException the font file could not be read.
      */
     private void readHheaTable() throws java.io.IOException {
         int[] table_location = tables.get("hhea");
@@ -156,7 +147,7 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
      * Read font header, table 'head'.
      *
      * @throws IOException the font is invalid.
-     * @throws java.io.IOException  the font file could not be read.
+     * @throws java.io.IOException the font file could not be read.
      */
     private void readHeadTable() throws java.io.IOException {
         int[] table_location = tables.get("head");
@@ -180,19 +171,19 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
     }
 
     /**
-     * Reads the windows metrics table. The metrics are extracted from the table 'OS/2'.
-     * Depends on {@link HeaderTable#unitsPerEm} property.
+     * Reads the windows metrics table. The metrics are extracted from the table 'OS/2'. Depends on
+     * {@link HeaderTable#unitsPerEm} property.
      *
      * @throws IOException the font is invalid.
-     * @throws java.io.IOException  the font file could not be read.
+     * @throws java.io.IOException the font file could not be read.
      */
     private void readOs_2Table() throws java.io.IOException {
         int[] table_location = tables.get("OS/2");
-        /***********代码增加****************/
+        /*********** 代码增加 ****************/
         /**********************************/
-		if (table_location == null) {
-			table_location = tables.get("os/2");
-		}
+        if (table_location == null) {
+            table_location = tables.get("os/2");
+        }
         /**********************************/
         if (table_location == null) {
             if (fileName != null) {
@@ -228,13 +219,13 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
         os_2.sTypoAscender = raf.readShort();
         os_2.sTypoDescender = raf.readShort();
         if (os_2.sTypoDescender > 0) {
-            os_2.sTypoDescender = (short) -os_2.sTypoDescender;
+            os_2.sTypoDescender = (short)-os_2.sTypoDescender;
         }
         os_2.sTypoLineGap = raf.readShort();
         os_2.usWinAscent = raf.readUnsignedShort();
         os_2.usWinDescent = raf.readUnsignedShort();
         if (os_2.usWinDescent > 0) {
-            os_2.usWinDescent = (short) -os_2.usWinDescent;
+            os_2.usWinDescent = (short)-os_2.usWinDescent;
         }
         os_2.ulCodePageRange1 = 0;
         os_2.ulCodePageRange2 = 0;
@@ -247,7 +238,7 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
             raf.skipBytes(2);
             os_2.sCapHeight = raf.readShort();
         } else {
-            os_2.sCapHeight = (int) (0.7 * head.unitsPerEm);
+            os_2.sCapHeight = (int)(0.7 * head.unitsPerEm);
         }
     }
 
@@ -258,41 +249,40 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
             short mantissa = raf.readShort();
             int fraction = raf.readUnsignedShort();
             post = new PostTable();
-            post.italicAngle = (float) (mantissa + fraction / 16384.0d);
+            post.italicAngle = (float)(mantissa + fraction / 16384.0d);
             post.underlinePosition = raf.readShort();
             post.underlineThickness = raf.readShort();
             post.isFixedPitch = raf.readInt() != 0;
         } else {
             post = new PostTable();
-            /***********代码修改****************/
+            /*********** 代码修改 ****************/
             /**********************************/
-			if (null != hhea) {
-				post.italicAngle = (float) (-Math.atan2(hhea.caretSlopeRun, hhea.caretSlopeRise) * 180 / Math.PI);
-			}
-			/**********************************/
+            if (null != hhea) {
+                post.italicAngle = (float)(-Math.atan2(hhea.caretSlopeRun, hhea.caretSlopeRise) * 180 / Math.PI);
+            }
+            /**********************************/
         }
     }
 
     /**
-     * Reads the several maps from the table 'cmap'. The maps of interest are 1.0 for symbolic
-     * fonts and 3.1 for all others. A symbolic font is defined as having the map 3.0.
-     * Depends from {@code readGlyphWidths()}.
+     * Reads the several maps from the table 'cmap'. The maps of interest are 1.0 for symbolic fonts and 3.1 for all
+     * others. A symbolic font is defined as having the map 3.0. Depends from {@code readGlyphWidths()}.
      *
      * @throws java.io.IOException the font file could not be read
      */
     private void readCmapTable() throws java.io.IOException {
         int[] table_location = tables.get("cmap");
-        /***********代码修改****************/
+        /*********** 代码修改 ****************/
         if (table_location == null) {
-//            if (fileName != null) {
-//                throw new IOException(IOException.TableDoesNotExistsIn).setMessageParams("cmap", fileName);
-//            } else {
-//                throw new IOException(IOException.TableDoesNotExist).setMessageParams("cmap");
-//            }
+            // if (fileName != null) {
+            // throw new IOException(IOException.TableDoesNotExistsIn).setMessageParams("cmap", fileName);
+            // } else {
+            // throw new IOException(IOException.TableDoesNotExist).setMessageParams("cmap");
+            // }
         } else {
-        	raf.seek(table_location[0]);
+            raf.seek(table_location[0]);
         }
-        
+
         raf.skipBytes(2);
         int num_tables = raf.readUnsignedShort();
         int map10 = 0;
@@ -364,17 +354,16 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
                     break;
             }
         }
-        /***********代码增加****************/
+        /*********** 代码增加 ****************/
         /**********************************/
-		if (null == cmaps.cmapExt && null == cmaps.cmap31 && null == cmaps.cmap10) {
-			cmaps.cmap10 = new HashMap<Integer, int[]>();
-		}
-		/***********************************/
+        if (null == cmaps.cmapExt && null == cmaps.cmap31 && null == cmaps.cmap10) {
+            cmaps.cmap10 = new HashMap<Integer, int[]>();
+        }
+        /***********************************/
     }
 
     /**
-     * Reads a <CODE>String</CODE> from the font file as bytes using the Cp1252
-     * encoding.
+     * Reads a <CODE>String</CODE> from the font file as bytes using the Cp1252 encoding.
      *
      * @param length the length of bytes to read
      * @return the <CODE>String</CODE> read
@@ -401,8 +390,8 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
     }
 
     /**
-     * The information in the maps of the table 'cmap' is coded in several formats.
-     * Format 0 is the Apple standard character to glyph index mapping table.
+     * The information in the maps of the table 'cmap' is coded in several formats. Format 0 is the Apple standard
+     * character to glyph index mapping table.
      *
      * @return a <CODE>HashMap</CODE> representing this map
      * @throws java.io.IOException the font file could not be read
@@ -420,8 +409,8 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
     }
 
     /**
-     * The information in the maps of the table 'cmap' is coded in several formats.
-     * Format 4 is the Microsoft standard character to glyph index mapping table.
+     * The information in the maps of the table 'cmap' is coded in several formats. Format 4 is the Microsoft standard
+     * character to glyph index mapping table.
      *
      * @return a <CODE>HashMap</CODE> representing this map
      * @throws java.io.IOException the font file could not be read
@@ -481,9 +470,8 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
     }
 
     /**
-     * The information in the maps of the table 'cmap' is coded in several formats.
-     * Format 6 is a trimmed table mapping. It is similar to format 0 but can have
-     * less than 256 entries.
+     * The information in the maps of the table 'cmap' is coded in several formats. Format 6 is a trimmed table mapping.
+     * It is similar to format 0 but can have less than 256 entries.
      *
      * @return a <CODE>HashMap</CODE> representing this map
      * @throws java.io.IOException the font file could not be read

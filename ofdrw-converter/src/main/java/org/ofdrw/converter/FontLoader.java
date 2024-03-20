@@ -2,7 +2,6 @@ package org.ofdrw.converter;
 
 
 import com.itextpdf.io.font.FontProgram;
-import com.itextpdf.io.font.FontProgramFactory;
 import com.itextpdf.io.font.ItextFontUtil;
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.kernel.font.PdfFont;
@@ -222,6 +221,7 @@ public final class FontLoader {
             byte[] buf = IOUtils.toByteArray(in);
             DefaultFontPath = loc;
             defaultFont = new TrueTypeFont().parse(buf);
+            // 使用统一的工具类加载iText字体，对裁剪字体进行兼容
             iTextDefaultFont = ItextFontUtil.loadFont(buf);
         } catch (Exception ignored) {
             return false;
@@ -704,6 +704,7 @@ public final class FontLoader {
         }
         FontProgram fontProgram = null;
 		try {
+		 // 使用统一的工具类加载iText字体，对裁剪字体进行兼容
 			fontProgram = ItextFontUtil.loadFontProgram(fontAbsPath);
 			return fontProgram;
 		} catch (Exception e) {
