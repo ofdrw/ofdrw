@@ -2,7 +2,7 @@ package org.ofdrw.converter;
 
 
 import com.itextpdf.io.font.FontProgram;
-import com.itextpdf.io.font.FontProgramFactory;
+import com.itextpdf.io.font.ItextFontUtil;
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
@@ -221,7 +221,8 @@ public final class FontLoader {
             byte[] buf = IOUtils.toByteArray(in);
             DefaultFontPath = loc;
             defaultFont = new TrueTypeFont().parse(buf);
-            iTextDefaultFont = new com.itextpdf.io.font.TrueTypeFont(buf);
+            // 使用统一的工具类加载iText字体，对裁剪字体进行兼容
+            iTextDefaultFont = ItextFontUtil.loadFont(buf);
         } catch (Exception ignored) {
             return false;
         } finally {
@@ -702,26 +703,17 @@ public final class FontLoader {
             return null;
         }
         FontProgram fontProgram = null;
-        final String fileName = fontAbsPath.toLowerCase();
-        // 统一读取到内存防止因为 FontProgram 解析异常关闭导致无法删除临时OFD文件的问题。
-        byte[] fontRaw = new byte[0];
-        try {
-            fontRaw = Files.readAllBytes(Paths.get(fontAbsPath));
-
-            if (fileName.endsWith(".ttc")) {
-                fontProgram = FontProgramFactory.createFont(fontRaw, 0, false);
-            } else if (fileName.endsWith(".ttf") || fileName.endsWith(".otf")) {
-                fontProgram = new com.itextpdf.io.font.TrueTypeFont(fontRaw);
-            } else {
-                fontProgram = FontProgramFactory.createFont(fontRaw);
-            }
-            return fontProgram;
-        } catch (Exception e) {
-            if (DEBUG) {
-                log.info("字体加载失败 " + fontAbsPath, e);
-            }
-            return null;
-        }
+		try {
+		 // 使用统一的工具类加载iText字体，对裁剪字体进行兼容
+			fontProgram = ItextFontUtil.loadFontProgram(fontAbsPath);
+			return fontProgram;
+		} catch (Exception e) {
+			log.info("字体加载失败 " + fontAbsPath, e);
+			if (DEBUG) {
+				log.info("字体加载失败 " + fontAbsPath, e);
+			}
+			return null;
+		}
     }
 
 
