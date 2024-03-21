@@ -25,7 +25,7 @@ import java.util.SortedSet;
  * iText TrueType字体解析器
  * <p>
  * 由于 TrueTypeFont(OpenTypeParser fontParser) 构造器私有无法扩展自定义字体解析器，因此采用重载重新部分功能。
- * 源码来自于Itext 7.1.13 的TrueTypeFont类</br>
+ * 源码来自于Itext 7.1.13 的TrueTypeFont类
  * 使用类ItextOpenTypeParser替换了类OpenTypeParser
  *
  * @since 2024-3-21 18:36:35
