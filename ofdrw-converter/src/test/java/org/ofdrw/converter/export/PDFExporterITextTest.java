@@ -24,7 +24,6 @@ class PDFExporterITextTest {
 
     /**
      * 忽略无法解析图片
-     * @throws IOException 
      */
     @Test
     void testErrImgResource() throws IOException {
@@ -38,7 +37,6 @@ class PDFExporterITextTest {
 
     /**
      * 图片覆盖整个页面
-     * @throws IOException 
      */
     @Test
     void testImageOverridePage() throws IOException {
@@ -52,7 +50,6 @@ class PDFExporterITextTest {
 
     /**
      * 增加Path裁剪逻辑
-     * @throws IOException 
      */
     @Test
     void testPathClip() throws IOException {
@@ -66,7 +63,6 @@ class PDFExporterITextTest {
 
     /**
      * 补充填充规则逻辑
-     * @throws IOException 
      */
     @Test
     void testFillRule() throws IOException {
@@ -80,7 +76,6 @@ class PDFExporterITextTest {
 
     /**
      * 优化Path颜色逻辑(国徽处)
-     * @throws IOException 
      */
     @Test
     void testFillColor() throws IOException {
@@ -94,7 +89,6 @@ class PDFExporterITextTest {
 
     /**
      * 优化线宽和文字的比例(印章处)
-     * @throws IOException 
      */
     @Test
     void testScaleOfLineWidthAndTextPoint() throws IOException {
@@ -108,7 +102,6 @@ class PDFExporterITextTest {
 
     /**
      * 测试嵌入字体(裁剪)的加载问题
-     * @throws IOException 
      */
     @Test
     void testErrEmbeddedFont() throws IOException {

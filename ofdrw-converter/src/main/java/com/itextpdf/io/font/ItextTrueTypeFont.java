@@ -1,7 +1,3 @@
-/**
- * 源码来自于Itext 7.1.13 的TrueTypeFont类</br>
- * 使用类ItextOpenTypeParser替换了类OpenTypeParser
- */
 package com.itextpdf.io.font;
 
 import com.itextpdf.io.IOException;
@@ -25,6 +21,15 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 
+/**
+ * iText TrueType字体解析器
+ * <p>
+ * 由于 TrueTypeFont(OpenTypeParser fontParser) 构造器私有无法扩展自定义字体解析器，因此采用重载重新部分功能。
+ * 源码来自于Itext 7.1.13 的TrueTypeFont类</br>
+ * 使用类ItextOpenTypeParser替换了类OpenTypeParser
+ *
+ * @since 2024-3-21 18:36:35
+ */
 public class ItextTrueTypeFont extends TrueTypeFont {
 
     private static final long serialVersionUID = -2232044646577669268L;
@@ -83,7 +88,7 @@ public class ItextTrueTypeFont extends TrueTypeFont {
     /**
      * Gets the kerning between two glyphs.
      *
-     * @param first the first glyph
+     * @param first  the first glyph
      * @param second the second glyph
      * @return the kerning to be applied
      */
@@ -190,7 +195,7 @@ public class ItextTrueTypeFont extends TrueTypeFont {
         int[] gsub = fontParser.tables.get("GSUB");
         if (gsub != null) {
             gsubTable = new GlyphSubstitutionTableReader(fontParser.raf, gsub[0], gdefTable, codeToGlyph,
-                fontMetrics.getUnitsPerEm());
+                    fontMetrics.getUnitsPerEm());
         }
     }
 
@@ -198,7 +203,7 @@ public class ItextTrueTypeFont extends TrueTypeFont {
         int[] gpos = fontParser.tables.get("GPOS");
         if (gpos != null) {
             gposTable = new GlyphPositioningTableReader(fontParser.raf, gpos[0], gdefTable, codeToGlyph,
-                fontMetrics.getUnitsPerEm());
+                    fontMetrics.getUnitsPerEm());
         }
     }
 
@@ -252,8 +257,8 @@ public class ItextTrueTypeFont extends TrueTypeFont {
         }
 
         byte[] pdfPanose = new byte[12];
-        pdfPanose[1] = (byte)(os_2.sFamilyClass);
-        pdfPanose[0] = (byte)(os_2.sFamilyClass >> 8);
+        pdfPanose[1] = (byte) (os_2.sFamilyClass);
+        pdfPanose[0] = (byte) (os_2.sFamilyClass >> 8);
         System.arraycopy(os_2.panose, 0, pdfPanose, 2, 10);
         fontIdentification.setPanose(pdfPanose);
 
@@ -268,7 +273,7 @@ public class ItextTrueTypeFont extends TrueTypeFont {
             if (index >= numOfGlyphs) {
                 Logger LOGGER = LoggerFactory.getLogger(TrueTypeFont.class);
                 LOGGER.warn(MessageFormatUtil.format(LogMessageConstant.FONT_HAS_INVALID_GLYPH,
-                    getFontNames().getFontName(), index));
+                        getFontNames().getFontName(), index));
                 continue;
             }
             Glyph glyph = new Glyph(index, glyphWidths[index], charCode, bBoxes != null ? bBoxes[index] : null);
@@ -307,8 +312,8 @@ public class ItextTrueTypeFont extends TrueTypeFont {
      * @return the code pages supported by the font
      */
     public String[] getCodePagesSupported() {
-        long cp = ((long)fontParser.getOs_2Table().ulCodePageRange2 << 32)
-            + (fontParser.getOs_2Table().ulCodePageRange1 & 0xffffffffL);
+        long cp = ((long) fontParser.getOs_2Table().ulCodePageRange2 << 32)
+                + (fontParser.getOs_2Table().ulCodePageRange1 & 0xffffffffL);
         int count = 0;
         long bit = 1;
         for (int k = 0; k < 64; ++k) {
@@ -343,9 +348,9 @@ public class ItextTrueTypeFont extends TrueTypeFont {
      * The method will update usedGlyphs with additional range or with all glyphs if there is no subset. This set of
      * used glyphs can be used for building width array and ToUnicode CMAP.
      *
-     * @param usedGlyphs a set of integers, which are glyph ids that denote used glyphs. This set is updated inside of
-     *            the method if needed.
-     * @param subset subset status
+     * @param usedGlyphs   a set of integers, which are glyph ids that denote used glyphs. This set is updated inside of
+     *                     the method if needed.
+     * @param subset       subset status
      * @param subsetRanges additional subset ranges
      */
     public void updateUsedGlyphs(SortedSet<Integer> usedGlyphs, boolean subset, List<int[]> subsetRanges) {
@@ -353,9 +358,9 @@ public class ItextTrueTypeFont extends TrueTypeFont {
         if (subsetRanges != null) {
             compactRange = toCompactRange(subsetRanges);
         } else if (!subset) {
-            compactRange = new int[] {0, 0xFFFF};
+            compactRange = new int[]{0, 0xFFFF};
         } else {
-            compactRange = new int[] {};
+            compactRange = new int[]{};
         }
 
         for (int k = 0; k < compactRange.length; k += 2) {
@@ -372,17 +377,17 @@ public class ItextTrueTypeFont extends TrueTypeFont {
     /**
      * Normalizes given ranges by making sure that first values in pairs are lower than second values and merges
      * overlapping ranges in one.
-     * 
+     *
      * @param ranges a {@link List} of integer arrays, which are constituted by pairs of ints that denote each range
-     *            limits. Each integer array size shall be a multiple of two.
+     *               limits. Each integer array size shall be a multiple of two.
      * @return single merged array consisting of pairs of integers, each of them denoting a range.
      */
     private static int[] toCompactRange(List<int[]> ranges) {
         List<int[]> simp = new ArrayList<>();
         for (int[] range : ranges) {
             for (int j = 0; j < range.length; j += 2) {
-                simp.add(new int[] {Math.max(0, Math.min(range[j], range[j + 1])),
-                    Math.min(0xffff, Math.max(range[j], range[j + 1]))});
+                simp.add(new int[]{Math.max(0, Math.min(range[j], range[j + 1])),
+                        Math.min(0xffff, Math.max(range[j], range[j + 1]))});
             }
         }
         for (int k1 = 0; k1 < simp.size() - 1; ++k1) {

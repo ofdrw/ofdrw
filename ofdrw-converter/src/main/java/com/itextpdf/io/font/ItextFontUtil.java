@@ -18,12 +18,12 @@ public class ItextFontUtil {
      * 加载字体，加载完成后释放字体文件
      * 
      * @param fontFile 字体文件路径
-     * @return
-     * @throws IOException
+     * @return 字体信息
+     * @throws IOException 解析失败
      */
     public static FontProgram loadFontProgram(String fontFile) throws IOException {
-        if (fontFile == null || fontFile.length() == 0) {
-            throw new RuntimeException("fontFile is empty");
+        if (fontFile == null || fontFile.isEmpty()) {
+            throw new IllegalArgumentException("字体路径为空");
         }
         FontProgram fontProgram = null;
         final String fileName = fontFile.toLowerCase();
@@ -48,8 +48,8 @@ public class ItextFontUtil {
      * 加载字体
      * 
      * @param fontRaw 字体文件内容
-     * @return
-     * @throws IOException
+     * @return 字体信息
+     * @throws IOException 解析失败
      */
     public static TrueTypeFont loadFont(byte[] fontRaw) throws IOException {
         try {

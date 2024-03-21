@@ -708,7 +708,6 @@ public final class FontLoader {
 			fontProgram = ItextFontUtil.loadFontProgram(fontAbsPath);
 			return fontProgram;
 		} catch (Exception e) {
-			log.info("字体加载失败 " + fontAbsPath, e);
 			if (DEBUG) {
 				log.info("字体加载失败 " + fontAbsPath, e);
 			}
@@ -750,7 +749,7 @@ public final class FontLoader {
             walk.filter(Files::isRegularFile).forEach(p -> loadFont(p.toFile()));
         } catch (IOException e) {
             if (DEBUG) {
-                log.warn("字体加载异常，{}", e);
+                log.warn("字体加载异常", e);
             }
         }
     }
@@ -786,66 +785,7 @@ public final class FontLoader {
                 log.warn("无法加载AWT字体 " + file.getAbsolutePath(), e);
             }
         }
-
-//        String fileName = file.getName();
-//        int offset = fileName.lastIndexOf('.');
-//        String suffix = offset == -1 ? ".ttf" : fileName.substring(offset).toLowerCase();
-//        try (TTFDataStream raf = new MemoryTTFDataStream(Files.newInputStream(file.toPath()))) {
-//            switch (suffix) {
-//                case ".otf":
-//                case ".ttf": {
-//                    TrueTypeFont font = new TrueTypeFont().parse(raf);
-//                    addNormalFont(font, file.getPath());
-//                    break;
-//                }
-//                case ".ttc": {
-//                    TrueTypeCollection trueTypeCollection = new TrueTypeCollection().parse(raf);
-//                    trueTypeCollection.foreach(font -> addNormalFont(font, file.getPath()));
-//                    break;
-//                }
-//                default:
-//                    break;
-//            }
-//        } catch (Exception e) {
-//            if (DEBUG) {
-//                log.warn(file.getAbsolutePath() + " 无法解析，忽略错误", e);
-//            }
-//        }
     }
-
-//    /**
-//     * 加入字体
-//     *
-//     * @param font 字体解析结果
-//     * @param path 字体所在路径
-//     */
-//    private void addNormalFont(TrueTypeFont font, String path) {
-//        if (fontNamePathMapping.containsKey(font.fontFamily)) {
-//            if (font.fontSubFamily == null || font.fontSubFamily.length() == 0 || font.fontSubFamily.equalsIgnoreCase("Regular")) {
-//                addSystemFontMapping(font.fontFamily, path);
-//            }
-//        } else {
-//            addSystemFontMapping(font.fontFamily, path);
-//        }
-//        if (font.psName != null && font.psName.length() > 0) {
-//            addSystemFontMapping(font.psName, path);
-//        }
-//
-//        try {
-//            Font awtFont = Font.createFont(Font.TRUETYPE_FONT, new File(path));
-//            String family = awtFont.getFamily();
-//            String fontName = awtFont.getFontName();
-//            if (family != null && family.equals(fontName)) {
-//                addSystemFontMapping(family, path);
-//            } else if (family != null) {
-//                addSystemFontMapping(fontName, path);
-//            }
-//        } catch (Exception e) {
-//            if (DEBUG) {
-//                log.warn("无法加载AWT字体 " + path, e);
-//            }
-//        }
-//    }
 
     /**
      * 修复了字体
