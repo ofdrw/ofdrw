@@ -13,6 +13,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.dom4j.Element;
 import org.ofdrw.converter.point.PathPoint;
 import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.converter.utils.CommonUtil;
@@ -28,8 +29,11 @@ import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.compositeObj.CT_VectorG;
+import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.graph.pathObj.FillColor;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
+import org.ofdrw.core.pageDescription.clips.Area;
+import org.ofdrw.core.pageDescription.clips.CT_Clip;
 import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.pageDescription.color.color.ColorClusterType;
@@ -458,6 +462,9 @@ public class PdfboxMaker {
                     pathObject.getBoundary().getWidth(),
                     pathObject.getBoundary().getHeight());
         }
+
+        clip(contentStream, box, pathObject);
+        
         List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), compositeObjectBoundary, compositeObjectCTM, true);
         for (int i = 0; i < listPoint.size(); i++) {
             if (listPoint.get(i).type.equals("M") || listPoint.get(i).type.equals("S")) {
@@ -474,6 +481,42 @@ public class PdfboxMaker {
             } else if (listPoint.get(i).type.equals("C")) {
                 contentStream.closePath();
             }
+        }
+    }
+
+    private void clip(PDPageContentStream contentStream, ST_Box box, PathObject pathObject) throws IOException {
+        if (pathObject.getClips() == null) {
+            return;
+        }
+
+        List<CT_Clip> clips = pathObject.getClips().getClips();
+        for (int k = 0; k < clips.size(); k++) {
+            CT_Clip clip = clips.get(k);
+            contentStream.clip();
+            for (Area area : clip.getAreas()) {
+                Element elePath = area.getOFDElement("Path");
+                CT_Path path = new CT_Path(elePath);
+                List<PathPoint> points = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(),
+                        pathObject.getBoundary(),
+                        PointUtil.convertPathAbbreviatedDatatoPoint(path.getAbbreviatedData()), area.getCTM() != null,
+                        area.getCTM(), null, null, true, 1.0);
+                for (int i = 0; i < points.size(); i++) {
+                    PathPoint pathPoint = points.get(i);
+                    if (pathPoint.type.equals("M") || pathPoint.type.equals("S")) {
+                        contentStream.moveTo(pathPoint.x1, pathPoint.y1);
+                    } else if (pathPoint.type.equals("L")) {
+                        contentStream.lineTo(pathPoint.x1, pathPoint.y1);
+                    } else if (pathPoint.type.equals("B")) {
+                        contentStream.curveTo(pathPoint.x1, pathPoint.y1, pathPoint.x2, pathPoint.y2, pathPoint.x3,
+                                pathPoint.y3);
+                    } else if (pathPoint.type.equals("Q")) {
+                        contentStream.curveTo2(pathPoint.x1, pathPoint.y1, pathPoint.x2, pathPoint.y2);
+                    } else if (pathPoint.type.equals("C")) {
+                        contentStream.closePath();
+                    }
+                }   
+            }
+            contentStream.clip();
         }
     }
 

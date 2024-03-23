@@ -48,4 +48,17 @@ class PDFExporterPDFBoxTest {
         System.out.println(">> " + pdfOut.toAbsolutePath());
     }
 
+    /**
+     * 增加Path裁剪逻辑
+     */
+    @Test
+    void testPathClip() throws IOException {
+        Path ofdIn = Paths.get("src/test/resources/testPathClip.ofd");
+        Path pdfOut = Paths.get("target/testPathClip.pdf");
+        try (OFDExporter exporter = new PDFExporterPDFBox(ofdIn, pdfOut)) {
+            exporter.export();
+        }
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
 }
