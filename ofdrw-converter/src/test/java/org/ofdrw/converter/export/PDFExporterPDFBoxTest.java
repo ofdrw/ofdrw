@@ -35,4 +35,17 @@ class PDFExporterPDFBoxTest {
         System.out.println(">> " + pdfOut.toAbsolutePath());
     }
 
+    /**
+     * 图片覆盖整个页面
+     */
+    @Test
+    void testImageOverridePage() throws IOException {
+        Path ofdIn = Paths.get("src/test/resources/testImageOverridePage.ofd");
+        Path pdfOut = Paths.get("target/testImageOverridePage.pdf");
+        try (OFDExporter exporter = new PDFExporterPDFBox(ofdIn, pdfOut)) {
+            exporter.export();
+        }
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
 }
