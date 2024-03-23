@@ -256,7 +256,7 @@ public class PointUtil {
         return pointList;
     }
 
-    public static List<TextCodePoint> calPdfTextCoordinate(double width, double height, ST_Box boundary, float fontSize, List<TextCode> textCodes, boolean hasCtm, ST_Array ctm, boolean fixOriginToPdf) {
+    public static List<TextCodePoint> calPdfTextCoordinate(double width, double height, ST_Box boundary, float fontSize, List<TextCode> textCodes, boolean hasCtm, ST_Array ctm, boolean fixOriginToPdf, double scale) {
         double x = 0, y = 0;
         List<TextCodePoint> textCodePointList = new ArrayList<>();
         for (TextCode textCode : textCodes) {
@@ -331,7 +331,7 @@ public class PointUtil {
                         y += deltaYList.get(i - 1);
                     }
                 }
-                double[] realPos = adjustPos(width, height, x, y, boundary);
+                double[] realPos = adjustPos(width, height, x * scale, y * scale, boundary);
                 String text = textStr.substring(i, i + 1);
                 TextCodePoint textCodePoint = new TextCodePoint(converterDpi(realPos[0]), converterDpi(fixOriginToPdf ? (height - realPos[1]) : realPos[1]), text);
                 textCodePointList.add(textCodePoint);

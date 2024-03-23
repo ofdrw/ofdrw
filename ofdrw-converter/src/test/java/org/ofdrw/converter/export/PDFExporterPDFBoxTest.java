@@ -87,4 +87,17 @@ class PDFExporterPDFBoxTest {
         System.out.println(">> " + pdfOut.toAbsolutePath());
     }
 
+    /**
+     * 优化线宽和文字的比例(印章处)
+     */
+    @Test
+    void testScaleOfLineWidthAndTextPoint() throws IOException {
+        Path ofdIn = Paths.get("src/test/resources/SignScaleError.ofd");
+        Path pdfOut = Paths.get("target/testScaleOfLineWidthAndTextPoint.pdf");
+        try (OFDExporter exporter = new PDFExporterPDFBox(ofdIn, pdfOut)) {
+            exporter.export();
+        }
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
 }
