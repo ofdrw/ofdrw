@@ -61,4 +61,17 @@ class PDFExporterPDFBoxTest {
         System.out.println(">> " + pdfOut.toAbsolutePath());
     }
 
+    /**
+     * 补充填充规则逻辑
+     */
+    @Test
+    void testFillRule() throws IOException {
+        Path ofdIn = Paths.get("src/test/resources/testImageNotFound.ofd");
+        Path pdfOut = Paths.get("target/testFillRule.pdf");
+        try (OFDExporter exporter = new PDFExporterPDFBox(ofdIn, pdfOut)) {
+            exporter.export();
+        }
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
 }

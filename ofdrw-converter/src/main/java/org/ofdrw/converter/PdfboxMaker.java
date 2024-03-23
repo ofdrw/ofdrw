@@ -31,6 +31,7 @@ import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.compositeObj.CT_VectorG;
 import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.graph.pathObj.FillColor;
+import org.ofdrw.core.graph.pathObj.Rule;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
 import org.ofdrw.core.pageDescription.clips.Area;
 import org.ofdrw.core.pageDescription.clips.CT_Clip;
@@ -390,7 +391,11 @@ public class PdfboxMaker {
                 contentStream.setNonStrokingColor(defaultFillColor);
             }
             path(contentStream, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
-            contentStream.fill();
+            if (pathObject.getRule() != null && pathObject.getRule().equals(Rule.Even_Odd)) {
+                contentStream.fillEvenOdd();
+            } else {
+                contentStream.fill();
+            }
             contentStream.restoreGraphicsState();
         }
     }
