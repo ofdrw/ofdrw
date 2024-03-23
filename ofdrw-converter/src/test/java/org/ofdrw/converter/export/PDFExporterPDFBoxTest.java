@@ -2,6 +2,7 @@ package org.ofdrw.converter.export;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -20,4 +21,18 @@ class PDFExporterPDFBoxTest {
         }
         System.out.println(">> " + pdfPath.toAbsolutePath());
     }
+
+    /**
+     * 忽略无法解析图片
+     */
+    @Test
+    void testErrImgResource() throws IOException {
+        Path ofdIn = Paths.get("src/test/resources/testImageNotFound.ofd");
+        Path pdfOut = Paths.get("target/testImageNotFound.pdf");
+        try (OFDExporter exporter = new PDFExporterPDFBox(ofdIn, pdfOut)) {
+            exporter.export();
+        }
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
 }

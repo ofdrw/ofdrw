@@ -483,7 +483,16 @@ public class PdfboxMaker {
         if (resourceID == null) {
             return;
         }
-        BufferedImage bufferedImage = resMgt.getImage(resourceID.toString());
+        BufferedImage bufferedImage = null;
+        try {
+            bufferedImage = resMgt.getImage(resourceID.toString());
+        } catch (Exception e) {
+            if (logger.isErrorEnabled()) {
+                logger.error(String.format("图片解析失败！[resourceId: %s][%s]", resourceID.toString(), e.getMessage()));
+            } else {
+                logger.warn(String.format("图片解析失败！[resourceId: %s]", resourceID.toString()), e);
+            }
+        }
         if (bufferedImage == null) {
             return;
         }
