@@ -160,7 +160,8 @@ public class CT_Attachment extends OFDElement {
         }
         str = str.trim();
         try {
-            return LocalDateTime.parse(str, Const.DATETIME_FORMATTER).toLocalDate();
+            // 增加时间转换的兼容性
+            return parseLocalDateTime(str).toLocalDate();
         } catch (Exception ignore) {
             return LocalDate.parse(str, Const.DATE_FORMATTER);
         }
@@ -179,7 +180,8 @@ public class CT_Attachment extends OFDElement {
         }
         str = str.trim();
         try {
-            return LocalDateTime.parse(str, Const.DATETIME_FORMATTER);
+            // 增加时间转换的兼容性
+            return parseLocalDateTime(str);
         } catch (Exception ignore) {
             return LocalDate.parse(str, Const.DATE_FORMATTER).atStartOfDay();
         }
@@ -234,7 +236,8 @@ public class CT_Attachment extends OFDElement {
         }
         str = str.trim();
         try {
-            return LocalDateTime.parse(str, Const.DATETIME_FORMATTER).toLocalDate();
+            // 增加时间转换的兼容性
+            return parseLocalDateTime(str).toLocalDate();
         } catch (Exception ignore) {
             return LocalDate.parse(str, Const.DATE_FORMATTER);
         }
@@ -253,9 +256,24 @@ public class CT_Attachment extends OFDElement {
         }
         str = str.trim();
         try {
-            return LocalDateTime.parse(str, Const.DATETIME_FORMATTER);
+            // 增加时间转换的兼容性
+            return parseLocalDateTime(str);
         } catch (Exception ignore) {
             return LocalDate.parse(str, Const.DATE_FORMATTER).atStartOfDay();
+        }
+    }
+
+    /**
+     * 统一处理日期时间转换，便于对日期时间格式进行兼容处理
+     * 
+     * @param dateTimeStr 日期时间字符串
+     * @return
+     */
+    private LocalDateTime parseLocalDateTime(String dateTimeStr) {
+        if (dateTimeStr.indexOf('T') == -1) {
+            return LocalDateTime.parse(dateTimeStr, Const.LOCAL_DATETIME_FORMATTER);
+        } else {
+            return LocalDateTime.parse(dateTimeStr, Const.DATETIME_FORMATTER);
         }
     }
 
