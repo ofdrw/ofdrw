@@ -74,4 +74,17 @@ class PDFExporterPDFBoxTest {
         System.out.println(">> " + pdfOut.toAbsolutePath());
     }
 
+    /**
+     * 优化Path颜色逻辑(国徽处)
+     */
+    @Test
+    void testFillColor() throws IOException {
+        Path ofdIn = Paths.get("src/test/resources/testPathClip.ofd");
+        Path pdfOut = Paths.get("target/testPathColor.pdf");
+        try (OFDExporter exporter = new PDFExporterPDFBox(ofdIn, pdfOut)) {
+            exporter.export();
+        }
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
 }

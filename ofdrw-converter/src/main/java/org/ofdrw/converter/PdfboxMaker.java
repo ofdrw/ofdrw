@@ -1,9 +1,15 @@
 package org.ofdrw.converter;
 
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSFloat;
+import org.apache.pdfbox.cos.COSInteger;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
+import org.apache.pdfbox.pdmodel.common.function.PDFunctionType2;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
@@ -12,6 +18,9 @@ import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType2;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType3;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.dom4j.Element;
 import org.ofdrw.converter.point.PathPoint;
@@ -37,6 +46,7 @@ import org.ofdrw.core.pageDescription.clips.Area;
 import org.ofdrw.core.pageDescription.clips.CT_Clip;
 import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.pageDescription.color.color.CT_RadialShd;
 import org.ofdrw.core.pageDescription.color.color.ColorClusterType;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.signatures.appearance.StampAnnot;
@@ -301,6 +311,122 @@ public class PdfboxMaker {
         }
     }
 
+    private PDShading parseAxial(Element eleAxialShd, ResourceManage resMgt, ST_Box box, PathObject pathObject) {
+        PDShading result = null;
+        if (eleAxialShd == null) {
+            return result;
+        }
+
+        CT_AxialShd ctAxialShd = new CT_AxialShd(eleAxialShd);
+        PDColor startColor = convertPDColor(ctAxialShd.getSegments().get(0).getColor().getValue());
+        PDColor endColor = convertPDColor(
+                ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor().getValue());
+        ST_Pos startPos = ctAxialShd.getStartPoint();
+        ST_Pos endPos = ctAxialShd.getEndPoint();
+        double x1 = startPos.getX(), y1 = startPos.getY();
+        double x2 = endPos.getX(), y2 = endPos.getY();
+
+        double[] realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x1, y1, pathObject.getBoundary());
+        x1 = realPos[0];
+        y1 = box.getHeight() - realPos[1];
+        realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, pathObject.getBoundary());
+        x2 = realPos[0];
+        y2 = box.getHeight() - realPos[1];
+
+        COSDictionary fdict = new COSDictionary();
+        fdict.setInt(COSName.FUNCTION_TYPE, 2);
+        COSArray domain = new COSArray();
+        domain.add(COSInteger.ZERO);
+        domain.add(COSInteger.ONE);
+        fdict.setItem(COSName.DOMAIN, domain);
+        fdict.setItem(COSName.C0, startColor.toCOSArray());
+        fdict.setItem(COSName.C1, endColor.toCOSArray());
+        fdict.setInt(COSName.N, 1);
+        PDFunctionType2 func = new PDFunctionType2(fdict);
+
+        PDShadingType2 axialShading = new PDShadingType2(new COSDictionary());
+        axialShading.setColorSpace(PDDeviceRGB.INSTANCE);
+        axialShading.setShadingType(PDShading.SHADING_TYPE2);
+        COSArray coords1 = new COSArray();
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(x1)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(y1)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(x2)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(y2)));
+        axialShading.setCoords(coords1);
+        axialShading.setFunction(func);
+
+        result = axialShading;
+
+        return result;
+    }
+
+    private PDShading parseRadial(Element eleRadialShd, ResourceManage resMgt, ST_Box box, PathObject pathObject) {
+        PDShading result = null;
+        if (eleRadialShd == null) {
+            return result;
+        }
+
+        CT_RadialShd ctRadialShd = new CT_RadialShd(eleRadialShd);
+        PDColor startColor = convertPDColor(ctRadialShd.getSegments().get(0).getColor().getValue());
+        PDColor endColor = convertPDColor(
+                ctRadialShd.getSegments().get(ctRadialShd.getSegments().size() - 1).getColor().getValue());
+        ST_Pos startPos = ctRadialShd.getStartPoint();
+        ST_Pos endPos = ctRadialShd.getEndPoint();
+        double x1 = startPos.getX(), y1 = startPos.getY();
+        double x2 = endPos.getX(), y2 = endPos.getY();
+        double[] realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x1, y1, pathObject.getBoundary());
+        x1 = realPos[0];
+        y1 = box.getHeight() - realPos[1];
+        realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, pathObject.getBoundary());
+        x2 = realPos[0];
+        y2 = box.getHeight() - realPos[1];
+
+        COSDictionary fdict = new COSDictionary();
+        fdict.setInt(COSName.FUNCTION_TYPE, 2);
+        COSArray domain = new COSArray();
+        domain.add(COSInteger.ZERO);
+        domain.add(COSInteger.ONE);
+        fdict.setItem(COSName.DOMAIN, domain);
+        fdict.setItem(COSName.C0, startColor.toCOSArray());
+        fdict.setItem(COSName.C1, endColor.toCOSArray());
+        fdict.setInt(COSName.N, 1);
+        PDFunctionType2 func = new PDFunctionType2(fdict);
+
+        PDShadingType3 radialShading = new PDShadingType3(new COSDictionary());
+        radialShading.setColorSpace(PDDeviceRGB.INSTANCE);
+        radialShading.setShadingType(PDShading.SHADING_TYPE3);
+        COSArray coords1 = new COSArray();
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(x1)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(y1)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(ctRadialShd.getStartRadius())));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(x2)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(y2)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(ctRadialShd.getEndRadius())));
+        radialShading.setCoords(coords1);
+        radialShading.setFunction(func);
+
+        result = radialShading;
+
+        return result;
+    }
+
+    private PDShading parseShading(CT_Color color, ST_Box box, PathObject pathObject) {
+        PDShading shading = null;
+        if (color == null) {
+            return shading;
+        }
+        PDShading axialShading = parseAxial(color.getOFDElement("AxialShd"), resMgt, box, pathObject);
+        if (axialShading != null) {
+            shading = axialShading;
+        }
+
+        PDShading radialShading = parseRadial(color.getOFDElement("RadialShd"), resMgt, box, pathObject);
+        if (radialShading != null) {
+            shading = radialShading;
+        }
+        return shading;
+    }
+
     private void writePath(ResourceManage resMgt,
                            PDPageContentStream contentStream,
                            ST_Box box,
@@ -369,6 +495,11 @@ public class PdfboxMaker {
             contentStream.setMiterLimit(pathObject.getMiterLimit().floatValue());
             path(contentStream, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
             contentStream.setLineWidth((float) converterDpi(lineWidth));
+            PDShading shading = parseShading(strokeColor, box, pathObject);
+            if (shading != null) {
+                contentStream.clip();
+                contentStream.shadingFill(shading);
+            }
             contentStream.stroke();
             contentStream.restoreGraphicsState();
         }
@@ -391,6 +522,12 @@ public class PdfboxMaker {
                 contentStream.setNonStrokingColor(defaultFillColor);
             }
             path(contentStream, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
+            PDShading shading = parseShading(fillColor, box, pathObject);
+            if (shading != null) {
+                contentStream.clip();
+                contentStream.shadingFill(shading);
+            }
+            
             if (pathObject.getRule() != null && pathObject.getRule().equals(Rule.Even_Odd)) {
                 contentStream.fillEvenOdd();
             } else {
