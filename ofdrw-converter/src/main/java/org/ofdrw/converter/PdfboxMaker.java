@@ -1,5 +1,9 @@
 package org.ofdrw.converter;
 
+import org.apache.fontbox.ttf.OTFParser;
+import org.apache.fontbox.ttf.TTFParser;
+import org.apache.fontbox.ttf.TrueTypeCollection;
+import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSFloat;
@@ -53,6 +57,7 @@ import org.ofdrw.core.signatures.appearance.StampAnnot;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
+import org.ofdrw.reader.ResourceLocator;
 import org.ofdrw.reader.ResourceManage;
 import org.ofdrw.reader.model.AnnotionEntity;
 import org.ofdrw.reader.model.StampAnnotEntity;
@@ -67,6 +72,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -892,6 +898,79 @@ public class PdfboxMaker {
 
     /**
      * 加载字体
+     * 
+     * @param ctFont 字体对象
+     * @return
+     * @throws IOException
+     */
+    private PDFont loadFont(CT_Font ctFont) throws IOException {
+        // 字体是否嵌入
+        boolean embedSubset = false;
+
+        // 获取嵌入式字体路径
+        Path fontPath = null;
+        if (ctFont != null && ctFont.getFontFile() != null) {
+            // 内嵌字体绝对路径
+            try {
+                ResourceLocator resourceLocator = reader.getResourceLocator();
+                fontPath = resourceLocator.getFile(ctFont.getFontFile()).toAbsolutePath();
+            } catch (Exception e) {
+                logger.warn(
+                    "无法加载内嵌字体: " + ctFont.getFamilyName() + " " + ctFont.getFontName() + " " + ctFont.getFontFile(), e);
+            }
+        }
+        if (fontPath != null) {
+            embedSubset = true;
+        } else {
+            // 获取系统字体
+            String systemFontPath = FontLoader.getInstance().getReplaceSimilarFontPath(ctFont.getFamilyName(),
+                    ctFont.getFontName());
+            if (systemFontPath != null) {
+                fontPath = Paths.get(systemFontPath);
+            }
+        }
+        if (fontPath == null) {
+            // 获取默认字体
+            fontPath = FontLoader.getInstance().getDefaultFontPath();
+        }
+
+        ByteArrayInputStream fontStream = new ByteArrayInputStream(Files.readAllBytes(fontPath));
+        String name = fontPath.toFile().getName().toLowerCase();
+        TrueTypeFont ttf = null;
+        if (name.endsWith(".ttf")) {
+            try {
+                ttf = new TTFParser(embedSubset).parse(fontStream);
+            } catch (Exception ex) {
+                ttf = new TTFParser(!embedSubset).parse(fontStream);
+            }
+
+        } else if (name.endsWith(".otf")) {
+            try {
+                ttf = new OTFParser(embedSubset).parse(fontStream);
+            } catch (Exception ex) {
+                ttf = new OTFParser(!embedSubset).parse(fontStream);
+            }
+
+        } else if (name.endsWith(".ttc")) {
+            TrueTypeCollection ttc = new TrueTypeCollection(fontStream);
+            if (ttc != null) {
+                ttf = ttc.getFontByName(ctFont.getFontName());
+                if (ttf == null) {
+                    String alias = FontLoader.getInstance().getFontAlias(ctFont);
+                    ttf = ttc.getFontByName(alias);
+                }
+                embedSubset = true;
+                ttc.close();
+            }
+        } else {
+            fontStream.close();
+        }
+        PDFont font = PDType0Font.load(pdf, ttf, embedSubset);
+        return font;
+    }
+
+    /**
+     * 加载字体
      *
      * @param ctFont 字体对象
      * @return 字体
@@ -903,13 +982,12 @@ public class PdfboxMaker {
         }
         try {
             // 加载字体
-            InputStream in = FontLoader.getInstance().loadFontSimilarStream(reader.getResourceLocator(), ctFont);
-            PDFont font = PDType0Font.load(pdf, in, true);
+            PDFont font = loadFont(ctFont);
             fontCache.put(key, font);
             return font;
         } catch (Exception e) {
             if (ctFont != null && ctFont.getFontFile() != null) {
-                logger.info("无法使用字体: {} {} {}", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile().toString());
+                logger.info("无法使用字体: {} {} {}", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile());
             }
             return PDType1Font.HELVETICA_BOLD;
         }

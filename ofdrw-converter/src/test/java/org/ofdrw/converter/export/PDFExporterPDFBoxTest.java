@@ -100,4 +100,17 @@ class PDFExporterPDFBoxTest {
         System.out.println(">> " + pdfOut.toAbsolutePath());
     }
 
+    /**
+     * 优化字体加载机制，嵌入式字体无法显示，字体加载失败等
+     */
+    @Test
+    void testFontLoad() throws IOException {
+        Path ofdIn = Paths.get("src/test/resources/SignScaleError.ofd");
+        Path pdfOut = Paths.get("target/testFontLoad.pdf");
+        try (OFDExporter exporter = new PDFExporterPDFBox(ofdIn, pdfOut)) {
+            exporter.export();
+        }
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
 }
