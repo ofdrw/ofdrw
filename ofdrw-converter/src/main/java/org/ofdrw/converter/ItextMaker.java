@@ -620,13 +620,20 @@ public class ItextMaker {
 		return scale;
 	}
 
-	private boolean equals(ST_Box box1, ST_Box box2) {
-		if (null == box1 || null == box2) {
-			return false;
-		}
-		return box1.getTopLeftX().equals(box2.getTopLeftX()) && box1.getTopLeftY().equals(box2.getTopLeftY())
-				&& box1.getWidth().equals(box2.getWidth()) && box1.getHeight().equals(box2.getHeight());
-	}
+    /**
+     * 判断两个box的位置和大小是否相同
+     * 
+     * @param box1
+     * @param box2
+     * @return true: 相同；false: 不同
+     */
+    private boolean isSameBox(ST_Box box1, ST_Box box2) {
+        if (null == box1 || null == box2) {
+            return false;
+        }
+        return box1.getTopLeftX().equals(box2.getTopLeftX()) && box1.getTopLeftY().equals(box2.getTopLeftY())
+            && box1.getWidth().equals(box2.getWidth()) && box1.getHeight().equals(box2.getHeight());
+    }
 
     private void writeImage(ResourceManage resMgt, PdfCanvas pdfCanvas, ST_Box box, ImageObject imageObject, ST_Box annotBox, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
         final ST_RefID resourceID = imageObject.getResourceID();
@@ -645,7 +652,7 @@ public class ItextMaker {
         pdfCanvas.saveState();
 
         PdfImageXObject pdfImageObject = new PdfImageXObject(ImageDataFactory.create(imageByteArray));
-        if (annotBox != null && !equals(annotBox, imageObject.getBoundary())) {
+        if (annotBox != null && !isSameBox(annotBox, imageObject.getBoundary())) {
             float x = annotBox.getTopLeftX().floatValue();
             float y = box.getHeight().floatValue() - (annotBox.getTopLeftY().floatValue() + annotBox.getHeight().floatValue());
             float width = annotBox.getWidth().floatValue();
