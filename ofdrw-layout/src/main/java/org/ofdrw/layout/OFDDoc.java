@@ -449,7 +449,8 @@ public class OFDDoc implements Closeable {
             return this;
         }
         DocDir docDefault = ofdDir.obtainDocDefault();
-        String resAbsPath = docDefault.getRes().getAbsLoc().toString();
+        // 若Res不存在则创建
+        String resAbsPath = docDefault.obtainRes().getAbsLoc().toString();
 
         return this.addAttachment(resAbsPath, attachment);
     }
