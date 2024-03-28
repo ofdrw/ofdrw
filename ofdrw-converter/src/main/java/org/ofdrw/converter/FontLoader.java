@@ -617,6 +617,15 @@ public final class FontLoader {
         return new ByteArrayInputStream(buf);
     }
 
+    /**
+     * 获取字体别名
+     * 
+     * @param ctFont 字体对象
+     * @return
+     */
+    public String getFontAlias(CT_Font ctFont) {
+        return fontNameAliasMapping.get(ctFont.getFontName());
+    }
 
     /**
      * 加载字体

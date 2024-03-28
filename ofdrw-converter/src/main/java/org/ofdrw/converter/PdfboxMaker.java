@@ -1,9 +1,19 @@
 package org.ofdrw.converter;
 
+import org.apache.fontbox.ttf.OTFParser;
+import org.apache.fontbox.ttf.TTFParser;
+import org.apache.fontbox.ttf.TrueTypeCollection;
+import org.apache.fontbox.ttf.TrueTypeFont;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSFloat;
+import org.apache.pdfbox.cos.COSInteger;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
+import org.apache.pdfbox.pdmodel.common.function.PDFunctionType2;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
@@ -12,7 +22,11 @@ import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType2;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType3;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.dom4j.Element;
 import org.ofdrw.converter.point.PathPoint;
 import org.ofdrw.converter.point.TextCodePoint;
 import org.ofdrw.converter.utils.CommonUtil;
@@ -28,16 +42,22 @@ import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.compositeObj.CT_VectorG;
+import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.graph.pathObj.FillColor;
+import org.ofdrw.core.graph.pathObj.Rule;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
+import org.ofdrw.core.pageDescription.clips.Area;
+import org.ofdrw.core.pageDescription.clips.CT_Clip;
 import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.pageDescription.color.color.CT_RadialShd;
 import org.ofdrw.core.pageDescription.color.color.ColorClusterType;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.signatures.appearance.StampAnnot;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
+import org.ofdrw.reader.ResourceLocator;
 import org.ofdrw.reader.ResourceManage;
 import org.ofdrw.reader.model.AnnotionEntity;
 import org.ofdrw.reader.model.StampAnnotEntity;
@@ -52,6 +72,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -296,6 +317,122 @@ public class PdfboxMaker {
         }
     }
 
+    private PDShading parseAxial(Element eleAxialShd, ResourceManage resMgt, ST_Box box, PathObject pathObject) {
+        PDShading result = null;
+        if (eleAxialShd == null) {
+            return result;
+        }
+
+        CT_AxialShd ctAxialShd = new CT_AxialShd(eleAxialShd);
+        PDColor startColor = convertPDColor(ctAxialShd.getSegments().get(0).getColor().getValue());
+        PDColor endColor = convertPDColor(
+                ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor().getValue());
+        ST_Pos startPos = ctAxialShd.getStartPoint();
+        ST_Pos endPos = ctAxialShd.getEndPoint();
+        double x1 = startPos.getX(), y1 = startPos.getY();
+        double x2 = endPos.getX(), y2 = endPos.getY();
+
+        double[] realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x1, y1, pathObject.getBoundary());
+        x1 = realPos[0];
+        y1 = box.getHeight() - realPos[1];
+        realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, pathObject.getBoundary());
+        x2 = realPos[0];
+        y2 = box.getHeight() - realPos[1];
+
+        COSDictionary fdict = new COSDictionary();
+        fdict.setInt(COSName.FUNCTION_TYPE, 2);
+        COSArray domain = new COSArray();
+        domain.add(COSInteger.ZERO);
+        domain.add(COSInteger.ONE);
+        fdict.setItem(COSName.DOMAIN, domain);
+        fdict.setItem(COSName.C0, startColor.toCOSArray());
+        fdict.setItem(COSName.C1, endColor.toCOSArray());
+        fdict.setInt(COSName.N, 1);
+        PDFunctionType2 func = new PDFunctionType2(fdict);
+
+        PDShadingType2 axialShading = new PDShadingType2(new COSDictionary());
+        axialShading.setColorSpace(PDDeviceRGB.INSTANCE);
+        axialShading.setShadingType(PDShading.SHADING_TYPE2);
+        COSArray coords1 = new COSArray();
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(x1)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(y1)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(x2)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(y2)));
+        axialShading.setCoords(coords1);
+        axialShading.setFunction(func);
+
+        result = axialShading;
+
+        return result;
+    }
+
+    private PDShading parseRadial(Element eleRadialShd, ResourceManage resMgt, ST_Box box, PathObject pathObject) {
+        PDShading result = null;
+        if (eleRadialShd == null) {
+            return result;
+        }
+
+        CT_RadialShd ctRadialShd = new CT_RadialShd(eleRadialShd);
+        PDColor startColor = convertPDColor(ctRadialShd.getSegments().get(0).getColor().getValue());
+        PDColor endColor = convertPDColor(
+                ctRadialShd.getSegments().get(ctRadialShd.getSegments().size() - 1).getColor().getValue());
+        ST_Pos startPos = ctRadialShd.getStartPoint();
+        ST_Pos endPos = ctRadialShd.getEndPoint();
+        double x1 = startPos.getX(), y1 = startPos.getY();
+        double x2 = endPos.getX(), y2 = endPos.getY();
+        double[] realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x1, y1, pathObject.getBoundary());
+        x1 = realPos[0];
+        y1 = box.getHeight() - realPos[1];
+        realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, pathObject.getBoundary());
+        x2 = realPos[0];
+        y2 = box.getHeight() - realPos[1];
+
+        COSDictionary fdict = new COSDictionary();
+        fdict.setInt(COSName.FUNCTION_TYPE, 2);
+        COSArray domain = new COSArray();
+        domain.add(COSInteger.ZERO);
+        domain.add(COSInteger.ONE);
+        fdict.setItem(COSName.DOMAIN, domain);
+        fdict.setItem(COSName.C0, startColor.toCOSArray());
+        fdict.setItem(COSName.C1, endColor.toCOSArray());
+        fdict.setInt(COSName.N, 1);
+        PDFunctionType2 func = new PDFunctionType2(fdict);
+
+        PDShadingType3 radialShading = new PDShadingType3(new COSDictionary());
+        radialShading.setColorSpace(PDDeviceRGB.INSTANCE);
+        radialShading.setShadingType(PDShading.SHADING_TYPE3);
+        COSArray coords1 = new COSArray();
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(x1)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(y1)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(ctRadialShd.getStartRadius())));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(x2)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(y2)));
+        coords1.add(new COSFloat((float) CommonUtil.converterDpi(ctRadialShd.getEndRadius())));
+        radialShading.setCoords(coords1);
+        radialShading.setFunction(func);
+
+        result = radialShading;
+
+        return result;
+    }
+
+    private PDShading parseShading(CT_Color color, ST_Box box, PathObject pathObject) {
+        PDShading shading = null;
+        if (color == null) {
+            return shading;
+        }
+        PDShading axialShading = parseAxial(color.getOFDElement("AxialShd"), resMgt, box, pathObject);
+        if (axialShading != null) {
+            shading = axialShading;
+        }
+
+        PDShading radialShading = parseRadial(color.getOFDElement("RadialShd"), resMgt, box, pathObject);
+        if (radialShading != null) {
+            shading = radialShading;
+        }
+        return shading;
+    }
+
     private void writePath(ResourceManage resMgt,
                            PDPageContentStream contentStream,
                            ST_Box box,
@@ -309,6 +446,7 @@ public class PdfboxMaker {
                            ST_Box compositeObjectBoundary,
                            ST_Array compositeObjectCTM) throws IOException {
         contentStream.saveGraphicsState();
+        double scale = scaling(sealBox, pathObject.getBoundary());
         // 获取引用的绘制参数可能会null
         CT_DrawParam ctDrawParam = resMgt.superDrawParam(pathObject);
         if (ctDrawParam != null) {
@@ -320,6 +458,9 @@ public class PdfboxMaker {
             if (pathObject.getFillColor() == null
                     && ctDrawParam.getFillColor() != null) {
                 pathObject.setFillColor(ctDrawParam.getFillColor());
+            }
+            if (pathObject.getLineWidth() == null && ctDrawParam.getLineWidth() != null) {
+                pathObject.setLineWidth(ctDrawParam.getLineWidth());
             }
         }
 
@@ -334,7 +475,12 @@ public class PdfboxMaker {
         } else {
             contentStream.setStrokingColor(defaultStrokeColor);
         }
-        float lineWidth = pathObject.getLineWidth() != null ? pathObject.getLineWidth().floatValue() : defaultLineWidth;
+
+        float lineWidth = defaultLineWidth;
+        if (pathObject.getLineWidth() != null && pathObject.getLineWidth() > 0) {
+            lineWidth = Double.valueOf(converterDpi(pathObject.getLineWidth()) * scale).floatValue();
+        }
+        contentStream.setLineWidth(lineWidth);
         if (pathObject.getCTM() != null && pathObject.getLineWidth() != null) {
             Double[] ctm = pathObject.getCTM().toDouble();
             double a = ctm[0].doubleValue();
@@ -363,7 +509,14 @@ public class PdfboxMaker {
             contentStream.setLineCapStyle(pathObject.getCap().ordinal());
             contentStream.setMiterLimit(pathObject.getMiterLimit().floatValue());
             path(contentStream, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
-            contentStream.setLineWidth((float) converterDpi(lineWidth));
+            if (pathObject.getLineWidth() != null && pathObject.getLineWidth() > 0) {
+                contentStream.setLineWidth( pathObject.getLineWidth().floatValue());
+            }
+            PDShading shading = parseShading(strokeColor, box, pathObject);
+            if (shading != null) {
+                contentStream.clip();
+                contentStream.shadingFill(shading);
+            }
             contentStream.stroke();
             contentStream.restoreGraphicsState();
         }
@@ -386,7 +539,17 @@ public class PdfboxMaker {
                 contentStream.setNonStrokingColor(defaultFillColor);
             }
             path(contentStream, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
-            contentStream.fill();
+            PDShading shading = parseShading(fillColor, box, pathObject);
+            if (shading != null) {
+                contentStream.clip();
+                contentStream.shadingFill(shading);
+            }
+            
+            if (pathObject.getRule() != null && pathObject.getRule().equals(Rule.Even_Odd)) {
+                contentStream.fillEvenOdd();
+            } else {
+                contentStream.fill();
+            }
             contentStream.restoreGraphicsState();
         }
     }
@@ -446,6 +609,7 @@ public class PdfboxMaker {
         if (pathObject.getBoundary() == null) {
             return;
         }
+        double scale = scaling(sealBox, pathObject.getBoundary());
         if (sealBox != null) {
             pathObject.setBoundary(pathObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
                     pathObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
@@ -458,7 +622,10 @@ public class PdfboxMaker {
                     pathObject.getBoundary().getWidth(),
                     pathObject.getBoundary().getHeight());
         }
-        List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), compositeObjectBoundary, compositeObjectCTM, true);
+
+        clip(contentStream, box, pathObject);
+        
+        List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), compositeObjectBoundary, compositeObjectCTM, true, scale);
         for (int i = 0; i < listPoint.size(); i++) {
             if (listPoint.get(i).type.equals("M") || listPoint.get(i).type.equals("S")) {
                 contentStream.moveTo(listPoint.get(i).x1, listPoint.get(i).y1);
@@ -477,13 +644,89 @@ public class PdfboxMaker {
         }
     }
 
+    private void clip(PDPageContentStream contentStream, ST_Box box, PathObject pathObject) throws IOException {
+        if (pathObject.getClips() == null) {
+            return;
+        }
+
+        List<CT_Clip> clips = pathObject.getClips().getClips();
+        for (int k = 0; k < clips.size(); k++) {
+            CT_Clip clip = clips.get(k);
+            contentStream.clip();
+            for (Area area : clip.getAreas()) {
+                Element elePath = area.getOFDElement("Path");
+                CT_Path path = new CT_Path(elePath);
+                List<PathPoint> points = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(),
+                        pathObject.getBoundary(),
+                        PointUtil.convertPathAbbreviatedDatatoPoint(path.getAbbreviatedData()), area.getCTM() != null,
+                        area.getCTM(), null, null, true, 1.0);
+                for (int i = 0; i < points.size(); i++) {
+                    PathPoint pathPoint = points.get(i);
+                    if (pathPoint.type.equals("M") || pathPoint.type.equals("S")) {
+                        contentStream.moveTo(pathPoint.x1, pathPoint.y1);
+                    } else if (pathPoint.type.equals("L")) {
+                        contentStream.lineTo(pathPoint.x1, pathPoint.y1);
+                    } else if (pathPoint.type.equals("B")) {
+                        contentStream.curveTo(pathPoint.x1, pathPoint.y1, pathPoint.x2, pathPoint.y2, pathPoint.x3,
+                                pathPoint.y3);
+                    } else if (pathPoint.type.equals("Q")) {
+                        contentStream.curveTo2(pathPoint.x1, pathPoint.y1, pathPoint.x2, pathPoint.y2);
+                    } else if (pathPoint.type.equals("C")) {
+                        contentStream.closePath();
+                    }
+                }   
+            }
+            contentStream.clip();
+        }
+    }
+
+    /**
+     * 计算当前盒子到目标盒子的缩放比例
+     * 
+     * @param targetBox
+     * @param currentBox
+     * @return 缩放比例
+     */
+    private double scaling(ST_Box targetBox, ST_Box currentBox) {
+        double scale = 1.0;
+        if (targetBox != null && currentBox != null) {
+            scale = Math.min(targetBox.getWidth() / currentBox.getWidth(),
+                    targetBox.getHeight() / currentBox.getHeight());
+        }
+        return scale;
+    }
+
+    /**
+     * 判断两个box的位置和大小是否相同
+     * 
+     * @param box1
+     * @param box2
+     * @return true: 相同；false: 不同
+     */
+    private boolean isSameBox(ST_Box box1, ST_Box box2) {
+        if (null == box1 || null == box2) {
+            return false;
+        }
+        return box1.getTopLeftX().equals(box2.getTopLeftX()) && box1.getTopLeftY().equals(box2.getTopLeftY())
+            && box1.getWidth().equals(box2.getWidth()) && box1.getHeight().equals(box2.getHeight());
+    }
+
     private void writeImage(ResourceManage resMgt, PDPageContentStream contentStream, ST_Box box, ImageObject imageObject, ST_Box annotBox) throws IOException {
         // 读取图片
         final ST_RefID resourceID = imageObject.getResourceID();
         if (resourceID == null) {
             return;
         }
-        BufferedImage bufferedImage = resMgt.getImage(resourceID.toString());
+        BufferedImage bufferedImage = null;
+        try {
+            bufferedImage = resMgt.getImage(resourceID.toString());
+        } catch (Exception e) {
+            if (logger.isErrorEnabled()) {
+                logger.error(String.format("图片解析失败！[resourceId: %s][%s]", resourceID.toString(), e.getMessage()));
+            } else {
+                logger.warn(String.format("图片解析失败！[resourceId: %s]", resourceID.toString()), e);
+            }
+        }
         if (bufferedImage == null) {
             return;
         }
@@ -497,7 +740,7 @@ public class PdfboxMaker {
             pdfImageObject = LosslessFactory.createFromImage(pdf, bufferedImage);
         }
 
-        if (annotBox != null) {
+        if (annotBox != null && !isSameBox(annotBox, imageObject.getBoundary())) {
             float x = annotBox.getTopLeftX().floatValue();
             float y = box.getHeight().floatValue() - (annotBox.getTopLeftY().floatValue() + annotBox.getHeight().floatValue());
             float width = annotBox.getWidth().floatValue();
@@ -550,8 +793,8 @@ public class PdfboxMaker {
     }
 
     private void writeText(ResourceManage resMgt, PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, TextObject textObject, PDColor fillColor, int alpha) throws IOException {
-        float fontSize = getTextObjectSize(textObject);
-
+        double scale = scaling(sealBox, textObject.getBoundary());
+        float fontSize = Double.valueOf(textObject.getSize() * scale).floatValue();
         if (sealBox != null && textObject.getBoundary() != null) {
             textObject.setBoundary(textObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
                     textObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
@@ -576,7 +819,7 @@ public class PdfboxMaker {
         CT_Font ctFont = resMgt.getFont(textObject.getFont().toString());
         PDFont font = getFont(ctFont);
 
-        List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCTM() != null, textObject.getCTM(), true);
+        List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCTM() != null, textObject.getCTM(), true, scale);
         double rx = 0, ry = 0;
         for (int i = 0; i < textCodePointList.size(); i++) {
             TextCodePoint textCodePoint = textCodePointList.get(i);
@@ -662,6 +905,79 @@ public class PdfboxMaker {
 
     /**
      * 加载字体
+     * 
+     * @param ctFont 字体对象
+     * @return
+     * @throws IOException
+     */
+    private PDFont loadFont(CT_Font ctFont) throws IOException {
+        // 字体是否嵌入
+        boolean embedSubset = false;
+
+        // 获取嵌入式字体路径
+        Path fontPath = null;
+        if (ctFont != null && ctFont.getFontFile() != null) {
+            // 内嵌字体绝对路径
+            try {
+                ResourceLocator resourceLocator = reader.getResourceLocator();
+                fontPath = resourceLocator.getFile(ctFont.getFontFile()).toAbsolutePath();
+            } catch (Exception e) {
+                logger.warn(
+                    "无法加载内嵌字体: " + ctFont.getFamilyName() + " " + ctFont.getFontName() + " " + ctFont.getFontFile(), e);
+            }
+        }
+        if (fontPath != null) {
+            embedSubset = true;
+        } else {
+            // 获取系统字体
+            String systemFontPath = FontLoader.getInstance().getReplaceSimilarFontPath(ctFont.getFamilyName(),
+                    ctFont.getFontName());
+            if (systemFontPath != null) {
+                fontPath = Paths.get(systemFontPath);
+            }
+        }
+        if (fontPath == null) {
+            // 获取默认字体
+            fontPath = FontLoader.getInstance().getDefaultFontPath();
+        }
+
+        ByteArrayInputStream fontStream = new ByteArrayInputStream(Files.readAllBytes(fontPath));
+        String name = fontPath.toFile().getName().toLowerCase();
+        TrueTypeFont ttf = null;
+        if (name.endsWith(".ttf")) {
+            try {
+                ttf = new TTFParser(embedSubset).parse(fontStream);
+            } catch (Exception ex) {
+                ttf = new TTFParser(!embedSubset).parse(fontStream);
+            }
+
+        } else if (name.endsWith(".otf")) {
+            try {
+                ttf = new OTFParser(embedSubset).parse(fontStream);
+            } catch (Exception ex) {
+                ttf = new OTFParser(!embedSubset).parse(fontStream);
+            }
+
+        } else if (name.endsWith(".ttc")) {
+            TrueTypeCollection ttc = new TrueTypeCollection(fontStream);
+            if (ttc != null) {
+                ttf = ttc.getFontByName(ctFont.getFontName());
+                if (ttf == null) {
+                    String alias = FontLoader.getInstance().getFontAlias(ctFont);
+                    ttf = ttc.getFontByName(alias);
+                }
+                embedSubset = true;
+                ttc.close();
+            }
+        } else {
+            fontStream.close();
+        }
+        PDFont font = PDType0Font.load(pdf, ttf, embedSubset);
+        return font;
+    }
+
+    /**
+     * 加载字体
      *
      * @param ctFont 字体对象
      * @return 字体
@@ -673,13 +989,12 @@ public class PdfboxMaker {
         }
         try {
             // 加载字体
-            InputStream in = FontLoader.getInstance().loadFontSimilarStream(reader.getResourceLocator(), ctFont);
-            PDFont font = PDType0Font.load(pdf, in, true);
+            PDFont font = loadFont(ctFont);
             fontCache.put(key, font);
             return font;
         } catch (Exception e) {
             if (ctFont != null && ctFont.getFontFile() != null) {
-                logger.info("无法使用字体: {} {} {}", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile().toString());
+                logger.info("无法使用字体: {} {} {}", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile());
             }
             return PDType1Font.HELVETICA_BOLD;
         }
