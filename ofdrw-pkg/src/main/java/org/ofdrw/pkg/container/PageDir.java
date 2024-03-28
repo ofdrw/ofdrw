@@ -12,11 +12,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * 页面目录容器
@@ -142,24 +141,27 @@ public class PageDir extends VirtualContainer {
     public Map<String, PageAnnot> getPageAnnots() throws IOException {
         Map<String, PageAnnot> res = new HashMap<>();
         // 过滤出注释文件
-        Files.list(this.getContainerPath()).filter((item) -> {
-            String fileName = item.getFileName().toString().toLowerCase();
-            // 不是目录 并且 文件名以 Annot_ 开头
-            return Files.isRegularFile(item)
-                    && fileName.startsWith(AnnotFilePrefix.toLowerCase())
-                    && fileName.endsWith(".xml");
-        }).forEach(item -> {
-            Element obj = null;
-            try {
-                obj = this.getObj(AnnotationFileName);
-            } catch (Exception e) {
-                // ignore
-                obj = null;
-            }
-            if (obj != null) {
-                res.put(item.getFileName().toString(), new PageAnnot(obj));
-            }
-        });
+        try (Stream<Path> stream = Files.list(this.getContainerPath())) {
+            stream.filter((item) -> {
+                String fileName = item.getFileName().toString().toLowerCase();
+                // 不是目录 并且 文件名以 Annot_ 开头
+                return Files.isRegularFile(item)
+                        && fileName.startsWith(AnnotFilePrefix.toLowerCase())
+                        && fileName.endsWith(".xml");
+            }).forEach(item -> {
+                Element obj = null;
+                try {
+                    obj = this.getObj(AnnotationFileName);
+                } catch (Exception e) {
+                    // ignore
+                    obj = null;
+                }
+                if (obj != null) {
+                    res.put(item.getFileName().toString(), new PageAnnot(obj));
+                }
+            });
+        }
+
         return res;
     }
 
@@ -246,22 +248,24 @@ public class PageDir extends VirtualContainer {
     public Integer getMaxAnnotFileIndex() throws IOException {
         if (maxAnnotIndex < 0) {
             Holder<Integer> maxIndexHolder = new Holder<>(-1);
-            Files.list(this.getContainerPath()).forEach((item) -> {
-                String fileName = item.getFileName().toString().toLowerCase();
-                // 不是目录 并且 文件名以 Annot_ 开头
-                if (fileName.startsWith(AnnotFilePrefix.toLowerCase())) {
-                    String numStr = fileName.replace(AnnotFilePrefix.toLowerCase(), "")
-                            .split("\\.")[0];
-                    try {
-                        int n = Integer.parseInt(numStr);
-                        if (n > maxIndexHolder.value) {
-                            maxIndexHolder.value = n;
+            try (Stream<Path> stream = Files.list(this.getContainerPath())) {
+                stream.forEach((item) -> {
+                    String fileName = item.getFileName().toString().toLowerCase();
+                    // 不是目录 并且 文件名以 Annot_ 开头
+                    if (fileName.startsWith(AnnotFilePrefix.toLowerCase())) {
+                        String numStr = fileName.replace(AnnotFilePrefix.toLowerCase(), "")
+                                .split("\\.")[0];
+                        try {
+                            int n = Integer.parseInt(numStr);
+                            if (n > maxIndexHolder.value) {
+                                maxIndexHolder.value = n;
+                            }
+                        } catch (NumberFormatException e) {
+                            // ignore
                         }
-                    } catch (NumberFormatException e) {
-                        // ignore
                     }
-                }
-            });
+                });
+            }
             maxAnnotIndex = maxIndexHolder.value;
         }
         return maxAnnotIndex;

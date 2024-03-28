@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * 模板文件存放目录
@@ -97,22 +98,24 @@ public class TempsDir extends VirtualContainer {
     public Integer getMaxTempIndex() throws IOException {
         if (maxTempIndex < 0) {
             Holder<Integer> maxIndexHolder = new Holder<>(-1);
-            Files.list(this.getContainerPath()).forEach((item) -> {
-                String fileName = item.getFileName().toString().toLowerCase();
-                // 不是目录 并且 文件名以 Annot_ 开头
-                if (fileName.startsWith(TempFilePrefix.toLowerCase())) {
-                    String numStr = fileName.replace(TempFilePrefix.toLowerCase(), "")
-                            .split("\\.")[0];
-                    try {
-                        int n = Integer.parseInt(numStr);
-                        if (n > maxIndexHolder.value) {
-                            maxIndexHolder.value = n;
+            try (Stream<Path> stream = Files.list(this.getContainerPath())) {
+                stream.forEach((item) -> {
+                    String fileName = item.getFileName().toString().toLowerCase();
+                    // 不是目录 并且 文件名以 Annot_ 开头
+                    if (fileName.startsWith(TempFilePrefix.toLowerCase())) {
+                        String numStr = fileName.replace(TempFilePrefix.toLowerCase(), "")
+                                .split("\\.")[0];
+                        try {
+                            int n = Integer.parseInt(numStr);
+                            if (n > maxIndexHolder.value) {
+                                maxIndexHolder.value = n;
+                            }
+                        } catch (NumberFormatException e) {
+                            // ignore
                         }
-                    } catch (NumberFormatException e) {
-                        // ignore
                     }
-                }
-            });
+                });
+            }
             maxTempIndex = maxIndexHolder.value;
         }
         return maxTempIndex;
