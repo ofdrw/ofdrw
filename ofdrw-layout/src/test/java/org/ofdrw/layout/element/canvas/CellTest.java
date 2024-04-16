@@ -316,4 +316,38 @@ class CellTest {
         System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
     }
 
+    /**
+     * 设置单元格外部字体
+     */
+    @Test
+    void setFontExt() throws Exception{
+        Path outP = Paths.get("target/font-ext.ofd");
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            Cell cell1 = new Cell(20d, 10d);
+            cell1.setFont("仿宋_裁剪", Paths.get("src/test/resources/仿宋_GB2312_subset.ttf"));
+            cell1.setBorder(0.353);
+            cell1.setTextAlign(TextAlign.center);
+            cell1.setPadding(1d, 3d, 1d, 3d);
+            cell1.setValue("名 称");
+            cell1.setFontSize(5d);
+            cell1.setDisplay(Display.inlineBlock);
+            cell1.setBackgroundColor("#CDD0D6");
+
+
+            Cell cell2 = new Cell(50d, 10d);
+            cell2.setFont("仿宋_裁剪", Paths.get("src/test/resources/仿宋_GB2312_subset.ttf"));
+            cell2.setBorder(0.353);
+            cell2.setTextAlign(TextAlign.center);
+            cell2.setPadding(1d, 3d, 1d, 3d);
+            cell2.setValue("OFD Reader & Writer");
+            cell2.setFontSize(5d);
+            cell2.setMarginLeft(-0.353);
+            cell2.setDisplay(Display.inlineBlock);
+
+            ofdDoc.add(cell1);
+            ofdDoc.add(cell2);
+        }
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+    }
+
 }

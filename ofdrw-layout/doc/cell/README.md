@@ -90,6 +90,7 @@ Cell元素除了继承自Div元素，除了常规的Div元素设置，Cell元素
 | setColor(String color)                        | 设置文本颜色     |
 | setFontName(String fontName)                  | 设置文本字体     |
 | setFontSize(double fontSize)                  | 设置文本字体大小   |
+| setFont(String fontName, Path fontPath)       | 设置文本使用外部字体 |
 | setVerticalAlign(VerticalAlign verticalAlign) | 设置文本垂直对齐方式 |
 | setLineSpace(Double lineSpace)                | 设置文本行间距    |
 | setBold(Boolean bold)                         | 设置文本是否为粗体  |

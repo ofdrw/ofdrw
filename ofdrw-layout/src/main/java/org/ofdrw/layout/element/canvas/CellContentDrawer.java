@@ -5,6 +5,7 @@ import org.ofdrw.core.basicType.STBase;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
 
@@ -111,6 +112,11 @@ public class CellContentDrawer implements Drawer {
      */
     private boolean deleteLine = false;
 
+    /**
+     * 外部字体路径
+     */
+    private Path extFontPath = null;
+
 
     /**
      * 通过已有Canvas构造单元格
@@ -139,6 +145,7 @@ public class CellContentDrawer implements Drawer {
         this.canvas = new Canvas(x, y, width, height);
         this.canvas.setDrawer(this);
     }
+
 
     /**
      * 文字行
@@ -202,6 +209,10 @@ public class CellContentDrawer implements Drawer {
                 // 绘制图片
                 drawImg(ctx);
             } else {
+                if (extFontPath != null) {
+                    // 添加外部字体
+                    ctx.addFont(fontName, extFontPath);
+                }
                 // 绘制文字
                 drawText(ctx);
             }
@@ -779,4 +790,26 @@ public class CellContentDrawer implements Drawer {
     public boolean getDeleteLine() {
         return this.deleteLine;
     }
+
+    /**
+     * 设置单元格绘制器使用的外部字体
+     * <p>
+     * 注意OFDRW不会提供任何字体裁剪功能，您的字体文件将直接加入OFD文件中，这可能造成文件体积剧增。
+     *
+     * @param fontName 字体名称，如“思源宋体”
+     * @param fontPath 字体文件所在路径
+     * @return this
+     */
+    public CellContentDrawer setFont(String fontName, Path fontPath) {
+        if (fontName == null || fontName.isEmpty()) {
+            throw new IllegalArgumentException("字体名称(fontName)不能为空");
+        }
+        if (fontPath == null || Files.exists(fontPath) == false){
+            throw new IllegalArgumentException("字体文件(fontPath)不存在");
+        }
+        this.setFontName(fontName);
+        this.extFontPath = fontPath;
+        return null;
+    }
+
 }

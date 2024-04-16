@@ -162,6 +162,20 @@ public class Cell extends Canvas {
     }
 
     /**
+     * 设置单元格使用的外部字体
+     * <p>
+     * 注意OFDRW不会提供任何字体裁剪功能，您的字体文件将直接加入OFD文件中，这可能造成文件体积剧增。
+     *
+     * @param fontName 字体名称，如“思源宋体”
+     * @param fontPath 字体文件所在路径
+     * @return this
+     */
+    public Cell setFont(String fontName, Path fontPath) {
+        this.cellDrawer.setFont(fontName, fontPath);
+        return this;
+    }
+
+    /**
      * 获取字号
      *
      * @return 字号，默认：0.353 （单位：毫米）
