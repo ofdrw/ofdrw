@@ -237,6 +237,9 @@ public abstract class AWTMaker {
 
 
     private void writeContent(Graphics2D graphics, CT_PageBlock pageBlock, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
+        if (pageBlock == null) {
+            return;
+        }
         graphics = (Graphics2D) graphics.create();
         try {
             if (drawParams == null) drawParams = new ArrayList<>();
@@ -411,6 +414,7 @@ public abstract class AWTMaker {
 
     /**
      * 获取字号 ，若无法获取则设置为默认值 0.353。
+     *
      * @param textObject 文字对象
      * @return 字号。
      */
@@ -729,25 +733,23 @@ public abstract class AWTMaker {
         return 0.4;
     }
 
-    private CT_Color getStrokeColorRelative(CT_DrawParam drawParam){
+    private CT_Color getStrokeColorRelative(CT_DrawParam drawParam) {
         CT_Color c = drawParam.getStrokeColor();
-        if (c != null)
-        {
+        if (c != null) {
             return c;
         }
-        if (drawParam.getRelative() != null && resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()) != null){
+        if (drawParam.getRelative() != null && resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()) != null) {
             return getStrokeColorRelative(resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()));
         }
         return null;
     }
 
-    private CT_Color getFillColorRelative(CT_DrawParam drawParam){
+    private CT_Color getFillColorRelative(CT_DrawParam drawParam) {
         CT_Color c = drawParam.getFillColor();
-        if (c != null)
-        {
+        if (c != null) {
             return c;
         }
-        if (drawParam.getRelative() != null && resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()) != null){
+        if (drawParam.getRelative() != null && resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()) != null) {
             return getFillColorRelative(resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()));
         }
         return null;
