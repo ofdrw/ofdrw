@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
@@ -782,12 +783,24 @@ public final class FontLoader {
     public void loadFont(File file) {
         try {
             Font awtFont = Font.createFont(Font.TRUETYPE_FONT, file);
+            // 根据地区加载字体名称映射，解决中英文字体名称不一致的问题
+            Locale locale = Locale.getDefault();
             String family = awtFont.getFamily();
-            String fontName = awtFont.getFontName();
-            if (family != null && family.equals(fontName)) {
-                addSystemFontMapping(family, file.getAbsolutePath());
-            } else if (family != null) {
+            if (null != family) {
+                String fontName = awtFont.getFontName(locale);
                 addSystemFontMapping(fontName, file.getAbsolutePath());
+                if (!Locale.CHINA.equals(locale)) {
+                    fontName = awtFont.getFontName(Locale.CHINA);
+                    addSystemFontMapping(fontName, file.getAbsolutePath());
+                }
+                if (!Locale.CHINESE.equals(locale)) {
+                    fontName = awtFont.getFontName(Locale.CHINESE);
+                    addSystemFontMapping(fontName, file.getAbsolutePath());
+                }
+                if (!Locale.ENGLISH.equals(locale)) {
+                    fontName = awtFont.getFontName(Locale.ENGLISH);
+                    addSystemFontMapping(fontName, file.getAbsolutePath());
+                }
             }
         } catch (Exception e) {
             if (DEBUG) {
