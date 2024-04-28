@@ -46,6 +46,7 @@ import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.graph.pathObj.FillColor;
 import org.ofdrw.core.graph.pathObj.Rule;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
+import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.clips.Area;
 import org.ofdrw.core.pageDescription.clips.CT_Clip;
 import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
@@ -446,7 +447,7 @@ public class PdfboxMaker {
                            ST_Box compositeObjectBoundary,
                            ST_Array compositeObjectCTM) throws IOException {
         contentStream.saveGraphicsState();
-        double scale = scaling(sealBox, pathObject.getBoundary());
+        double scale = scaling(sealBox, pathObject);
         // 获取引用的绘制参数可能会null
         CT_DrawParam ctDrawParam = resMgt.superDrawParam(pathObject);
         if (ctDrawParam != null) {
@@ -609,7 +610,7 @@ public class PdfboxMaker {
         if (pathObject.getBoundary() == null) {
             return;
         }
-        double scale = scaling(sealBox, pathObject.getBoundary());
+        double scale = scaling(sealBox, pathObject);
         if (sealBox != null) {
             pathObject.setBoundary(pathObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
                     pathObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
@@ -622,7 +623,7 @@ public class PdfboxMaker {
                     pathObject.getBoundary().getWidth(),
                     pathObject.getBoundary().getHeight());
         }
-
+        
         clip(contentStream, box, pathObject);
         
         List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), compositeObjectBoundary, compositeObjectCTM, true, scale);
@@ -692,6 +693,21 @@ public class PdfboxMaker {
         if (targetBox != null && currentBox != null) {
             scale = Math.min(targetBox.getWidth() / currentBox.getWidth(),
                     targetBox.getHeight() / currentBox.getHeight());
+        }
+        return scale;
+    }
+
+    /**
+     * 计算图元到目标盒子的缩放比例
+     * 
+     * @param targetBox 目标盒子
+     * @param graphicUnit 图元
+     * @return 缩放比例
+     */
+    private double scaling(ST_Box targetBox, @SuppressWarnings("rawtypes") CT_GraphicUnit graphicUnit) {
+        double scale = 1D;
+        if ("PageBlock".equalsIgnoreCase(graphicUnit.getParent().getName())) {
+            scale = scaling(targetBox, graphicUnit.getBoundary());
         }
         return scale;
     }
@@ -793,7 +809,7 @@ public class PdfboxMaker {
     }
 
     private void writeText(ResourceManage resMgt, PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, TextObject textObject, PDColor fillColor, int alpha) throws IOException {
-        double scale = scaling(sealBox, textObject.getBoundary());
+        double scale = scaling(sealBox, textObject);
         float fontSize = Double.valueOf(textObject.getSize() * scale).floatValue();
         if (sealBox != null && textObject.getBoundary() != null) {
             textObject.setBoundary(textObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),

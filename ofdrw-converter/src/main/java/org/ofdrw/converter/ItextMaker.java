@@ -45,6 +45,7 @@ import org.ofdrw.core.graph.pathObj.CT_Path;
 import org.ofdrw.core.graph.pathObj.FillColor;
 import org.ofdrw.core.graph.pathObj.Rule;
 import org.ofdrw.core.graph.pathObj.StrokeColor;
+import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.clips.Area;
 import org.ofdrw.core.pageDescription.clips.CT_Clip;
 import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
@@ -430,7 +431,7 @@ public class ItextMaker {
             pdfCanvas.setExtGState(gs0);
         }
 
-        double scale = scaling(sealBox, pathObject.getBoundary());
+        double scale = scaling(sealBox, pathObject);
         CT_DrawParam ctDrawParam = resMgt.superDrawParam(pathObject);
         if (ctDrawParam != null) {
             // 使用绘制参数补充缺省的颜色
@@ -538,7 +539,7 @@ public class ItextMaker {
         if (pathObject.getBoundary() == null) {
             return;
         }
-        double scale = scaling(sealBox, pathObject.getBoundary());
+        double scale = scaling(sealBox, pathObject);
         if (sealBox != null) {
             pathObject.setBoundary(pathObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
                     pathObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
@@ -613,21 +614,35 @@ public class ItextMaker {
 
 	}
 
-	/**
-	 * 计算当前盒子到目标盒子的缩放比例
-	 * 
-	 * @param targetBox
-	 * @param currentBox
-	 * @return 缩放比例
-	 */
-	private double scaling(ST_Box targetBox, ST_Box currentBox) {
-		double scale = 1.0;
-		if (targetBox != null && currentBox != null) {
-			scale = Math.min(targetBox.getWidth() / currentBox.getWidth(),
-					targetBox.getHeight() / currentBox.getHeight());
-		}
-		return scale;
-	}
+    /**
+     * 计算当前盒子到目标盒子的缩放比例
+     * 
+     * @param targetBox
+     * @param currentBox
+     * @return 缩放比例
+     */
+    private double scaling(ST_Box targetBox, ST_Box currentBox) {
+        double scale = 1.0;
+        if (targetBox != null && currentBox != null) {
+            scale = Math.min(targetBox.getWidth() / currentBox.getWidth(), targetBox.getHeight() / currentBox.getHeight());
+        }
+        return scale;
+    }
+
+    /**
+     * 计算图元到目标盒子的缩放比例
+     * 
+     * @param targetBox 目标盒子
+     * @param graphicUnit 图元
+     * @return 缩放比例
+     */
+    private double scaling(ST_Box targetBox, @SuppressWarnings("rawtypes") CT_GraphicUnit graphicUnit) {
+        double scale = 1D;
+        if ("PageBlock".equalsIgnoreCase(graphicUnit.getParent().getName())) {
+            scale = scaling(targetBox, graphicUnit.getBoundary());
+        }
+        return scale;
+    }
 
     /**
      * 判断两个box的位置和大小是否相同
@@ -728,7 +743,7 @@ public class ItextMaker {
     }
 
     private void writeText(ResourceManage resMgt, PdfCanvas pdfCanvas, ST_Box box, ST_Box sealBox, ST_Box annotBox, TextObject textObject, Color fillColor, int alpha, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
-    	double scale = scaling(sealBox, textObject.getBoundary());
+        double scale = scaling(sealBox, textObject);
     	float fontSize = Double.valueOf(textObject.getSize() * scale).floatValue();
         pdfCanvas.setFillColor(fillColor);
         if (textObject.getFillColor() != null) {
