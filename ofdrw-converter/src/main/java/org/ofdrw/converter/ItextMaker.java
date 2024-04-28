@@ -421,6 +421,15 @@ public class ItextMaker {
                            ST_Box compositeObjectBoundary,
                            ST_Array compositeObjectCTM) {
         pdfCanvas.saveState();
+
+        // 处理透明度
+        Integer alpha = pathObject.getAlpha();
+        if (alpha != null) {
+            PdfExtGState gs0 = new PdfExtGState();
+            gs0.setFillOpacity(alpha / 255f);
+            pdfCanvas.setExtGState(gs0);
+        }
+
         double scale = scaling(sealBox, pathObject.getBoundary());
         CT_DrawParam ctDrawParam = resMgt.superDrawParam(pathObject);
         if (ctDrawParam != null) {
