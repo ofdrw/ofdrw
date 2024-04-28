@@ -281,6 +281,7 @@ public class PdfboxMaker {
                 // text
                 PDColor fillColor = defaultFillColor;
                 TextObject textObject = (TextObject) block;
+                resMgt.superDrawParam(textObject);
                 int alpha = 255;
                 if (textObject.getFillColor() != null) {
                     if (textObject.getFillColor().getValue() != null) {
@@ -792,7 +793,7 @@ public class PdfboxMaker {
         return fontSize;
     }
 
-    private void writeText(ResourceManage resMgt, PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, TextObject textObject, PDColor fillColor, int alpha) throws IOException {
+    private void writeText(ResourceManage resMgt, PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, TextObject textObject, PDColor defaultFontColor, int alpha) throws IOException {
         double scale = scaling(sealBox, textObject.getBoundary());
         float fontSize = Double.valueOf(textObject.getSize() * scale).floatValue();
         if (sealBox != null && textObject.getBoundary() != null) {
@@ -814,6 +815,17 @@ public class PdfboxMaker {
                 fontSize = (float) (fontSize * sx);
             }
         }
+
+        PDColor fillColor = defaultFontColor;
+        CT_DrawParam ctDrawParam = resMgt.superDrawParam(textObject);
+        if (ctDrawParam != null) {
+            // 使用绘制参数补充缺省的颜色
+            if (textObject.getFillColor() == null
+                    && ctDrawParam.getFillColor() != null) {
+                fillColor = convertPDColor(ctDrawParam.getFillColor().getValue());
+            }
+        }
+
 
         // 加载字体
         CT_Font ctFont = resMgt.getFont(textObject.getFont().toString());
