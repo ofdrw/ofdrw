@@ -113,4 +113,19 @@ class PDFExporterPDFBoxTest {
         System.out.println(">> " + pdfOut.toAbsolutePath());
     }
 
+
+
+    /**
+     * 测试Path对象的填充透明度的问题
+     */
+    @Test
+    void testPathFillOpacity() throws IOException {
+        Path ofdIn = Paths.get("src/test/resources/testPathFillOpacity.ofd");
+        Path pdfOut = Paths.get("target/testPathFillOpacity.pdf");
+        try (OFDExporter exporter = new PDFExporterIText(ofdIn, pdfOut)) {
+            exporter.export();
+        }
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
+
 }

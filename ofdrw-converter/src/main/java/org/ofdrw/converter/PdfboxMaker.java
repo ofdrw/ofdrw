@@ -685,8 +685,8 @@ public class PdfboxMaker {
     /**
      * 计算当前盒子到目标盒子的缩放比例
      * 
-     * @param targetBox
-     * @param currentBox
+     * @param targetBox 目标区域大小
+     * @param currentBox 当前区域大小
      * @return 缩放比例
      */
     private double scaling(ST_Box targetBox, ST_Box currentBox) {
@@ -707,7 +707,8 @@ public class PdfboxMaker {
      */
     private double scaling(ST_Box targetBox, @SuppressWarnings("rawtypes") CT_GraphicUnit graphicUnit) {
         double scale = 1D;
-        if ("PageBlock".equalsIgnoreCase(graphicUnit.getParent().getName())) {
+        PageBlockType instance = PageBlockType.getInstance(graphicUnit);
+        if (instance != null) {
             scale = scaling(targetBox, graphicUnit.getBoundary());
         }
         return scale;
@@ -716,8 +717,8 @@ public class PdfboxMaker {
     /**
      * 判断两个box的位置和大小是否相同
      * 
-     * @param box1
-     * @param box2
+     * @param box1 A
+     * @param box2 B
      * @return true: 相同；false: 不同
      */
     private boolean isSameBox(ST_Box box1, ST_Box box2) {
