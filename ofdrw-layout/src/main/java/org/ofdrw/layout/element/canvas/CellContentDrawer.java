@@ -86,6 +86,12 @@ public class CellContentDrawer implements Drawer {
      * 是否加粗
      */
     private Boolean bold = false;
+    
+    /**
+     * 获取字体宽度
+     * @return String 字体宽度，应遵循 CSS3标准，可选值为 normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
+     */
+    private String fontWeight = "normal";
 
     /**
      * 是否斜体
@@ -298,6 +304,8 @@ public class CellContentDrawer implements Drawer {
         }
         if (bold) {
             fontStr += "bold ";
+        }else if(fontWeight != null && !fontWeight.isEmpty()){
+            fontStr += fontWeight + " ";
         }
         ctx.font = fontStr + STBase.fmt(fontSize) + "mm " + fontName;
         if (this.letterSpacing != 0) {
@@ -789,6 +797,22 @@ public class CellContentDrawer implements Drawer {
      */
     public boolean getDeleteLine() {
         return this.deleteLine;
+    }
+    
+    /**
+     * 获取字体宽度
+     * @return 字体宽度，应遵循 CSS3标准，可选值为 normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
+     */
+    public String getFontWeight() {
+        return fontWeight;
+    }
+    
+    /**
+     * 设置字体宽度
+     * @param fontWeight 字体宽度，应遵循 CSS3标准，可选值为 normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
+     */
+    public void setFontWeight(String fontWeight) {
+        this.fontWeight = fontWeight;
     }
 
     /**
