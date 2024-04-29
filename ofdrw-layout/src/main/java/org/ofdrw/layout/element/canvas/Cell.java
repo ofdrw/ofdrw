@@ -416,9 +416,9 @@ public class Cell extends Canvas {
 
     /**
      * 设置字体宽度
-     * <p>
      *
      * @param fontWeight 宽度，应遵循 CSS3标准: normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
+     * @return this
      */
     public Cell setFontWeight(String fontWeight) {
         this.cellDrawer.setFontWeight(fontWeight);

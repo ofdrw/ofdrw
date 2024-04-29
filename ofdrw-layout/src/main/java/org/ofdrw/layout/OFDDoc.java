@@ -511,14 +511,14 @@ public class OFDDoc implements Closeable {
     
     
     /**
-     * <pre>
      * 给整个文档增加水印.
      * 本方法会遍历整个文档，将水印添加到每个页面中。
      * 按照OFD标准 GB/T 33190-2016 15.2 分页注释文件 的设计水印应该以一种特殊的注释类型写入。
      * 如果要添加图片类型的水印，请使用 {@link Annotation}, 参考：{@link #addAnnotation(int, Annotation)}
      * 如果要为指定页码添加水印，请使用 {@link #addAnnotation(int, Annotation)}
-     * </pre>
      * @param watermark 水印信息
+     * @throws IOException 文件操作异常
+     * @return this
      */
     public OFDDoc addWatermark(Watermark watermark) throws IOException {
         if (watermark == null) {

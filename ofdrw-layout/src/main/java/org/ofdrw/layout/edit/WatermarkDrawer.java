@@ -196,6 +196,8 @@ public class WatermarkDrawer implements Drawer {
 
     /**
      * 水印文字内容
+     *
+     * @return 水印文字内容
      */
     public String getValue() {
         return value;
@@ -230,6 +232,8 @@ public class WatermarkDrawer implements Drawer {
 
     /**
      * 获取字体名称
+     *
+     * @return 字体名称
      */
     public String getFontName() {
         return fontName;
@@ -246,6 +250,8 @@ public class WatermarkDrawer implements Drawer {
 
     /**
      * 获取字号
+     *
+     * @return 字号，单位 mm
      */
     public double getFontSize() {
         return fontSize;
@@ -262,6 +268,8 @@ public class WatermarkDrawer implements Drawer {
 
     /**
      * 是否加粗
+     *
+     * @return 是否加粗
      */
     public Boolean getBold() {
         return bold;
@@ -278,6 +286,8 @@ public class WatermarkDrawer implements Drawer {
 
     /**
      * 获取字体宽度
+     *
+     * @return 字体宽度，如：normal、bold、bolder、lighter、100、200、300、400、500、600、700、800、900
      */
     public String getFontWeight() {
         return fontWeight;
@@ -294,6 +304,8 @@ public class WatermarkDrawer implements Drawer {
 
     /**
      * 是否斜体
+     *
+     * @return 是否斜体
      */
     public Boolean getItalic() {
         return italic;
@@ -309,6 +321,8 @@ public class WatermarkDrawer implements Drawer {
 
     /**
      * 获取文字之间的间距
+     *
+     * @return 文字之间的间距，单位mm
      */
     public Double getLetterSpacing() {
         return letterSpacing;
@@ -317,7 +331,7 @@ public class WatermarkDrawer implements Drawer {
     /**
      * 设置文字之间的间距
      *
-     * @param letterSpacing 文字之间的间距
+     * @param letterSpacing 文字之间的间距，单位mm
      */
     public void setLetterSpacing(Double letterSpacing) {
         this.letterSpacing = letterSpacing;
@@ -325,6 +339,8 @@ public class WatermarkDrawer implements Drawer {
 
     /**
      * 获取透明度
+     *
+     * @return 透明度，0.0~1.0
      */
     public Double getGlobalAlpha() {
         return globalAlpha;
@@ -344,6 +360,8 @@ public class WatermarkDrawer implements Drawer {
 
     /**
      * 获取旋转角度
+     *
+     * @return 旋转角度，0-360, 默认330（-30）
      */
     public Double getAngle() {
         return angle;
@@ -403,6 +421,8 @@ public class WatermarkDrawer implements Drawer {
 
     /**
      * 是否调试
+     *
+     * @return 是否调试 true - 调试模式绘制边框 false - 非调试模式
      */
     public boolean isDEBUG() {
         return DEBUG;
@@ -410,6 +430,8 @@ public class WatermarkDrawer implements Drawer {
 
     /**
      * 设置调试状态
+     *
+     * @param DEBUG 是否调试 true - 调试模式绘制边框 false - 非调试模式
      */
     public void setDEBUG(boolean DEBUG) {
         this.DEBUG = DEBUG;
@@ -417,6 +439,8 @@ public class WatermarkDrawer implements Drawer {
 
     /**
      * 水印注释信息
+     *
+     * @return 水印注释对象，{@link Annotation} 的实现实例
      */
     public Annotation getAnnotation() {
         return annotation;
@@ -457,6 +481,9 @@ public class WatermarkDrawer implements Drawer {
      * 绘制辅助线
      *
      * @param ctx 绘制上下文
+     * @param metrics 文字度量
+     * @param offsetX 横向偏移，单位mm
+     * @param offsetY 纵向偏移，单位mm
      */
     private void debugBorder(DrawContext ctx, TextMetrics metrics, double offsetX, double offsetY) {
         double lineWidth = 0.353d;

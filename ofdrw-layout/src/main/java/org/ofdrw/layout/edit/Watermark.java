@@ -77,7 +77,7 @@ public class Watermark extends Annotation {
     /**
      * 获取水印文字颜色
      *
-     * @return 颜色
+     * @return 颜色 CSS3样式的颜色值，可选值 颜色英文单词,例如red,blue、16进制颜色值，#000000、rgb(0,0,0)、rgba(0,0,0,1)
      */
     public String getColor() {
         return drawer.getColor();
@@ -157,7 +157,7 @@ public class Watermark extends Annotation {
     /**
      * 字体宽度，遵循 CSS3标准，可选值为 normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
      *
-     * @return 字体宽度
+     * @return 字体宽度，可选值为 normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
      */
     public String getFontWeight() {
         return drawer.getFontWeight();
@@ -167,6 +167,7 @@ public class Watermark extends Annotation {
      * 字体宽度
      *
      * @param fontWeight 字体宽度，应遵循 CSS3标准，可选值为 normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
+     * @return this
      */
     public Watermark setFontWeight(String fontWeight) {
         drawer.setFontWeight(fontWeight);
@@ -196,7 +197,7 @@ public class Watermark extends Annotation {
     /**
      * 获取文字字间距
      *
-     * @return 文字字间距
+     * @return 文字字间距，单位mm
      */
     public Double getLetterSpacing() {
         return drawer.getLetterSpacing();
@@ -205,7 +206,7 @@ public class Watermark extends Annotation {
     /**
      * 设置文字字间距
      *
-     * @param letterSpacing 文字字间距
+     * @param letterSpacing 文字字间距，单位mm
      * @return this
      */
     public Watermark setLetterSpacing(Double letterSpacing) {
@@ -215,6 +216,8 @@ public class Watermark extends Annotation {
 
     /**
      * 水印透明度，可取值 0.0~1.0，默认 0.5
+     *
+     * @return 水印透明度，可取值 0.0~1.0，默认 0.5
      */
     public Double getGlobalAlpha() {
         return drawer.getGlobalAlpha();
@@ -222,7 +225,9 @@ public class Watermark extends Annotation {
 
     /**
      * 设置水印透明度，可取值 0.0~1.0，默认 0.5
+     *
      * @param globalAlpha 水印透明度，可取值 0.0~1.0，默认 0.5
+     * @return this
      */
     public Watermark setGlobalAlpha(Double globalAlpha) {
         drawer.setGlobalAlpha(globalAlpha);
@@ -231,6 +236,8 @@ public class Watermark extends Annotation {
 
     /**
      * 旋转角度
+     *
+     * @return 旋转角度，0-360, 默认330(对应数学弧度30度)
      */
     public Double getAngle() {
         return drawer.getAngle();
@@ -279,6 +286,7 @@ public class Watermark extends Annotation {
 
     /***
      * 获取水印纵向间距，单位mm
+     *
      * @return 水印纵向间距，单位mm
      */
     public Double getIntervalY() {
@@ -287,6 +295,7 @@ public class Watermark extends Annotation {
 
     /***
      * 水印纵向间距
+     *
      * @param intervalY 水印纵向间距，单位mm
      * @return this
      */
@@ -311,6 +320,8 @@ public class Watermark extends Annotation {
 
     /**
      * 开启调试
+     *
+     * @return this
      */
     public Watermark debug() {
         drawer.setDEBUG(true);
