@@ -18,6 +18,7 @@ import org.ofdrw.layout.edit.Annotation;
 import org.ofdrw.layout.edit.AnnotationRender;
 import org.ofdrw.layout.edit.Attachment;
 import org.ofdrw.layout.element.Div;
+import org.ofdrw.layout.edit.Watermark;
 import org.ofdrw.layout.engine.*;
 import org.ofdrw.layout.engine.render.RenderException;
 import org.ofdrw.layout.exception.DocReadException;
@@ -152,6 +153,11 @@ public class OFDDoc implements Closeable {
      * 页面解析前处理器
      */
     private VPageHandler onPageHandler = null;
+    
+    /**
+     * 文档水印
+     */
+    private Watermark defaultWatermark = null;
 
 
     /**
@@ -500,6 +506,36 @@ public class OFDDoc implements Closeable {
         cleanOldAttachment(rl, attachments, attachment.getName());
         // 加入附件记录
         attachments.addAttachment(ctAttachment);
+        return this;
+    }
+    
+    
+    /**
+     * <pre>
+     * 给整个文档增加水印.
+     * 本方法会遍历整个文档，将水印添加到每个页面中。
+     * 按照OFD标准 GB/T 33190-2016 15.2 分页注释文件 的设计水印应该以一种特殊的注释类型写入。
+     * 如果要添加图片类型的水印，请使用 {@link Annotation}, 参考：{@link #addAnnotation(int, Annotation)}
+     * 如果要为指定页码添加水印，请使用 {@link #addAnnotation(int, Annotation)}
+     * </pre>
+     * @param watermark 水印信息
+     */
+    public OFDDoc addWatermark(Watermark watermark) throws IOException {
+        if (watermark == null) {
+            return this;
+        }
+        
+        if (reader == null) {
+            throw new RuntimeException("仅在修改模式下允许获取追加注释对象，请使用reader构造");
+        }
+        
+        int pageNums = this.reader.getNumberOfPages();
+        if(pageNums == 0){
+            return this;
+        }
+        for(int i = 1; i <= pageNums; i++) {
+            addAnnotation(i, watermark);
+        }
         return this;
     }
 

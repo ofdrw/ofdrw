@@ -404,4 +404,23 @@ public class Cell extends Canvas {
     public double getImgHeight() {
         return this.cellDrawer.getImgHeight();
     }
+    
+    /**
+     * 获取字体宽度
+     * @return String 字体宽度，应遵循 CSS3标准，可选值为 normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
+     */
+    public String getFontWeight() {
+        return this.cellDrawer.getFontWeight();
+    }
+    
+    /**
+     * 设置字体宽度
+     * <p>
+     * 应遵循 CSS3标准：
+     * font-weight: normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
+     */
+    public Cell setFontWeight(String fontWeight) {
+        this.cellDrawer.setFontWeight(fontWeight);
+        return this;
+    }
 }
