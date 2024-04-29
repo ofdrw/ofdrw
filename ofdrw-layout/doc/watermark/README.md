@@ -46,7 +46,7 @@ public class Main{
 
 效果如下：
 
-![水印效果.png](自定义水印.png)
+![水印效果.png](水印.png)
 
 
 示例代码详见： [WatermarkTest.java](../../src/test/java/org/ofdrw/layout/cases/watermark/WatermarkTest.java)
