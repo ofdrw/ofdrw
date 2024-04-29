@@ -47,7 +47,7 @@ Maven项目引入依赖
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>2.2.12</version>
+  <version>2.2.13</version>
 </dependency>
 ```
 
@@ -81,7 +81,6 @@ public class HelloWorld {
 - [文档布局示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/LayoutTest.java)
 - [Canvas示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/element/canvas/DrawContextTest.java)
 - [文字抽取示例](./ofdrw-reader/src/test/java/org/ofdrw/reader/ContentExtractorTest.java)
-- [水印示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/cases/watermark/WatermarkTest.java)
 - [段落布局示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/ParagraphLayoutDemo.java)
 - [文档编辑示例](./ofdrw-layout/src/test/java/org/ofdrw/layout/DocEditDemos.java)
 - [数字签名清理示例](./ofdrw-sign/src/test/java/org/ofdrw/sign/SignCleanerTest.java)
@@ -99,6 +98,7 @@ public class HelloWorld {
 - [OFD R&W 单元格元素 使用指南](./ofdrw-layout/doc/cell/README.md)
 - [OFD R&W 内容生成 事件处理](./ofdrw-layout/doc/onpage/README.md)
 - [OFD R&W 附件操作](./ofdrw-layout/doc/attachment/README.md)
+- [OFD R&W 添加水印](./ofdrw-layout/doc/watermark/README.md)
 
 ### 相关解决方案
 

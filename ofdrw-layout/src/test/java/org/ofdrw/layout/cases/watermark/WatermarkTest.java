@@ -5,6 +5,7 @@ import org.ofdrw.core.annotation.pageannot.AnnotType;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.layout.OFDDoc;
 import org.ofdrw.layout.edit.Annotation;
+import org.ofdrw.layout.edit.Watermark;
 import org.ofdrw.reader.OFDReader;
 
 import java.io.IOException;
@@ -15,9 +16,32 @@ import java.nio.file.Paths;
  * 水印测试用例
  *
  * @author minghu.zhang
- * @since 11:36 2020/10/16
+ * @since 2020/10/16 11:36
  **/
 public class WatermarkTest {
+
+    /**
+     * 通过绘制绘制对象添加水印
+     */
+    @Test
+    void draw() throws IOException {
+        Path srcP = Paths.get("src/test/resources/1-1.ofd");
+        Path outP = Paths.get("target/watermark-1.ofd");
+
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+
+            Watermark watermark = new Watermark(ofdDoc.getPageLayout())
+                    .setValue("测试水印")
+                    .setFontName("宋体")
+                    .setColor("#FF0000")
+                    .setFontWeight("900")
+                    .setAngle(330d)
+                    .setFontSize(5d);
+            ofdDoc.addWatermark(watermark);
+        }
+        System.out.println(">> 生成文档位置：" + outP.toAbsolutePath());
+    }
 
     /**
      * 水印处理

@@ -19,7 +19,7 @@ OFDRW已经有Canvas元素了为什么要实现`Graphics2D`接口？
 <dependency>
     <groupId>org.ofdrw</groupId>
     <artifactId>ofdrw-graphics2d</artifactId>
-    <version>2.2.12</version>
+    <version>2.2.13</version>
 </dependency>
 ```
 
