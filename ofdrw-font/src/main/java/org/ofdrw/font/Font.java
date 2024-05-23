@@ -215,8 +215,10 @@ public class Font {
      * 是否可嵌入OFD文件包。 如果设置为false,则字体文件仅在生成OFD文档的过程中被引用，不会包包含到OFD文件内。
      * 默认值为true。
      * @param embeddable true-嵌入，false-不嵌入
+     * @return this
      */
-    public void setEmbeddable(boolean embeddable) {
+    public Font setEmbeddable(boolean embeddable) {
         this.embeddable = embeddable;
+        return this;
     }
 }
