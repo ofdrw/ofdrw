@@ -209,7 +209,7 @@ public class ResManager {
                 .setFontName(font.getName())
                 .setFamilyName(familyName);
         Path fontFile = font.getFontFile();
-        if (fontFile != null) {
+        if (fontFile != null && font.isEmbeddable()) {
             // 将字体文件加入到文档容器中
             fontFile = docDir.addResourceWithPath(fontFile);
 
