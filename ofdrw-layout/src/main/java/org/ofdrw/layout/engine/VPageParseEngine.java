@@ -13,8 +13,6 @@ import org.ofdrw.layout.PageLayout;
 import org.ofdrw.layout.VirtualPage;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.element.*;
-import org.ofdrw.layout.element.AreaHolderBlock;
-import org.ofdrw.layout.element.canvas.Canvas;
 import org.ofdrw.layout.engine.render.*;
 import org.ofdrw.layout.handler.VPageHandler;
 import org.ofdrw.pkg.container.DocDir;
@@ -22,8 +20,10 @@ import org.ofdrw.pkg.container.PageDir;
 import org.ofdrw.pkg.container.PagesDir;
 
 import java.io.FileNotFoundException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -62,6 +62,29 @@ public class VPageParseEngine {
      * 公共资源管理器
      */
     private ResManager resManager;
+
+    /**
+     * 注册的OFDRW元素处理器
+     */
+    private static Map<String, Processor> registeredProcessor = new HashMap<>();
+
+    static {
+        // 注册处理器
+        register("Div", new ImgRender());
+        register("Paragraph", new ParagraphRender());
+        register("Canvas", new CanvasRender());
+    }
+
+    /**
+     * 注册处理器
+     *
+     * @param elementType 处理的元素类型，详见 {@link Div#elementType()}
+     * @param processor   处理器
+     */
+    public static void register(String elementType, Processor processor) {
+        registeredProcessor.put(elementType, processor);
+    }
+
 
     /**
      * 页面解析前处理器
@@ -230,26 +253,29 @@ public class VPageParseEngine {
         // 处理页面中的元素为OFD的图元
         for (Div elem : content) {
             // 忽略占位符和对象
-            if (elem instanceof PageAreaFiller
-                    || elem.isPlaceholder()) {
+            if ((elem instanceof PageAreaFiller) || elem.isPlaceholder()) {
                 continue;
             }
             // 处理每一个元素的基础盒式模型属性，背景边框等，并加入到图层中
             DivRender.render(to, elem, maxUnitID);
-
-            if (elem instanceof Img) {
-                // 渲染图片对象
-                ImgRender.render(to, resManager, (Img) elem, maxUnitID);
-            } else if (elem instanceof Paragraph) {
-                // 渲染段落对象
-                ParagraphRender.render(to, resManager, (Paragraph) elem, maxUnitID);
-            } else if (elem instanceof Canvas) {
-                // 渲染Canvas
-                CanvasRender.render(to, resManager, (Canvas) elem, maxUnitID);
-            } else if (elem instanceof AreaHolderBlock) {
-                // 渲染区域占位符 不进行任何绘制
-                AreaHolderBlockRender.render(this.docDir, pageLoc, to, (AreaHolderBlock) elem, maxUnitID);
+            // 获取处理器
+            Processor processor = registeredProcessor.get(elem.elementType());
+            if (processor != null) {
+                processor.render(to, resManager, elem, maxUnitID);
             }
+//            if (elem instanceof Img) {
+//                // 渲染图片对象
+//                ImgRender.render(to, resManager, (Img) elem, maxUnitID);
+//            } else if (elem instanceof Paragraph) {
+//                // 渲染段落对象
+//                ParagraphRender.render(to, resManager, (Paragraph) elem, maxUnitID);
+//            } else if (elem instanceof Canvas) {
+//                // 渲染Canvas
+//                CanvasRender.render(to, resManager, (Canvas) elem, maxUnitID);
+//            } else if (elem instanceof AreaHolderBlock) {
+//                // 渲染区域占位符 不进行任何绘制
+//                AreaHolderBlockRender.render(this.docDir, pageLoc, to, (AreaHolderBlock) elem, maxUnitID);
+//            }
         }
     }
 

@@ -133,4 +133,16 @@ public class Canvas extends Div<Canvas> {
     public void setPreferBlock(CT_PageBlock preferBlock) {
         this.preferBlock = preferBlock;
     }
+
+    /**
+     * 获取元素类型
+     * <p>
+     * 关联绘制器：{@link org.ofdrw.layout.engine.render.CanvasRender}
+     *
+     * @return Canvas
+     */
+    @Override
+    public String elementType() {
+        return "Canvas";
+    }
 }

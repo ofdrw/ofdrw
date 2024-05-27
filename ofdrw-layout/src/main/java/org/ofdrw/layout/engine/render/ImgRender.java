@@ -4,6 +4,7 @@ import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.Img;
 import org.ofdrw.layout.engine.ResManager;
 
@@ -20,7 +21,21 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author 权观宇
  * @since 2020-03-22 13:17:52
  */
-public class ImgRender {
+public class ImgRender implements Processor {
+    /**
+     * 执行图片渲染
+     *
+     * @param layer      图片将要放置的图层
+     * @param resManager 资源管理器
+     * @param e          图片对象
+     * @param maxUnitID  最大元素ID提供器
+     */
+    @Override
+    public void render(CT_PageBlock layer, ResManager resManager, Div e, AtomicInteger maxUnitID) {
+        if (e instanceof Img) {
+            render(layer, resManager, (Img) e, maxUnitID);
+        }
+    }
 
     /**
      * 渲染图片对象

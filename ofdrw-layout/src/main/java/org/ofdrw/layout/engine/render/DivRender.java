@@ -10,6 +10,7 @@ import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.engine.GraphHelper;
+import org.ofdrw.layout.engine.ResManager;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -21,7 +22,21 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author 权观宇
  * @since 2020-03-21 14:18:40
  */
-public class DivRender {
+public class DivRender implements Processor{
+
+    /**
+     * 执行Div元素渲染
+     *
+     * @param layer     图层
+     * @param resManager 资源管理器
+     * @param e         元素
+     * @param maxUnitID 最大ID
+     */
+    @Override
+    public void render(CT_PageBlock layer, ResManager resManager, Div e, AtomicInteger maxUnitID) {
+        render(layer, e, maxUnitID);
+    }
+
     /**
      * 渲染Div元素到指定图层
      *
@@ -290,4 +305,6 @@ public class DivRender {
         }
         return true;
     }
+
+
 }

@@ -201,4 +201,16 @@ public class Img extends Div<Img> {
     public Div[] split(double sHeight) {
         throw new RuntimeException("图片对象不支持分割操作");
     }
+
+    /**
+     * 元素类型
+     * <p>
+     * 关联绘制器：{@link org.ofdrw.layout.engine.render.ImgRender}
+     *
+     * @return Img
+     */
+    @Override
+    public String elementType() {
+        return "Img";
+    }
 }

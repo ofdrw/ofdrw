@@ -2,6 +2,7 @@ package org.ofdrw.layout.engine.render;
 
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.canvas.Canvas;
 import org.ofdrw.layout.element.canvas.DrawContext;
 import org.ofdrw.layout.element.canvas.Drawer;
@@ -18,7 +19,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author 权观宇
  * @since 2020-05-01 17:44:41
  */
-public class CanvasRender {
+public class CanvasRender implements Processor {
+
 
     /**
      * 执行Canvas 渲染器
@@ -62,6 +64,21 @@ public class CanvasRender {
             drawer.draw(ctx);
         } catch (IOException e) {
             throw new RenderException("Canvas绘制过程中发生异常", e);
+        }
+    }
+
+    /**
+     * 渲染Canvas对象
+     *
+     * @param layer      图片将要放置的图层
+     * @param resManager 资源管理器
+     * @param e          Canvas对象
+     * @param maxUnitID  最大元素ID提供器
+     */
+    @Override
+    public void render(CT_PageBlock layer, ResManager resManager, Div e, AtomicInteger maxUnitID) {
+        if (e instanceof Canvas) {
+            render(layer, resManager, (Canvas) e, maxUnitID);
         }
     }
 }

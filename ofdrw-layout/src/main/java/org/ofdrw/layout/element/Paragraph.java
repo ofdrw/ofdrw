@@ -571,7 +571,7 @@ public class Paragraph extends Div<Paragraph> {
             lines.add(line);
         }
         // 合并所有行的高度
-        double  height = 0;
+        double height = 0;
         for (TxtLineBlock txtLineBlock : lines) {
             height += txtLineBlock.getHeight();
         }
@@ -678,5 +678,17 @@ public class Paragraph extends Div<Paragraph> {
         p.lines = new LinkedList<>();
         p.contents = new LinkedList<>();
         return p;
+    }
+
+    /**
+     * 元素类型
+     * <p>
+     * 关联渲染器：{@link org.ofdrw.layout.engine.render.ParagraphRender}
+     *
+     * @return Paragraph
+     */
+    @Override
+    public String elementType() {
+        return "Paragraph";
     }
 }

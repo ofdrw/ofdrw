@@ -10,10 +10,7 @@ import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.core.text.text.Weight;
-import org.ofdrw.layout.element.Paragraph;
-import org.ofdrw.layout.element.PlaceholderSpan;
-import org.ofdrw.layout.element.Span;
-import org.ofdrw.layout.element.TxtLineBlock;
+import org.ofdrw.layout.element.*;
 import org.ofdrw.layout.engine.ResManager;
 
 import java.io.IOException;
@@ -28,7 +25,21 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author 权观宇
  * @since 2020-03-24 04:31:37
  */
-public class ParagraphRender {
+public class ParagraphRender  implements Processor{
+    /**
+     * 执行段落渲染
+     *
+     * @param layer      图片将要放置的图层
+     * @param resManager 资源管理器
+     * @param e          段落对象
+     * @param maxUnitID  最大元素ID提供器
+     */
+    @Override
+    public void render(CT_PageBlock layer, ResManager resManager, Div e, AtomicInteger maxUnitID) {
+        if (e instanceof Paragraph) {
+            render(layer, resManager, (Paragraph) e, maxUnitID);
+        }
+    }
 
     /**
      * 将段落渲染到图层上

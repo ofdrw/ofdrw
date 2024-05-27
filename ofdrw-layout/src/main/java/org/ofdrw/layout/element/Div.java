@@ -1073,6 +1073,19 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
         return new Div[]{div1, div2};
     }
 
+    /**
+     * 获取元素类型名称
+     * <p>
+     * 用于标识元素类型，选择合适的处理器，自定义元素请重写该方法
+     * <p>
+     * 关联绘制器：{@link org.ofdrw.layout.engine.render.DivRender}
+     *
+     * @return 元素类型名称
+     */
+    public String elementType() {
+        return "Div";
+    }
+
 
     @Override
     public String toString() {
