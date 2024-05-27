@@ -746,6 +746,27 @@ class OFDDocTest {
             Font font = new Font("simsun-cut1", "simsun-cut1", fontFile);
             ofdDoc.getResManager().addFont(font);
 
+            Paragraph p = new Paragraph("追加非嵌入字体文字内容", 8d, font);
+            ofdDoc.add(p);
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath());
+    }
+
+    /**
+     * 测试添加外部字体，不嵌入OFD
+     */
+    @Test
+    public void testAddNoEmbedFont() throws IOException{
+        Path srcP = Paths.get("src/test/resources", "AddWatermarkAnnot.ofd");
+        Path outP = Paths.get("target/AddWatermarkAnnot-no-embed-font.ofd");
+        Path fontFile = Paths.get("src/test/resources", "simhei-cut1.ttf");
+
+        try (OFDReader reader = new OFDReader(srcP);
+             OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
+            Font font = new Font("simsun-cut1", "simsun-cut1", fontFile)
+                    .setEmbeddable(false);
+            ofdDoc.getResManager().addFont(font);
+
             Paragraph p = new Paragraph("国庆节普天同庆", 8d, font);
             ofdDoc.add(p);
         }
