@@ -491,7 +491,12 @@ public abstract class AWTMaker {
                     try {
                         // 通过字符编码获取字形
                         GlyphData glyphData = typeFont.getUnicodeGlyph(c);
-                        tbDrawChars.add(glyphData.getPath());
+                        if (glyphData != null) {
+                            tbDrawChars.add(glyphData.getPath());
+                        }else{
+                            // 找不到字形
+                            tbDrawChars.add(null);
+                        }
                     } catch (Exception e) {
                         tbDrawChars.add(null);
                         logger.debug(String.format("找不到字形 unicode: %c", c));

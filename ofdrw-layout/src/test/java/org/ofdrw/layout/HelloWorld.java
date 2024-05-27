@@ -3,8 +3,9 @@ package org.ofdrw.layout;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.layout.element.Paragraph;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -17,7 +18,6 @@ public class HelloWorld {
     @Test
     void testPath() throws IOException {
         Path path = Paths.get("target/helloworld.ofd").toAbsolutePath();
-        System.out.println(path.toString());
         try (OFDDoc ofdDoc = new OFDDoc(path)) {
             Paragraph p = new Paragraph("你好呀，OFD Reader&Writer！");
             ofdDoc.add(p);
@@ -28,8 +28,8 @@ public class HelloWorld {
     @Test
     void testOutputStream() throws IOException {
         Path path = Paths.get("target/helloworld.ofd").toAbsolutePath();
-        System.out.println(path.toString());
-        try (OFDDoc ofdDoc = new OFDDoc(new FileOutputStream(path.toAbsolutePath().toString()))) {
+        try (OutputStream fout = Files.newOutputStream(path);
+             OFDDoc ofdDoc = new OFDDoc(fout)) {
             Paragraph p = new Paragraph("你好呀，OFD Reader&Writer！");
             ofdDoc.add(p);
         }
