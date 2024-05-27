@@ -746,7 +746,7 @@ class OFDDocTest {
             Font font = new Font("simsun-cut1", "simsun-cut1", fontFile);
             ofdDoc.getResManager().addFont(font);
 
-            Paragraph p = new Paragraph("追加非嵌入字体文字内容", 8d, font);
+            Paragraph p = new Paragraph("国庆节普天同庆", 8d, font);
             ofdDoc.add(p);
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath());
@@ -767,7 +767,7 @@ class OFDDocTest {
                     .setEmbeddable(false);
             ofdDoc.getResManager().addFont(font);
 
-            Paragraph p = new Paragraph("国庆节普天同庆", 8d, font);
+            Paragraph p = new Paragraph("追加非嵌入字体文字内容", 8d, font);
             ofdDoc.add(p);
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath());
