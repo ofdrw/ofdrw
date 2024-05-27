@@ -60,3 +60,8 @@ class Main {
 ```
 
 完整示例代码见：[OFDDocTest.java #onRenderFinished](../../src/test/java/org/ofdrw/layout/OFDDocTest.java)
+
+
+## 元素事件
+
+TODO: 元素渲染完成事件处理

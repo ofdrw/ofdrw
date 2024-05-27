@@ -8,12 +8,14 @@ import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
+import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.layout.PageLayout;
 import org.ofdrw.layout.VirtualPage;
 import org.ofdrw.layout.edit.AdditionVPage;
 import org.ofdrw.layout.element.*;
 import org.ofdrw.layout.engine.render.*;
+import org.ofdrw.layout.handler.ElementRenderFinishHandler;
 import org.ofdrw.layout.handler.VPageHandler;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.PageDir;
@@ -70,7 +72,8 @@ public class VPageParseEngine {
 
     static {
         // 注册处理器
-        register("Div", new ImgRender());
+        // Div 不需要注册，任何元素都继承自Div，首先都会调用DivRender绘制，保证Div的内容在最下方。
+        register("Img", new ImgRender());
         register("Paragraph", new ParagraphRender());
         register("Canvas", new CanvasRender());
     }
@@ -257,12 +260,32 @@ public class VPageParseEngine {
                 continue;
             }
             // 处理每一个元素的基础盒式模型属性，背景边框等，并加入到图层中
+            int divObjStart = this.maxUnitID.get();
             DivRender.render(to, elem, maxUnitID);
-            // 获取处理器
+            int divObjEnd = this.maxUnitID.get();
+            // 获取处理器，进行元素的渲染，扩展元素渲染器时，需要注册处理器
             Processor processor = registeredProcessor.get(elem.elementType());
             if (processor != null) {
                 processor.render(to, resManager, elem, maxUnitID);
             }
+
+            int contentObjEnd = this.maxUnitID.get();
+            // 调用元素渲染结束处理器，处理元素绘制完成后的逻辑
+            ElementRenderFinishHandler onRenderFinish = elem.getOnRenderFinish();
+            if (onRenderFinish != null) {
+                // 计算出Div对象绘制产生的OFD元素ID序列
+                ST_ID[] divObjIds = new ST_ID[divObjEnd - divObjStart];
+                for (int i = 0; i < divObjIds.length; i++) {
+                    divObjIds[i] = new ST_ID(divObjStart + i);
+                }
+                // 计算出内容对象绘制产生的OFD元素ID序列
+                ST_ID[] contentObjIds = new ST_ID[contentObjEnd - divObjEnd];
+                for (int i = 0; i < contentObjIds.length; i++) {
+                    contentObjIds[i] = new ST_ID(divObjEnd + i);
+                }
+                onRenderFinish.handle(pageLoc, contentObjIds, divObjIds);
+            }
+
 //            if (elem instanceof Img) {
 //                // 渲染图片对象
 //                ImgRender.render(to, resManager, (Img) elem, maxUnitID);

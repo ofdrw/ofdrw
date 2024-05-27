@@ -6,6 +6,7 @@ import org.ofdrw.layout.Rectangle;
 import org.ofdrw.layout.RenderPrepare;
 import org.ofdrw.layout.element.canvas.NamedColor;
 import org.ofdrw.layout.engine.ElementSplit;
+import org.ofdrw.layout.handler.ElementRenderFinishHandler;
 
 import java.util.Arrays;
 
@@ -151,6 +152,12 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
      * 图层，默认为Body
      */
     private Type layer = Type.Body;
+
+    /**
+     * 渲染完成后的处理器
+     * 在该回调中可以获取到生成OFD元素在容器中的位置，以及过程中生成的所有OFD元素。
+     */
+    private ElementRenderFinishHandler renderFinishHandler = null;
 
     public Div() {
     }
@@ -1086,6 +1093,25 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
         return "Div";
     }
 
+    /**
+     * 获取渲染完成回调事件
+     *
+     * @return 处理器
+     */
+    public ElementRenderFinishHandler getOnRenderFinish() {
+        return renderFinishHandler;
+    }
+
+    /**
+     * 设置渲染完成回调事件
+     * <p>
+     * 在该处理器中你可以得到元素在OFD容器的中文件位置和对象ID
+     *
+     * @param renderFinishHandler 处理器
+     */
+    public void onRenderFinish(ElementRenderFinishHandler renderFinishHandler) {
+        this.renderFinishHandler = renderFinishHandler;
+    }
 
     @Override
     public String toString() {
