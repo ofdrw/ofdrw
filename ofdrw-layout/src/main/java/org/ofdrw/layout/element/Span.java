@@ -54,6 +54,15 @@ public class Span implements TextFontInfo {
      * 默认不含下划线
      */
     private boolean underline = false;
+    /**
+     * 下划线与文字的偏移量
+     */
+    private double underlineOffset = 1.2d;
+    /**
+     * 下划线宽度，0表示保持默认，默认为字体大小的0.05倍
+     */
+    private double underlineWidth = 0d;
+
 
     /**
      * 是否填充
@@ -196,10 +205,30 @@ public class Span implements TextFontInfo {
         return underline;
     }
 
+    /**
+     * 设置 下划线
+     * @param underline 是否启用下划线
+     * @return this
+     */
     public Span setUnderline(boolean underline) {
         this.underline = underline;
         return this;
     }
+
+    /**
+     * 设置下划线
+     * @param underline 是否启用下划线
+     * @param offset 下划线与文字的偏移量，可以为负值，默认值为1.2，单位毫米。
+     * @param width 下划线线宽，默认为0，为0时默认为字体大小的0.05倍。
+     * @return this
+     */
+    public Span setUnderline(boolean underline, double offset, double width) {
+        this.underline = underline;
+        this.underlineOffset = offset;
+        this.underlineWidth = width;
+        return this;
+    }
+
 
     public Boolean isFill() {
         return fill;
@@ -362,6 +391,22 @@ public class Span implements TextFontInfo {
         return res;
     }
 
+    /**
+     * 获取下划线与文字的偏移量
+     * @return 下划线与文字的偏移量，单位毫米
+     */
+    public double getUnderlineOffset() {
+        return underlineOffset;
+    }
+
+    /**
+     * 获取下划线宽度
+     * @return 下划线宽度,0表示保持默认，默认为字体大小的0.05倍，单位毫米
+     */
+    public double getUnderlineWidth() {
+        return underlineWidth;
+    }
+
     @Override
     public Span clone() {
         Span span = new Span();
@@ -371,6 +416,8 @@ public class Span implements TextFontInfo {
         span.bold = bold;
         span.italic = italic;
         span.underline = underline;
+        span.underlineOffset = underlineOffset;
+        span.underlineWidth = underlineWidth;
         span.fill = fill;
         span.text = text;
         span.integrity = integrity;

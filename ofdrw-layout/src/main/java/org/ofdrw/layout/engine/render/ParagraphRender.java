@@ -1,6 +1,5 @@
 package org.ofdrw.layout.engine.render;
 
-import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
@@ -25,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author 权观宇
  * @since 2020-03-24 04:31:37
  */
-public class ParagraphRender  implements Processor{
+public class ParagraphRender implements Processor {
     /**
      * 执行段落渲染
      *
@@ -168,7 +167,13 @@ public class ParagraphRender  implements Processor{
                 if (s.isUnderline()) {
                     ST_ID underlineId = new ST_ID(maxUnitID.incrementAndGet());
                     // 构造下划线
-                    PathObject underline = drawUnderline(underlineId, boundary, offset);
+                    double underlineOffset = offset + s.getUnderlineOffset();
+                    double underlineWidth = s.getUnderlineWidth();
+                    if (underlineWidth == 0) {
+                        // 0.05 比例系数为经验值
+                        underlineWidth = s.getFontSize() * 0.05;
+                    }
+                    PathObject underline = drawUnderline(underlineId, boundary, color, underlineOffset, underlineWidth);
                     if (e.getOpacity() != null) {
                         // 图元透明度
                         underline.setAlpha((int) (e.getOpacity() * 255));
@@ -190,15 +195,19 @@ public class ParagraphRender  implements Processor{
      *
      * @param id       下划线ID
      * @param boundary 绘制下划线的区域
+     * @param color   下划线颜色 [R, G, B]
      * @param offset   在绘制区域内Y的偏移量
+     * @param width    下划线线宽
      * @return 路径对象
      */
-    private static PathObject drawUnderline(ST_ID id, ST_Box boundary, double offset) {
+    private static PathObject drawUnderline(ST_ID id, ST_Box boundary, int[] color, double offset, double width) {
         PathObject res = new PathObject(id);
-        offset += 1.2d;
+        if (color != null && color.length >= 3) {
+            res.setStrokeColor(CT_Color.rgb(color));
+        }
         res.setBoundary(boundary)
                 .setAbbreviatedData(new AbbreviatedData().M(0, offset).lineTo(boundary.getWidth(), offset))
-                .setLineWidth(0.353);
+                .setLineWidth(width);
         return res;
     }
 }

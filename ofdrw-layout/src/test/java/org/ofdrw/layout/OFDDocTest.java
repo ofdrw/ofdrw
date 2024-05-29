@@ -494,7 +494,13 @@ class OFDDocTest {
                     .setBold(true)
                     .setFontSize(15d);
 
-            p.add(sp1).add(sp2).add(sp3);
+            Span sp4 = new Span("你好你好")
+                    .setColor(0, 0, 255)
+                    .setBold(true)
+                    .setFontSize(8d)
+                    .setUnderline(true, -2.5, 1d);
+
+            p.add(sp1).add(sp2).add(sp3).add(sp4);
             ofdDoc.add(p);
 
         }
