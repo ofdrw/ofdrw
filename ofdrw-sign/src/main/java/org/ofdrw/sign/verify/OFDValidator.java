@@ -103,6 +103,9 @@ public class OFDValidator implements Closeable {
             rl.cd(signsListLoc.parent());
             // 获取签名记录列表
             List<org.ofdrw.core.signatures.Signature> signatures = sigList.getSignatures();
+            if (signatures == null || signatures.size() == 0) {
+                throw new DocNotSignException("文件未进行电子签名");
+            }
             for (org.ofdrw.core.signatures.Signature sigRecord : signatures) {
                 // 获取签章类型
                 SigType type = sigRecord.getType();
