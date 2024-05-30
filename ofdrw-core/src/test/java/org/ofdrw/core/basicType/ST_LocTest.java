@@ -54,4 +54,34 @@ class ST_LocTest {
         part2 = new ST_Loc("Content.xml");
         assertEquals("/Content.xml", part1.cat(part2).toString());
     }
+
+    @Test
+    void parts() {
+
+        ST_Loc loc = new ST_Loc("Doc_9/Pages/Page_0/Content.xml");
+        String[] parts = loc.parts();
+        assertArrayEquals(new String[]{"Doc_9", "Pages", "Page_0", "Content.xml"}, parts);
+
+        loc = new ST_Loc("Content.xml");
+        parts = loc.parts();
+        assertArrayEquals(new String[]{"Content.xml"}, parts);
+
+        loc = new ST_Loc("Doc_9/");
+        parts = loc.parts();
+        assertArrayEquals(new String[]{"Doc_9"}, parts);
+
+
+        loc = new ST_Loc("/Doc_0/Pages/Page_0/Content.xml");
+        parts = loc.parts();
+        assertArrayEquals(new String[]{"Doc_0", "Pages", "Page_0", "Content.xml"}, parts);
+
+
+        loc = new ST_Loc("/Doc_0//Pages/   /Page_0/Content.xml//");
+        parts = loc.parts();
+        assertArrayEquals(new String[]{"Doc_0", "Pages", "Page_0", "Content.xml"}, parts);
+
+        loc = new ST_Loc("/// ///      //////   /////");
+        parts = loc.parts();
+        assertArrayEquals(new String[]{}, parts);
+    }
 }

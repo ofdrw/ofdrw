@@ -233,6 +233,10 @@ class VirtualContainerTest {
         Element res = vc.getObj(loc);
         Assertions.assertNotNull(res);
 
+        loc = new ST_Loc("/Doc_0//Pages//Page_0/Content.xml");
+        res = vc.getObj(loc);
+        Assertions.assertNotNull(res);
+
         loc = new ST_Loc("Doc_0/Pages/Page_0/Content.xml");
         res = vc.getObj(loc);
         Assertions.assertNotNull(res);

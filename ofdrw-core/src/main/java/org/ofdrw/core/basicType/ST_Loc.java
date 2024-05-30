@@ -3,6 +3,8 @@ package org.ofdrw.core.basicType;
 
 import org.dom4j.Element;
 
+import java.util.ArrayList;
+
 /**
  * 包结构内文件的路径，“.”表示当前路径，“..”表示符路径
  * <p>
@@ -70,11 +72,37 @@ public class ST_Loc extends STBase {
 
     /**
      * 路径分割
+     * <p>
+     * 通过该方法获取的路径中可能含有 "" 空字符串，
+     * 如果需要获取路径的各个部分，请使用 {@link #parts()}
      *
      * @return 各个子路径
      */
     public String[] split() {
+        if (loc == null) {
+            return new String[0];
+        }
         return this.loc.split("/");
+    }
+
+    /**
+     * 获取路径的各个部分
+     *
+     * @return 路径的各个部分
+     */
+    public String[] parts() {
+        if (loc == null) {
+            return new String[0];
+        }
+        String[] split = this.loc.split("/");
+        // 移除split中为空的元素
+        ArrayList<String> paths = new ArrayList<>();
+        for (String s : split) {
+            if (s != null && s.trim().length() > 0) {
+                paths.add(s);
+            }
+        }
+        return paths.toArray(new String[0]);
     }
 
     /**
@@ -179,6 +207,7 @@ public class ST_Loc extends STBase {
 
     /**
      * 是否为空或空串
+     *
      * @return true - 空；false - 非空
      */
     public boolean isEmpty() {

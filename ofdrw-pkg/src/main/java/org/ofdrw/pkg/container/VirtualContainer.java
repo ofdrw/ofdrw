@@ -255,10 +255,10 @@ public class VirtualContainer implements Closeable {
         if (loc == null || loc.isEmpty()) {
             return null;
         }
-        String[] dst = loc.split();
+        String[] dst = loc.parts();
         // 判断是否是跟元素并且具有相同的前缀
         if (loc.isRootPath()) {
-            String[] current = getAbsLoc().split();
+            String[] current = getAbsLoc().parts();
             // 检查 dst 是否包含全部 current每个元素
             for (int i = 0; i < current.length; i++) {
                 if (current[i].equals(dst[i]) == false) {
@@ -339,12 +339,12 @@ public class VirtualContainer implements Closeable {
         if (loc.isEmpty()) {
             return getContainerPath();
         }
-        String[] dst = loc.split();
+        String[] dst = loc.parts();
         boolean isRoot = loc.isRootPath();
 
         // 若是根路径，则判断是否具有相同前缀，然后转换为相对路径
         if (isRoot) {
-            String[] current = getAbsLoc().split();
+            String[] current = getAbsLoc().parts();
             // 检查 dst 是否包含全部 current每个元素
             for (int i = 0; i < current.length; i++) {
                 if (current[i].equals(dst[i]) == false) {
