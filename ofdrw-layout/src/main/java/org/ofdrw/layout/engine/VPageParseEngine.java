@@ -22,10 +22,7 @@ import org.ofdrw.pkg.container.PageDir;
 import org.ofdrw.pkg.container.PagesDir;
 
 import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -260,45 +257,32 @@ public class VPageParseEngine {
                 continue;
             }
             // 处理每一个元素的基础盒式模型属性，背景边框等，并加入到图层中
-            int divObjStart = this.maxUnitID.get();
+            int objStart = this.maxUnitID.get();
             DivRender.render(to, elem, maxUnitID);
-            int divObjEnd = this.maxUnitID.get();
             // 获取处理器，进行元素的渲染，扩展元素渲染器时，需要注册处理器
             Processor processor = registeredProcessor.get(elem.elementType());
             if (processor != null) {
                 processor.render(to, resManager, elem, maxUnitID);
             }
-
-            int contentObjEnd = this.maxUnitID.get();
+            int objEnd = this.maxUnitID.get();
             // 调用元素渲染结束处理器，处理元素绘制完成后的逻辑
             ElementRenderFinishHandler onRenderFinish = elem.getOnRenderFinish();
             if (onRenderFinish != null) {
-                // 计算出Div对象绘制产生的OFD元素ID序列
-                ST_ID[] divObjIds = new ST_ID[divObjEnd - divObjStart];
-                for (int i = 0; i < divObjIds.length; i++) {
-                    divObjIds[i] = new ST_ID(divObjStart + i);
-                }
-                // 计算出内容对象绘制产生的OFD元素ID序列
-                ST_ID[] contentObjIds = new ST_ID[contentObjEnd - divObjEnd];
-                for (int i = 0; i < contentObjIds.length; i++) {
-                    contentObjIds[i] = new ST_ID(divObjEnd + i);
-                }
-                onRenderFinish.handle(pageLoc, contentObjIds, divObjIds);
-            }
+                ArrayList<ST_ID> objIds = new ArrayList<>(objEnd - objStart);
+                ArrayList<ST_ID> resIds = new ArrayList<>();
+                ArrayList<ST_ID> newResIds = resManager.getNewResIds();
 
-//            if (elem instanceof Img) {
-//                // 渲染图片对象
-//                ImgRender.render(to, resManager, (Img) elem, maxUnitID);
-//            } else if (elem instanceof Paragraph) {
-//                // 渲染段落对象
-//                ParagraphRender.render(to, resManager, (Paragraph) elem, maxUnitID);
-//            } else if (elem instanceof Canvas) {
-//                // 渲染Canvas
-//                CanvasRender.render(to, resManager, (Canvas) elem, maxUnitID);
-//            } else if (elem instanceof AreaHolderBlock) {
-//                // 渲染区域占位符 不进行任何绘制
-//                AreaHolderBlockRender.render(this.docDir, pageLoc, to, (AreaHolderBlock) elem, maxUnitID);
-//            }
+                // 获取所有新的元素ID，判断是否是资源对象，若是资源对象则加入资源列表
+                for (int id = objEnd; id > objStart; id--) {
+                    ST_ID objId = new ST_ID(id);
+                    if (newResIds.contains(objId)) {
+                        resIds.add(objId);
+                    }else{
+                        objIds.add(objId);
+                    }
+                }
+                onRenderFinish.handle(pageLoc, objIds, resIds);
+            }
         }
     }
 
