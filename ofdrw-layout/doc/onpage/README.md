@@ -31,8 +31,7 @@ class Main {
     }
 }
 ```
-
-完整示例代码见：[OFDDocTest.java #setOnPage](../../src/test/java/org/ofdrw/layout/OFDDocTest.java)
+完整示例代码见：[VPageHandlerTest.java #handle](../../src/test/java/org/ofdrw/layout/handler/VPageHandlerTest.java)
 
 ## 渲染完成事件
 
@@ -58,10 +57,41 @@ class Main {
     }
 }
 ```
-
-完整示例代码见：[OFDDocTest.java #onRenderFinished](../../src/test/java/org/ofdrw/layout/OFDDocTest.java)
+完整示例代码见：[RenderFinishHandlerTest.java #handle](../../src/test/java/org/ofdrw/layout/handler/RenderFinishHandlerTest.java)
 
 
 ## 元素事件
 
-TODO: 元素渲染完成事件处理
+OFDRW支持当OFDRW元素（如Div或Canvas）在转换为OFD对象时触发事件。
+
+OFDDoc在关闭时将会把所有虚拟页面中的OFDRW元素转换为OFD对象，这个过程中会触发元素渲染完成事件。
+
+您可以在该事件中获取到过程中生成的OFD元素对象ID以及产生资源ID，并支持使用虚拟容器向OFD容器中添加文件等操作。
+
+要是实现元素事件处理，你需要为您的OFDRW提供`OnRenderFinish`事件的回调函数，步骤如下：
+
+1. 创建一个OFD元素，例如`Div`、`Paragraph`、`Canvas`等。
+2. 为该元素设置`OnRenderFinish`事件处理器，事件处理器需要实现`org.ofdrw.layout.handler.ElementRenderFinishHandler`接口。
+3. 把元素添加到虚拟页面或文档中。
+4. 关闭文档。
+
+```java
+class Main {
+    public static void main(String[] args) {
+        // path ...
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            // 1. 创建一个OFD元素
+            Paragraph p = new Paragraph("你好呀，OFD Reader&Writer！", 8d);
+            // 2. 为该元素设置OnRenderFinish事件处理器
+            p.setOnRenderFinish((loc, contentObjId, resObjIds) -> {
+                // 保存
+            });
+            // 3. 把元素添加到虚拟页面或文档中
+            ofdDoc.add(p);
+            // 4. 关闭文档 try-with-resources 会自动调用close方法
+        }
+    }
+}
+```
+
+完整示例代码见：[ElementRenderFinishHandlerTest.java #handle](../../src/test/java/org/ofdrw/layout/handler/ElementRenderFinishHandlerTest.java)

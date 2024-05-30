@@ -924,6 +924,7 @@ public class Div<T extends Div> implements RenderPrepare, ElementSplit {
         div.setIntegrity(integrity);
         div.setPlaceholder(placeholder);
         div.setLayer(layer);
+        div.onRenderFinish(renderFinishHandler);
         return div;
 
     }
