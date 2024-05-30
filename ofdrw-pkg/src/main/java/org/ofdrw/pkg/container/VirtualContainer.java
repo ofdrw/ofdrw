@@ -706,6 +706,48 @@ public class VirtualContainer implements Closeable {
         return absRes;
     }
 
+    /**
+     * 向虚拟容器中加入文件
+     *
+     * @param fileName 文件名称
+     * @param in      输入流，流的关闭应由调用者负责
+     * @throws IOException 文件复制异常
+     */
+    public void putFile(String fileName, InputStream in) throws IOException {
+        Path target = Paths.get(fullPath, fileName);
+        byte[] buffer = new byte[4096];
+        int n = 0;
+        try (OutputStream out = Files.newOutputStream(
+                target,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING)) {
+            while ((n = in.read(buffer)) != -1) {
+                out.write(buffer, 0, n);
+            }
+        }
+    }
+
+    /**
+     * 向虚拟容器中加入文件
+     * @param fileName 文件名称
+     * @param data    数据内容
+     * @throws IOException 文件写入异常
+     */
+    public void putFile(String fileName, byte[] data) throws IOException {
+        if (data == null || data.length == 0) {
+            data = new byte[0];
+        }
+        Path target = Paths.get(fullPath, fileName);
+        try (OutputStream out = Files.newOutputStream(
+                target,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING)) {
+            out.write(data);
+        }
+    }
+
+
+
     @Override
     public void close() throws IOException {
         // 删除工作过程中存放于虚拟容器中的文件和目录
