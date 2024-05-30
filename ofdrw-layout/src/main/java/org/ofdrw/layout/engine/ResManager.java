@@ -22,6 +22,7 @@ import org.ofdrw.pkg.container.OFDDir;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -99,6 +100,11 @@ public class ResManager {
      * 公共资源
      */
     private Res publicRes;
+
+    /**
+     * 新增资源对象ID
+     */
+    public ArrayList<ST_ID> newResIds = new ArrayList<>();
 
     /**
      * 绘制参数Hash
@@ -444,6 +450,8 @@ public class ResManager {
             // 文档中不存在该资源则资源ID，并缓存
             objId = new ST_ID(maxUnitID.incrementAndGet());
             resObj.setObjID(objId);
+            // 记录资源ID
+            newResIds.add(objId);
             this.resObjHash.put(key, objId);
         }
 
@@ -601,5 +609,14 @@ public class ResManager {
             absLoc = docDir.getAbsLoc().cat(base);
         }
         return absLoc.cat(target);
+    }
+
+    /**
+     * 获取新加入的资源ID
+     *
+     * @return 新加入的资源ID
+     */
+    public ArrayList<ST_ID> getNewResIds() {
+        return newResIds;
     }
 }
