@@ -7,11 +7,15 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.doc.Document;
+import org.ofdrw.core.basicStructure.ofd.OFD;
+import org.ofdrw.core.basicStructure.pageObj.Page;
+import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.pkg.tool.ElemCup;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -128,8 +132,9 @@ class VirtualContainerTest {
 
     /**
      * 测试文件在读取后没有改动，是否会影响文档中文件
-     * @throws IOException no happen
-     * @throws DocumentException  no happen
+     *
+     * @throws IOException       no happen
+     * @throws DocumentException no happen
      */
     @Test
     void testReadFileNoChange() throws IOException, DocumentException {
@@ -150,5 +155,114 @@ class VirtualContainerTest {
 
         Assertions.assertTrue(Arrays.equals(before, after));
 
+    }
+
+    @Test
+    void testGetFile() throws IOException {
+        FileUtils.deleteDirectory(new File("target/vc_get/"));
+        Files.createDirectories(Paths.get("target/vc_get/aaa/bc/fff"));
+        Files.createDirectories(Paths.get("target/vc_get/aaabc"));
+//        Files.createDirectories(Paths.get("target/aaabc"));
+        Files.createFile(Paths.get("target/vc_get/aaabc/1.txt"));
+        Files.createFile(Paths.get("target/vc_get/aaa/bc/2.txt"));
+        Files.createFile(Paths.get("target/vc_get/aaa/bc/fff/3.txt"));
+         /*
+        loc: /aaabc
+        current: /aaa
+        有如下路径
+        /aaabc
+        /aaa/bc
+         */
+        VirtualContainer vc = new VirtualContainer(Paths.get("target/vc_get/"));
+        ST_Loc loc = new ST_Loc("/aaabc/1.txt");
+        Path res = vc.getFile(loc);
+        Assertions.assertNotNull(res);
+
+        loc = new ST_Loc("aaa/bc/2.txt");
+        res = vc.getFile(loc);
+        Assertions.assertNotNull(res);
+
+        loc = new ST_Loc("");
+        res = vc.getFile(loc);
+        Assertions.assertNotNull(res);
+
+        VirtualContainer aaa = vc.getContainer("aaa", VirtualContainer::new);
+        loc = new ST_Loc("bc/2.txt");
+        res = aaa.getFile(loc);
+        Assertions.assertNotNull(res);
+
+        VirtualContainer bc = aaa.getContainer("bc", VirtualContainer::new);
+        loc = new ST_Loc("/aaa/bc/fff/3.txt");
+        res = bc.getFile(loc);
+        Assertions.assertNotNull(res);
+
+        loc = new ST_Loc("fff/3.txt");
+        res = bc.getFile(loc);
+        Assertions.assertNotNull(res);
+
+        loc = new ST_Loc("/aaa/bc");
+        res = bc.getFile(loc);
+        Assertions.assertNotNull(res);
+
+        loc = new ST_Loc("/aaa/bc/");
+        res = bc.getFile(loc);
+        Assertions.assertNotNull(res);
+
+    }
+
+    @Test
+    void testGetObj()throws Exception {
+        FileUtils.deleteDirectory(new File("target/vc_get_obj/"));
+        Files.createDirectories(Paths.get("target/vc_get_obj/Doc_0/Pages/Page_0/"));
+        Files.createDirectories(Paths.get("target/vc_get_obj/Doc_0/PagesPage_0/"));
+        Files.createDirectories(Paths.get("target/vc_get_obj/Doc_0/Pages/Page_1/"));
+
+        Page page1 = new Page();
+        page1.setArea(new CT_PageArea(10, 10, 10,10));
+        Page page2= new Page();
+        page2.setArea(new CT_PageArea(20, 20, 20,20));
+
+        ElemCup.dump(page1, Paths.get("target/vc_get_obj/Doc_0/Pages/Page_0/Content.xml"));
+        ElemCup.dump(page2, Paths.get("target/vc_get_obj/Doc_0/Pages/Page_1/Content.xml"));
+        OFD doc = new OFD();
+        ElemCup.dump(doc, Paths.get("target/vc_get_obj/Doc_0/PagesPage_0/Content.xml"));
+
+
+        VirtualContainer vc = new VirtualContainer(Paths.get("target/vc_get_obj/"));
+        ST_Loc loc = new ST_Loc("/Doc_0/Pages/Page_0/Content.xml");
+        Element res = vc.getObj(loc);
+        Assertions.assertNotNull(res);
+
+        loc = new ST_Loc("Doc_0/Pages/Page_0/Content.xml");
+        res = vc.getObj(loc);
+        Assertions.assertNotNull(res);
+
+
+        loc = new ST_Loc("/Doc_0/PagesPage_0/Content.xml");
+        res = vc.getObj(loc);
+        Assertions.assertEquals("ofd:OFD", res.getQualifiedName());
+
+        VirtualContainer doc_0 = vc.getContainer("Doc_0", VirtualContainer::new);
+        VirtualContainer pages = doc_0.getContainer("Pages", VirtualContainer::new);
+
+        loc = new ST_Loc("/Doc_0/Pages/Page_0/Content.xml");
+        res = pages.getObj(loc);
+        Assertions.assertEquals("ofd:Page", res.getQualifiedName());
+
+        loc = new ST_Loc("Page_0/Content.xml");
+        res = pages.getObj(loc);
+        Assertions.assertEquals("ofd:Page", res.getQualifiedName());
+
+        loc = new ST_Loc("/Doc_0/PagesPage_0/Content.xml");
+        res = pages.getObj(loc);
+        Assertions.assertNull(res);
+
+        loc = new ST_Loc("PagesPage_0/Content.xml");
+        res = pages.getObj(loc);
+        Assertions.assertNull(res);
+
+        loc = new ST_Loc("Page_1");
+        res = pages.getObj(loc);
+        Assertions.assertNull(res);
     }
 }

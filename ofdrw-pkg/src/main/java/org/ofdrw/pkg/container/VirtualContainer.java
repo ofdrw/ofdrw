@@ -237,6 +237,141 @@ public class VirtualContainer implements Closeable {
     }
 
     /**
+     * 通过路径获取元素
+     * <p>
+     * 例如：
+     * <p>
+     * 当前 /Doc_0/Pages，获取 /Doc_0/Pages/Page_0/Content.xml -> Page Element
+     * <p>
+     * 当前 /Doc_0/Tpl -> 获取 /Doc_0/Pages/Page_0/Content.xml -> null
+     * <p>
+     * 当前 /Doc_0/Pages -> 获取 Page_0/Content.xml -> Page Element
+     *
+     * @param loc 元素所在路径，支持相对路径，若是绝对路径且不在当前容器中，那么返回null
+     * @return 元素对象，不存在返回null
+     * @throws DocumentException 元素序列化异常
+     */
+    public Element getObj(ST_Loc loc) throws DocumentException {
+        if (loc == null || loc.isEmpty()) {
+            return null;
+        }
+        String[] dst = loc.split();
+        // 判断是否是跟元素并且具有相同的前缀
+        if (loc.isRootPath()) {
+            String[] current = getAbsLoc().split();
+            // 检查 dst 是否包含全部 current每个元素
+            for (int i = 0; i < current.length; i++) {
+                if (current[i].equals(dst[i]) == false) {
+                    // 处于不同前缀中
+                    return null;
+                }
+            }
+            // 转换为相对路径
+            String[] relative = new String[dst.length - current.length];
+            for (int i = current.length; i < dst.length; i++) {
+                relative[i - current.length] = dst[i];
+            }
+            dst = relative;
+        }
+        // 通过相对路径获取元素
+        return getObj(dst);
+    }
+
+    /**
+     * 通过路径获取元素
+     *
+     * @param relativeDst 相对路径，["a","b", "content.xml"]
+     * @return 元素对象，若文件路径不存在则返回null
+     * @throws DocumentException 文件解析异常
+     */
+    private Element getObj(String[] relativeDst) throws DocumentException {
+        if (relativeDst == null || relativeDst.length == 0) {
+            return null;
+        }
+        if (relativeDst.length == 1) {
+            // 只有一个元素且为空无法找到
+            if (relativeDst[0].isEmpty()) {
+                return null;
+            }
+            // 只有一个元素，则从缓存中获取
+            try {
+                return getObj(relativeDst[0]);
+            } catch (FileNotFoundException e) {
+                // 找不到文件
+                return null;
+            }
+        }
+
+        try {
+            VirtualContainer child = getContainer(relativeDst[0], VirtualContainer::new);
+            // 移除子元素
+            String[] sub = Arrays.copyOfRange(relativeDst, 1, relativeDst.length);
+            // 递归获取
+            return child.getObj(sub);
+        } catch (FileNotFoundException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 通过路径获取文件
+     * <p>
+     * 注意在文档尚未关闭之前，获取的元素对象是缓存的，此时若获取文件将会出现 FileNotFoundException。
+     * <p>
+     * 获取获取时若使用绝对路径，与当前目录没有相同的前缀则返回null。
+     * <p>
+     * 例如：
+     * <p>
+     * 当前 /Doc_0/Pages，获取 /Doc_0/Pages/Page_0/Content.xml -> Content.xml
+     * <p>
+     * 当前 /Doc_0/Pages，获取 /Doc_0/Pages/Page_0/Content.xml -> null
+     * <p>
+     * 当前 /Doc_0/Pages，获取 Page_0/Content.xml -> Content.xml
+     *
+     * @param loc 文件路径，可以是相对路径，也可以是绝对路径。
+     * @return 文件路径 或 文件不存在返回null。
+     */
+    public Path getFile(ST_Loc loc) {
+        if (loc == null) {
+            return null;
+        }
+        // 空表示获取但前容器路径
+        if (loc.isEmpty()) {
+            return getContainerPath();
+        }
+        String[] dst = loc.split();
+        boolean isRoot = loc.isRootPath();
+
+        // 若是根路径，则判断是否具有相同前缀，然后转换为相对路径
+        if (isRoot) {
+            String[] current = getAbsLoc().split();
+            // 检查 dst 是否包含全部 current每个元素
+            for (int i = 0; i < current.length; i++) {
+                if (current[i].equals(dst[i]) == false) {
+                    // 处于不同前缀中
+                    return null;
+                }
+            }
+            // 转换为相对路径
+            String[] relative = new String[dst.length - current.length];
+            for (int i = current.length; i < dst.length; i++) {
+                relative[i - current.length] = dst[i];
+            }
+            dst = relative;
+        }
+        // 相对路径为空表示获取当前容器路径
+        if (dst.length == 0) {
+            return getContainerPath();
+        }
+        // 在相同目录中则组装
+        Path res = Paths.get(fullPath, dst);
+        if (Files.notExists(res)) {
+            return null;
+        }
+        return res;
+    }
+
+    /**
      * 通过文件名获取元素对象
      *
      * @param fileName 文件名
