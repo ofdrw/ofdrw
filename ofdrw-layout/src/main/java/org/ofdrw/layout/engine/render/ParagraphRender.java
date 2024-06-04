@@ -127,10 +127,13 @@ public class ParagraphRender implements Processor {
                         .setFont(id.ref())
                         // 设置字体大小
                         .setSize(s.getFontSize());
-                // 判断字体是否加粗
-                if (s.isBold()) {
+                // 设置字体粗细
+                if (s.getWeight() != null) {
+                    txtObj.setWeight(s.getWeight());
+                } else if (s.isBold()) {
                     txtObj.setWeight(Weight.W_800);
                 }
+
                 // 是否是斜体
                 if (s.isItalic()) {
                     txtObj.setItalic(true);
@@ -195,7 +198,7 @@ public class ParagraphRender implements Processor {
      *
      * @param id       下划线ID
      * @param boundary 绘制下划线的区域
-     * @param color   下划线颜色 [R, G, B]
+     * @param color    下划线颜色 [R, G, B]
      * @param offset   在绘制区域内Y的偏移量
      * @param width    下划线线宽
      * @return 路径对象

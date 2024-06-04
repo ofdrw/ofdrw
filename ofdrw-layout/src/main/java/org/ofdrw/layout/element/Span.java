@@ -1,5 +1,6 @@
 package org.ofdrw.layout.element;
 
+import org.ofdrw.core.text.text.Weight;
 import org.ofdrw.font.Font;
 import org.ofdrw.layout.Rectangle;
 
@@ -38,8 +39,17 @@ public class Span implements TextFontInfo {
      * 是否加粗
      * <p>
      * 默认不加粗 false
+     * <p>
+     * 加粗等价于 {@link #setWeight(Weight)} 为 {@link Weight#W_800}
      */
     private boolean bold = false;
+
+    /**
+     * 文字粗细
+     * <p>
+     * 默认 {@link Weight#W_400}
+     */
+    private Weight weight = null;
 
     /**
      * 是否斜体
@@ -187,8 +197,36 @@ public class Span implements TextFontInfo {
         return bold;
     }
 
+    /**
+     * 设置是否加粗
+     * <p>
+     * 若需要更加细致的控制，可以使用 {@link #setWeight(Weight)}
+     *
+     * @param bold 是否加粗
+     * @return this
+     */
     public Span setBold(boolean bold) {
         this.bold = bold;
+        return this;
+    }
+
+    /**
+     * 获取字体粗细
+     *
+     * @return 字体粗细，可能为null。
+     */
+    public Weight getWeight() {
+        return weight;
+    }
+
+    /**
+     * 设置字体粗细
+     *
+     * @param weight 字体粗细
+     * @return this
+     */
+    public Span setWeight(Weight weight) {
+        this.weight = weight;
         return this;
     }
 
@@ -207,6 +245,7 @@ public class Span implements TextFontInfo {
 
     /**
      * 设置 下划线
+     *
      * @param underline 是否启用下划线
      * @return this
      */
@@ -217,9 +256,10 @@ public class Span implements TextFontInfo {
 
     /**
      * 设置下划线
+     *
      * @param underline 是否启用下划线
-     * @param offset 下划线与文字的偏移量，可以为负值，默认值为1.2，单位毫米。
-     * @param width 下划线线宽，默认为0，为0时默认为字体大小的0.05倍。
+     * @param offset    下划线与文字的偏移量，可以为负值，默认值为1.2，单位毫米。
+     * @param width     下划线线宽，默认为0，为0时默认为字体大小的0.05倍。
      * @return this
      */
     public Span setUnderline(boolean underline, double offset, double width) {
@@ -393,6 +433,7 @@ public class Span implements TextFontInfo {
 
     /**
      * 获取下划线与文字的偏移量
+     *
      * @return 下划线与文字的偏移量，单位毫米
      */
     public double getUnderlineOffset() {
@@ -401,7 +442,8 @@ public class Span implements TextFontInfo {
 
     /**
      * 获取下划线宽度
-     * @return 下划线宽度,0表示保持默认，默认为字体大小的0.05倍，单位毫米
+     *
+     * @return 下划线宽度, 0表示保持默认，默认为字体大小的0.05倍，单位毫米
      */
     public double getUnderlineWidth() {
         return underlineWidth;
@@ -414,6 +456,7 @@ public class Span implements TextFontInfo {
         span.fontSize = fontSize;
         span.letterSpacing = letterSpacing;
         span.bold = bold;
+        span.weight = weight;
         span.italic = italic;
         span.underline = underline;
         span.underlineOffset = underlineOffset;

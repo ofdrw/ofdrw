@@ -11,6 +11,7 @@ import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.text.CT_CGTransform;
 import org.ofdrw.core.text.font.CT_Font;
+import org.ofdrw.core.text.text.Weight;
 import org.ofdrw.font.Font;
 import org.ofdrw.font.FontName;
 import org.ofdrw.layout.edit.Annotation;
@@ -432,6 +433,46 @@ class OFDDocTest {
             ofdDoc.add(p5);
             ofdDoc.add(p6);
             ofdDoc.add(p7);
+        }
+        System.out.println("生成文档位置: " + path.toAbsolutePath());
+    }
+
+    /**
+     * 测试设置Span字体粗细
+     */
+    @Test
+    void testSetSpanWeight() throws IOException {
+        Path path = Paths.get("target/testSetSpanWeight.ofd").toAbsolutePath();
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+            Paragraph p = new Paragraph();
+            Span sp0 = new Span("我们无论遇到什么困难也不要怕，微笑着面对它，消除恐惧的最好办法就是直面恐惧，")
+                    .setFontSize(5d)
+                    .setWeight(Weight.W_900);
+            p.add(sp0);
+            ofdDoc.add(p);
+
+            p = new Paragraph();
+            Span sp1 = new Span("坚持就是胜利，")
+                    .setFontSize(5d)
+                    .setWeight(Weight.W_800);
+            Span sp2 = new Span("加油！")
+                    .setFontSize(5d)
+                    .setBold(true);
+            Span sp3 = new Span("奥力给！！")
+                    .setFontSize(5d)
+                    .setWeight(Weight.W_500);
+
+            Span sp4 = new Span("奥力给！")
+                    .setFontSize(5d)
+                    .setWeight(Weight.W_300);
+
+            Span sp5 = new Span("奥力给")
+                    .setFontSize(5d)
+                    .setWeight(Weight.W_100);
+
+            p.add(sp1).add(sp2).add(sp3).add(sp4).add(sp5);
+            ofdDoc.add(p);
+
         }
         System.out.println("生成文档位置: " + path.toAbsolutePath());
     }
