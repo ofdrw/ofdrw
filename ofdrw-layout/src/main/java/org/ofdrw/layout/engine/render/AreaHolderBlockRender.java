@@ -9,6 +9,8 @@ import org.ofdrw.layout.areaholder.AreaHolderBlocks;
 import org.ofdrw.layout.areaholder.AreaHolderBlocksProcess;
 import org.ofdrw.layout.areaholder.CT_AreaHolderBlock;
 import org.ofdrw.layout.element.AreaHolderBlock;
+import org.ofdrw.layout.element.Div;
+import org.ofdrw.layout.engine.ResManager;
 import org.ofdrw.pkg.container.DocDir;
 
 import java.io.FileNotFoundException;
@@ -22,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author 权观宇
  * @since 2023-10-28 12:30:12
  */
-public class AreaHolderBlockRender {
+public class AreaHolderBlockRender implements Processor {
 
     /**
      * 执行 AreaHolderBlockRender 渲染器
@@ -66,6 +68,24 @@ public class AreaHolderBlockRender {
             blocks.addAreaHolderBlock(obj);
         } catch (DocumentException | FileNotFoundException e) {
             throw new RenderException("区域占位区块列表文件获取失败 ", e);
+        }
+    }
+
+
+    /**
+     * 处理占位区域
+     *
+     * @param pageLoc    页面在虚拟容器中绝对路径。
+     * @param layer      占位符所在图层。
+     * @param resManager 资源管理器
+     * @param e          OFDRW元素
+     * @param maxUnitID  最大元素ID提供器
+     * @throws RenderException 渲染发生错误
+     */
+    @Override
+    public void render(ST_Loc pageLoc, CT_PageBlock layer, ResManager resManager, Div e, AtomicInteger maxUnitID) throws RenderException {
+        if (e instanceof AreaHolderBlock) {
+            render(resManager.getDocDir(), pageLoc, layer, (AreaHolderBlock) e, maxUnitID);
         }
     }
 }

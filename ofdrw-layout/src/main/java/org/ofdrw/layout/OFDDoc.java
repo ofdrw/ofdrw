@@ -299,8 +299,7 @@ public class OFDDoc implements Closeable {
         DocDir docDir = ofdDir.newDoc();
         operateDocDir = docDir;
         docDir.setDocument(ofdDocument);
-        prm = new ResManager(docDir, MaxUnitID);
-        prm.setRoot(ofdDir);
+        prm = new ResManager(ofdDir, docDir, MaxUnitID);
     }
 
     /**
@@ -326,8 +325,7 @@ public class OFDDoc implements Closeable {
         // 设置当前文档最大ID
         MaxUnitID = new AtomicInteger(maxUnitID.getId().intValue());
         operateDocDir = ofdDir.obtainDocDefault();
-        prm = new ResManager(ofdDir.obtainDocDefault(), MaxUnitID);
-        prm.setRoot(ofdDir);
+        prm = new ResManager(ofdDir, ofdDir.obtainDocDefault(), MaxUnitID);
     }
 
     /**

@@ -19,7 +19,7 @@ class AreaHolderBlockTest {
         Path out = Paths.get("target/AreaHolderBlockTest-StreamDocAdd.ofd");
         try (OFDDoc ofdDoc = new OFDDoc(out)) {
 
-            /**
+            /*
              * 第1行
              */
             Paragraph p = new Paragraph("姓名", 6d);
@@ -41,7 +41,7 @@ class AreaHolderBlockTest {
             ofdDoc.add(field);
             ofdDoc.add(new BR());
 
-            /**
+            /*
              * 第2行
              */
             p = new Paragraph("生日", 6d);
@@ -80,7 +80,7 @@ class AreaHolderBlockTest {
             AdditionVPage avPage = ofdDoc.getAVPage(1);
 
 
-            /**
+            /*
              * 第1行
              */
             Paragraph p = new Paragraph("姓名", 6d);
@@ -104,7 +104,7 @@ class AreaHolderBlockTest {
             avPage.add(field);
 
 
-            /**
+            /*
              * 第2行
              */
             p = new Paragraph("生日", 6d);

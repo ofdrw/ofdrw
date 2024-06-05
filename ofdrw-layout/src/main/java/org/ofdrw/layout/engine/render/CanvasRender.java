@@ -2,6 +2,7 @@ package org.ofdrw.layout.engine.render;
 
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
 import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.canvas.Canvas;
 import org.ofdrw.layout.element.canvas.DrawContext;
@@ -70,13 +71,15 @@ public class CanvasRender implements Processor {
     /**
      * 渲染Canvas对象
      *
+     * @param pageLoc    页面在虚拟容器中绝对路径。
      * @param layer      图片将要放置的图层
      * @param resManager 资源管理器
      * @param e          Canvas对象
      * @param maxUnitID  最大元素ID提供器
+     * @throws RenderException 渲染发生错误
      */
     @Override
-    public void render(CT_PageBlock layer, ResManager resManager, Div e, AtomicInteger maxUnitID) {
+    public void render(ST_Loc pageLoc, CT_PageBlock layer, ResManager resManager, Div e, AtomicInteger maxUnitID)throws RenderException {
         if (e instanceof Canvas) {
             render(layer, resManager, (Canvas) e, maxUnitID);
         }

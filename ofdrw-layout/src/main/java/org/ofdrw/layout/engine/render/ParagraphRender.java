@@ -5,6 +5,7 @@ import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.text.TextCode;
@@ -28,13 +29,15 @@ public class ParagraphRender implements Processor {
     /**
      * 执行段落渲染
      *
+     * @param pageLoc    页面在虚拟容器中绝对路径。
      * @param layer      图片将要放置的图层
      * @param resManager 资源管理器
      * @param e          段落对象
      * @param maxUnitID  最大元素ID提供器
+     * @throws RenderException 渲染发生错误
      */
     @Override
-    public void render(CT_PageBlock layer, ResManager resManager, Div e, AtomicInteger maxUnitID) {
+    public void render(ST_Loc pageLoc, CT_PageBlock layer, ResManager resManager, Div e, AtomicInteger maxUnitID) throws RenderException{
         if (e instanceof Paragraph) {
             render(layer, resManager, (Paragraph) e, maxUnitID);
         }

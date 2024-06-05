@@ -5,6 +5,7 @@ import org.ofdrw.core.basicStructure.pageObj.layer.block.PathObject;
 import org.ofdrw.core.basicType.STBase;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
@@ -27,13 +28,15 @@ public class DivRender implements Processor{
     /**
      * 执行Div元素渲染
      *
+     * @param pageLoc   页面在虚拟容器中绝对路径。
      * @param layer     图层
      * @param resManager 资源管理器
      * @param e         元素
      * @param maxUnitID 最大ID
+     * @throws RenderException 渲染发生错误
      */
     @Override
-    public void render(CT_PageBlock layer, ResManager resManager, Div e, AtomicInteger maxUnitID) {
+    public void render(ST_Loc pageLoc, CT_PageBlock layer, ResManager resManager, Div e, AtomicInteger maxUnitID) throws RenderException{
         render(layer, e, maxUnitID);
     }
 

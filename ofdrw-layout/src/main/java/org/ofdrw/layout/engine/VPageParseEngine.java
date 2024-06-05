@@ -73,6 +73,7 @@ public class VPageParseEngine {
         register("Img", new ImgRender());
         register("Paragraph", new ParagraphRender());
         register("Canvas", new CanvasRender());
+        register("AreaHolderBlock", new AreaHolderBlockRender());
     }
 
     /**
@@ -262,7 +263,7 @@ public class VPageParseEngine {
             // 获取处理器，进行元素的渲染，扩展元素渲染器时，需要注册处理器
             Processor processor = registeredProcessor.get(elem.elementType());
             if (processor != null) {
-                processor.render(to, resManager, elem, maxUnitID);
+                processor.render(pageLoc, to, resManager, elem, maxUnitID);
             }
             int objEnd = this.maxUnitID.get();
             // 调用元素渲染结束处理器，处理元素绘制完成后的逻辑
@@ -277,7 +278,7 @@ public class VPageParseEngine {
                     ST_ID objId = new ST_ID(id);
                     if (newResIds.contains(objId)) {
                         resIds.add(objId);
-                    }else{
+                    } else {
                         objIds.add(objId);
                     }
                 }

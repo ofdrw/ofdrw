@@ -119,15 +119,16 @@ public class ResManager {
     private ResManager() {
     }
 
-
     /**
-     * 创建资源管理
+     * 创建资源管理器
      *
+     * @param root      文档根目录
      * @param docDir    文档虚拟容器
      * @param maxUnitID 自增最大ID提供者
      */
-    public ResManager(DocDir docDir, AtomicInteger maxUnitID) {
+    public ResManager(OFDDir root, DocDir docDir, AtomicInteger maxUnitID) {
         this();
+        this.root = root;
         this.docDir = docDir;
         this.maxUnitID = maxUnitID;
 
@@ -153,6 +154,19 @@ public class ResManager {
                 throw new RuntimeException("已有 DocumentRes.xml 资源文件解析失败", e);
             }
         }
+
+    }
+
+    /**
+     * 创建资源管理
+     *
+     * @param docDir    文档虚拟容器
+     * @param maxUnitID 自增最大ID提供者
+     * @deprecated 缺少根容器可能导致部分资源无法获取，请使用 {@link #ResManager(OFDDir, DocDir, AtomicInteger)}
+     */
+    @Deprecated
+    public ResManager(DocDir docDir, AtomicInteger maxUnitID) {
+        this(null, docDir, maxUnitID);
     }
 
     /**
@@ -583,6 +597,11 @@ public class ResManager {
         this.root = root;
     }
 
+    /**
+     * 获取文档根容器
+     *
+     * @return 文档根容器
+     */
     public OFDDir getRoot() {
         return root;
     }
@@ -618,5 +637,14 @@ public class ResManager {
      */
     public ArrayList<ST_ID> getNewResIds() {
         return newResIds;
+    }
+
+    /**
+     * 获取当前操作的文档容器
+     *
+     * @return 文档容器
+     */
+    public DocDir getDocDir() {
+        return docDir;
     }
 }
