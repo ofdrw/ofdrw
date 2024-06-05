@@ -88,8 +88,8 @@ public class HelloWorld {
 相关文档目录：
 
 - [OFD R&W 布局设计](./ofdrw-layout/doc/layout/README.md)
-- [OFD R&W 扩展 自定义元素](./ofdrw-layout/doc/customelement/README.md)
-- [OFD R&W 基于Canvas文档内容生成 ***新***](./ofdrw-layout/doc/canvas/README.md)
+- [OFD R&W 扩展 自定义元素 ***新***](./ofdrw-layout/doc/customelement/README.md)
+- [OFD R&W 基于Canvas文档内容生成](./ofdrw-layout/doc/canvas/README.md)
 - [OFD R&W 签名签章快速入门](./ofdrw-sign/doc/quickstart/README.md)
 - [OFD R&W 加密 完整性保护协议](./ofdrw-crypto/README.md)
 - [OFD R&W 转换OFD/OFD导出 ](./ofdrw-converter/README.md)
