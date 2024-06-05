@@ -241,11 +241,11 @@ public class VirtualContainer implements Closeable {
      * <p>
      * 例如：
      * <p>
-     * 当前 /Doc_0/Pages，获取 /Doc_0/Pages/Page_0/Content.xml -> Page Element
+     * 当前 <pre>/Doc_0/Pages，获取 /Doc_0/Pages/Page_0/Content.xml 结果 Page Element</pre>
      * <p>
-     * 当前 /Doc_0/Tpl -> 获取 /Doc_0/Pages/Page_0/Content.xml -> null
+     * 当前 <pre>/Doc_0/Tpl 结果 获取 /Doc_0/Pages/Page_0/Content.xml 结果 null</pre>
      * <p>
-     * 当前 /Doc_0/Pages -> 获取 Page_0/Content.xml -> Page Element
+     * 当前 <pre>/Doc_0/Pages 结果 获取 Page_0/Content.xml 结果 Page Element</pre>
      *
      * @param loc 元素所在路径，支持相对路径，若是绝对路径且不在当前容器中，那么返回null
      * @return 元素对象，不存在返回null
@@ -322,11 +322,11 @@ public class VirtualContainer implements Closeable {
      * <p>
      * 例如：
      * <p>
-     * 当前 /Doc_0/Pages，获取 /Doc_0/Pages/Page_0/Content.xml -> Content.xml
+     * 当前 <pre>/Doc_0/Pages，获取 /Doc_0/Pages/Page_0/Content.xml 结果 Content.xml</pre>
      * <p>
-     * 当前 /Doc_0/Pages，获取 /Doc_0/Pages/Page_0/Content.xml -> null
+     * 当前 <pre>/Doc_0/Pages，获取 /Doc_0/Pages/Page_0/Content.xml 结果 null</pre>
      * <p>
-     * 当前 /Doc_0/Pages，获取 Page_0/Content.xml -> Content.xml
+     * 当前 <pre>/Doc_0/Pages，获取 Page_0/Content.xml 结果 Content.xml</pre>
      *
      * @param loc 文件路径，可以是相对路径，也可以是绝对路径。
      * @return 文件路径 或 文件不存在返回null。
