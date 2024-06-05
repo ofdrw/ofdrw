@@ -8,7 +8,11 @@ import org.ofdrw.layout.engine.ResManager;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 绘制器
+ * 元素绘制器
+ * <p>
+ * 用于实现OFDRW元素到OFD图元的转换，并处理OFD虚拟容器以及资源管理。
+ *
+ * 绘制器的选择由 {@link org.ofdrw.layout.engine.VPageParseEngine} 实现，您需要向 VPageParseEngine 通过名称注册绘制器。
  *
  * @author 权观宇
  * @since 2024-5-27 19:22:48

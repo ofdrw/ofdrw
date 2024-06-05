@@ -1,4 +1,4 @@
-# OFD R&W Canvas API
+# OFD R&W 基于Canvas文档内容生成 Canvas API
 
 为了更加自由和灵活的绘制OFD文档，OFD R&W提供了一个特殊的元素`Canvas`。
 通过Canvas开发者可以自由绘制曲线、放置文字图形、操作形变等。

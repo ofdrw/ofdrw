@@ -5,14 +5,14 @@ import java.io.IOException;
 /**
  * OFDRW 线条元素，用于快速构建一条线条。
  * <p>
- * 若需要绘制复杂图形，请使用 {@link Canvas} 对象 使用绘制上下文实现。
+ * 若需要绘制复杂图形，请使用 {@link Canvas} 对象，并提供 {@link  Drawer}实现，在Drawer中使用绘制上下文绘制。
  * <p>
  * 若绘制简单矩形，可以使用 {@link org.ofdrw.layout.element.Div} 对象设置边框 实现。
  *
  * @author 张炳恒
  * @since 2024-5-27 18:50:52
  */
-public class Line extends Canvas implements Drawer{
+public class Line extends CanvasBase {
 
     /**
      * 线条起点坐标(x,y)
@@ -49,7 +49,6 @@ public class Line extends Canvas implements Drawer{
      */
     public Line(Double width, Double height) {
         super(width, height);
-        this.setDrawer(this);
     }
 
     /**
@@ -62,7 +61,6 @@ public class Line extends Canvas implements Drawer{
      */
     public Line(double x, double y, double w, double h) {
         super(x, y, w, h);
-        this.setDrawer(this);
     }
 
     /**
