@@ -140,6 +140,9 @@ public class PointUtil {
 
 
     public static double[] adjustPos(double width, double height, double x, double y, ST_Box boundary) {
+        if (boundary == null) {
+            return new double[] {x, y};
+        }
         double realX = boundary.getTopLeftX() + x;
 //        if (realX > (boundary.getTopLeftX() + boundary.getWidth())) {
 //            realX = boundary.getTopLeftX() + boundary.getWidth();
