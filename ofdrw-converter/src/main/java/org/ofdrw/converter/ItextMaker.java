@@ -472,7 +472,6 @@ public class ItextMaker {
         if (pathObject.getLineWidth() != null && pathObject.getLineWidth() > 0) {
 			lineWidth = Double.valueOf(converterDpi(pathObject.getLineWidth()) * scale).floatValue();
 		}
-        pdfCanvas.setLineWidth(lineWidth);
         if (pathObject.getCTM() != null && pathObject.getLineWidth() != null) {
             Double[] ctm = pathObject.getCTM().toDouble();
             double a = ctm[0].doubleValue();
@@ -485,6 +484,7 @@ public class ItextMaker {
             double sy = Math.signum(d) * Math.sqrt(b * b + d * d);
             lineWidth = (float) (lineWidth * sx);
         }
+        pdfCanvas.setLineWidth(lineWidth);
         if (pathObject.getStroke()) {
             if (pathObject.getDashPattern() != null) {
                 float unitsOn = (float) converterDpi(pathObject.getDashPattern().toDouble()[0].floatValue());
