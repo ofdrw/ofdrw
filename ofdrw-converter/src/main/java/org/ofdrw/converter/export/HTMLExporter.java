@@ -152,6 +152,7 @@ public class HTMLExporter implements OFDExporter {
         svgMaker.config.setDrawBoundary(false);
         svgMaker.config.setClip(false);
         output = htmlOutput;
+        output.write(header);
     }
 
 
