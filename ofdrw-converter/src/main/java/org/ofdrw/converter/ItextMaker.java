@@ -642,8 +642,8 @@ public class ItextMaker {
      */
     private double scaling(ST_Box targetBox, @SuppressWarnings("rawtypes") CT_GraphicUnit graphicUnit) {
         double scale = 1D;
-        PageBlockType instance = PageBlockType.getInstance(graphicUnit);
-        if (instance != null) {
+        PageBlockType instance = PageBlockType.getInstance(graphicUnit.getParent());
+        if (instance != null && instance instanceof CT_PageBlock) {
             scale = scaling(targetBox, graphicUnit.getBoundary());
         }
         return scale;
