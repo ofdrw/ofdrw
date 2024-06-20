@@ -523,7 +523,11 @@ public class ItextMaker {
 				}
 				
             } else {
-                pdfCanvas.setFillColor(defaultFillColor);
+//                pdfCanvas.setFillColor(defaultFillColor);
+                // 未设置颜色时，以透明色填充（规范中有明确说明）
+                PdfExtGState gs2 = new PdfExtGState();
+                gs2.setFillOpacity(0);
+                pdfCanvas.setExtGState(gs2);
             }
             path(pdfCanvas, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
 			if (null != pathObject.getRule() && pathObject.getRule().equals(Rule.Even_Odd)) {
