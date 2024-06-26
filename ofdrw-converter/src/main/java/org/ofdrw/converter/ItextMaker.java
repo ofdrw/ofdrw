@@ -472,7 +472,6 @@ public class ItextMaker {
         if (pathObject.getLineWidth() != null && pathObject.getLineWidth() > 0) {
 			lineWidth = Double.valueOf(converterDpi(pathObject.getLineWidth()) * scale).floatValue();
 		}
-        pdfCanvas.setLineWidth(lineWidth);
         if (pathObject.getCTM() != null && pathObject.getLineWidth() != null) {
             Double[] ctm = pathObject.getCTM().toDouble();
             double a = ctm[0].doubleValue();
@@ -485,6 +484,7 @@ public class ItextMaker {
             double sy = Math.signum(d) * Math.sqrt(b * b + d * d);
             lineWidth = (float) (lineWidth * sx);
         }
+        pdfCanvas.setLineWidth(lineWidth);
         if (pathObject.getStroke()) {
             if (pathObject.getDashPattern() != null) {
                 float unitsOn = (float) converterDpi(pathObject.getDashPattern().toDouble()[0].floatValue());
@@ -523,7 +523,11 @@ public class ItextMaker {
 				}
 				
             } else {
-                pdfCanvas.setFillColor(defaultFillColor);
+//                pdfCanvas.setFillColor(defaultFillColor);
+                // 未设置颜色时，以透明色填充（规范中有明确说明）
+                PdfExtGState gs2 = new PdfExtGState();
+                gs2.setFillOpacity(0);
+                pdfCanvas.setExtGState(gs2);
             }
             path(pdfCanvas, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
 			if (null != pathObject.getRule() && pathObject.getRule().equals(Rule.Even_Odd)) {
@@ -638,8 +642,8 @@ public class ItextMaker {
      */
     private double scaling(ST_Box targetBox, @SuppressWarnings("rawtypes") CT_GraphicUnit graphicUnit) {
         double scale = 1D;
-        PageBlockType instance = PageBlockType.getInstance(graphicUnit);
-        if (instance != null) {
+        PageBlockType instance = PageBlockType.getInstance(graphicUnit.getParent());
+        if (instance != null && instance instanceof CT_PageBlock) {
             scale = scaling(targetBox, graphicUnit.getBoundary());
         }
         return scale;
