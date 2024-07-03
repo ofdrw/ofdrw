@@ -5,8 +5,12 @@ import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * 环境变量中的字体
@@ -69,10 +73,8 @@ public final class EnvFont {
                 // Font Family 表示字体系列，如 Serif
                 // Font Name 表示系列下的不同样式，如 Serif.bold、Serif.italic
                 fMap.put(font.getFamily().toLowerCase(), font);
-                if (defaultFont == null) {
-                    defaultFont = font;
-                }
             }
+
             if (fMap.get("宋体") != null) {
                 defaultFont = fMap.get("宋体");
             } else if (fMap.get("simsun") != null) {
@@ -85,6 +87,9 @@ public final class EnvFont {
                 defaultFont = fMap.get("times new roman");
             } else if (fMap.get("serif") != null) {
                 defaultFont = fMap.get("serif");
+            } else if (!fMap.isEmpty()) {
+                // 选择第一个字体
+                defaultFont = fMap.values().iterator().next();
             }
             isInitialized = true;
         }
@@ -126,6 +131,41 @@ public final class EnvFont {
 
 
     /**
+     * 从目录中加载字体，仅加载以 .otf 或 .ttf 结尾的字体文件，若字体无法加载则忽略并打印错误
+     * <p>
+     * 首次运行会加载环境变量中的字体，然后以目标目录中的字体文件覆盖环境变量中的字体。
+     * <p>
+     * 若需要指定默认字体，可以在加载字体后调用 {@link #setDefaultFont(Path)} 方法。
+     *
+     * @param dirPath 字体文件所有目录
+     * @throws IOException IO读写异常
+     */
+    public static void load(Path dirPath) throws IOException {
+        if (dirPath == null || !Files.isDirectory(dirPath)) {
+            return;
+        }
+        initialize();
+        // 遍历 dirPath 所有openType字体文件
+        try (Stream<Path> walk = Files.walk(dirPath)) {
+            walk.filter(p -> {
+                String fileName = p.getFileName().toString().toLowerCase();
+                return fileName.endsWith(".otf") || fileName.endsWith(".ttf");
+            }).forEach(p -> {
+                try {
+                    java.awt.Font font = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, p.toFile());
+                    fMap.put(font.getFontName().toLowerCase(), font);
+                    fMap.put(font.getFamily().toLowerCase(), font);
+                } catch (Exception e) {
+                    // 加载字体失败，打印错误并继续
+                    System.err.println("加载字体文件失败：" + p + "，错误：" + e.getMessage());
+                }
+            });
+        }
+
+    }
+
+
+    /**
      * 分析字符串大小在指定字号下所占空间大小
      * <p>
      * 若无法找到字体则使用默认字体计算
@@ -163,6 +203,21 @@ public final class EnvFont {
      */
     public static void setDefaultFont(Font defaultFont) {
         EnvFont.defaultFont = defaultFont;
+    }
+
+
+    /**
+     * 设置默认字体
+     *
+     * @param path 字体文件路径
+     * @throws IOException         IO读写异常
+     * @throws FontFormatException 字体格式异常
+     */
+    public static void setDefaultFont(Path path) throws IOException, FontFormatException {
+        if (path == null || !Files.exists(path)) {
+            return;
+        }
+        defaultFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, path.toFile());
     }
 
     /**
