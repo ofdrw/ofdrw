@@ -47,7 +47,7 @@ Maven项目引入依赖
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>2.3.0</version>
+  <version>2.3.1</version>
 </dependency>
 ```
 
@@ -88,7 +88,7 @@ public class HelloWorld {
 相关文档目录：
 
 - [OFD R&W 布局设计](./ofdrw-layout/doc/layout/README.md)
-- [OFD R&W 扩展 自定义元素 ***新***](./ofdrw-layout/doc/customelement/README.md)
+- [OFD R&W 扩展 自定义元素](./ofdrw-layout/doc/customelement/README.md)
 - [OFD R&W 基于Canvas文档内容生成](./ofdrw-layout/doc/canvas/README.md)
 - [OFD R&W 签名签章快速入门](./ofdrw-sign/doc/quickstart/README.md)
 - [OFD R&W 加密 完整性保护协议](./ofdrw-crypto/README.md)
@@ -97,7 +97,7 @@ public class HelloWorld {
 - [OFD R&W 文档合并](./ofdrw-tool/README.md)
 - [OFD R&W 区域占位区块（类表单效果）](./ofdrw-layout/doc/areaholderblock/README.md)
 - [OFD R&W 单元格元素 使用指南](./ofdrw-layout/doc/cell/README.md)
-- [OFD R&W 内容生成 事件处理 ***新***](./ofdrw-layout/doc/onpage/README.md)
+- [OFD R&W 内容生成 事件处理](./ofdrw-layout/doc/onpage/README.md)
 - [OFD R&W 附件操作](./ofdrw-layout/doc/attachment/README.md)
 - [OFD R&W 添加水印](./ofdrw-layout/doc/watermark/README.md)
 
