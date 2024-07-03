@@ -157,6 +157,15 @@ public final class EnvFont {
     }
 
     /**
+     * 设置默认字体
+     *
+     * @param defaultFont 默认字体
+     */
+    public static void setDefaultFont(Font defaultFont) {
+        EnvFont.defaultFont = defaultFont;
+    }
+
+    /**
      * 获取默认字体绘制上下文
      *
      * @return 上下文
