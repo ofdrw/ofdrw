@@ -8,6 +8,7 @@ import java.io.IOException;
 
 /**
  * 艺术字元素
+ * 本元素在Span元素的效果上增加了艺术字常见效果，，比如斜体，文字左右拉伸，文字垂直拉伸
  *
  * @author 韩兴元
  * @date 2024/6/12
