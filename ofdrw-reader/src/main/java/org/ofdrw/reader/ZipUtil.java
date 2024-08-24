@@ -1,14 +1,13 @@
 package org.ofdrw.reader;
 
-import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
-import org.apache.commons.compress.archivers.zip.ZipExtraField;
-import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * ZIP 文件解压工具
@@ -36,9 +35,10 @@ public class ZipUtil {
     }
 
     /**
-     * 默认字符集：UTF8
+     * 默认字符集：GBK
+     * 若ZIP压缩包中有默认字符集，则以压缩包中的字符集为准
      */
-    private static String charset = "UTF8";
+    private static String charset = "UTF-8";
 
     /**
      * 解压到指定目录
@@ -74,18 +74,6 @@ public class ZipUtil {
     }
 
     /**
-     * 校验文件路径是否在期望的文件目录下
-     *
-     * @param targetDir 期望解压目录
-     * @param filePath  文件路径
-     * @throws IOException 文件操作IO异常
-     */
-    private static void pathValid(String targetDir, String filePath) throws IOException {
-        if (!filePath.startsWith(targetDir))
-            throw new IOException(String.format("不合法的路径：%s", filePath));
-    }
-
-    /**
      * 使用apache common compress库 解压zipFile，能支持更多zip包解压的特性
      *
      * @param srcFile 带解压的源文件
@@ -109,29 +97,30 @@ public class ZipUtil {
      * @throws IOException IO异常
      */
     public static void unZipFileByApacheCommonCompress(InputStream src, String descDir) throws IOException {
-        File pathFile = new File(descDir).getCanonicalFile();
-        if (!pathFile.exists() && !pathFile.mkdirs()) {
-            throw new IOException("解压目录创建失败: " + pathFile);
-        }
+        Path pathFile = Files.createDirectories(Paths.get(descDir));
 
-        try (ZipArchiveInputStream zipFile = new ZipArchiveInputStream(src,charset,false,true)) {
+        try (ZipArchiveInputStream zipFile = new ZipArchiveInputStream(src, charset, false, true)) {
             ZipArchiveEntry entry = null;
-            while ((entry = (ZipArchiveEntry)zipFile.getNextEntry()) != null) {
-                File f = new File(pathFile, entry.getName()).getCanonicalFile();
+            while ((entry = zipFile.getNextEntry()) != null) {
                 //校验路径合法性
-                pathValid(pathFile.getAbsolutePath(), f.getAbsolutePath());
+                Path f = null;
+                try {
+                    f = pathFile.resolve(entry.getName());
+                } catch (InvalidPathException e) {
+                    // 尝试使用GBK解析
+                    f = pathFile.resolve(new String(entry.getRawName(), "GBK"));
+                }
+
+                if (f == null || f.startsWith(pathFile) == false) {
+                    throw new IOException(String.format("不合法的路径：%s", f));
+                }
 
                 if (entry.isDirectory()) {
-                    if (!f.isDirectory() && !f.mkdirs()) {
-                        throw new IOException("failed to create directory " + f);
-                    }
+                    Files.createDirectories(f);
                 } else {
-                    File parent = f.getParentFile();
-                    if (!parent.isDirectory() && !parent.mkdirs()) {
-                        throw new IOException("failed to create directory " + parent);
-                    }
-                    try (OutputStream o = Files.newOutputStream(f.toPath())) {
-                        IOUtils.copy(zipFile, o);
+                    Files.createDirectories(f.getParent());
+                    try (OutputStream o = Files.newOutputStream(f)) {
+                        org.apache.commons.io.IOUtils.copy(zipFile, o);
                     }
                 }
             }
