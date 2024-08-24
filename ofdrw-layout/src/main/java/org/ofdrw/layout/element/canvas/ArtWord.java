@@ -11,7 +11,7 @@ import java.io.IOException;
  * 本元素在Span元素的效果上增加了艺术字常见效果，，比如斜体，文字左右拉伸，文字垂直拉伸
  *
  * @author 韩兴元
- * @date 2024/6/12
+ * @since 2024/6/12
  */
 public class ArtWord extends CanvasBase {
     /**
@@ -157,7 +157,7 @@ public class ArtWord extends CanvasBase {
      * 设置字体颜色
      *
      * @param color 16进制颜色，如#FFFFFF
-     * @return
+     * @return this
      */
     public ArtWord setColor(String color) {
         this.color = new int[]{
