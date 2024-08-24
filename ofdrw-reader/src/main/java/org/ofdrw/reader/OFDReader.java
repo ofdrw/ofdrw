@@ -88,7 +88,9 @@ public class OFDReader implements Closeable {
      * 默认值： 100MB
      *
      * @param size 解压文件大小，单位字节（Byte）
+     * @deprecated 该参数已经弃用。
      */
+    @Deprecated
     public static void setZipFileMaxSize(long size) {
         ZipUtil.setMaxSize(size);
     }
@@ -134,7 +136,7 @@ public class OFDReader implements Closeable {
         }
         workDir = Files.createTempDirectory("ofd-tmp-");
         // 解压文档，到临时的工作目录
-        ZipUtil.unZipFileByApacheCommonCompress(stream, workDir.toAbsolutePath().toString() + File.separator);
+        ZipUtil.unZipFileByApacheCommonCompress(stream, workDir.toAbsolutePath() + File.separator);
         ofdDir = new OFDDir(workDir);
         // 创建资源定位器
         rl = new ResourceLocator(ofdDir);

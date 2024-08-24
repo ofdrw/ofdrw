@@ -2,8 +2,7 @@ package org.ofdrw.reader;
 
 import org.junit.jupiter.api.Test;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
-import org.ofdrw.core.basicStructure.pageObj.Page;
-import org.ofdrw.core.basicType.ST_Box;
+
 import org.ofdrw.reader.extractor.ExtractorFilter;
 import org.ofdrw.reader.extractor.RegionTextExtractorFilter;
 
