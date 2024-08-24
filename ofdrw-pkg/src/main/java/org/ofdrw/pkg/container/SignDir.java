@@ -38,25 +38,37 @@ public class SignDir extends VirtualContainer {
     /**
      * 表示第几个签名
      */
-    private Integer index = 0;
+    private String index = "0";
 
     public SignDir(Path fullDir) throws IllegalArgumentException {
         super(fullDir);
-        // 标准的签名目录名为 Sign_N (N代表第几个签名)
-        String indexStr = this.getContainerName()
-                .replace(SignContainerPrefix, "");
-        try {
-            index = Integer.parseInt(indexStr);
-        } catch (NumberFormatException e) {
-            clean();
-            throw new IllegalArgumentException("不合法的文件目录名称：" + this.getContainerName() + "，目录名称应为 Sign_N");
-        }
+        this.index = this.getContainerName().replace(SignContainerPrefix, "");
+//        // 标准的签名目录名为 Sign_N (N代表第几个签名)
+//        String indexStr = this.getContainerName().replace(SignContainerPrefix, "");
+//        try {
+//            index = Integer.parseInt(indexStr);
+//        } catch (NumberFormatException e) {
+//            clean();
+//            throw new IllegalArgumentException("不合法的文件目录名称：" + this.getContainerName() + "，目录名称应为 Sign_N");
+//        }
     }
 
     /**
+     * 获取该签名容器索引
+     *
      * @return 第几个签名，从1开始
+     * @throws NumberFormatException 非规范的签名索引可能导致该问题
      */
     public Integer getIndex() {
+        return Integer.parseInt(index);
+    }
+
+    /**
+     * 获取签名容器名称，用于兼容非规范的签名容器名称
+     *
+     * @return 签名容器名称
+     */
+    public String getIndexStr() {
         return index;
     }
 

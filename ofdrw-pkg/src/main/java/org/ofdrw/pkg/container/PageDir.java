@@ -60,7 +60,7 @@ public class PageDir extends VirtualContainer {
      * <p>
      * index 从 0 开始取
      */
-    private int index = 0;
+    private String index = "0";
 
 
     /**
@@ -73,13 +73,13 @@ public class PageDir extends VirtualContainer {
 
     public PageDir(Path fullDir) throws IllegalArgumentException {
         super(fullDir);
-        String indexStr = this.getContainerName().replace(PageContainerPrefix, "");
-        try {
-            this.index = Integer.parseInt(indexStr);
-        } catch (NumberFormatException e) {
-            clean();
-            throw new IllegalArgumentException("不合法的文件目录名称：" + this.getContainerName() + "，目录名称应为 Page_N");
-        }
+        this.index = this.getContainerName().replace(PageContainerPrefix, "");
+//        try {
+//            this.index = Integer.parseInt(indexStr);
+//        } catch (NumberFormatException e) {
+//            clean();
+//            throw new IllegalArgumentException("不合法的文件目录名称：" + this.getContainerName() + "，目录名称应为 Page_N");
+//        }
     }
 
 
@@ -87,8 +87,18 @@ public class PageDir extends VirtualContainer {
      * 获取页面索引
      *
      * @return 页面索引
+     * @throws NumberFormatException 非规范的页面索引可能导致该问题
      */
     public Integer getIndex() {
+        return Integer.parseInt(index);
+    }
+
+    /**
+     * 获取页面索引字符串，默认为数字如 "1"，非规范情况下将返回自定义名称
+     *
+     * @return 页面索引字符串，默认为数字如 "1"，非规范情况下将返回自定义名称
+     */
+    public String getIndexStr() {
         return index;
     }
 

@@ -36,9 +36,13 @@ public class PagesDir extends VirtualContainer {
                 // 签名目录名为： Page_N
                 if (f.getName().startsWith(PageDir.PageContainerPrefix)) {
                     String numb = f.getName().replace(PageDir.PageContainerPrefix, "");
-                    int num = Integer.parseInt(numb);
-                    if (maxPageIndex <= num) {
-                        maxPageIndex = num + 1;
+                    try{
+                        int num = Integer.parseInt(numb);
+                        if (maxPageIndex <= num) {
+                            maxPageIndex = num + 1;
+                        }
+                    } catch (NumberFormatException e){
+                        // ignore
                     }
                 }
             }
