@@ -140,6 +140,7 @@ public class Line extends CanvasBase {
      * 设置线的颜色
      *
      * @param lineColor 线的颜色，格式：#000000、rgb(0,0,0)、rgba(0,0,0,1)、black
+     * @return this
      */
     public Line setLineColor(String lineColor) {
         this.lineColor = lineColor;
@@ -159,6 +160,7 @@ public class Line extends CanvasBase {
      * 设置线的宽度
      *
      * @param lineWidth 线的宽度，单位 毫米mm
+     * @return this
      */
     public Line setLineWidth(double lineWidth) {
         this.lineWidth = lineWidth;
