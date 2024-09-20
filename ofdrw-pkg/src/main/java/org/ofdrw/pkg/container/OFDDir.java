@@ -11,10 +11,7 @@ import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.crypto.encryt.Encryptions;
 
 import java.io.*;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.List;
@@ -259,6 +256,57 @@ public class OFDDir extends VirtualContainer {
             }
         }
         return obtainDoc(0);
+    }
+
+    /**
+     * 将文件写入OFD虚拟容器，若路径不存在则创建
+     *
+     * @param absPath 文件绝对路径，例如："/Doc_0/Document.xml"
+     * @param path    文件路径
+     * @return 文件在OFD虚拟容器中的路径
+     * @throws IOException IO异常
+     */
+    public ST_Loc putFileAbs(String absPath, Path path) throws IOException {
+        if (absPath == null || absPath.trim().isEmpty()) {
+            throw new IllegalArgumentException("文件绝对路径（absPath）为空");
+        }
+        if (path == null) {
+            throw new IllegalArgumentException("文件路径（path）为空");
+        }
+
+        Path target = Paths.get(this.getSysAbsPath(), absPath);
+        // 检查路径是否越界
+        if (!target.startsWith(this.getContainerPath())) {
+            throw new IllegalArgumentException("文件路径越界，不能写入到OFD虚拟容器外部");
+        }
+
+        Files.createDirectories(target.getParent());
+        Files.copy(path, target);
+
+        // 获取文件的相对路径
+        String relPath = this.getContainerPath().relativize(target).toString();
+        String res = FilenameUtils.separatorsToUnix(relPath);
+        // 转换为OFD虚拟容器中的绝对路径
+        return new ST_Loc("/").cat(res);
+    }
+
+    /**
+     * 获取OFD虚拟容器中的文件
+     *
+     * @param absPath 文件绝对路径，例如："/Doc_0/Document.xml"
+     * @return 文件路径
+     * @throws InvalidPathException 文件不存在
+     */
+    public Path getFileAbs(String absPath) {
+        if (absPath == null || absPath.trim().isEmpty()) {
+            throw new IllegalArgumentException("文件绝对路径（absPath）为空");
+        }
+        Path target = Paths.get(this.getSysAbsPath(), absPath);
+        // 检查路径是否越界
+        if (!target.startsWith(this.getContainerPath())) {
+            throw new IllegalArgumentException("文件路径越界，不能读取OFD虚拟容器外部");
+        }
+        return target;
     }
 
 

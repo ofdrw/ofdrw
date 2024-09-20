@@ -482,20 +482,19 @@ public class OFDDoc implements Closeable {
         }
 
         DocDir docDefault = ofdDir.obtainDocDefault();
+        // 构造完整路径
+        ST_Loc fileAbsLoc = new ST_Loc(absPath).cat(file.getFileName().toString());
+        // 将文件放置于指定目录下
+        fileAbsLoc = ofdDir.putFileAbs(fileAbsLoc.toString(), file);
 
-        VirtualContainer resParentDir = ofdDir.obtainContainer(absPath, VirtualContainer::new);
-        resParentDir.putFileWithPath(file);
 
-        // 构造附件文件存放路径
-        ST_Loc loc = resParentDir.getAbsLoc()
-                .cat(file.getFileName().toString());
         // 计算附件所占用的空间，单位KB。
         double size = Files.size(file) / 1024d;
         CT_Attachment ctAttachment = attachment.getAttachment()
                 .setID(String.valueOf(MaxUnitID.incrementAndGet()))
                 .setCreationDate(LocalDateTime.now())
                 .setSize(size)
-                .setFileLoc(loc);
+                .setFileLoc(fileAbsLoc);
         ResourceLocator rl = new ResourceLocator(docDefault);
 
         // 获取附件目录，并切换目录到与附件列表文件同级
