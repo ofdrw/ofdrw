@@ -1,5 +1,6 @@
 package org.ofdrw.converter;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendComposite;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
 import org.ofdrw.converter.font.FontWrapper;
@@ -47,6 +48,8 @@ import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.*;
 
@@ -431,9 +434,29 @@ public abstract class AWTMaker {
         return fontSize;
     }
 
+    /**
+     * 获取文字透明度 默认透明度为1.0
+     *
+     * @param textObject 文字对象
+     * @return 文字透明度。
+     */
+    private float getTextObjectAlpha(TextObject textObject) {
+        float alpha = 1.0f;
+        if (textObject == null) {
+            return alpha;
+        }
+        try {
+            alpha = NumberUtils.createBigDecimal(textObject.getAlpha().toString()).divide(new BigDecimal(255), 2, RoundingMode.HALF_UP).floatValue();
+        } catch (Exception e) {
+            alpha = 1.0f;
+        }
+        return alpha;
+    };
+
     private void writeText(Graphics2D graphics, TextObject textObject, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
         logger.debug("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━TextObject━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓");
         Double fontSize = getTextObjectSize(textObject);
+        AlphaComposite alpha = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, getTextObjectAlpha(textObject));
         Color strokeColor = getStrokeColor(textObject.getStrokeColor(), null, drawParams);
         Color fillColor = getFillColor(textObject.getFillColor(), null, drawParams);
         if (fillColor == null) fillColor = Color.black;
@@ -586,7 +609,7 @@ public abstract class AWTMaker {
                 }
                 // 结合变换矩阵绘制字形
                 Matrix matrix = chatMatrix(textObject, x, y, fontSize, fontMatrix, baseMatrix);
-                renderChar(graphics, shape, matrix, strokeColor, fillColor);
+                renderChar(graphics, shape, matrix, strokeColor, fillColor, alpha);
             }
             // 更新上一个TextCode的X和Y，用于缺失 X或Y时准备
             if (textCode.getX() != null) {
@@ -620,11 +643,12 @@ public abstract class AWTMaker {
         return m;
     }
 
-    private void renderChar(Graphics2D graphics, Shape shape, Matrix m, Color stroke, Color fill) {
+    private void renderChar(Graphics2D graphics, Shape shape, Matrix m, Color stroke, Color fill, AlphaComposite alpha) {
         if (shape == null) return;
         graphics.setClip(null);
         graphics.setTransform(MatrixUtils.createAffineTransform(m));
 //        graphics.setStroke(new BasicStroke(0.1f));
+        graphics.setComposite(alpha);
         graphics.setColor(Color.BLACK);
         graphics.setBackground(Color.white);
         if (stroke != null) {
