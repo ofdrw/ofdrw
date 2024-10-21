@@ -442,7 +442,7 @@ public abstract class AWTMaker {
      */
     private float getTextObjectAlpha(TextObject textObject) {
         float alpha = 1.0f;
-        if (textObject == null) {
+        if (textObject == null || textObject.getAlpha() == 0) {
             return alpha;
         }
         try {
