@@ -36,7 +36,7 @@ public class OFD2IMGTest {
         FontLoader.setSimilarFontReplace(true);
         long start = System.currentTimeMillis();
 
-        toPng("src/test/resources/helloworld.ofd", "target/helloworld.ofd");
+        toPng("src/test/resources/透明度文字.ofd", "target/helloworld.ofd");
 //        toPng("src/test/resources/999.ofd", "target/999.ofd");
 //        toPng("src/test/resources/zsbk.ofd", "target/zsbk.ofd");
 //        toPng("src/test/resources/ano.ofd", "target/ano.ofd");
