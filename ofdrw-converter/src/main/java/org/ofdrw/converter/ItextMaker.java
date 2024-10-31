@@ -74,6 +74,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.ofdrw.converter.utils.CommonUtil.converterDpi;
 
@@ -643,7 +644,7 @@ public class ItextMaker {
     private double scaling(ST_Box targetBox, @SuppressWarnings("rawtypes") CT_GraphicUnit graphicUnit) {
         double scale = 1D;
         PageBlockType instance = PageBlockType.getInstance(graphicUnit.getParent());
-        if (instance != null && instance instanceof CT_PageBlock) {
+        if (Objects.nonNull(instance) && Objects.equals(CT_PageBlock.class, instance.getClass())) {
             scale = scaling(targetBox, graphicUnit.getBoundary());
         }
         return scale;
