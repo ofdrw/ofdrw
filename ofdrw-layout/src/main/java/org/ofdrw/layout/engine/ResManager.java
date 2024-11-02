@@ -5,6 +5,7 @@ import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
 import org.ofdrw.core.basicStructure.doc.Document;
+import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicStructure.res.MediaType;
 import org.ofdrw.core.basicStructure.res.OFDResource;
@@ -135,57 +136,13 @@ public class ResManager {
      * @param maxUnitID 自增最大ID提供者
      */
     public ResManager(OFDDir root, DocDir docDir, AtomicInteger maxUnitID) {
-        this(root, docDir, maxUnitID, null, null);
-    }
-
-    /**
-     * 创建资源管理器
-     *
-     * @param root      文档根目录
-     * @param docDir    文档虚拟容器
-     * @param maxUnitID 自增最大ID提供者
-     * @param document 文档对象
-     * @param resourceLocator 资源定位器
-     */
-    public ResManager(OFDDir root, DocDir docDir, AtomicInteger maxUnitID, Document document, ResourceLocator resourceLocator) {
         this();
         this.root = root;
         this.docDir = docDir;
         this.maxUnitID = maxUnitID; 
-        
-        if (Objects.nonNull(document) && Objects.nonNull(resourceLocator)) {
-			this.document = document;
-            try {
-                resourceLocator.save();
-                resourceLocator.cd(docDir);
-                CT_CommonData commonData = this.document.getCommonData();
-                if (Objects.nonNull(commonData)) {
-                    for (ST_Loc loc : commonData.getPublicResList()) {
-                        if (Objects.nonNull(loc.getLoc()) && loc.getLoc().length() > 0
-                            && resourceLocator.exist(loc.getLoc())) {
-                            this.publicRes = resourceLocator.get(loc, Res::new);
-                            reloadRes(this.publicRes);
-                            break;
-                        }
-                    }
-                    for (ST_Loc loc : commonData.getDocumentResList()) {
-                        if (Objects.nonNull(loc.getLoc()) && loc.getLoc().length() > 0
-                            && resourceLocator.exist(loc.getLoc())) {
-                            this.documentRes = resourceLocator.get(loc, Res::new);
-                            reloadRes(documentRes);
-                            break;
-                        }
-                    }
-                }
-            } catch (Exception e) {
-             // 忽略异常
-            } finally {
-                resourceLocator.restore();
-            }
-        }
 
         // 如果存在公共资源，尝试加载
-        if (Objects.isNull(this.publicRes) && docDir.exist(DocDir.PublicResFileName)) {
+        if (docDir.exist(DocDir.PublicResFileName)) {
             try {
                 this.publicRes = docDir.getPublicRes();
                 reloadRes(publicRes);
@@ -195,9 +152,9 @@ public class ResManager {
                 throw new RuntimeException("已有 PublicRes.xml 资源文件解析失败", e);
             }
         }
-        
+
         // 如果存在文档资源，尝试加载
-        if (Objects.isNull(this.documentRes) && docDir.exist(DocDir.DocumentResFileName)) {
+        if (docDir.exist(DocDir.DocumentResFileName)) {
             try {
                 this.documentRes = docDir.getDocumentRes();
                 reloadRes(documentRes);
@@ -208,6 +165,50 @@ public class ResManager {
             }
         }
 
+    }
+
+    /**
+     * 创建资源管理器
+     * 
+     * @param reader OFD解析器
+     * @throws DocumentException 
+     * @throws FileNotFoundException 
+     */
+    public ResManager(OFDReader reader) throws FileNotFoundException, DocumentException {
+        this();
+
+        OFDDir ofdDir = reader.getOFDDir();
+        OFD ofd = ofdDir.getOfd();
+        // 资源定位器
+        ResourceLocator resourceLocator = reader.getResourceLocator();
+        // 找到 Document.xml文件并且序列化
+        ST_Loc docRoot = ofd.getDocBody().getDocRoot();
+        Document document = resourceLocator.get(docRoot, Document::new);
+        CT_CommonData commonData = document.getCommonData();
+
+        this.root = ofdDir;
+        this.docDir = ofdDir.obtainDocDefault();
+        this.document = document;
+        this.maxUnitID = new AtomicInteger(commonData.getMaxUnitID().getId().intValue());
+        
+        try {
+            resourceLocator.save();
+            resourceLocator.cd(docDir);
+            for (ST_Loc loc : commonData.getPublicResList()) {
+                this.publicRes = resourceLocator.get(loc, Res::new);
+                reloadRes(this.publicRes);
+                break;
+            }
+            for (ST_Loc loc : commonData.getDocumentResList()) {
+                this.documentRes = resourceLocator.get(loc, Res::new);
+                reloadRes(documentRes);
+                break;
+            }
+        } catch (Exception e) {
+            // 忽略异常
+        } finally {
+            resourceLocator.restore();
+        }
     }
 
     /**
