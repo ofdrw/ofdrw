@@ -143,6 +143,9 @@ public class OFDMerger implements Closeable {
      * @throws IOException 页面读写异常
      */
     public OFDMerger add(Path filepath, int... pageIndexes) throws IOException {
+        if (filepath == null) {
+            return this;
+        }
         String key = filepath.toAbsolutePath().getFileName().toString();
         DocContext ctx = docCtxMap.get(key);
         // 缓存中没有该文件映射
@@ -180,6 +183,10 @@ public class OFDMerger implements Closeable {
      * @throws IOException 页面读写异常
      */
     public OFDMerger addMix(Path dstDocFilepath, int dstPageIndex, Path tbMixDocFilepath, int tbMixPageIndex) throws IOException {
+        if (dstDocFilepath == null || tbMixDocFilepath == null) {
+            return this;
+        }
+
         String key = dstDocFilepath.toAbsolutePath().getFileName().toString();
         DocContext ctx = docCtxMap.get(key);
         // 缓存中没有该文件映射
