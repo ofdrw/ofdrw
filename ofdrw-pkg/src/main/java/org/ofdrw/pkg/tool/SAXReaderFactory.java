@@ -33,13 +33,24 @@ public class SAXReaderFactory {
 
     /**
      * 创建 SAXReader 实例
+     * <p>
+     * 若用户未配置，则调用 SAXReader.createDefault()创建，否则调用用户定义的生成器逻辑
      *
      * @return SAXReader 对象
-     * 若用户未配置，则调用 SAXReader.createDefault()创建，否则调用用户定义的生成器逻辑
      */
     public static SAXReader create() {
         if (null == CustomizeProducer) {
-            return new SAXReader();
+            SAXReader reader = new SAXReader();
+            // 防止 XXE 攻击
+            try {
+                reader.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                reader.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+                reader.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                reader.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            } catch (Exception e) {
+                // ignore
+            }
+            return reader;
         } else {
             return CustomizeProducer.get();
         }
