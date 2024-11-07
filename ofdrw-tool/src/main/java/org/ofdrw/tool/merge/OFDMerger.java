@@ -10,6 +10,7 @@ import org.ofdrw.core.annotation.pageannot.AnnPage;
 import org.ofdrw.core.annotation.pageannot.PageAnnot;
 import org.ofdrw.core.basicStructure.doc.CT_PageArea;
 import org.ofdrw.core.basicStructure.pageObj.CT_TemplatePage;
+import org.ofdrw.core.basicStructure.pageObj.Content;
 import org.ofdrw.core.basicStructure.pageObj.Template;
 import org.ofdrw.core.basicStructure.pageTree.Page;
 import org.ofdrw.core.basicStructure.pageTree.Pages;
@@ -165,6 +166,35 @@ public class OFDMerger implements Closeable {
         return this;
     }
 
+
+    /**
+     * 添加并混合两个文档中的页面
+     * <p>
+     * 注意两个页面大小不一致，则以第一个文档的页面大小为准。
+     *
+     * @param dstDocFilepath   原始文档路径（用于作为基础页面其他文档的页面将加入到该页面中）
+     * @param dstPageIndex     要混合的页面页序列，如果为空表示所有页面（页码从1开始）
+     * @param tbMixDocFilepath 需要混合的文档路径，该文档的页面内容将被混合到目标文档中
+     * @param tbMixPageIndex   需要混合的文档页序列（页码从1开始）
+     * @return this
+     * @throws IOException 页面读写异常
+     */
+    public OFDMerger addMix(Path dstDocFilepath, int dstPageIndex, Path tbMixDocFilepath, int tbMixPageIndex) throws IOException {
+        String key = dstDocFilepath.toAbsolutePath().getFileName().toString();
+        DocContext ctx = docCtxMap.get(key);
+        // 缓存中没有该文件映射
+        if (ctx == null) {
+            // 加载文件上下文
+            ctx = new DocContext(dstDocFilepath);
+            docCtxMap.put(key, ctx);
+        }
+        // 追加内容到页面列表中
+        PageEntry pageEntry = new PageEntry(dstPageIndex, ctx, new PageEntry(tbMixPageIndex, new DocContext(tbMixDocFilepath)));
+        pageArr.add(pageEntry);
+        return this;
+    }
+
+
     /**
      * 向合并文件中添加页面
      * <p>
@@ -208,7 +238,7 @@ public class OFDMerger implements Closeable {
             // 如果存在Pages那么获取，不存在那么创建
             final PagesDir pagesDir = ofdDoc.docDir.obtainPages();
             for (final PageEntry pageEntry : pageArr) {
-                // 取0文档对象
+                // 取Doc_0文档对象
                 final CT_PageArea docDefaultArea = new CT_PageArea((Element) pageEntry.docCtx.getDefaultArea(0).clone());
                 org.ofdrw.core.basicStructure.pageObj.Page page = null;
                 ST_ID oldPageID = null;
@@ -217,15 +247,15 @@ public class OFDMerger implements Closeable {
                 try {
                     // 获取页面在原文档中的对象ID
                     oldPageID = pageEntry.docCtx.reader.getPageObjectId(pageEntry.pageIndex);
-
-                    Element copy = (Element) pageEntry.docCtx.reader.getPage(pageEntry.pageIndex).clone();
-                    final Document document = DocumentHelper.createDocument();
-                    document.add(copy);
-                    page = new org.ofdrw.core.basicStructure.pageObj.Page(copy);
                 } catch (NumberFormatException e) {
                     // 忽略页码非法的页面复制
                     continue;
                 }
+
+                Element copy = (Element) pageEntry.docCtx.reader.getPage(pageEntry.pageIndex).clone();
+                final Document document = DocumentHelper.createDocument();
+                document.add(copy);
+                page = new org.ofdrw.core.basicStructure.pageObj.Page(copy);
 
                 // 若当前页面的页面区域的大小和位置为空，则使用文档默认的尺寸
                 if (page.getArea() == null) {
@@ -254,7 +284,7 @@ public class OFDMerger implements Closeable {
 
                 // 通过XML 选中与资源有关对象，并实现资源迁移和引用替换
                 domMigrate(pageEntry.docCtx, page);
-                // 把替换后得到页面放入页面容器中
+                // 页面放入页面容器中
                 pageDir.setContent(page);
 
                 // 迁移注释
@@ -262,6 +292,89 @@ public class OFDMerger implements Closeable {
                     String pageDirName = pageDir.getContainerName();
                     pageAnnotationMigrate(pageEntry.docCtx, oldPageID, newPageID, pageDirName);
                 }
+                // 若存在混合页面，那么混合页面
+                if (pageEntry.tbMixPages != null) {
+                    for (PageEntry beMixPageEntry : pageEntry.tbMixPages) {
+                        // 将混合页面的内容混合到目标页面中
+                        mixPage(pageDir, newPageID, page, beMixPageEntry);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 执行混合页面内容
+     *
+     * @param targetPageDir  目标页面容器
+     * @param newPageID      目标页面ID
+     * @param targetPageObj  目标页面对象
+     * @param beMixPageEntry 被混合页面
+     * @throws IOException 文件读取或复制异常
+     */
+    private void mixPage(PageDir targetPageDir, ST_ID newPageID, org.ofdrw.core.basicStructure.pageObj.Page targetPageObj, PageEntry beMixPageEntry) throws IOException {
+        ST_ID oldPageID = null;
+        // 解析原OFD页面的Content.xml 为Page对象
+        try {
+            // 获取页面在原文档中的对象ID
+            oldPageID = beMixPageEntry.docCtx.reader.getPageObjectId(beMixPageEntry.pageIndex);
+        } catch (NumberFormatException e) {
+            // 忽略页码非法的页面复制
+            return;
+        }
+        // 复制页面
+        Element copy = (Element) beMixPageEntry.docCtx.reader.getPage(beMixPageEntry.pageIndex).clone();
+        final Document document = DocumentHelper.createDocument();
+        document.add(copy);
+        org.ofdrw.core.basicStructure.pageObj.Page beMixPage = new org.ofdrw.core.basicStructure.pageObj.Page(copy);
+
+
+        // 迁移页面模板
+        if (beMixPageEntry.copyTemplate) {
+            // 页面模板的迁移的替换
+            final List<Template> pageTplArr = beMixPage.getTemplates();
+            for (Template tplObj : pageTplArr) {
+                // 迁移页面
+                ST_RefID tplNewId = pageTplMigrate(beMixPageEntry.docCtx, tplObj);
+                tplObj.setTemplateID(tplNewId);
+            }
+            // 将不在目标页面的模板加入到目标页面
+            final List<Template> targetTplArr = targetPageObj.getTemplates();
+            for (Template tplObj : pageTplArr) {
+                boolean exist = false;
+                for (Template targetTpl : targetTplArr) {
+                    if (tplObj.getTemplateID().equals(targetTpl.getTemplateID())) {
+                        exist = true;
+                        break;
+                    }
+                }
+                if (!exist) {
+                    targetPageObj.addTemplate(tplObj);
+                }
+            }
+        }
+
+        // 通过XML 选中与资源有关对象，并实现资源迁移和引用替换
+        domMigrate(beMixPageEntry.docCtx, beMixPage);
+
+        // 迁移注释
+        if (beMixPageEntry.copyAnnotations && oldPageID != null) {
+            String pageDirName = targetPageDir.getContainerName();
+            pageAnnotationMigrate(beMixPageEntry.docCtx, oldPageID, newPageID, pageDirName);
+        }
+
+        // 把被混合页面Content中的内容追加到目标页面Content中
+        Content targetPageObjContent = targetPageObj.getContent();
+        if (targetPageObjContent == null) {
+            // 若原页面没有内容描述对象，则创建一个
+            targetPageObjContent = new Content();
+            targetPageObj.setContent(targetPageObjContent);
+        }
+        Content beMixPageContent = beMixPage.getContent();
+        if (beMixPageContent != null) {
+            List<Element> elements = beMixPageContent.elements();
+            for (Element element : elements) {
+                targetPageObjContent.add((Element) element.clone());
             }
         }
     }
@@ -300,7 +413,7 @@ public class OFDMerger implements Closeable {
             if (pageAnnot == null) {
                 return;
             }
-            Element copy = (Element) pageAnnot.clone();;
+            Element copy = (Element) pageAnnot.clone();
             final Document document = DocumentHelper.createDocument();
             document.add(copy);
             pageAnnot = new PageAnnot(copy);

@@ -1,6 +1,9 @@
 package org.ofdrw.tool.merge;
 
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * 页面项目
  *
@@ -35,6 +38,11 @@ public class PageEntry {
 
 
     /**
+     * 需要混合到指定页面的其他文档页面（将一页追加到指定页的上面）
+     */
+    public List<PageEntry> tbMixPages =null;
+
+    /**
      * 创建迁移页面对象
      *
      * @param pageIndex 页面索引号（页码从1开始）
@@ -43,5 +51,21 @@ public class PageEntry {
     public PageEntry(Integer pageIndex, DocContext docCtx) {
         this.docCtx = docCtx;
         this.pageIndex = pageIndex;
+    }
+
+
+    /**
+     * 创建迁移页面对象
+     *
+     * @param pageIndex 页面索引号（页码从1开始）
+     * @param docCtx    上下文
+     * @param tbMixPages 需要混合到指定页面的其他文档页面。
+     */
+    public PageEntry(Integer pageIndex, DocContext docCtx, PageEntry... tbMixPages) {
+        this.docCtx = docCtx;
+        this.pageIndex = pageIndex;
+        if (tbMixPages != null && tbMixPages.length > 0) {
+            this.tbMixPages = Arrays.asList(tbMixPages);
+        }
     }
 }
