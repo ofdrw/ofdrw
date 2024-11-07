@@ -3,7 +3,9 @@ package org.ofdrw.layout.engine;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.ofdrw.core.OFDElement;
+import org.ofdrw.core.basicStructure.doc.CT_CommonData;
 import org.ofdrw.core.basicStructure.doc.Document;
+import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicStructure.res.MediaType;
 import org.ofdrw.core.basicStructure.res.OFDResource;
@@ -18,6 +20,8 @@ import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.font.Font;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
+import org.ofdrw.reader.OFDReader;
+import org.ofdrw.reader.ResourceLocator;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -25,6 +29,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -90,7 +95,11 @@ public class ResManager {
      */
     private CompositeGraphicUnits compositeGraphicUnits;
 
-
+    /**
+     * 文档对象
+     */
+    private Document document;
+    
     /**
      * 文档资源
      */
@@ -100,7 +109,7 @@ public class ResManager {
      * 公共资源
      */
     private Res publicRes;
-
+    
     /**
      * 新增资源对象ID
      */
@@ -130,7 +139,7 @@ public class ResManager {
         this();
         this.root = root;
         this.docDir = docDir;
-        this.maxUnitID = maxUnitID;
+        this.maxUnitID = maxUnitID; 
 
         // 如果存在公共资源，尝试加载
         if (docDir.exist(DocDir.PublicResFileName)) {
@@ -143,6 +152,7 @@ public class ResManager {
                 throw new RuntimeException("已有 PublicRes.xml 资源文件解析失败", e);
             }
         }
+
         // 如果存在文档资源，尝试加载
         if (docDir.exist(DocDir.DocumentResFileName)) {
             try {
@@ -155,6 +165,50 @@ public class ResManager {
             }
         }
 
+    }
+
+    /**
+     * 创建资源管理器
+     * 
+     * @param reader OFD解析器
+     * @throws DocumentException 
+     * @throws FileNotFoundException 
+     */
+    public ResManager(OFDReader reader) throws FileNotFoundException, DocumentException {
+        this();
+
+        OFDDir ofdDir = reader.getOFDDir();
+        OFD ofd = ofdDir.getOfd();
+        // 资源定位器
+        ResourceLocator resourceLocator = reader.getResourceLocator();
+        // 找到 Document.xml文件并且序列化
+        ST_Loc docRoot = ofd.getDocBody().getDocRoot();
+        Document document = resourceLocator.get(docRoot, Document::new);
+        CT_CommonData commonData = document.getCommonData();
+
+        this.root = ofdDir;
+        this.docDir = ofdDir.obtainDocDefault();
+        this.document = document;
+        this.maxUnitID = new AtomicInteger(commonData.getMaxUnitID().getId().intValue());
+        
+        try {
+            resourceLocator.save();
+            resourceLocator.cd(docDir);
+            for (ST_Loc loc : commonData.getPublicResList()) {
+                this.publicRes = resourceLocator.get(loc, Res::new);
+                reloadRes(this.publicRes);
+                break;
+            }
+            for (ST_Loc loc : commonData.getDocumentResList()) {
+                this.documentRes = resourceLocator.get(loc, Res::new);
+                reloadRes(documentRes);
+                break;
+            }
+        } catch (Exception e) {
+            // 忽略异常
+        } finally {
+            resourceLocator.restore();
+        }
     }
 
     /**
@@ -374,7 +428,10 @@ public class ResManager {
      */
     private Document document() {
         try {
-            return docDir.getDocument();
+            if (Objects.isNull(document)) {
+                this.document = docDir.getDocument();
+            }
+            return this.document;
         } catch (FileNotFoundException | DocumentException ex) {
             throw new RuntimeException("文档中缺少Document.xml 文件");
         }

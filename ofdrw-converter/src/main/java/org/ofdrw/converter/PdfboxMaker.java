@@ -708,7 +708,7 @@ public class PdfboxMaker {
     private double scaling(ST_Box targetBox, @SuppressWarnings("rawtypes") CT_GraphicUnit graphicUnit) {
         double scale = 1D;
         PageBlockType instance = PageBlockType.getInstance(graphicUnit.getParent());
-        if (instance != null && instance instanceof CT_PageBlock) {
+        if (Objects.nonNull(instance) && Objects.equals(CT_PageBlock.class, instance.getClass())) {
             scale = scaling(targetBox, graphicUnit.getBoundary());
         }
         return scale;
