@@ -99,7 +99,7 @@ public class ResManager {
      * 文档对象
      */
     private Document document;
-    
+
     /**
      * 文档资源
      */
@@ -109,7 +109,7 @@ public class ResManager {
      * 公共资源
      */
     private Res publicRes;
-    
+
     /**
      * 新增资源对象ID
      */
@@ -130,16 +130,25 @@ public class ResManager {
 
     /**
      * 创建资源管理器
+     * <p>
+     * 要求文档 Doc_N 路径中存在 Document.xml
      *
      * @param root      文档根目录
-     * @param docDir    文档虚拟容器
+     * @param docDir    文档虚拟容器，请确保文档容器中存在 Document.xml
      * @param maxUnitID 自增最大ID提供者
+     * @throws RuntimeException 文档解析异常
      */
     public ResManager(OFDDir root, DocDir docDir, AtomicInteger maxUnitID) {
         this();
         this.root = root;
         this.docDir = docDir;
-        this.maxUnitID = maxUnitID; 
+        this.maxUnitID = maxUnitID;
+
+        try {
+            this.document = docDir.getDocument();
+        } catch (FileNotFoundException | DocumentException e) {
+            throw new RuntimeException("文档解析失败未能找到 Document.xml", e);
+        }
 
         // 如果存在公共资源，尝试加载
         if (docDir.exist(DocDir.PublicResFileName)) {
@@ -168,11 +177,14 @@ public class ResManager {
     }
 
     /**
-     * 创建资源管理器
-     * 
+     * 创建资源管理器，
+     *
+     * <p>
+     * 要求文档 Doc_N 路径中存在 Document.xml
+     *
      * @param reader OFD解析器
-     * @throws DocumentException 
-     * @throws FileNotFoundException 
+     * @throws DocumentException     文档解析异常
+     * @throws FileNotFoundException OFD文档结构非法
      */
     public ResManager(OFDReader reader) throws FileNotFoundException, DocumentException {
         this();
@@ -190,19 +202,17 @@ public class ResManager {
         this.docDir = ofdDir.obtainDocDefault();
         this.document = document;
         this.maxUnitID = new AtomicInteger(commonData.getMaxUnitID().getId().intValue());
-        
+
         try {
             resourceLocator.save();
             resourceLocator.cd(docDir);
             for (ST_Loc loc : commonData.getPublicResList()) {
                 this.publicRes = resourceLocator.get(loc, Res::new);
                 reloadRes(this.publicRes);
-                break;
             }
             for (ST_Loc loc : commonData.getDocumentResList()) {
                 this.documentRes = resourceLocator.get(loc, Res::new);
                 reloadRes(documentRes);
-                break;
             }
         } catch (Exception e) {
             // 忽略异常
@@ -214,7 +224,10 @@ public class ResManager {
     /**
      * 创建资源管理
      *
-     * @param docDir    文档虚拟容器
+     * <p>
+     * 要求文档 Doc_N 路径中存在 Document.xml
+     *
+     * @param docDir    文档虚拟容器，请确保文档容器中存在 Document.xml
      * @param maxUnitID 自增最大ID提供者
      * @deprecated 缺少根容器可能导致部分资源无法获取，请使用 {@link #ResManager(OFDDir, DocDir, AtomicInteger)}
      */
@@ -396,7 +409,12 @@ public class ResManager {
         // 如果不存在那么创建一个公共资源清单，容器目录为文档根目录下的Res目录
         Res pubRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
         docDir.setPublicRes(pubRes);
-        document().getCommonData().addPublicRes(ST_Loc.getInstance("PublicRes.xml"));
+        CT_CommonData commonData = document.getCommonData();
+        if (commonData == null) {
+            commonData = new CT_CommonData();
+            document.setCommonData(commonData);
+        }
+        commonData.addPublicRes(ST_Loc.getInstance("PublicRes.xml"));
         this.publicRes = pubRes;
         return publicRes;
     }
@@ -416,25 +434,14 @@ public class ResManager {
         // 如果不存在那么创建一个公共资源清单，容器目录为文档根目录下的Res目录
         Res docRes = new Res().setBaseLoc(ST_Loc.getInstance("Res"));
         docDir.setDocumentRes(docRes);
-        document().getCommonData().addDocumentRes(ST_Loc.getInstance("DocumentRes.xml"));
+        CT_CommonData commonData = document.getCommonData();
+        if (commonData == null) {
+            commonData = new CT_CommonData();
+            document.setCommonData(commonData);
+        }
+        commonData.addDocumentRes(ST_Loc.getInstance("DocumentRes.xml"));
         documentRes = docRes;
         return documentRes;
-    }
-
-    /**
-     * 忽略无法获取到得到错误信息
-     *
-     * @return document对象
-     */
-    private Document document() {
-        try {
-            if (Objects.isNull(document)) {
-                this.document = docDir.getDocument();
-            }
-            return this.document;
-        } catch (FileNotFoundException | DocumentException ex) {
-            throw new RuntimeException("文档中缺少Document.xml 文件");
-        }
     }
 
 
