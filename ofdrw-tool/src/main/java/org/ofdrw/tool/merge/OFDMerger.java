@@ -183,7 +183,7 @@ public class OFDMerger implements Closeable {
      * @throws IOException 页面读写异常
      */
     public OFDMerger addMix(Path dstDocFilepath, int dstPageIndex, Path tbMixDocFilepath, int tbMixPageIndex) throws IOException {
-        if (dstDocFilepath == null || tbMixDocFilepath == null) {
+        if (dstDocFilepath == null) {
             return this;
         }
 
@@ -195,18 +195,21 @@ public class OFDMerger implements Closeable {
             ctx = new DocContext(dstDocFilepath);
             docCtxMap.put(key, ctx);
         }
-        // 追加内容到页面列表中
-        PageEntry tbMixPageEntry = new PageEntry(tbMixPageIndex, new DocContext(tbMixDocFilepath));
-        String keyMix = tbMixDocFilepath.toAbsolutePath().getFileName().toString();
-        DocContext tbMixCtx = docCtxMap.get(keyMix);
-        // 缓存中没有该文件映射
-        if (tbMixCtx == null) {
-            // 加载文件上下文
-            tbMixCtx = new DocContext(tbMixDocFilepath);
-            docCtxMap.put(keyMix, tbMixCtx);
+        PageEntry pageEntry = new PageEntry(dstPageIndex, ctx);
+        if (tbMixDocFilepath != null) {
+            // 追加内容到页面列表中
+            PageEntry tbMixPageEntry = new PageEntry(tbMixPageIndex, new DocContext(tbMixDocFilepath));
+            String keyMix = tbMixDocFilepath.toAbsolutePath().getFileName().toString();
+            DocContext tbMixCtx = docCtxMap.get(keyMix);
+            // 缓存中没有该文件映射
+            if (tbMixCtx == null) {
+                // 加载文件上下文
+                tbMixCtx = new DocContext(tbMixDocFilepath);
+                docCtxMap.put(keyMix, tbMixCtx);
+            }
+            pageEntry.tbMixPages = new ArrayList<>(1);
+            pageEntry.tbMixPages.add(tbMixPageEntry);
         }
-
-        PageEntry pageEntry = new PageEntry(dstPageIndex, ctx, tbMixPageEntry);
         pageArr.add(pageEntry);
         return this;
     }
