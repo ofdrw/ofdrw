@@ -31,7 +31,7 @@ OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、
 - [**ofrw-crypto**](./ofdrw-crypto) 用于实现《GM/T 0099-2020 开放版式文档密码应用技术规范》对OFD的密码相关功能。
 - [**ofdrw-gv**](./ofdrw-gv) OFDRW 所有模块所共用的全局变量。
 - [**ofdrw-converter**](./ofdrw-converter) OFD文档转换。
-- [**ofdrw-tool**](./ofdrw-tool) OFD文档工具，文档合并、裁剪、重组。
+- [**ofdrw-tool**](./ofdrw-tool) OFD文档工具，文档合并、裁剪、重组、混合。***New***
 - [**ofdrw-graphics2d**](./ofdrw-graphics2d) 实现了AWT Graphics2D接口，生成OFD文档内容。
 - [**ofdrw-full**](./ofdrw-full) 上述所有模块整合包，用于简化依赖引入。
 

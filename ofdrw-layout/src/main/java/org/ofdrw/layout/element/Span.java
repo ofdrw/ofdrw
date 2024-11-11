@@ -3,6 +3,7 @@ package org.ofdrw.layout.element;
 import org.ofdrw.core.text.text.Weight;
 import org.ofdrw.font.Font;
 import org.ofdrw.layout.Rectangle;
+import org.ofdrw.layout.element.canvas.NamedColor;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -137,6 +138,20 @@ public class Span implements TextFontInfo {
     public Span setColor(int[] rgb) {
         this.fillColor = rgb;
         return this;
+    }
+
+    /**
+     * 设置 文字颜色
+     *
+     * @param color 颜色值，可以是 16进制值 "#FFFFFF"、 16进制值缩写 "#FF"F、RGB "rgb(255,255,255)"、颜色名称 "white"
+     * @return this
+     */
+    public Span setColor(String color) {
+        int[] c = NamedColor.rgb(color);
+        if (c == null || c.length < 3) {
+            throw new IllegalArgumentException("边框颜色 颜色值错误：" + color);
+        }
+       return setColor(c);
     }
 
     /**

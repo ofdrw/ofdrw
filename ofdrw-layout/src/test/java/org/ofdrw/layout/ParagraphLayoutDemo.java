@@ -17,6 +17,34 @@ import java.nio.file.Paths;
 public class ParagraphLayoutDemo {
 
     /**
+     * 设置段落内字体颜色
+     */
+    @Test
+    public void setParagraphColor() throws Exception{
+        Path outP = Paths.get("target/page1.ofd");
+
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
+            VirtualPage vp = new VirtualPage(PageLayout.A4());
+            Paragraph p = new Paragraph();
+            p.setBackgroundColor("#409EFF");
+            p.setPadding(30d);
+            p.setBorder(1d);
+            p.setBorderColor("#000000");
+            p.setWidth(40d);
+            p.setHeight(40d);
+            p.setXY(10d, 10d);
+            p.setPosition(Position.Absolute);
+            Span txt = new Span("1");
+            txt.setColor("#FFFFFF");
+            txt.setFontSize(20d);
+            p.add(txt);
+            vp.add(p);
+            ofdDoc.addVPage(vp);
+
+        }
+        System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
+    }
+    /**
      * 测试段落内文字浮动
      */
     @Test

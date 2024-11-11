@@ -183,34 +183,51 @@ public class OFDMerger implements Closeable {
      * @throws IOException 页面读写异常
      */
     public OFDMerger addMix(Path dstDocFilepath, int dstPageIndex, Path tbMixDocFilepath, int tbMixPageIndex) throws IOException {
-        if (dstDocFilepath == null) {
+        ArrayList<DocPage> pageList = new ArrayList<>(2);
+        pageList.add(new DocPage(dstDocFilepath, dstPageIndex));
+        pageList.add(new DocPage(tbMixDocFilepath, tbMixPageIndex));
+        return addMix(pageList);
+    }
+
+    /**
+     * 添加并混合多个文档页面到一个页面中
+     * <p>
+     * 注意两个页面大小不一致，则以第一个文档的页面大小为准。
+     *
+     * @param pageList 需要混合的页面列表，按照顺序依次混合，第1个文档页面处于最底下。
+     * @return this
+     * @throws IOException 页面读写异常
+     */
+    public OFDMerger addMix(List<DocPage> pageList) throws IOException {
+        if (pageList == null || pageList.isEmpty()) {
             return this;
         }
 
-        String key = dstDocFilepath.toAbsolutePath().getFileName().toString();
-        DocContext ctx = docCtxMap.get(key);
-        // 缓存中没有该文件映射
-        if (ctx == null) {
-            // 加载文件上下文
-            ctx = new DocContext(dstDocFilepath);
-            docCtxMap.put(key, ctx);
-        }
-        PageEntry pageEntry = new PageEntry(dstPageIndex, ctx);
-        if (tbMixDocFilepath != null) {
-            // 追加内容到页面列表中
-            PageEntry tbMixPageEntry = new PageEntry(tbMixPageIndex, new DocContext(tbMixDocFilepath));
-            String keyMix = tbMixDocFilepath.toAbsolutePath().getFileName().toString();
-            DocContext tbMixCtx = docCtxMap.get(keyMix);
-            // 缓存中没有该文件映射
-            if (tbMixCtx == null) {
-                // 加载文件上下文
-                tbMixCtx = new DocContext(tbMixDocFilepath);
-                docCtxMap.put(keyMix, tbMixCtx);
+        PageEntry newPage = null;
+        for (DocPage page : pageList) {
+            if (page.path == null || page.index < 1) {
+                continue;
             }
-            pageEntry.tbMixPages = new ArrayList<>(1);
-            pageEntry.tbMixPages.add(tbMixPageEntry);
+
+            String key = page.path.toAbsolutePath().getFileName().toString();
+            DocContext ctx = docCtxMap.get(key);
+            // 缓存中没有该文件映射
+            if (ctx == null) {
+                // 加载文件上下文
+                ctx = new DocContext(page.path);
+                docCtxMap.put(key, ctx);
+            }
+            // 被混合的第一页
+            if (newPage == null) {
+                newPage = new PageEntry(page.index, ctx);
+                newPage.tbMixPages = new ArrayList<>(pageList.size());
+            }else{
+                newPage.tbMixPages.add(new PageEntry(page.index, ctx));
+            }
         }
-        pageArr.add(pageEntry);
+        if (newPage != null) {
+            pageArr.add(newPage);
+        }
         return this;
     }
 
@@ -236,6 +253,7 @@ public class OFDMerger implements Closeable {
             if (!docCtxMap.containsKey(key)) {
                 docCtxMap.put(key, page.docCtx);
             }
+            // 追加混合页面
             if (page.tbMixPages != null) {
                 for (PageEntry beMixPage : page.tbMixPages) {
                     String keyMix = beMixPage.docCtx.filepath.toAbsolutePath().getFileName().toString();
