@@ -8,6 +8,7 @@ import org.ofdrw.core.basicType.ST_Loc;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * 附件
@@ -267,12 +268,15 @@ public class CT_Attachment extends OFDElement {
      * 统一处理日期时间转换，便于对日期时间格式进行兼容处理
      * 
      * @param dateTimeStr 日期时间字符串
-     * @return
+     * @return 日期时间
      */
     private LocalDateTime parseLocalDateTime(String dateTimeStr) {
         if (dateTimeStr.indexOf('T') == -1) {
             return LocalDateTime.parse(dateTimeStr, Const.LOCAL_DATETIME_FORMATTER);
-        } else {
+        }if((dateTimeStr.indexOf('/') == -1)) {
+            // 兼容非标准日期格式解析
+            return LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("[yyyy-MM-dd][yyyy/MM/dd] HH:mm:ss"));
+        }else {
             return LocalDateTime.parse(dateTimeStr, Const.DATETIME_FORMATTER);
         }
     }
