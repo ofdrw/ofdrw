@@ -295,6 +295,15 @@ public class OFDSigner implements Closeable {
     }
 
     /**
+     * 清除签章外观设置List
+     * @return this
+     */
+    public OFDSigner cleanApPos() {
+        this.apList.clear();
+        return this;
+    }
+
+    /**
      * OFD文档预检查
      * <p>
      * 1. 是否需要根性OFD.xml。
