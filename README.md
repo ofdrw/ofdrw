@@ -105,12 +105,10 @@ public class HelloWorld {
 
 #### HTML5
 
-HTML5前端预览解决方案： [DLTech21/ofd.js . https://github.com/DLTech21/ofd.js](https://github.com/DLTech21/ofd.js)
+HTML5前端预览解决方案： 
 
-- `jszip`解压。
-- `fast-xml-parser`解析xml为json数据。
-- `svg`及`canvas`渲染实现。
-- 完全浏览器OFD页面渲染。
+- [DLTech21/ofd.js . https://github.com/DLTech21/ofd.js](https://github.com/DLTech21/ofd.js)
+- [xxss0903/LiteOfd . https://github.com/xxss0903/liteofd](https://github.com/xxss0903/liteofd)
 
 #### 开源阅读器
 
