@@ -751,6 +751,12 @@ public class ItextMaker {
     private void writeText(ResourceManage resMgt, PdfCanvas pdfCanvas, ST_Box box, ST_Box sealBox, ST_Box annotBox, TextObject textObject, Color fillColor, int alpha, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
         double scale = scaling(sealBox, textObject);
     	float fontSize = Double.valueOf(textObject.getSize() * scale).floatValue();
+        CT_DrawParam ctDrawParam = resMgt.superDrawParam(textObject);
+        // 使用绘制参数补充缺省的颜色
+        if (ctDrawParam != null && textObject.getFillColor() == null
+                && ctDrawParam.getFillColor() != null) {
+            fillColor = ColorConvert.pdfRGB(resMgt, ctDrawParam.getFillColor());
+        }
         pdfCanvas.setFillColor(fillColor);
         if (textObject.getFillColor() != null) {
             Element e = textObject.getFillColor().getOFDElement("AxialShd");
