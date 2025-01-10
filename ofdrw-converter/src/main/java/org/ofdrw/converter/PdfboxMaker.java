@@ -512,7 +512,7 @@ public class PdfboxMaker {
             contentStream.setMiterLimit(pathObject.getMiterLimit().floatValue());
             path(contentStream, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
             if (pathObject.getLineWidth() != null && pathObject.getLineWidth() > 0) {
-                contentStream.setLineWidth( pathObject.getLineWidth().floatValue());
+                contentStream.setLineWidth((float) converterDpi(pathObject.getLineWidth()));
             }
             PDShading shading = parseShading(strokeColor, box, pathObject);
             if (shading != null) {
