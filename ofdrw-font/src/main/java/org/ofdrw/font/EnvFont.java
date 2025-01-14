@@ -8,8 +8,9 @@ import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -28,7 +29,7 @@ public final class EnvFont {
     /**
      * 字体缓存
      */
-    private static Map<String, java.awt.Font> fMap;
+    private static Map<String, Font> fMap;
 
 
     /**
@@ -49,7 +50,7 @@ public final class EnvFont {
      * @param name 字体名
      * @return 指定名称字体，若不存在则返回空。
      */
-    public static java.awt.Font getFont(String name) {
+    public static Font getFont(String name) {
         if (name == null || name.equals("")) {
             return null;
         }
@@ -57,6 +58,7 @@ public final class EnvFont {
         name = name.toLowerCase();
         return fMap.get(name);
     }
+
 
     /**
      * 字体加载初始化块，仅在首次执行时加载，防止由于并发读取字体造成的NPE。
@@ -67,14 +69,9 @@ public final class EnvFont {
             // 静态初始化锁防止多线程初始化字体映射异常
             fMap = new HashMap<>();
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            java.awt.Font[] allFonts = ge.getAllFonts();
-            for (java.awt.Font font : allFonts) {
-                fMap.put(font.getFontName().toLowerCase(), font);
-                // Font Family 表示字体系列，如 Serif
-                // Font Name 表示系列下的不同样式，如 Serif.bold、Serif.italic
-                fMap.put(font.getFamily().toLowerCase(), font);
-            }
-
+            Font[] allFonts = ge.getAllFonts();
+            Map<String, List<Font>> fontsFamilyMap = Arrays.stream(allFonts).collect(Collectors.groupingBy(Font::getFamily));
+            loadFonts(fontsFamilyMap);
             if (fMap.get("宋体") != null) {
                 defaultFont = fMap.get("宋体");
             } else if (fMap.get("simsun") != null) {
@@ -147,21 +144,22 @@ public final class EnvFont {
         initialize();
         // 遍历 dirPath 所有openType字体文件
         try (Stream<Path> walk = Files.walk(dirPath)) {
-            walk.filter(p -> {
+            Map<String, List<Font>> fontsFamilyMap = walk.filter(p -> {
                 String fileName = p.getFileName().toString().toLowerCase();
                 return fileName.endsWith(".otf") || fileName.endsWith(".ttf");
-            }).forEach(p -> {
+            }).map(path -> {
+                Font font = null;
                 try {
-                    java.awt.Font font = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, p.toFile());
-                    fMap.put(font.getFontName().toLowerCase(), font);
-                    fMap.put(font.getFamily().toLowerCase(), font);
+                    font = Font.createFont(Font.TRUETYPE_FONT, path.toFile());
                 } catch (Exception e) {
                     // 加载字体失败，打印错误并继续
-                    System.err.println("加载字体文件失败：" + p + "，错误：" + e.getMessage());
+                    System.err.println("加载字体文件失败：" + path + "，错误：" + e.getMessage());
                 }
-            });
-        }
+                return font;
+            }).filter(Objects::nonNull).collect(Collectors.groupingBy(Font::getFamily));
+            loadFonts(fontsFamilyMap);
 
+        }
     }
 
 
@@ -217,7 +215,7 @@ public final class EnvFont {
         if (path == null || !Files.exists(path)) {
             return;
         }
-        defaultFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, path.toFile());
+        defaultFont = Font.createFont(Font.TRUETYPE_FONT, path.toFile());
     }
 
     /**
@@ -232,6 +230,28 @@ public final class EnvFont {
             }
         }
         return frCtx;
+    }
+
+    /**
+     * 加载字体
+     *
+     * @param fontsFamilyMap 包含字体数据的Map
+     */
+    private static void loadFonts(Map<String, List<Font>> fontsFamilyMap) {
+        for (Map.Entry<String, List<Font>> fontEntry : fontsFamilyMap.entrySet()) {
+            List<Font> fonts = fontEntry.getValue();
+            //是否安装了正常字体
+            boolean containsNormalFont = fonts.stream().anyMatch(font -> font.getFontName().equals(font.getFamily()));
+            for (Font font : fonts) {
+                fMap.put(font.getFontName().toLowerCase(), font);
+                // Font Family 表示字体系列，如 Serif
+                // Font Name 表示系列下的不同样式，如 Serif.bold、Serif.italic
+                //如果安装了正常字体,就不再添加，防止正常字体被覆盖
+                if (!containsNormalFont && !fMap.containsKey(font.getFamily().toLowerCase())) {
+                    fMap.put(font.getFamily().toLowerCase(), font);
+                }
+            }
+        }
     }
 
 }
