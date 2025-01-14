@@ -240,13 +240,13 @@ public final class EnvFont {
     private static void loadFonts(Map<String, List<Font>> fontsFamilyMap) {
         for (Map.Entry<String, List<Font>> fontEntry : fontsFamilyMap.entrySet()) {
             List<Font> fonts = fontEntry.getValue();
-            //是否安装了正常字体
+            // 常规字体中 FontName 等于 FamilyName
             boolean containsNormalFont = fonts.stream().anyMatch(font -> font.getFontName().equals(font.getFamily()));
             for (Font font : fonts) {
                 fMap.put(font.getFontName().toLowerCase(), font);
                 // Font Family 表示字体系列，如 Serif
                 // Font Name 表示系列下的不同样式，如 Serif.bold、Serif.italic
-                //如果安装了正常字体,就不再添加，防止正常字体被覆盖
+                // 如果安装了常规字体就不再添加，防止正常字体被覆盖。
                 if (!containsNormalFont && !fMap.containsKey(font.getFamily().toLowerCase())) {
                     fMap.put(font.getFamily().toLowerCase(), font);
                 }
