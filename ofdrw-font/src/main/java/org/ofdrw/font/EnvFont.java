@@ -247,7 +247,7 @@ public final class EnvFont {
                 // Font Family 表示字体系列，如 Serif
                 // Font Name 表示系列下的不同样式，如 Serif.bold、Serif.italic
                 //如果安装了正常字体,就不再添加，防止正常字体被覆盖
-                if (!containsNormalFont && fMap.containsKey(font.getFamily().toLowerCase())) {
+                if (!containsNormalFont && !fMap.containsKey(font.getFamily().toLowerCase())) {
                     fMap.put(font.getFamily().toLowerCase(), font);
                 }
             }
