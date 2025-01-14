@@ -552,10 +552,9 @@ public class ItextMaker {
                     pathObject.getBoundary().getHeight());
         }
         if (annotBox != null) {
-            //TODO 修复annot中的注解的定位
             pathObject.setBoundary(
-                    pathObject.getBoundary().getTopLeftX() + converterDpi(annotBox.getTopLeftX()),
-                    pathObject.getBoundary().getTopLeftY() + converterDpi(annotBox.getTopLeftY()),
+                    pathObject.getBoundary().getTopLeftX() + annotBox.getTopLeftX(),
+                    pathObject.getBoundary().getTopLeftY() +annotBox.getTopLeftY(),
                     pathObject.getBoundary().getWidth(),
                     pathObject.getBoundary().getHeight());
         }
