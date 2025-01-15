@@ -77,6 +77,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static org.ofdrw.converter.utils.CommonUtil.converterDpi;
+import static org.ofdrw.core.text.text.Direction.*;
 
 /**
  * pdf生成器
@@ -475,12 +476,12 @@ public class ItextMaker {
 		}
         if (pathObject.getCTM() != null && pathObject.getLineWidth() != null) {
             Double[] ctm = pathObject.getCTM().toDouble();
-            double a = ctm[0].doubleValue();
-            double b = ctm[1].doubleValue();
-            double c = ctm[2].doubleValue();
-            double d = ctm[3].doubleValue();
-            double e = ctm[4].doubleValue();
-            double f = ctm[5].doubleValue();
+            double a = ctm[0];
+            double b = ctm[1];
+            double c = ctm[2];
+            double d = ctm[3];
+            double e = ctm[4];
+            double f = ctm[5];
             double sx = Math.signum(a) * Math.sqrt(a * a + c * c);
             double sy = Math.signum(d) * Math.sqrt(b * b + d * d);
             lineWidth = (float) (lineWidth * sx);
@@ -815,12 +816,12 @@ public class ItextMaker {
         }
         if (textObject.getCTM() != null) {
             Double[] ctm = textObject.getCTM().toDouble();
-            double a = ctm[0].doubleValue();
-            double b = ctm[1].doubleValue();
-            double c = ctm[2].doubleValue();
-            double d = ctm[3].doubleValue();
-            double e = ctm[4].doubleValue();
-            double f = ctm[5].doubleValue();
+            double a = ctm[0];
+            double b = ctm[1];
+            double c = ctm[2];
+            double d = ctm[3];
+            double e = ctm[4];
+            double f = ctm[5];
             double sx = a > 0 ? Math.signum(a) * Math.sqrt(a * a + c * c) : Math.sqrt(a * a + c * c);
             double angel = Math.atan2(-b, d);
             if (!(angel == 0 && a != 0 && d == 1)) {
@@ -831,12 +832,12 @@ public class ItextMaker {
         }
         if (compositeObjectCTM != null) {
             Double[] ctm = compositeObjectCTM.toDouble();
-            double a = ctm[0].doubleValue();
-            double b = ctm[1].doubleValue();
-            double c = ctm[2].doubleValue();
-            double d = ctm[3].doubleValue();
-            double e = ctm[4].doubleValue();
-            double f = ctm[5].doubleValue();
+            double a = ctm[0];
+            double b = ctm[1];
+            double c = ctm[2];
+            double d = ctm[3];
+            double e = ctm[4];
+            double f = ctm[5];
             double sx = a > 0 ? Math.signum(a) * Math.sqrt(a * a + c * c) : Math.sqrt(a * a + c * c);
             double angel = Math.atan2(-b, d);
             if (!(angel == 0 && a != 0 && d == 1)) {
@@ -867,12 +868,12 @@ public class ItextMaker {
             pdfCanvas.moveText((textCodePoint.getX()), (textCodePoint.getY()));
             if (textObject.getCTM() != null) {
                 Double[] ctm = textObject.getCTM().toDouble();
-                double a = ctm[0].doubleValue();
-                double b = ctm[1].doubleValue();
-                double c = ctm[2].doubleValue();
-                double d = ctm[3].doubleValue();
-                double e = ctm[4].doubleValue();
-                double f = ctm[5].doubleValue();
+                double a = ctm[0];
+                double b = ctm[1];
+                double c = ctm[2];
+                double d = ctm[3];
+                double e = ctm[4];
+                double f = ctm[5];
                 AffineTransform transform = new AffineTransform();
                 double angel = Math.atan2(-b, d);
                 transform.rotate(angel, rx, ry);
@@ -894,6 +895,15 @@ public class ItextMaker {
                 //处理加粗字体
                 pdfCanvas.setFillColor(ColorConstants.BLACK);
                 pdfCanvas.setTextRenderingMode(PdfCanvasConstants.TextRenderingMode.FILL_STROKE);
+            }
+
+            //设置字符方向
+            if (textObject.getCharDirection() == Angle_90) {
+                pdfCanvas.setTextMatrix(0, -1, 1, 0, (float) textCodePoint.getX(), (float) textCodePoint.getY());
+            } else if (textObject.getCharDirection() == Angle_180) {
+                pdfCanvas.setTextMatrix(-1, 0, 0, -1, (float) textCodePoint.getX(), (float) textCodePoint.getY());
+            } else if (textObject.getCharDirection() == Angle_270) {
+                pdfCanvas.setTextMatrix(0, 1, -1, 0, (float) textCodePoint.getX(), (float) textCodePoint.getY());
             }
 
 
