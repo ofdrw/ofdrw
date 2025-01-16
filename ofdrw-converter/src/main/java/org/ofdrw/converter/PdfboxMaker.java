@@ -26,6 +26,7 @@ import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType2;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType3;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.util.Matrix;
 import org.dom4j.Element;
 import org.ofdrw.converter.point.PathPoint;
 import org.ofdrw.converter.point.TextCodePoint;
@@ -80,6 +81,7 @@ import java.util.*;
 
 import static org.ofdrw.converter.utils.CommonUtil.convertPDColor;
 import static org.ofdrw.converter.utils.CommonUtil.converterDpi;
+import static org.ofdrw.core.text.text.Direction.*;
 
 
 /**
@@ -485,12 +487,12 @@ public class PdfboxMaker {
         contentStream.setLineWidth(lineWidth);
         if (pathObject.getCTM() != null && pathObject.getLineWidth() != null) {
             Double[] ctm = pathObject.getCTM().toDouble();
-            double a = ctm[0].doubleValue();
-            double b = ctm[1].doubleValue();
-            double c = ctm[2].doubleValue();
-            double d = ctm[3].doubleValue();
-            double e = ctm[4].doubleValue();
-            double f = ctm[5].doubleValue();
+            double a = ctm[0];
+            double b = ctm[1];
+            double c = ctm[2];
+            double d = ctm[3];
+            double e = ctm[4];
+            double f = ctm[5];
             double sx = Math.signum(a) * Math.sqrt(a * a + c * c);
             double sy = Math.signum(d) * Math.sqrt(b * b + d * d);
             lineWidth = (float) (lineWidth * sx);
@@ -879,6 +881,16 @@ public class PdfboxMaker {
                 transform.setTransform(textObject.getHScale().floatValue(), 0, 0, 1, (1 - textObject.getHScale().floatValue()) * textCodePoint.getX(), 0);
                 contentStream.concatenate2CTM(transform);
             }
+
+            //设置字符方向
+            if (textObject.getCharDirection() == Angle_90) {
+                contentStream.setTextMatrix(new Matrix(0, -1, 1, 0, (float) textCodePoint.getX(), (float) textCodePoint.getY()));
+            } else if (textObject.getCharDirection() == Angle_180) {
+                contentStream.setTextMatrix(new Matrix(-1, 0, 0, -1, (float) textCodePoint.getX(), (float) textCodePoint.getY()));
+            } else if (textObject.getCharDirection() == Angle_270) {
+                contentStream.setTextMatrix(new Matrix(0, 1, -1, 0, (float) textCodePoint.getX(), (float) textCodePoint.getY()));
+            }
+
             contentStream.setFont(font, (float) converterDpi(fontSize));
             try {
                 contentStream.showText(textCodePoint.getText());
