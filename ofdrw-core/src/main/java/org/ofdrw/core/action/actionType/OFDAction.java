@@ -37,8 +37,8 @@ public interface OFDAction extends Element {
             case "ofd:Sound":
             case "Sound":
                 return new Sound(element);
-            case "ofd:Movies":
-            case "Movies":
+            case "ofd:Movie":
+            case "Movie":
                 return new Movie(element);
             default:
                 throw new IllegalArgumentException("未知的动作类型：" + qName);
