@@ -87,9 +87,10 @@ public final class FontLoader {
      */
     private static synchronized void syncInit() {
         if (instance == null) {
-            instance = new FontLoader();
+            FontLoader singleInstance = new FontLoader();
             // 初始化加载字体信息
-            instance.init();
+            singleInstance.init();
+            instance = singleInstance;
         }
     }
 
