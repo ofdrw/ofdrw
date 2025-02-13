@@ -73,7 +73,10 @@ public final class FontLoader {
      */
     private static Path DefaultFontPath;
 
-    private static FontLoader instance = null;
+    /**
+     * 设置为volatile，防止后续 syncInit() 方法中 instance = singleInstance 语句的指令重排序
+     */
+    private static volatile FontLoader instance = null;
 
     private boolean enableSimilarFontReplace = true;
 
