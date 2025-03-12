@@ -139,7 +139,8 @@ class PDFConverterTest {
         Path[] arr = new Path[]{
                 Paths.get("src/test/resources/img.jpg"),
                 Paths.get("src/test/resources/log4j2.xml"),
-                Paths.get("src/test/resources/helloworld.ofd")
+                Paths.get("src/test/resources/helloworld.ofd"),
+                Paths.get("src/test/resources/intro-数科.ofd")
         };
         try (PDDocument pdfDoc =  PDDocument.load(src.toFile())) {
             PDEmbeddedFilesNameTreeNode efTree = new PDEmbeddedFilesNameTreeNode();
