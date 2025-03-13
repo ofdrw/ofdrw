@@ -921,8 +921,8 @@ public class PdfboxMaker {
             PDComplexFileSpecification fs = new PDComplexFileSpecification();
             Path attFile = ofdReader.getAttachmentFile(attachment);
             // 文件名传
-            fs.setFile(attFile.getFileName().toString());
-
+            fs.setFile(attachment.getAttachmentName());
+            fs.setFileUnicode(attachment.getAttachmentName());
             // 文件流，该流将由PDEmbeddedFile内部关闭
             PDEmbeddedFile ef = new PDEmbeddedFile(pdf, Files.newInputStream(attFile));
             // 文件类型
