@@ -1,17 +1,12 @@
 package com.itextpdf.io.font;
 
-import com.itextpdf.io.IOException;
-import com.itextpdf.io.LogMessageConstant;
 import com.itextpdf.io.font.constants.TrueTypeCodePages;
 import com.itextpdf.io.font.otf.Glyph;
 import com.itextpdf.io.font.otf.GlyphPositioningTableReader;
 import com.itextpdf.io.font.otf.GlyphSubstitutionTableReader;
 import com.itextpdf.io.font.otf.OpenTypeGdefTableReader;
 import com.itextpdf.io.util.IntHashtable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.itextpdf.io.util.MessageFormatUtil;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -130,7 +125,8 @@ public class ItextTrueTypeFont extends TrueTypeFont {
             }
         } catch (java.io.IOException e) {
             fontStreamBytes = null;
-            throw new IOException(IOException.IoException, e);
+            throw new RuntimeException("Failed to read font stream bytes", e);
+
         }
         return fontStreamBytes;
     }
@@ -177,7 +173,7 @@ public class ItextTrueTypeFont extends TrueTypeFont {
         try {
             return fontParser.getSubset(glyphs, subset);
         } catch (java.io.IOException e) {
-            throw new IOException(IOException.IoException, e);
+            throw new RuntimeException("Failed to get subset", e);
         }
     }
 
@@ -271,9 +267,9 @@ public class ItextTrueTypeFont extends TrueTypeFont {
         for (int charCode : cmap.keySet()) {
             int index = cmap.get(charCode)[0];
             if (index >= numOfGlyphs) {
-                Logger LOGGER = LoggerFactory.getLogger(TrueTypeFont.class);
-                LOGGER.warn(MessageFormatUtil.format(LogMessageConstant.FONT_HAS_INVALID_GLYPH,
-                        getFontNames().getFontName(), index));
+//                Logger LOGGER = LoggerFactory.getLogger(TrueTypeFont.class);
+//                LOGGER.warn(MessageFormatUtil.format(LogMessageConstant.FONT_HAS_INVALID_GLYPH,
+//                        getFontNames().getFontName(), index));
                 continue;
             }
             Glyph glyph = new Glyph(index, glyphWidths[index], charCode, bBoxes != null ? bBoxes[index] : null);

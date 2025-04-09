@@ -1,8 +1,8 @@
 package com.itextpdf.io.font;
 
-import com.itextpdf.io.IOException;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,7 +64,6 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
     /**
      * Extracts the names of the font in all the languages available.
      *
-     * @throws IOException         on error
      * @throws java.io.IOException on error
      */
     private void readNameTable() throws java.io.IOException {
@@ -120,16 +119,15 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
     /**
      * Read horizontal header, table 'hhea'.
      *
-     * @throws IOException         the font is invalid.
      * @throws java.io.IOException the font file could not be read.
      */
     private void readHheaTable() throws java.io.IOException {
         int[] table_location = tables.get("hhea");
         if (table_location == null) {
             if (fileName != null) {
-                throw new IOException(IOException.TableDoesNotExistsIn).setMessageParams("hhea", fileName);
+                throw new IOException("hhea table does not exist in " + fileName);
             } else {
-                throw new IOException(IOException.TableDoesNotExist).setMessageParams("hhea");
+                throw new IOException("hhea table does not exist");
             }
         }
         raf.seek(table_location[0] + 4);
@@ -157,9 +155,9 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
         int[] table_location = tables.get("head");
         if (table_location == null) {
             if (fileName != null) {
-                throw new IOException(IOException.TableDoesNotExistsIn).setMessageParams("head", fileName);
+                throw new IOException("head table does not exist in " + fileName);
             } else {
-                throw new IOException(IOException.TableDoesNotExist).setMessageParams("head");
+                throw new IOException("head table does not exist");
             }
         }
         raf.seek(table_location[0] + 16);
@@ -178,7 +176,6 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
      * Reads the windows metrics table. The metrics are extracted from the table 'OS/2'. Depends on
      * {@link HeaderTable#unitsPerEm} property.
      *
-     * @throws IOException         the font is invalid.
      * @throws java.io.IOException the font file could not be read.
      */
     private void readOs_2Table() throws java.io.IOException {
@@ -190,9 +187,9 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
         /**********************************/
         if (table_location == null) {
             if (fileName != null) {
-                throw new IOException(IOException.TableDoesNotExistsIn).setMessageParams("os/2", fileName);
+                throw new IOException("OS/2 table does not exist in " + fileName);
             } else {
-                throw new IOException(IOException.TableDoesNotExist).setMessageParams("os/2");
+                throw new IOException("OS/2 table does not exist");
             }
         }
         os_2 = new WindowsMetrics();

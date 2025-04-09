@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 public class OFD2PDFTest {
 
 
+    @Deprecated
     @Test
     public void convertPdf() {
 //        Path src = Paths.get("src/test/resources/1.ofd");

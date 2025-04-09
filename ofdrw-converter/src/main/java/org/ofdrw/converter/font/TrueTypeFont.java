@@ -9,7 +9,6 @@ import org.apache.fontbox.ttf.CmapTable;
 import org.apache.fontbox.type1.Type1Font;
 import org.ofdrw.converter.font.type1.Type1SegSplitParser;
 
-import java.awt.*;
 import java.awt.geom.GeneralPath;
 import java.io.IOException;
 import java.io.InputStream;

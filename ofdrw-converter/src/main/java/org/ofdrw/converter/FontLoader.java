@@ -693,13 +693,12 @@ public final class FontLoader {
                 fontProgram = iTextDefaultFont;
                 hasReplace = true;
             }
-            return new FontWrapper<>(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, false), hasReplace);
+            return new FontWrapper<>(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED), hasReplace);
         } catch (Exception e) {
             if (DEBUG) {
                 log.warn("加载字体异常 " + familyName + " " + fontName + " " + ctFont.getFontFile(), e);
             }
-
-            return new FontWrapper<>(PdfFontFactory.createFont(iTextDefaultFont, PdfEncodings.IDENTITY_H, false), true);
+            return new FontWrapper<>(PdfFontFactory.createFont(iTextDefaultFont, PdfEncodings.IDENTITY_H, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED), true);
         }
 
     }
@@ -723,7 +722,7 @@ public final class FontLoader {
 			return fontProgram;
 		} catch (Exception e) {
 			if (DEBUG) {
-				log.info("字体加载失败 " + fontAbsPath, e);
+				log.info("已跳过 {} 字体文件解析，原因 {}" ,fontAbsPath, e.getMessage());
 			}
 			return null;
 		}
@@ -808,7 +807,7 @@ public final class FontLoader {
             }
         } catch (Exception e) {
             if (DEBUG) {
-                log.warn("无法加载AWT字体 " + file.getAbsolutePath(), e);
+                log.info("已跳过 {} 字体文件解析，原因 {} ", file.getAbsolutePath(), e.getMessage());
             }
         }
     }
