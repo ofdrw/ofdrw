@@ -928,12 +928,17 @@ public class PdfboxMaker {
             // 文件类型
             ef.setSubtype(attachment.getFormat());
             ef.setSize((int) Files.size(attFile));
-            // 设置创建时间
-            LocalDateTime creationDate = attachment.getCreationDateTime();
-            Date date = Date.from(creationDate.atZone(ZoneId.systemDefault()).toInstant());
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(date);
-            ef.setCreationDate(calendar);
+
+            try {
+                Calendar calendar = Calendar.getInstance();
+                // 设置创建时间
+                LocalDateTime creationDate = attachment.getCreationDateTime();
+                Date date = Date.from(creationDate.atZone(ZoneId.systemDefault()).toInstant());
+                calendar.setTime(date);
+                ef.setCreationDate(calendar);
+            }catch (Exception e){
+                logger.info("无法获取附件创建时间 {} : {}",attachment.attributeValue("CreationDate") ,attachment.getAttachmentName(), e);
+            }
 
             fs.setEmbeddedFile(ef);
             efMap.put(attachment.getAttachmentName(), fs);

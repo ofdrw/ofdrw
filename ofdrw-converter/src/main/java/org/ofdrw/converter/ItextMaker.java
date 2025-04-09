@@ -21,7 +21,6 @@ import com.itextpdf.kernel.pdf.colorspace.PdfShading;
 import com.itextpdf.kernel.pdf.extgstate.PdfExtGState;
 import com.itextpdf.kernel.pdf.filespec.PdfFileSpec;
 import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
-import com.itextpdf.kernel.pdf.xobject.PdfImageXObject;
 import com.itextpdf.layout.Canvas;
 import org.dom4j.Element;
 import org.ofdrw.converter.font.FontWrapper;
@@ -61,8 +60,6 @@ import org.ofdrw.reader.ResourceManage;
 import org.ofdrw.reader.model.AnnotionEntity;
 import org.ofdrw.reader.model.StampAnnotEntity;
 import org.ofdrw.reader.tools.ImageUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -681,14 +678,13 @@ public class ItextMaker {
         }
         pdfCanvas.saveState();
 
-        PdfImageXObject pdfImageObject = new PdfImageXObject(ImageDataFactory.create(imageByteArray));
+        ImageData image = ImageDataFactory.create(imageByteArray);
         if (annotBox != null && !isSameBox(annotBox, imageObject.getBoundary())) {
             float x = annotBox.getTopLeftX().floatValue();
             float y = box.getHeight().floatValue() - (annotBox.getTopLeftY().floatValue() + annotBox.getHeight().floatValue());
             float width = annotBox.getWidth().floatValue();
             float height = annotBox.getHeight().floatValue();
-            Rectangle rect = new Rectangle((float) converterDpi(x), (float) converterDpi(y), (float) converterDpi(width), (float) converterDpi(height));
-            pdfCanvas.addXObject(pdfImageObject, rect);
+            pdfCanvas.addImageWithTransformationMatrix(image, width, 0,0, height, x, y);
         } else {
             org.apache.pdfbox.util.Matrix matrix = CommonUtil.toPFMatrix(CommonUtil.getImageMatrixFromOfd(imageObject, box, compositeObjectCTM));
             float a = matrix.getValue(0, 0);
@@ -697,7 +693,7 @@ public class ItextMaker {
             float d = matrix.getValue(1, 1);
             float e = matrix.getValue(2, 0);
             float f = matrix.getValue(2, 1);
-            pdfCanvas.addXObject(pdfImageObject, a, b, c, d, e, f);
+            pdfCanvas.addImageWithTransformationMatrix(image, a, b, c, d, e, f);
         }
         pdfCanvas.restoreState();
     }
@@ -722,9 +718,9 @@ public class ItextMaker {
             xObjectCanvas.clip();
             xObjectCanvas.endPath();
         }
-        xObjectCanvas.addImage(img, rect.getWidth(), 0, 0, rect.getHeight(), 0, 0);
+        xObjectCanvas.addImageWithTransformationMatrix(img, rect.getWidth(), 0, 0, rect.getHeight(), 0, 0);
         com.itextpdf.layout.element.Image clipped = new com.itextpdf.layout.element.Image(xObject);
-        Canvas canvas = new Canvas(pdfCanvas, pdfDocument, rect);
+        Canvas canvas = new Canvas(pdfCanvas, rect);
         canvas.add(clipped);
         canvas.close();
     }
