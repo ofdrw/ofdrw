@@ -475,16 +475,16 @@ public abstract class AWTMaker {
         if (typeFont == null) {
             logger.info("无法加载字体ID：" + textObject.getFont());
             typeFont = FontLoader.getInstance().loadDefaultFont();
+        }
+        if (typeFont == null) {
+            logger.warn("无法加载字体ID：" + textObject.getFont() + "无法渲染 textObject:" + textObject);
+            return;
         } else {
             try {
                 fontMatrix = typeFont.getFontMatrix();
             } catch (Exception e) {
                 logger.warn("解析加载异常", e);
             }
-        }
-        if (typeFont == null) {
-            logger.warn("无法加载字体ID：" + textObject.getFont() + "无法渲染 textObject:" + textObject);
-            return;
         }
 
         // 创建字形变换映射
