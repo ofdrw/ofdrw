@@ -884,12 +884,27 @@ public class ItextMaker {
             }
             pdfCanvas.setFontAndSize(font, (float) converterDpi(fontSize));
 
+			// 设置线宽
             if (textObject.getLineWidth() != null) {
-                //  修正线宽不受ctm影响的问题
-                pdfCanvas.setLineWidth((float) lineWidth);
-                //处理加粗字体
-                pdfCanvas.setFillColor(ColorConstants.BLACK);
-                pdfCanvas.setTextRenderingMode(PdfCanvasConstants.TextRenderingMode.FILL_STROKE);
+	            StrokeColor stroke = textObject.getStrokeColor();
+	            if (stroke != null && textObject.getStroke()) {
+		            Color strokeColor = ColorConstants.BLACK;
+		            // 获取描边颜色
+		            if (stroke.getValue() != null) {
+			            strokeColor = ColorConvert.pdfRGB(resMgt, stroke);
+		            } else if (stroke.getColorByType() != null) {
+			            CT_AxialShd ctAxialShd = stroke.getColorByType();
+			            strokeColor = ColorConvert.pdfRGB(resMgt, ctAxialShd.getSegments().get(0).getColor());
+		            }
+		            // 设置透明度
+		            PdfExtGState gs2 = new PdfExtGState();
+		            gs2.setFillOpacity(stroke.getAlpha() / 255f);
+		            pdfCanvas.setExtGState(gs2);
+		            // 设置描边颜色
+		            pdfCanvas.setStrokeColor(strokeColor);
+		            pdfCanvas.setLineWidth((float) converterDpi(lineWidth));
+		            pdfCanvas.setTextRenderingMode(PdfCanvasConstants.TextRenderingMode.FILL_STROKE);
+	            }
             }
 
             //设置字符方向
