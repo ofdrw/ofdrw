@@ -254,9 +254,9 @@ public class ItextMaker {
             for (Annot annot : annotList) {
 
 	            // 超链接类型，注释不绘制
-	            // if (annot.getType() == AnnotType.Link) {
-		        //     continue;
-	            // }
+	            if (annot.getType() == AnnotType.Link) {
+		            continue;
+	            }
 
                 Appearance appearance = annot.getAppearance();
                 if (appearance == null) {
