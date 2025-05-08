@@ -30,6 +30,7 @@ import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.converter.utils.PointUtil;
 import org.ofdrw.converter.utils.StringUtils;
 import org.ofdrw.core.annotation.pageannot.Annot;
+import org.ofdrw.core.annotation.pageannot.AnnotType;
 import org.ofdrw.core.annotation.pageannot.Appearance;
 import org.ofdrw.core.attachment.CT_Attachment;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
@@ -251,6 +252,12 @@ public class ItextMaker {
                 continue;
             }
             for (Annot annot : annotList) {
+
+	            // 超链接类型，注释不绘制
+	            if (annot.getType() == AnnotType.Link) {
+		            continue;
+	            }
+
                 Appearance appearance = annot.getAppearance();
                 if (appearance == null) {
                     continue;
