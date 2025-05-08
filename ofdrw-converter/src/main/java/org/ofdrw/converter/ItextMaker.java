@@ -520,6 +520,14 @@ public class ItextMaker {
 				if (radialShdColor != null) {
 					pdfCanvas.setFillColor(radialShdColor);
 				}
+                Element patternElement = fillColor.getOFDElement("Pattern");
+                if (patternElement != null) {
+                    Color patternColor = parsePattern(patternElement, resMgt, box, pathObject, pdfCanvas, annotBox);
+                    if (patternColor != null) {
+                        pdfCanvas.setFillColor(patternColor);
+                    }
+                }
+
 				
             } else {
 //                pdfCanvas.setFillColor(defaultFillColor);
@@ -536,6 +544,27 @@ public class ItextMaker {
 			}
             pdfCanvas.restoreState();
         }
+    }
+    private Color parsePattern(Element elePattern, ResourceManage resMgt, ST_Box box, PathObject pathObject,
+                           PdfCanvas pdfCanvas, ST_Box annotBox) {
+        // 返回一个默认值防止渲染出来的画面变成黑色
+        // TODO 待完善支持Pattern渲染
+        double width = Double.parseDouble(elePattern.attributeValue("Width"));
+        double height = Double.parseDouble(elePattern.attributeValue("Height"));
+        double xStep = Double.parseDouble(elePattern.attributeValue("XStep"));
+        double yStep = Double.parseDouble(elePattern.attributeValue("YStep"));
+        String relativeTo = elePattern.attributeValue("RelativeTo", "Object");
+        String reflectMethod = elePattern.attributeValue("ReflectMethod", "Normal");
+
+        PdfPattern.Tiling tilingPattern = new PdfPattern.Tiling(
+            (float) converterDpi(width),
+            (float) converterDpi(height),
+            (float) converterDpi(xStep),
+            (float) converterDpi(yStep),
+            true // 使用彩色Pattern
+            );
+        return new PatternColor(tilingPattern);
+
     }
 
     private void path(PdfCanvas pdfCanvas, ST_Box box, ST_Box sealBox, ST_Box annotBox, PathObject pathObject, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) {
@@ -684,7 +713,9 @@ public class ItextMaker {
             float y = box.getHeight().floatValue() - (annotBox.getTopLeftY().floatValue() + annotBox.getHeight().floatValue());
             float width = annotBox.getWidth().floatValue();
             float height = annotBox.getHeight().floatValue();
-            pdfCanvas.addImageWithTransformationMatrix(image, width, 0,0, height, x, y);
+            pdfCanvas.addImageWithTransformationMatrix(image, (float) converterDpi(width), 0, 0,
+                (float) converterDpi(height), (float) converterDpi(x), (float) converterDpi(y));
+
         } else {
             org.apache.pdfbox.util.Matrix matrix = CommonUtil.toPFMatrix(CommonUtil.getImageMatrixFromOfd(imageObject, box, compositeObjectCTM));
             float a = matrix.getValue(0, 0);

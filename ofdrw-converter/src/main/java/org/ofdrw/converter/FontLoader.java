@@ -164,6 +164,8 @@ public final class FontLoader {
             scanFontDir(new File(DEFAULT_FONT_DIR_MAC));
         } else if (OSinfo.isMacOSX()) {
             scanFontDir(new File(DEFAULT_FONT_DIR_MAC));
+            String username = System.getProperties().getProperty("user.name");
+            scanFontDir(new File(String.format("/Users/%s/Library/Fonts/", username)));
         } else if (OSinfo.isLinux()) {
             scanFontDir(new File(DEFAULT_FONT_DIR_LINUX));
         }
