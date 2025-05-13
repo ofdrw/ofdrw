@@ -3,6 +3,7 @@ package org.ofdrw.converter;
 
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.ItextFontUtil;
+import com.itextpdf.io.font.ItextTrueTypeFont;
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
@@ -219,6 +220,9 @@ public final class FontLoader {
      * @return true - 加载成功；false - 加载失败
      */
     public static boolean loadAsDefaultFont(String path) {
+        if (DEBUG) {
+            log.info("尝试加载为默认字体：{}", path);
+        }
         InputStream in = null;
         try {
             Path loc = Paths.get(path);
@@ -633,28 +637,16 @@ public final class FontLoader {
     }
 
     /**
-     * 加载字体
-     * <p>
-     * 兼容性保留
-     *
-     * @param rl     资源加载器，用于从虚拟容器中取出文件
-     * @param ctFont 字体对象
-     * @return 字体 或 null
-     */
-    public PdfFont loadPDFFont(ResourceLocator rl, CT_Font ctFont) {
-        return this.loadPDFFontSimilar(rl, ctFont).getFont();
-    }
-
-    /**
      * 尽可能的加载字体
      * <p>
      * 如果字体无法加载时使用相近字体替换
      *
      * @param rl     资源加载器，用于从虚拟容器中取出文件
      * @param ctFont 字体对象
+     * @param isNoGlyphs 是否不存在字符索引
      * @return 字体 或 null
      */
-    public FontWrapper<PdfFont> loadPDFFontSimilar(ResourceLocator rl, CT_Font ctFont) {
+    public FontWrapper<PdfFont> loadPDFFontSimilar(ResourceLocator rl, CT_Font ctFont, boolean isNoGlyphs) {
         if (ctFont == null) {
             return null;
         }
@@ -670,29 +662,44 @@ public final class FontLoader {
         try {
             ST_Loc fontFileLoc = ctFont.getFontFile();
             FontProgram fontProgram = null;
-            boolean hasReplace = false;
-            // 尝试加载内嵌字体
+
+            // 1、尝试加载内嵌字体
             if (fontFileLoc != null) {
                 String fontAbsPath = rl.getFile(fontFileLoc).toAbsolutePath().toString();
                 fontProgram = getFontProgram(fontAbsPath);
             }
-            // 尝试根据名字从操作系统加载字体
-            if (fontProgram == null) {
+
+            // 是否要加载系统字体
+            boolean isLoadSystemFont = false;
+            // 源文件不存在索引标签且加载的映射表为空，也需要选择加载操作系统字体
+            if (isNoGlyphs && fontProgram instanceof ItextTrueTypeFont) {
+                isLoadSystemFont = ((ItextTrueTypeFont) fontProgram).isEmptyCmap;
+            }
+            if (DEBUG) {
+                log.info("是否加载系统字体 {} {} {}", isLoadSystemFont, isNoGlyphs, fontProgram == null);
+            }
+
+            // 2、尝试根据名字从操作系统加载字体
+            if (isLoadSystemFont || fontProgram == null) {
                 // 首先尝试从操作系统
                 String fontAbsPath = getSystemFontPath(familyName, fontName);
                 if (fontAbsPath == null && enableSimilarFontReplace) {
                     // 操作系统中不存在，那么尝试使用近似的字体替换
-                    hasReplace = true;
                     fontAbsPath = getReplaceSimilarFontPath(familyName, fontName);
                 }
                 fontProgram = getFontProgram(fontAbsPath);
             }
-            // 前面两种加载机制都失效时，使用默认字体
-            if (fontProgram == null) {
-                log.info("无法内嵌加载字体 {} {} {}", familyName, fontName, ctFont.getFontFile());
-                fontProgram = iTextDefaultFont;
-                hasReplace = true;
+            if (DEBUG) {
+                log.info("加载PDF中的字体 status=加载{}, {}, {}, {}", fontProgram == null ? "失败" : "成功", familyName, fontName, ctFont.getFontFile());
             }
+
+            // 3、前面两种加载机制都失效时，使用默认字体
+            if (fontProgram == null) {
+                fontProgram = iTextDefaultFont;
+            }
+
+            // 只要替换了内嵌字体，就需要设置为需要替换
+            boolean hasReplace = isLoadSystemFont || fontProgram == null;
             return new FontWrapper<>(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED), hasReplace);
         } catch (Exception e) {
             if (DEBUG) {
