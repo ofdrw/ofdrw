@@ -856,6 +856,12 @@ public class ItextMaker {
                 ry = textCodePoint.y;
             }
             pdfCanvas.saveState();
+
+	        // 文字透明度
+	        if (textObject.getFill()) {
+		        pdfCanvas.setExtGState(new PdfExtGState().setFillOpacity(textObject.getAlpha() / 255f));
+	        }
+
             pdfCanvas.beginText();
             if (textObject.getMiterLimit() > 0)
                 pdfCanvas.setMiterLimit(textObject.getMiterLimit().floatValue());
