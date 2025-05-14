@@ -851,7 +851,7 @@ public class ItextMaker {
 
         // 加载字体
         CT_Font ctFont = resMgt.getFont(textObject.getFont().toString());
-        FontWrapper<PdfFont> pdfFontWrapper = getFont(resMgt.getOfdReader().getResourceLocator(), ctFont);
+        FontWrapper<PdfFont> pdfFontWrapper = getFont(resMgt.getOfdReader().getResourceLocator(), ctFont, textObject.getCGTransforms().isEmpty());
         PdfFont font = pdfFontWrapper.getFont();
 
         List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCGTransforms(), compositeObjectBoundary, compositeObjectCTM, textObject.getCTM() != null, textObject.getCTM(), true, scale);
@@ -863,6 +863,12 @@ public class ItextMaker {
                 ry = textCodePoint.y;
             }
             pdfCanvas.saveState();
+
+	        // 文字透明度
+	        if (textObject.getFill()) {
+		        pdfCanvas.setExtGState(new PdfExtGState().setFillOpacity(textObject.getAlpha() / 255f));
+	        }
+
             pdfCanvas.beginText();
             if (textObject.getMiterLimit() > 0)
                 pdfCanvas.setMiterLimit(textObject.getMiterLimit().floatValue());
@@ -952,14 +958,15 @@ public class ItextMaker {
      *
      * @param rl     资源加载器
      * @param ctFont 字体对象
+     * @param isNoGlyphs 是否不存在字符索引
      * @return 字体
      */
-    private FontWrapper<PdfFont> getFont(ResourceLocator rl, CT_Font ctFont) {
+    private FontWrapper<PdfFont> getFont(ResourceLocator rl, CT_Font ctFont, boolean isNoGlyphs) {
         String key = String.format("%s_%s_%s", ctFont.getFamilyName(), ctFont.attributeValue("FontName"), ctFont.getFontFile());
         if (fontCache.containsKey(key)) {
             return fontCache.get(key);
         }
-        FontWrapper<PdfFont> font = FontLoader.getInstance().loadPDFFontSimilar(rl, ctFont);
+        FontWrapper<PdfFont> font = FontLoader.getInstance().loadPDFFontSimilar(rl, ctFont, isNoGlyphs);
         fontCache.put(key, font);
         return font;
     }

@@ -9,6 +9,7 @@ import com.itextpdf.io.util.IntHashtable;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,9 @@ import java.util.SortedSet;
 public class ItextTrueTypeFont extends TrueTypeFont {
 
     private static final long serialVersionUID = -2232044646577669268L;
+
+    /** 默认为非空，如果解析到cmap表为空，则设置为true */
+    public boolean isEmptyCmap = false;
 
     private OpenTypeParser fontParser;
 
@@ -259,6 +263,12 @@ public class ItextTrueTypeFont extends TrueTypeFont {
         fontIdentification.setPanose(pdfPanose);
 
         Map<Integer, int[]> cmap = getActiveCmap();
+        // 如果没有可用的cmap，则将isEmptyCmap设置为true
+        if (Objects.isNull(cmap) || cmap.isEmpty()) {
+            isEmptyCmap = true;
+            cmap = Collections.emptyMap();
+        }
+
         int[] glyphWidths = fontParser.getGlyphWidthsByIndex();
         int numOfGlyphs = fontMetrics.getNumberOfGlyphs();
         unicodeToGlyph = new LinkedHashMap<>(cmap.size());
