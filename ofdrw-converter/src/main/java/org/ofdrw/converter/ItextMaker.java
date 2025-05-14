@@ -30,6 +30,7 @@ import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.converter.utils.PointUtil;
 import org.ofdrw.converter.utils.StringUtils;
 import org.ofdrw.core.annotation.pageannot.Annot;
+import org.ofdrw.core.annotation.pageannot.AnnotType;
 import org.ofdrw.core.annotation.pageannot.Appearance;
 import org.ofdrw.core.attachment.CT_Attachment;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
@@ -251,6 +252,12 @@ public class ItextMaker {
                 continue;
             }
             for (Annot annot : annotList) {
+
+	            // 超链接类型，注释不绘制
+	            if (annot.getType() == AnnotType.Link) {
+		            continue;
+	            }
+
                 Appearance appearance = annot.getAppearance();
                 if (appearance == null) {
                     continue;
@@ -875,7 +882,7 @@ public class ItextMaker {
 
         // 加载字体
         CT_Font ctFont = resMgt.getFont(textObject.getFont().toString());
-        FontWrapper<PdfFont> pdfFontWrapper = getFont(resMgt.getOfdReader().getResourceLocator(), ctFont);
+        FontWrapper<PdfFont> pdfFontWrapper = getFont(resMgt.getOfdReader().getResourceLocator(), ctFont, textObject.getCGTransforms().isEmpty());
         PdfFont font = pdfFontWrapper.getFont();
 
         List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCGTransforms(), compositeObjectBoundary, compositeObjectCTM, textObject.getCTM() != null, textObject.getCTM(), true, scale);
@@ -887,6 +894,12 @@ public class ItextMaker {
                 ry = textCodePoint.y;
             }
             pdfCanvas.saveState();
+
+	        // 文字透明度
+	        if (textObject.getFill()) {
+		        pdfCanvas.setExtGState(new PdfExtGState().setFillOpacity(textObject.getAlpha() / 255f));
+	        }
+
             pdfCanvas.beginText();
             if (textObject.getMiterLimit() > 0)
                 pdfCanvas.setMiterLimit(textObject.getMiterLimit().floatValue());
@@ -976,14 +989,15 @@ public class ItextMaker {
      *
      * @param rl     资源加载器
      * @param ctFont 字体对象
+     * @param isNoGlyphs 是否不存在字符索引
      * @return 字体
      */
-    private FontWrapper<PdfFont> getFont(ResourceLocator rl, CT_Font ctFont) {
+    private FontWrapper<PdfFont> getFont(ResourceLocator rl, CT_Font ctFont, boolean isNoGlyphs) {
         String key = String.format("%s_%s_%s", ctFont.getFamilyName(), ctFont.attributeValue("FontName"), ctFont.getFontFile());
         if (fontCache.containsKey(key)) {
             return fontCache.get(key);
         }
-        FontWrapper<PdfFont> font = FontLoader.getInstance().loadPDFFontSimilar(rl, ctFont);
+        FontWrapper<PdfFont> font = FontLoader.getInstance().loadPDFFontSimilar(rl, ctFont, isNoGlyphs);
         fontCache.put(key, font);
         return font;
     }
