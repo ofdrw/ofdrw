@@ -679,8 +679,9 @@ public final class FontLoader {
                 log.info("是否加载系统字体 {} {} {}", isLoadSystemFont, isNoGlyphs, fontProgram == null);
             }
 
-            // 2、尝试根据名字从操作系统加载字体
-            if (isLoadSystemFont || fontProgram == null) {
+            // 2、尝试根据名字从操作系统加载字体，只要替换了内嵌字体，就需要设置为需要替换
+            boolean hasReplace = isLoadSystemFont || fontProgram == null;
+            if (hasReplace) {
                 // 首先尝试从操作系统
                 String fontAbsPath = getSystemFontPath(familyName, fontName);
                 if (fontAbsPath == null && enableSimilarFontReplace) {
@@ -698,8 +699,6 @@ public final class FontLoader {
                 fontProgram = iTextDefaultFont;
             }
 
-            // 只要替换了内嵌字体，就需要设置为需要替换
-            boolean hasReplace = isLoadSystemFont || fontProgram == null;
             return new FontWrapper<>(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED), hasReplace);
         } catch (Exception e) {
             if (DEBUG) {
