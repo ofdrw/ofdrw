@@ -855,6 +855,15 @@ public class ItextMaker {
         PdfFont font = pdfFontWrapper.getFont();
 
         List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCGTransforms(), compositeObjectBoundary, compositeObjectCTM, textObject.getCTM() != null, textObject.getCTM(), true, scale);
+
+	    // 创建矩形对象, 指定文字绘制区域
+	    ST_Box boundary = textObject.getBoundary();
+	    Rectangle rectangle = new Rectangle(
+			    (float) converterDpi(boundary.getTopLeftX()),
+			    (float) converterDpi(box.getHeight() - boundary.getTopLeftY() - boundary.getHeight()),
+			    (float) converterDpi(boundary.getWidth()),
+			    (float) converterDpi(boundary.getHeight()));
+
         double rx = 0, ry = 0;
         for (int i = 0; i < textCodePointList.size(); i++) {
             TextCodePoint textCodePoint = textCodePointList.get(i);
@@ -868,6 +877,11 @@ public class ItextMaker {
 	        if (textObject.getFill()) {
 		        pdfCanvas.setExtGState(new PdfExtGState().setFillOpacity(textObject.getAlpha() / 255f));
 	        }
+
+	        // 剪裁文字实际绘制区域
+	        pdfCanvas.rectangle(rectangle); // 绘制剪裁区域
+	        pdfCanvas.clip();    // 通过将当前剪切路径与当前路径相交来修改当前剪切路径
+	        pdfCanvas.endPath(); // 让剪裁操作生效
 
             pdfCanvas.beginText();
             if (textObject.getMiterLimit() > 0)
