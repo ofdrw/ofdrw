@@ -934,6 +934,21 @@ public class ItextMaker {
 	            }
             }
 
+	        // 设置文字斜体
+	        if (textObject.getItalic()) {
+		        // 计算剪切因子（角度=10°）
+		        double shearFactor = Math.tan(Math.toRadians(10));
+
+		        // 定义补偿量：补偿量 = 剪切因子 * 字体高度
+		        double compensation = shearFactor * textCodePoint.getY();
+
+		        // 构建组合变换矩阵（反向平移且剪切）
+		        AffineTransform transform = new AffineTransform();
+		        transform.translate(-compensation, 0); // 反向平移补偿偏移
+		        transform.shear(shearFactor, 0);     // 应用剪切
+		        pdfCanvas.concatMatrix(transform);
+	        }
+
             //设置字符方向
             if (textObject.getCharDirection() == Angle_90) {
                 pdfCanvas.setTextMatrix(0, -1, 1, 0, (float) textCodePoint.getX(), (float) textCodePoint.getY());
