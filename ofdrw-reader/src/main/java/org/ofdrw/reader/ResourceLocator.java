@@ -1,11 +1,16 @@
 package org.ofdrw.reader;
 
+import org.apache.pdfbox.jbig2.util.log.Logger;
+import org.apache.pdfbox.jbig2.util.log.LoggerFactory;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.pkg.container.*;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,6 +28,8 @@ import java.util.regex.Pattern;
  * @since 2020-04-08 20:05:14
  */
 public class ResourceLocator {
+
+    private static final Logger logger = LoggerFactory.getLogger(ResourceLocator.class);
 
     /**
      * 路径匹配正则列表
@@ -222,20 +229,88 @@ public class ResourceLocator {
         Path sysPath = Paths.get(ofwTmp + absPath);
         if (Files.exists(sysPath) && Files.isDirectory(sysPath)) {
             // 刷新工作区到指定区域
-            workDir.clear();
-            workDir.add("/");
-            for (String item : absPath.split("/")) {
-                item = item.trim();
-                if (item.isEmpty()) {
-                    continue;
-                }
-                workDir.add(item);
-            }
-        } else {
-            // 如果路径不存在，那么报错
+            refreshWorkDir(workDir, absPath);
+            return this;
+        }
+
+        // 解析忽略大小写的路径
+        Path ignoreCasePath = resolveIgnoreCasePath(sysPath);
+
+        // 如果路径不存在，那么报错
+        if (ignoreCasePath == null || !Files.isDirectory(ignoreCasePath)) {
             throw new ErrorPathException("无法切换路径到" + path + "，目录不存在。");
         }
+
+        // 获取相对于ofwTmp的正确路径
+        Path ofwTmpPath = Paths.get(ofwTmp);
+        Path relativePath = ofwTmpPath.relativize(ignoreCasePath);
+        String correctAbsPath = relativePath.toString().replace(File.separator, "/");
+
+        // 刷新工作区到实际路径
+        refreshWorkDir(workDir, correctAbsPath);
         return this;
+    }
+
+    /**
+     * 刷新工作区到指定区域
+     */
+    private static void refreshWorkDir(LinkedList<String> workDir, String absPath) {
+        workDir.clear();
+        workDir.add("/");
+        for (String item : absPath.split("/")) {
+            item = item.trim();
+            if (item.isEmpty()) {
+                continue;
+            }
+            workDir.add(item);
+        }
+    }
+
+    /**
+     * 解析忽略大小写的路径
+     */
+    private Path resolveIgnoreCasePath(Path path) {
+
+        Path currentPath = path.getRoot();
+
+        // 遍历路径的每个路径组件（如：/a/b/c → [/, a, b, c]）
+        for (Path component : path) {
+            if (currentPath == null) {
+                // 初始情况处理（当currentPath未初始化时）
+                currentPath = component;
+                continue;
+            }
+
+            // 尝试直接拼接路径（用于处理完全匹配的情况）
+            Path nextPath = currentPath.resolve(component);
+            if (Files.exists(nextPath)) {
+                currentPath = nextPath;
+                continue;
+            }
+
+            // 在当前目录下查找匹配项
+            Path parent = currentPath;
+            String targetName = component.toString();
+            boolean found = false;
+
+            // 遍历当前目录下的所有项
+            try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(parent)) {
+                for (Path p : dirStream) {
+                    if (p.getFileName().toString().equalsIgnoreCase(targetName)) {
+                        // 更新为不区分大小写的路径
+                        currentPath = parent.resolve(p.getFileName());
+                        found = true;
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                logger.warn("无法解析不区分大小写的路径: " + e.getMessage());
+                return null;
+            }
+
+            if (!found) return null; // 未找到匹配项
+        }
+        return currentPath;
     }
 
     /**
