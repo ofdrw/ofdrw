@@ -248,13 +248,15 @@ public class ItextTrueTypeFont extends TrueTypeFont {
 
         // font identification group
         String[][] ttfVersion = fontNames.getNames(5);
-        if (ttfVersion != null) {
+        /** 代码修改 start */
+        if (ttfVersion != null && ttfVersion.length > 0 && ttfVersion[0].length > 3) {
             fontIdentification.setTtfVersion(ttfVersion[0][3]);
         }
         String[][] ttfUniqueId = fontNames.getNames(3);
-        if (ttfUniqueId != null) {
+        if (ttfUniqueId != null && ttfUniqueId.length > 0 && ttfUniqueId[0].length > 3) {
             fontIdentification.setTtfVersion(ttfUniqueId[0][3]);
         }
+        /** 代码修改 end */
 
         byte[] pdfPanose = new byte[12];
         pdfPanose[1] = (byte) (os_2.sFamilyClass);

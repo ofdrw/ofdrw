@@ -1,6 +1,10 @@
 package com.itextpdf.io.font;
 
 
+import com.itextpdf.io.font.constants.FontStretches;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Serializable;
@@ -21,6 +25,8 @@ import java.util.Map;
 class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closeable {
 
     private static final long serialVersionUID = 3399061674525229738L;
+
+    private static final Logger log = LoggerFactory.getLogger(ItextOpenTypeParser.class);
 
     public ItextOpenTypeParser(byte[] ttf) throws java.io.IOException {
         super(ttf);
@@ -49,7 +55,11 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
 
     @Override
     protected void loadTables(boolean all) throws java.io.IOException {
-        readNameTable();
+        try {
+            readNameTable();
+        } catch (Exception e) {
+            log.error("提取所有可用语言的字体名称失败！", e);
+        }
         readHeadTable();
         readOs_2Table();
         readPostTable();
@@ -57,7 +67,11 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
             checkCff();
             readHheaTable();
             readGlyphWidths();
-            readCmapTable();
+            try {
+                readCmapTable();
+            } catch (Exception e) {
+                log.error("从cmap中读取映射失败！", e);
+            }
         }
     }
 
@@ -185,20 +199,24 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
             table_location = tables.get("os/2");
         }
         /**********************************/
-        if (table_location == null) {
-            if (fileName != null) {
-                throw new IOException("OS/2 table does not exist in " + fileName);
-            } else {
-                throw new IOException("OS/2 table does not exist");
-            }
+
+        /** 代码修改 start */
+        if (table_location != null) {
+            raf.seek(table_location[0]);
+        } else {
+            // 不管os/2表是否存在，都不要阻止字体继续加载，尽管后续读取的数据不正确
+            log.error("os/2表不存在: fileName:{}", fileName);
         }
+        /** 代码修改 end */
+
         os_2 = new WindowsMetrics();
-        raf.seek(table_location[0]);
+        // raf.seek(table_location[0]);
         int version = raf.readUnsignedShort();
         os_2.xAvgCharWidth = raf.readShort();
         os_2.usWeightClass = raf.readUnsignedShort();
         os_2.usWidthClass = raf.readUnsignedShort();
         os_2.fsType = raf.readShort();
+        os_2.fsType = 0; // 0 代表无限制，保证字体文件能正确加载
         os_2.ySubscriptXSize = raf.readShort();
         os_2.ySubscriptYSize = raf.readShort();
         os_2.ySubscriptXOffset = raf.readShort();
@@ -510,5 +528,46 @@ class ItextOpenTypeParser extends OpenTypeParser implements Serializable, Closea
             }
         }
         return h;
+    }
+
+
+    /**
+     * 重写获取字体名称逻辑，增加额外校验
+     */
+    @Override
+    public FontNames getFontNames() {
+        FontNames fontNames = new FontNames();
+        fontNames.setAllNames(getAllNameEntries());
+        fontNames.setFontName(getPsFontName());
+        fontNames.setFullName(fontNames.getNames(4));
+        String[][] otfFamilyName = fontNames.getNames(16);
+        if (otfFamilyName != null) {
+            fontNames.setFamilyName(otfFamilyName);
+        } else {
+            fontNames.setFamilyName(fontNames.getNames(1));
+        }
+        String[][] subfamily = fontNames.getNames(2);
+        /** 代码修改 start*/
+        if (subfamily != null && subfamily.length > 0 && subfamily[0].length > 3) {
+            fontNames.setStyle(subfamily[0][3]);
+        }
+        /** 代码修改 end*/
+        String[][] otfSubFamily = fontNames.getNames(17);
+        if (otfFamilyName != null) {
+            fontNames.setSubfamily(otfSubFamily);
+        } else {
+            fontNames.setSubfamily(subfamily);
+        }
+        String[][] cidName = fontNames.getNames(20);
+        /** 代码修改 start*/
+        if (cidName != null && cidName.length > 0 && cidName[0].length > 3) {
+            fontNames.setCidFontName(cidName[0][3]);
+        }
+        /** 代码修改 end*/
+        fontNames.setFontWeight(os_2.usWeightClass);
+        fontNames.setFontStretch(FontStretches.fromOpenTypeWidthClass(os_2.usWidthClass));
+        fontNames.setMacStyle(head.macStyle);
+        fontNames.setAllowEmbedding(os_2.fsType != 2);
+        return fontNames;
     }
 }
