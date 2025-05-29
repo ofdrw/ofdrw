@@ -412,12 +412,15 @@ public class PointUtil {
                             double e = ctms[4].doubleValue();
                             double f = ctms[5].doubleValue();
                             double angel = Math.atan2(-b, d);
+
+                            double[] newPoint = ctmCalPoint(dx, 0, ctm.toDouble());
+                            // 无旋转时直接应用CTM
                             if (angel == 0) {
-                                double[] newPoint = ctmCalPoint(dx, 0, ctm.toDouble());
                                 dx = newPoint[0];
                             } else {
+                                // 如果竖排文字，水平偏移转化为变换后坐标的垂直分量
                                 if (a == 0 && d == 0) {
-                                    dx = dx * fontSize;
+                                    dx = Math.abs(newPoint[1]); // 取绝对值防止负数
                                 }
                             }
                         } else {
