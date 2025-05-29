@@ -691,7 +691,7 @@ public class ItextMaker {
             float y = box.getHeight().floatValue() - (annotBox.getTopLeftY().floatValue() + annotBox.getHeight().floatValue());
             float width = annotBox.getWidth().floatValue();
             float height = annotBox.getHeight().floatValue();
-            pdfCanvas.addImageWithTransformationMatrix(image, width, 0,0, height, x, y);
+            pdfCanvas.addImageWithTransformationMatrix(image, (float)converterDpi(width), 0,0, (float)converterDpi(height), (float)converterDpi(x), (float)converterDpi(y));
         } else {
             org.apache.pdfbox.util.Matrix matrix = CommonUtil.toPFMatrix(CommonUtil.getImageMatrixFromOfd(imageObject, box, compositeObjectCTM));
             float a = matrix.getValue(0, 0);
