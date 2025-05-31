@@ -880,6 +880,9 @@ public class OFDPageGraphics2D extends Graphics2D {
         // 如果不是单位矩阵则对路径进行变换
         if (!this.drawParam.ctm.isIdentity()) {
             s = this.drawParam.ctm.createTransformedShape(s);
+            this.drawParam.isTransformClip = true;
+        } else {
+            this.drawParam.isTransformClip = false;
         }
         this.drawParam.clip = new Area(s);
     }
@@ -1327,12 +1330,13 @@ public class OFDPageGraphics2D extends Graphics2D {
             clipObj.setFill(true);
             clipObj.setBoundary(this.size);
             try {
-                // 由于图元内的裁剪区域受到图元的变换矩阵影响，
-                // 而裁剪区域是位于未受到变换的原始画布上的区域，
-                // 因此在图元内部的裁剪区为需要叠加一个图元内变换的逆变换，
+                // 如果剪裁区域已经转换到OFD的页面空间上， 则不需要进行矩阵转换；
+                // 如果剪裁区域仍处于原始画布，则需要在图元内部的裁剪区叠加一个图元内变换的逆变换，
                 // 才可以实现向外部空间的映射。
-                AffineTransform inverse = objCTM.createInverse();
-                clipObj.setCTM(trans(inverse));
+                if (!this.drawParam.isTransformClip) {
+                    AffineTransform inverse = objCTM.createInverse();
+                    clipObj.setCTM(trans(inverse));
+                }
                 area.setClipObj(clipObj);
                 clips.addClip(new CT_Clip().addArea(area));
                 return clips;

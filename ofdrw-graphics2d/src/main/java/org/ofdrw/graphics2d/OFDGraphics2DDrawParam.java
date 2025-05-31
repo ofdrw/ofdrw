@@ -23,6 +23,11 @@ import java.awt.geom.AffineTransform;
 public class OFDGraphics2DDrawParam {
 
     /**
+     * 剪裁区域是否已手动变换
+     */
+    public boolean isTransformClip = false;
+
+    /**
      * 文档上下文
      */
     private final OFDGraphicsDocument docCtx;
