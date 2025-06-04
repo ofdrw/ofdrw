@@ -485,10 +485,19 @@ class OFDPageGraphics2DTest {
             OFDPageGraphics2D g = doc.newPage(500, 500);
 //            Path file = Paths.get("src/test/resources", "eg_tulip.jpg");
 //            g.translate(100,100);
+//            g.setPaint(Color.RED);
+//            g.translate(100, 100);
+//            g.setClip(new Rectangle2D.Double(0, 0, 200, 200));
+//            g.fillArc(0, 0, 400, 400, 0, 360);
+
             g.setPaint(Color.RED);
-            g.translate(100, 100);
-            g.setClip(new Rectangle2D.Double(0, 0, 200, 200));
-            g.fillArc(0, 0, 400, 400, 0, 360);
+            g.fillArc(0, 0, 500, 500, 0, 360);
+
+            g.setPaint(Color.BLUE);
+            g.translate(250, 250);
+            g.shear(0.5,0);
+            g.setClip(new Rectangle2D.Double(0, 0, 250, 250));
+            g.fillArc(0, 0, 500, 500, 0, 360);
         }
         System.out.println(">> " + dst.toAbsolutePath());
     }

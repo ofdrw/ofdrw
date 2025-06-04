@@ -1318,27 +1318,31 @@ public class OFDPageGraphics2D extends Graphics2D {
                 bounds.getY() + 0.000001,
                 w < 0 ? 0 : w,
                 h < 0 ? 0 : h);
-        if (this.drawParam.clip.contains(bounds)){
+        if (this.drawParam.clip.contains(bounds)) {
             // 若图形外边框都处于裁剪区域内部，那么忽略裁剪区域
-        }else {
+        } else {
             Clips clips = new Clips();
             org.ofdrw.core.pageDescription.clips.Area area = new org.ofdrw.core.pageDescription.clips.Area();
             CT_Path clipObj = new CT_Path().setAbbreviatedData(OFDShapes.path(new GeneralPath(this.drawParam.clip)));
             clipObj.setFill(true);
             clipObj.setBoundary(this.size);
-            try {
-                // 由于图元内的裁剪区域受到图元的变换矩阵影响，
-                // 而裁剪区域是位于未受到变换的原始画布上的区域，
-                // 因此在图元内部的裁剪区为需要叠加一个图元内变换的逆变换，
-                // 才可以实现向外部空间的映射。
-                AffineTransform inverse = objCTM.createInverse();
-                clipObj.setCTM(trans(inverse));
-                area.setClipObj(clipObj);
-                clips.addClip(new CT_Clip().addArea(area));
-                return clips;
-            } catch (NoninvertibleTransformException e) {
-                // 初等变换都可逆，若非初等变换那么忽略裁剪区
-            }
+
+//            try {
+//                // 由于图元内的裁剪区域受到图元的变换矩阵影响，
+//                // 而裁剪区域是位于未受到变换的原始画布上的区域，
+//                // 因此在图元内部的裁剪区为需要叠加一个图元内变换的逆变换，
+//                // 才可以实现向外部空间的映射。
+//                AffineTransform inverse = objCTM.createInverse();
+//                clipObj.setCTM(trans(inverse));
+//                area.setClipObj(clipObj);
+//                clips.addClip(new CT_Clip().addArea(area));
+//                return clips;
+//            } catch (NoninvertibleTransformException e) {
+//                // 初等变换都可逆，若非初等变换那么忽略裁剪区
+//            }
+
+            area.setClipObj(clipObj);
+            clips.addClip(new CT_Clip().addArea(area));
         }
         return null;
     }

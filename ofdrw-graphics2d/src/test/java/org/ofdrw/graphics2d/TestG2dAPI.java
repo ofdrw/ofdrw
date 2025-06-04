@@ -2,6 +2,7 @@ package org.ofdrw.graphics2d;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -28,8 +29,8 @@ public class TestG2dAPI {
 //
 //
 
-        g.setColor(Color.blue);
-        g.fillRect(0, 0, 1000, 1000);
+//        g.setColor(Color.blue);
+//        g.fillRect(0, 0, 1000, 1000);
 
 //        g.setColor(Color.RED);
 //        g.scale(2, 2);
@@ -44,13 +45,13 @@ public class TestG2dAPI {
 
 
 
-        g.setColor(Color.RED);
-        g.translate(100,100);
-        g.clipRect(0,0, 100,100);
-        g.fillRect(0, 0, 100, 100);
-        g.rotate(45 * Math.PI / 180d);
-        g.setColor(Color.YELLOW);
-        g.fillRect(0, 0, 100, 100);
+//        g.setColor(Color.RED);
+//        g.translate(100,100);
+//        g.clipRect(0,0, 100,100);
+//        g.fillRect(0, 0, 100, 100);
+//        g.rotate(45 * Math.PI / 180d);
+//        g.setColor(Color.YELLOW);
+//        g.fillRect(0, 0, 100, 100);
 //        g.scale(2, 2);
 //        g.drawRect(0, 0, 10, 10);
 //        g.fillRoundRect(150, 50, 100, 100, 50, 25);
@@ -97,6 +98,16 @@ public class TestG2dAPI {
 //                new RadialGradientPaint(center, 0.5f * 500, dist, colors);
 //        g.setPaint(p);
 //        g.fillRect(0, 0, 500, 500);
+
+
+        g.setPaint(Color.RED);
+        g.fillArc(0, 0, 500, 500, 0, 360);
+
+        g.setPaint(Color.BLUE);
+        g.translate(250, 250);
+        g.shear(0.5,0);
+        g.setClip(new Rectangle2D.Double(0, 0, 250, 250));
+        g.fillArc(0, 0, 500, 500, 0, 360);
 
         Path path = Paths.get("ofdrw-graphics2d/target/test.png");
         ImageIO.write(image, "png", path.toFile());
