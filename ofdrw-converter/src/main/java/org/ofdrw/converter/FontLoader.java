@@ -156,17 +156,19 @@ public final class FontLoader {
      * 加载系统字体
      * */
     public void init() {
+        String username = System.getProperties().getProperty("user.name");
         if (OSinfo.isWindows()) {
             scanFontDir(new File(DEFAULT_FONT_DIR_WINDOWS));
             // 扫描用户字体目录
-            String username = System.getProperties().getProperty("user.name");
             scanFontDir(new File(String.format("C:\\Users\\%s\\AppData\\Local\\Microsoft\\Windows\\Fonts", username)));
         } else if (OSinfo.isMacOS()) {
             scanFontDir(new File(DEFAULT_FONT_DIR_MAC));
         } else if (OSinfo.isMacOSX()) {
             scanFontDir(new File(DEFAULT_FONT_DIR_MAC));
+            scanFontDir(new File(String.format("/Users/%s/Library/Fonts/", username)));
         } else if (OSinfo.isLinux()) {
             scanFontDir(new File(DEFAULT_FONT_DIR_LINUX));
+            scanFontDir(new File(String.format("/home/%s/.fonts/", username)));
         }
 
         addAliasMapping("小标宋体", "方正小标宋简体");

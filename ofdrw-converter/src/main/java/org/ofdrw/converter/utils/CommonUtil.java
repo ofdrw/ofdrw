@@ -92,8 +92,8 @@ public class CommonUtil {
         return System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID().toString();
     }
 
-    public static double converterDpi(double width) {
-        return CommonUtil.millimetersToPixel(width, 72);
+    public static double converterDpi(double len) {
+        return CommonUtil.millimetersToPixel(len, 72);
     }
 
     public static PDColor convertPDColor(ST_Array colorArray) {

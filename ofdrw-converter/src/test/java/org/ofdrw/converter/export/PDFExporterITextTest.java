@@ -138,5 +138,18 @@ class PDFExporterITextTest {
         }
         System.out.println(">> " + pdfOut.toAbsolutePath());
     }
-    
+
+
+    /**
+     * 测试Path对象的默认填充问题(规范明确说明，未设置填充色时，使用透明填充)
+     */
+    @Test
+    void testColorPattern() throws IOException {
+        Path ofdIn = Paths.get("src/test/resources/pattern类型.ofd");
+        Path pdfOut = Paths.get("target/pattern类型.pdf");
+        try (OFDExporter exporter = new PDFExporterIText(ofdIn, pdfOut)) {
+            exporter.export();
+        }
+        System.out.println(">> " + pdfOut.toAbsolutePath());
+    }
 }

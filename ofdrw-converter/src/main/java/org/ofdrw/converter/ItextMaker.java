@@ -253,10 +253,10 @@ public class ItextMaker {
             }
             for (Annot annot : annotList) {
 
-	            // 超链接类型，注释不绘制
-	            if (annot.getType() == AnnotType.Link) {
-		            continue;
-	            }
+                // 超链接类型，注释不绘制
+                if (annot.getType() == AnnotType.Link) {
+                    continue;
+                }
 
                 Appearance appearance = annot.getAppearance();
                 if (appearance == null) {
@@ -356,64 +356,95 @@ public class ItextMaker {
         }
     }
 
-	private Color parseAxial(Element eleAxialShd, ResourceManage resMgt, ST_Box box, PathObject pathObject) {
-		Color result = null;
-		if (eleAxialShd == null) {
-			return result;
-		}
+    private Color parseAxial(Element eleAxialShd, ResourceManage resMgt, ST_Box box, PathObject pathObject) {
+        Color result = null;
+        if (eleAxialShd == null) {
+            return result;
+        }
 
-		CT_AxialShd ctAxialShd = new CT_AxialShd(eleAxialShd);
-		Color startColor = ColorConvert.pdfRGB(resMgt, ctAxialShd.getSegments().get(0).getColor());
-		Color endColor = ColorConvert.pdfRGB(resMgt,
-				ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor());
-		ST_Pos startPos = ctAxialShd.getStartPoint();
-		ST_Pos endPos = ctAxialShd.getEndPoint();
-		double x1 = startPos.getX(), y1 = startPos.getY();
-		double x2 = endPos.getX(), y2 = endPos.getY();
-		double[] realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x1, y1, pathObject.getBoundary());
-		x1 = realPos[0];
-		y1 = box.getHeight() - realPos[1];
-		realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, pathObject.getBoundary());
-		x2 = realPos[0];
-		y2 = box.getHeight() - realPos[1];
-		PdfShading.Axial axial = new PdfShading.Axial(new PdfDeviceCs.Rgb(), (float) CommonUtil.converterDpi(x1),
-				(float) CommonUtil.converterDpi(y1), startColor.getColorValue(), (float) CommonUtil.converterDpi(x2),
-				(float) CommonUtil.converterDpi(y2), endColor.getColorValue());
-		PdfPattern.Shading shading = new PdfPattern.Shading(axial);
-		result = new PatternColor(shading);
+        CT_AxialShd ctAxialShd = new CT_AxialShd(eleAxialShd);
+        Color startColor = ColorConvert.pdfRGB(resMgt, ctAxialShd.getSegments().get(0).getColor());
+        Color endColor = ColorConvert.pdfRGB(resMgt,
+                ctAxialShd.getSegments().get(ctAxialShd.getSegments().size() - 1).getColor());
+        ST_Pos startPos = ctAxialShd.getStartPoint();
+        ST_Pos endPos = ctAxialShd.getEndPoint();
+        double x1 = startPos.getX(), y1 = startPos.getY();
+        double x2 = endPos.getX(), y2 = endPos.getY();
+        double[] realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x1, y1, pathObject.getBoundary());
+        x1 = realPos[0];
+        y1 = box.getHeight() - realPos[1];
+        realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, pathObject.getBoundary());
+        x2 = realPos[0];
+        y2 = box.getHeight() - realPos[1];
+        PdfShading.Axial axial = new PdfShading.Axial(new PdfDeviceCs.Rgb(), (float) CommonUtil.converterDpi(x1),
+                (float) CommonUtil.converterDpi(y1), startColor.getColorValue(), (float) CommonUtil.converterDpi(x2),
+                (float) CommonUtil.converterDpi(y2), endColor.getColorValue());
+        PdfPattern.Shading shading = new PdfPattern.Shading(axial);
+        result = new PatternColor(shading);
 
-		return result;
-	}
-	
-	private Color parseRadial(Element eleRadialShd, ResourceManage resMgt, ST_Box box, PathObject pathObject) {
-		Color result = null;
-		if (eleRadialShd == null) {
-			return result;
-		}
+        return result;
+    }
 
-		CT_RadialShd ctRadialShd = new CT_RadialShd(eleRadialShd);
-		Color startColor = ColorConvert.pdfRGB(resMgt, ctRadialShd.getSegments().get(0).getColor());
-		Color endColor = ColorConvert.pdfRGB(resMgt,
-				ctRadialShd.getSegments().get(ctRadialShd.getSegments().size() - 1).getColor());
-		ST_Pos startPos = ctRadialShd.getStartPoint();
-		ST_Pos endPos = ctRadialShd.getEndPoint();
-		double x1 = startPos.getX(), y1 = startPos.getY();
-		double x2 = endPos.getX(), y2 = endPos.getY();
-		double[] realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x1, y1, pathObject.getBoundary());
-		x1 = realPos[0];
-		y1 = box.getHeight() - realPos[1];
-		realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, pathObject.getBoundary());
-		x2 = realPos[0];
-		y2 = box.getHeight() - realPos[1];
-		PdfShading.Radial radial = new PdfShading.Radial(new PdfDeviceCs.Rgb(), (float) CommonUtil.converterDpi(x1),
-				(float) CommonUtil.converterDpi(y1), (float) CommonUtil.converterDpi(ctRadialShd.getStartRadius()),
-				startColor.getColorValue(), (float) CommonUtil.converterDpi(x2), (float) CommonUtil.converterDpi(y2),
-				(float) CommonUtil.converterDpi(ctRadialShd.getEndRadius()), endColor.getColorValue());
-		PdfPattern.Shading shading = new PdfPattern.Shading(radial);
-		result = new PatternColor(shading);
+    private Color parseRadial(Element eleRadialShd, ResourceManage resMgt, ST_Box box, PathObject pathObject) {
+        Color result = null;
+        if (eleRadialShd == null) {
+            return result;
+        }
 
-		return result;
-	}
+        CT_RadialShd ctRadialShd = new CT_RadialShd(eleRadialShd);
+        Color startColor = ColorConvert.pdfRGB(resMgt, ctRadialShd.getSegments().get(0).getColor());
+        Color endColor = ColorConvert.pdfRGB(resMgt,
+                ctRadialShd.getSegments().get(ctRadialShd.getSegments().size() - 1).getColor());
+        ST_Pos startPos = ctRadialShd.getStartPoint();
+        ST_Pos endPos = ctRadialShd.getEndPoint();
+        double x1 = startPos.getX(), y1 = startPos.getY();
+        double x2 = endPos.getX(), y2 = endPos.getY();
+        double[] realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x1, y1, pathObject.getBoundary());
+        x1 = realPos[0];
+        y1 = box.getHeight() - realPos[1];
+        realPos = PointUtil.adjustPos(box.getWidth(), box.getHeight(), x2, y2, pathObject.getBoundary());
+        x2 = realPos[0];
+        y2 = box.getHeight() - realPos[1];
+        PdfShading.Radial radial = new PdfShading.Radial(new PdfDeviceCs.Rgb(), (float) CommonUtil.converterDpi(x1),
+                (float) CommonUtil.converterDpi(y1), (float) CommonUtil.converterDpi(ctRadialShd.getStartRadius()),
+                startColor.getColorValue(), (float) CommonUtil.converterDpi(x2), (float) CommonUtil.converterDpi(y2),
+                (float) CommonUtil.converterDpi(ctRadialShd.getEndRadius()), endColor.getColorValue());
+        PdfPattern.Shading shading = new PdfPattern.Shading(radial);
+        result = new PatternColor(shading);
+
+        return result;
+    }
+
+//    /**
+//     * 解析图案类型颜色
+//     *
+//     * @param elePattern ofd元素
+//     * @param resMgt     资源管理器
+//     * @param box        图元外界矩形
+//     * @param pathObject 路径对象
+//     * @return 颜色，若无法解析则返回空
+//     */
+//    private Color parsePattern(Element elePattern, ResourceManage resMgt, ST_Box box, PathObject pathObject) {
+//        Color result = null;
+//        if (elePattern == null) {
+//            return result;
+//        }
+//
+//        CT_Pattern ctPattern = new CT_Pattern(elePattern);
+//        double width = ctPattern.getWidth();
+//        double height = ctPattern.getHeight();
+//        double xStep = ctPattern.getXStep();
+//        double yStep = ctPattern.getYStep();
+//
+//        PdfPattern.Tiling tilingPattern = new PdfPattern.Tiling(
+//                (float) converterDpi(width),
+//                (float) converterDpi(height),
+//                (float) converterDpi(xStep),
+//                (float) converterDpi(yStep),
+//                true // 使用彩色Pattern
+//        );
+//        return new PatternColor(tilingPattern);
+//    }
 
     private void writePath(ResourceManage resMgt,
                            PdfCanvas pdfCanvas,
@@ -461,23 +492,23 @@ public class ItextMaker {
                 pdfCanvas.setStrokeColor(ColorConvert.pdfRGB(resMgt, strokeColor));
             }
             Color axialShdColor = parseAxial(strokeColor.getOFDElement("AxialShd"), resMgt, box, pathObject);
-			if (axialShdColor != null) {
-				pdfCanvas.setStrokeColor(axialShdColor);
-			}
+            if (axialShdColor != null) {
+                pdfCanvas.setStrokeColor(axialShdColor);
+            }
 
-			Color radialShdColor = parseRadial(strokeColor.getOFDElement("RadialShd"), resMgt, box, pathObject);
-			if (radialShdColor != null) {
-				pdfCanvas.setStrokeColor(radialShdColor);
-			}
-			
+            Color radialShdColor = parseRadial(strokeColor.getOFDElement("RadialShd"), resMgt, box, pathObject);
+            if (radialShdColor != null) {
+                pdfCanvas.setStrokeColor(radialShdColor);
+            }
+
         } else {
             pdfCanvas.setStrokeColor(defaultStrokeColor);
         }
 
         float lineWidth = defaultLineWidth;
         if (pathObject.getLineWidth() != null && pathObject.getLineWidth() > 0) {
-			lineWidth = Double.valueOf(converterDpi(pathObject.getLineWidth()) * scale).floatValue();
-		}
+            lineWidth = Double.valueOf(converterDpi(pathObject.getLineWidth()) * scale).floatValue();
+        }
         if (pathObject.getCTM() != null && pathObject.getLineWidth() != null) {
             Double[] ctm = pathObject.getCTM().toDouble();
             double a = ctm[0];
@@ -519,15 +550,19 @@ public class ItextMaker {
                     pdfCanvas.setFillColor(ColorConvert.pdfRGB(resMgt, fillColor));
                 }
                 Color axialShdColor = parseAxial(fillColor.getOFDElement("AxialShd"), resMgt, box, pathObject);
-				if (axialShdColor != null) {
-					pdfCanvas.setFillColor(axialShdColor);
-				}
+                if (axialShdColor != null) {
+                    pdfCanvas.setFillColor(axialShdColor);
+                }
 
-				Color radialShdColor = parseRadial(fillColor.getOFDElement("RadialShd"), resMgt, box, pathObject);
-				if (radialShdColor != null) {
-					pdfCanvas.setFillColor(radialShdColor);
-				}
-				
+                Color radialShdColor = parseRadial(fillColor.getOFDElement("RadialShd"), resMgt, box, pathObject);
+                if (radialShdColor != null) {
+                    pdfCanvas.setFillColor(radialShdColor);
+                }
+//                Color patternColor = parsePattern(fillColor.getOFDElement("Pattern"), resMgt, box, pathObject);
+//                if (patternColor != null) {
+//                    pdfCanvas.setFillColor(patternColor);
+//                }
+
             } else {
 //                pdfCanvas.setFillColor(defaultFillColor);
                 // 未设置颜色时，以透明色填充（规范中有明确说明）
@@ -536,11 +571,11 @@ public class ItextMaker {
                 pdfCanvas.setExtGState(gs2);
             }
             path(pdfCanvas, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
-			if (null != pathObject.getRule() && pathObject.getRule().equals(Rule.Even_Odd)) {
-				pdfCanvas.eoFill();
-			} else {
-				pdfCanvas.fill();
-			}
+            if (null != pathObject.getRule() && pathObject.getRule().equals(Rule.Even_Odd)) {
+                pdfCanvas.eoFill();
+            } else {
+                pdfCanvas.fill();
+            }
             pdfCanvas.restoreState();
         }
     }
@@ -559,14 +594,14 @@ public class ItextMaker {
         if (annotBox != null) {
             pathObject.setBoundary(
                     pathObject.getBoundary().getTopLeftX() + annotBox.getTopLeftX(),
-                    pathObject.getBoundary().getTopLeftY() +annotBox.getTopLeftY(),
+                    pathObject.getBoundary().getTopLeftY() + annotBox.getTopLeftY(),
                     pathObject.getBoundary().getWidth(),
                     pathObject.getBoundary().getHeight());
         }
 
         // 裁剪
         clip(pdfCanvas, box, pathObject);
-        
+
         List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), compositeObjectBoundary, compositeObjectCTM, true, scale);
         for (int i = 0; i < listPoint.size(); i++) {
             if (listPoint.get(i).type.equals("M") || listPoint.get(i).type.equals("S")) {
@@ -587,46 +622,46 @@ public class ItextMaker {
     }
 
     private void clip(PdfCanvas pdfCanvas, ST_Box box, PathObject pathObject) {
-		if (pathObject.getClips() == null) {
-			return;
-		}
+        if (pathObject.getClips() == null) {
+            return;
+        }
 
-		List<CT_Clip> clips = pathObject.getClips().getClips();
-		for (int k = 0; k < clips.size(); k++) {
-			CT_Clip clip = clips.get(k);
-			for (Area area : clip.getAreas()) {
-				Element elePath = area.getOFDElement("Path");
-				CT_Path path = new CT_Path(elePath);
-				List<PathPoint> points = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(),
-						pathObject.getBoundary(),
-						PointUtil.convertPathAbbreviatedDatatoPoint(path.getAbbreviatedData()), area.getCTM() != null,
-						area.getCTM(), null, null, true, 1.0);
-				pdfCanvas.clip();
-				for (int i = 0; i < points.size(); i++) {
-					PathPoint pathPoint = points.get(i);
-					if (pathPoint.type.equals("M") || pathPoint.type.equals("S")) {
-						pdfCanvas.moveTo(pathPoint.x1, pathPoint.y1);
-					} else if (pathPoint.type.equals("L")) {
-						pdfCanvas.lineTo(pathPoint.x1, pathPoint.y1);
-					} else if (pathPoint.type.equals("B")) {
-						pdfCanvas.curveTo(pathPoint.x1, pathPoint.y1, pathPoint.x2, pathPoint.y2, pathPoint.x3,
-								pathPoint.y3);
-					} else if (pathPoint.type.equals("Q")) {
-						pdfCanvas.curveTo(pathPoint.x1, pathPoint.y1, pathPoint.x2, pathPoint.y2);
-					} else if (pathPoint.type.equals("C")) {
-						pdfCanvas.closePath();
-					}
-				}
-				pdfCanvas.endPath();
-			}
-		}
+        List<CT_Clip> clips = pathObject.getClips().getClips();
+        for (int k = 0; k < clips.size(); k++) {
+            CT_Clip clip = clips.get(k);
+            for (Area area : clip.getAreas()) {
+                Element elePath = area.getOFDElement("Path");
+                CT_Path path = new CT_Path(elePath);
+                List<PathPoint> points = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(),
+                        pathObject.getBoundary(),
+                        PointUtil.convertPathAbbreviatedDatatoPoint(path.getAbbreviatedData()), area.getCTM() != null,
+                        area.getCTM(), null, null, true, 1.0);
+                pdfCanvas.clip();
+                for (int i = 0; i < points.size(); i++) {
+                    PathPoint pathPoint = points.get(i);
+                    if (pathPoint.type.equals("M") || pathPoint.type.equals("S")) {
+                        pdfCanvas.moveTo(pathPoint.x1, pathPoint.y1);
+                    } else if (pathPoint.type.equals("L")) {
+                        pdfCanvas.lineTo(pathPoint.x1, pathPoint.y1);
+                    } else if (pathPoint.type.equals("B")) {
+                        pdfCanvas.curveTo(pathPoint.x1, pathPoint.y1, pathPoint.x2, pathPoint.y2, pathPoint.x3,
+                                pathPoint.y3);
+                    } else if (pathPoint.type.equals("Q")) {
+                        pdfCanvas.curveTo(pathPoint.x1, pathPoint.y1, pathPoint.x2, pathPoint.y2);
+                    } else if (pathPoint.type.equals("C")) {
+                        pdfCanvas.closePath();
+                    }
+                }
+                pdfCanvas.endPath();
+            }
+        }
 
-	}
+    }
 
     /**
      * 计算当前盒子到目标盒子的缩放比例
-     * 
-     * @param targetBox 目标区域大小
+     *
+     * @param targetBox  目标区域大小
      * @param currentBox 图元大小
      * @return 缩放比例
      */
@@ -640,8 +675,8 @@ public class ItextMaker {
 
     /**
      * 计算图元到目标盒子的缩放比例
-     * 
-     * @param targetBox 目标区域大小
+     *
+     * @param targetBox   目标区域大小
      * @param graphicUnit 图元
      * @return 缩放比例
      */
@@ -656,7 +691,7 @@ public class ItextMaker {
 
     /**
      * 判断两个box的位置和大小是否相同
-     * 
+     *
      * @param box1 A
      * @param box2 B
      * @return true: 相同；false: 不同
@@ -666,7 +701,7 @@ public class ItextMaker {
             return false;
         }
         return box1.getTopLeftX().equals(box2.getTopLeftX()) && box1.getTopLeftY().equals(box2.getTopLeftY())
-            && box1.getWidth().equals(box2.getWidth()) && box1.getHeight().equals(box2.getHeight());
+                && box1.getWidth().equals(box2.getWidth()) && box1.getHeight().equals(box2.getHeight());
     }
 
     private void writeImage(ResourceManage resMgt, PdfCanvas pdfCanvas, ST_Box box, ImageObject imageObject, ST_Box annotBox, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
@@ -691,7 +726,7 @@ public class ItextMaker {
             float y = box.getHeight().floatValue() - (annotBox.getTopLeftY().floatValue() + annotBox.getHeight().floatValue());
             float width = annotBox.getWidth().floatValue();
             float height = annotBox.getHeight().floatValue();
-            pdfCanvas.addImageWithTransformationMatrix(image, (float)converterDpi(width), 0,0, (float)converterDpi(height), (float)converterDpi(x), (float)converterDpi(y));
+            pdfCanvas.addImageWithTransformationMatrix(image, (float) converterDpi(width), 0, 0, (float) converterDpi(height), (float) converterDpi(x), (float) converterDpi(y));
         } else {
             org.apache.pdfbox.util.Matrix matrix = CommonUtil.toPFMatrix(CommonUtil.getImageMatrixFromOfd(imageObject, box, compositeObjectCTM));
             float a = matrix.getValue(0, 0);
@@ -753,7 +788,7 @@ public class ItextMaker {
 
     private void writeText(ResourceManage resMgt, PdfCanvas pdfCanvas, ST_Box box, ST_Box sealBox, ST_Box annotBox, TextObject textObject, Color fillColor, int alpha, Integer compositeObjectAlpha, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM) throws IOException {
         double scale = scaling(sealBox, textObject);
-    	float fontSize = Double.valueOf(textObject.getSize() * scale).floatValue();
+        float fontSize = Double.valueOf(textObject.getSize() * scale).floatValue();
         CT_DrawParam ctDrawParam = resMgt.superDrawParam(textObject);
         // 使用绘制参数补充缺省的颜色
         if (ctDrawParam != null && textObject.getFillColor() == null
@@ -856,13 +891,13 @@ public class ItextMaker {
 
         List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCGTransforms(), compositeObjectBoundary, compositeObjectCTM, textObject.getCTM() != null, textObject.getCTM(), true, scale);
 
-	    // 创建矩形对象, 指定文字绘制区域
-	    ST_Box boundary = textObject.getBoundary();
-	    Rectangle rectangle = new Rectangle(
-			    (float) converterDpi(boundary.getTopLeftX()),
-			    (float) converterDpi(box.getHeight() - boundary.getTopLeftY() - boundary.getHeight()),
-			    (float) converterDpi(boundary.getWidth()),
-			    (float) converterDpi(boundary.getHeight()));
+        // 创建矩形对象, 指定文字绘制区域
+        ST_Box boundary = textObject.getBoundary();
+        Rectangle rectangle = new Rectangle(
+                (float) converterDpi(boundary.getTopLeftX()),
+                (float) converterDpi(box.getHeight() - boundary.getTopLeftY() - boundary.getHeight()),
+                (float) converterDpi(boundary.getWidth()),
+                (float) converterDpi(boundary.getHeight()));
 
         double rx = 0, ry = 0;
         for (int i = 0; i < textCodePointList.size(); i++) {
@@ -873,15 +908,15 @@ public class ItextMaker {
             }
             pdfCanvas.saveState();
 
-	        // 文字透明度
-	        if (textObject.getFill()) {
-		        pdfCanvas.setExtGState(new PdfExtGState().setFillOpacity(textObject.getAlpha() / 255f));
-	        }
+            // 文字透明度
+            if (textObject.getFill()) {
+                pdfCanvas.setExtGState(new PdfExtGState().setFillOpacity(textObject.getAlpha() / 255f));
+            }
 
-	        // 剪裁文字实际绘制区域
-	        pdfCanvas.rectangle(rectangle); // 绘制剪裁区域
-	        pdfCanvas.clip();    // 通过将当前剪切路径与当前路径相交来修改当前剪切路径
-	        pdfCanvas.endPath(); // 让剪裁操作生效
+            // 剪裁文字实际绘制区域
+            pdfCanvas.rectangle(rectangle); // 绘制剪裁区域
+            pdfCanvas.clip();    // 通过将当前剪切路径与当前路径相交来修改当前剪切路径
+            pdfCanvas.endPath(); // 让剪裁操作生效
 
             pdfCanvas.beginText();
             if (textObject.getMiterLimit() > 0)
@@ -911,43 +946,43 @@ public class ItextMaker {
             }
             pdfCanvas.setFontAndSize(font, (float) converterDpi(fontSize));
 
-			// 设置线宽
+            // 设置线宽
             if (textObject.getLineWidth() != null) {
-	            StrokeColor stroke = textObject.getStrokeColor();
-	            if (stroke != null && textObject.getStroke()) {
-		            Color strokeColor = ColorConstants.BLACK;
-		            // 获取描边颜色
-		            if (stroke.getValue() != null) {
-			            strokeColor = ColorConvert.pdfRGB(resMgt, stroke);
-		            } else if (stroke.getColorByType() != null) {
-			            CT_AxialShd ctAxialShd = stroke.getColorByType();
-			            strokeColor = ColorConvert.pdfRGB(resMgt, ctAxialShd.getSegments().get(0).getColor());
-		            }
-		            // 设置透明度
-		            PdfExtGState gs2 = new PdfExtGState();
-		            gs2.setFillOpacity(stroke.getAlpha() / 255f);
-		            pdfCanvas.setExtGState(gs2);
-		            // 设置描边颜色
-		            pdfCanvas.setStrokeColor(strokeColor);
-		            pdfCanvas.setLineWidth((float) converterDpi(lineWidth));
-		            pdfCanvas.setTextRenderingMode(PdfCanvasConstants.TextRenderingMode.FILL_STROKE);
-	            }
+                StrokeColor stroke = textObject.getStrokeColor();
+                if (stroke != null && textObject.getStroke()) {
+                    Color strokeColor = ColorConstants.BLACK;
+                    // 获取描边颜色
+                    if (stroke.getValue() != null) {
+                        strokeColor = ColorConvert.pdfRGB(resMgt, stroke);
+                    } else if (stroke.getColorByType() != null) {
+                        CT_AxialShd ctAxialShd = stroke.getColorByType();
+                        strokeColor = ColorConvert.pdfRGB(resMgt, ctAxialShd.getSegments().get(0).getColor());
+                    }
+                    // 设置透明度
+                    PdfExtGState gs2 = new PdfExtGState();
+                    gs2.setFillOpacity(stroke.getAlpha() / 255f);
+                    pdfCanvas.setExtGState(gs2);
+                    // 设置描边颜色
+                    pdfCanvas.setStrokeColor(strokeColor);
+                    pdfCanvas.setLineWidth((float) converterDpi(lineWidth));
+                    pdfCanvas.setTextRenderingMode(PdfCanvasConstants.TextRenderingMode.FILL_STROKE);
+                }
             }
 
-	        // 设置文字斜体
-	        if (textObject.getItalic()) {
-		        // 计算剪切因子（角度=10°）
-		        double shearFactor = Math.tan(Math.toRadians(10));
+            // 设置文字斜体
+            if (textObject.getItalic()) {
+                // 计算剪切因子（角度=10°）
+                double shearFactor = Math.tan(Math.toRadians(10));
 
-		        // 定义补偿量：补偿量 = 剪切因子 * 字体高度
-		        double compensation = shearFactor * textCodePoint.getY();
+                // 定义补偿量：补偿量 = 剪切因子 * 字体高度
+                double compensation = shearFactor * textCodePoint.getY();
 
-		        // 构建组合变换矩阵（反向平移且剪切）
-		        AffineTransform transform = new AffineTransform();
-		        transform.translate(-compensation, 0); // 反向平移补偿偏移
-		        transform.shear(shearFactor, 0);     // 应用剪切
-		        pdfCanvas.concatMatrix(transform);
-	        }
+                // 构建组合变换矩阵（反向平移且剪切）
+                AffineTransform transform = new AffineTransform();
+                transform.translate(-compensation, 0); // 反向平移补偿偏移
+                transform.shear(shearFactor, 0);     // 应用剪切
+                pdfCanvas.concatMatrix(transform);
+            }
 
             //设置字符方向
             if (textObject.getCharDirection() == Angle_90) {
@@ -985,8 +1020,8 @@ public class ItextMaker {
     /**
      * 加载字体
      *
-     * @param rl     资源加载器
-     * @param ctFont 字体对象
+     * @param rl         资源加载器
+     * @param ctFont     字体对象
      * @param isNoGlyphs 是否不存在字符索引
      * @return 字体
      */
