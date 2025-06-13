@@ -175,7 +175,7 @@ public class OFDPageGraphics2D extends Graphics2D {
 
         // 如果存在裁剪区域，设置裁剪
         if (this.drawParam.clip != null) {
-            Clips clips = makeClip(s, new AffineTransform(this.drawParam.ctm));
+            Clips clips = makeClip(s, new AffineTransform(this.drawParam.ctm), false);
             pathObj.setClips(clips);
         }
 
@@ -352,7 +352,7 @@ public class OFDPageGraphics2D extends Graphics2D {
             // 图片缩放后在画布上的路径
             // 说明：图片是通过一个 (x: 0,y: 0,w: 1,h: 1)的矩形通过变换矩阵放置到OFD上
             Shape imgShape = imgCTM.createTransformedShape(new Rectangle2D.Double(0, 0, 1, 1));
-            Clips clips = makeClip(imgShape, imgCTM);
+            Clips clips = makeClip(imgShape, imgCTM, true);
             imgObj.setClips(clips);
         }
         container.addPageBlock(imgObj);
@@ -566,7 +566,7 @@ public class OFDPageGraphics2D extends Graphics2D {
         pathObj.setAbbreviatedData(pData);
         // 如果存在裁剪区域，设置裁剪
         if (this.drawParam.clip != null) {
-            Clips clips = makeClip(s, new AffineTransform(this.drawParam.ctm));
+            Clips clips = makeClip(s, new AffineTransform(this.drawParam.ctm), false);
             pathObj.setClips(clips);
         }
 
@@ -1304,9 +1304,10 @@ public class OFDPageGraphics2D extends Graphics2D {
      *
      * @param s      图形对象
      * @param objCTM 对象当前的变换矩阵
+     * @param isNeedInverse 是否需要将裁剪区域进行逆变换
      * @return 裁剪区 或 null（图形完全处于裁剪区）
      */
-    private Clips makeClip(Shape s, AffineTransform objCTM) {
+    private Clips makeClip(Shape s, AffineTransform objCTM, boolean isNeedInverse) {
         Rectangle2D bounds = s.getBounds2D();
 
         // 由于 double 的特性存在精度误差，为了减少由精度误差造成 contains 判断错误
@@ -1327,22 +1328,21 @@ public class OFDPageGraphics2D extends Graphics2D {
             clipObj.setFill(true);
             clipObj.setBoundary(this.size);
 
-//            try {
-//                // 由于图元内的裁剪区域受到图元的变换矩阵影响，
-//                // 而裁剪区域是位于未受到变换的原始画布上的区域，
-//                // 因此在图元内部的裁剪区为需要叠加一个图元内变换的逆变换，
-//                // 才可以实现向外部空间的映射。
-//                AffineTransform inverse = objCTM.createInverse();
-//                clipObj.setCTM(trans(inverse));
-//                area.setClipObj(clipObj);
-//                clips.addClip(new CT_Clip().addArea(area));
-//                return clips;
-//            } catch (NoninvertibleTransformException e) {
-//                // 初等变换都可逆，若非初等变换那么忽略裁剪区
-//            }
-
-            area.setClipObj(clipObj);
-            clips.addClip(new CT_Clip().addArea(area));
+           try {
+               // 【文字】、【矢量图形】，其坐标与剪裁区域的坐标，通过变换，已经提前位于设备空间，无需进行逆变换；
+               // 但是【图像】例外，不会提前变换，因为会产生极高的变换成本，所以存在设备空间及对象空间（原始画布）两个坐标系
+               // 而图像的裁剪区域是位于未受到变换的原始画布上的区域，
+               // 因此在图像的裁剪区为需要叠加一个图元内变换的逆变换，
+               // 才可以实现向外部空间的映射。
+               if (isNeedInverse) {
+                   clipObj.setCTM(trans(objCTM.createInverse()));
+               }
+               area.setClipObj(clipObj);
+               clips.addClip(new CT_Clip().addArea(area));
+               return clips;
+           } catch (NoninvertibleTransformException e) {
+               // 初等变换都可逆，若非初等变换那么忽略裁剪区
+           }
         }
         return null;
     }
