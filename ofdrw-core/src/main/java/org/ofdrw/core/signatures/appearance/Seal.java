@@ -1,7 +1,7 @@
 package org.ofdrw.core.signatures.appearance;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.Nullable;
+
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.ST_Loc;
 
@@ -69,7 +69,7 @@ public class Seal extends OFDElement {
      * @param imageLoc 印模图片存储位置，null表示删除
      * @return this
      */
-    public Seal setImageLoc(@Nullable ST_Loc imageLoc) {
+    public Seal setImageLoc( ST_Loc imageLoc) {
         if (imageLoc == null) {
             this.removeOFDElemByNames("ImageLoc");
             return this;
@@ -84,7 +84,7 @@ public class Seal extends OFDElement {
      *
      * @return 印模图片存储位置，可能为null
      */
-    @Nullable
+    
     public ST_Loc getImageLoc(){
         Element e = this.getOFDElement("ImageLoc");
         if (e == null) {

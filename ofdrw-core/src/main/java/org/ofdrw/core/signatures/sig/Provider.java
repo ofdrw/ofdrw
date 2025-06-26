@@ -1,7 +1,7 @@
 package org.ofdrw.core.signatures.sig;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.Nullable;
+
 import org.ofdrw.core.OFDElement;
 
 import java.util.Base64;
@@ -113,7 +113,7 @@ public class Provider extends OFDElement {
      * @param protocolVer 创建签名时所用的签章组件的接口协议版，如果为空则删除该属性
      * @return this
      */
-    public Provider setProtocolVer(@Nullable String protocolVer) {
+    public Provider setProtocolVer( String protocolVer) {
         if (protocolVer == null) {
             this.removeAttr("ProtocolVer");
             return this;
@@ -130,7 +130,7 @@ public class Provider extends OFDElement {
      *
      * @return 创建签名时所用的签章组件的接口协议版，可能为空
      */
-    @Nullable
+    
     public String getProtocolVer() {
         return this.attributeValue("ProtocolVer");
     }
@@ -144,7 +144,7 @@ public class Provider extends OFDElement {
      * @param extendData 创建签名时所用的签章组件的扩展信息
      * @return this
      */
-    public Provider setExtendData(@Nullable byte[] extendData) {
+    public Provider setExtendData( byte[] extendData) {
         if (extendData == null) {
             extendData = new byte[0];
         }

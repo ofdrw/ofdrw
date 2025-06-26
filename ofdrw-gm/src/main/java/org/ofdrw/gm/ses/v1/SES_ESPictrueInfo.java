@@ -17,7 +17,7 @@ public class SES_ESPictrueInfo extends ASN1Object {
      * <p>
      * 代表印章图片类型，如 GIF、BMP、JPG、SVG等
      */
-    private DERIA5String type;
+    private ASN1IA5String type;
 
     /**
      * 印章图片数据
@@ -110,7 +110,7 @@ public class SES_ESPictrueInfo extends ASN1Object {
         return this;
     }
 
-    public DERIA5String getType() {
+    public ASN1IA5String getType() {
         return type;
     }
 

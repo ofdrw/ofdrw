@@ -2,7 +2,7 @@ package org.ofdrw.crypto.integrity;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.jetbrains.annotations.NotNull;
+
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.integrity.FileList;
 import org.ofdrw.core.integrity.OFDEntries;
@@ -51,7 +51,7 @@ public class OFDIntegrity implements Closeable {
 
     private AtomicInteger idProvider;
 
-    public OFDIntegrity(@NotNull Path ofdFile, @NotNull Path dest) throws IOException {
+    public OFDIntegrity( Path ofdFile,  Path dest) throws IOException {
         if (ofdFile == null || Files.notExists(ofdFile)) {
             throw new IllegalArgumentException("待保护文件位置(ofdFile)不正确");
         }
@@ -75,7 +75,7 @@ public class OFDIntegrity implements Closeable {
      * @throws IOException IO操作异常
      * @throws GeneralSecurityException 密码运算相关问题
      */
-    public void protect(@NotNull ProtectSigner signer) throws IOException, GeneralSecurityException {
+    public void protect( ProtectSigner signer) throws IOException, GeneralSecurityException {
         if (signer == null) {
             throw new IllegalArgumentException("请提供 签名实现");
         }

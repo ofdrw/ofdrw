@@ -1,8 +1,8 @@
 package org.ofdrw.core.crypto.encryt;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+
 import org.ofdrw.core.OFDElement;
 
 import java.util.List;
@@ -48,7 +48,7 @@ public class ExtendParams extends OFDElement {
      * @param value 扩展参数值
      * @return this
      */
-    public ExtendParams addParameter(@NotNull String name, @Nullable String value) {
+    public ExtendParams addParameter( String name,  String value) {
         return addParameter(new Parameter(name, value));
     }
 
@@ -68,7 +68,7 @@ public class ExtendParams extends OFDElement {
      * @param name 参数名
      * @return 参数值，可能为null
      */
-    public String getValue(@Nullable String name) {
+    public String getValue( String name) {
         if (name == null) {
             return null;
         }

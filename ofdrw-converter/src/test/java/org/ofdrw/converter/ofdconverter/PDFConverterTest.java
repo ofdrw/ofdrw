@@ -1,5 +1,6 @@
 package org.ofdrw.converter.ofdconverter;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
 import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
@@ -142,7 +143,7 @@ class PDFConverterTest {
                 Paths.get("src/test/resources/helloworld.ofd"),
                 Paths.get("src/test/resources/intro-数科.ofd")
         };
-        try (PDDocument pdfDoc =  PDDocument.load(src.toFile())) {
+        try (PDDocument pdfDoc =  Loader.loadPDF(src.toFile())) {
             PDEmbeddedFilesNameTreeNode efTree = new PDEmbeddedFilesNameTreeNode();
             Map<String, PDComplexFileSpecification> efMap = new HashMap<>();
             for (Path attFile : arr) {

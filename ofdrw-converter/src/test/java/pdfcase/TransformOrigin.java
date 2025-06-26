@@ -5,6 +5,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.util.Matrix;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +42,7 @@ public class TransformOrigin {
 
                 contentStream.moveTo(0, 0);
                 contentStream.beginText();
-                contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
+                contentStream.setFont( new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 10);
                 contentStream.showText("Hello world!");
                 contentStream.endText();
                 contentStream.restoreGraphicsState();

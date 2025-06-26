@@ -1,7 +1,7 @@
 package org.ofdrw.core.integrity;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
+
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.ST_Loc;
 
@@ -52,7 +52,7 @@ public class File extends OFDElement {
      * @param id 文件标识
      * @return this
      */
-    public File setID(@NotNull String id) {
+    public File setID( String id) {
         if (id == null) {
             throw new IllegalArgumentException("文件标识(ID)为空");
         }
@@ -81,7 +81,7 @@ public class File extends OFDElement {
      * @param fileLoc 包内文件路径
      * @return this
      */
-    public File setFileLoc(@NotNull ST_Loc fileLoc) {
+    public File setFileLoc( ST_Loc fileLoc) {
         if (fileLoc == null) {
             throw new IllegalArgumentException("包内文件路径(FileLoc)为空");
         }
@@ -95,7 +95,7 @@ public class File extends OFDElement {
      *
      * @return 包内文件路径
      */
-    @NotNull
+
     public ST_Loc getFileLoc() {
         final String fileLoc = this.attributeValue("FileLoc");
         if (fileLoc == null) {

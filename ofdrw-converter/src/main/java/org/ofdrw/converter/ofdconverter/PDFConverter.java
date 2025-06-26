@@ -1,5 +1,6 @@
 package org.ofdrw.converter.ofdconverter;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSInputStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
@@ -129,7 +130,7 @@ public class PDFConverter implements DocConverter {
             return;
         }
 
-        try (PDDocument pdfDoc = PDDocument.load(filepath.toFile())) {
+        try (PDDocument pdfDoc = Loader.loadPDF(filepath.toFile())) {
             int total = pdfDoc.getNumberOfPages();
             List<Integer> targetPages = new LinkedList<>();
             if (indexes == null || indexes.length == 0) {

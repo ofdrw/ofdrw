@@ -14,7 +14,7 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jetbrains.annotations.NotNull;
+
 
 
 /**
@@ -37,9 +37,9 @@ public final class SignedDataBuilder {
      * @throws GeneralSecurityException 证书解析异常
      * @throws IOException              IO操作异常
      */
-    public static SignedData signedData(@NotNull byte[] plaintext,
-                                        @NotNull byte[] signature,
-                                        @NotNull Certificate certificate) throws GeneralSecurityException, IOException {
+    public static SignedData signedData( byte[] plaintext,
+                                         byte[] signature,
+                                         Certificate certificate) throws GeneralSecurityException, IOException {
         if (plaintext == null || plaintext.length == 0) {
             throw new IllegalArgumentException("签名原文(plaintext)为空");
         }
@@ -64,8 +64,8 @@ public final class SignedDataBuilder {
      * @throws GeneralSecurityException 证书解析异常
      * @throws IOException              IO操作异常
      */
-    public static SignedData signedData(@NotNull byte[] plaintext,
-                                        @NotNull List<CertSigHolder> certSigArr,
+    public static SignedData signedData( byte[] plaintext,
+                                         List<CertSigHolder> certSigArr,
                                         List<Certificate> extCertArr)
             throws GeneralSecurityException, IOException {
         if (plaintext == null || plaintext.length == 0) {

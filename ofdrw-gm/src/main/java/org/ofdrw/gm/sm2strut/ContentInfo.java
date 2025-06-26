@@ -55,7 +55,7 @@ public final class ContentInfo extends ASN1Object {
             if (!tagged.isExplicit() || tagged.getTagNo() != 0) {
                 throw new IllegalArgumentException("content 无法解析");
             }
-            content = tagged.getObject();
+            content = tagged.getBaseObject();
         }
     }
 

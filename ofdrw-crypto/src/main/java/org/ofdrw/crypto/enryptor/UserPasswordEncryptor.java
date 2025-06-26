@@ -8,7 +8,7 @@ import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.jcajce.provider.digest.SM3;
-import org.jetbrains.annotations.NotNull;
+
 import org.ofdrw.core.crypto.ProtectionCaseID;
 import org.ofdrw.core.crypto.encryt.UserInfo;
 import org.ofdrw.gm.support.KDF;
@@ -53,7 +53,7 @@ public class UserPasswordEncryptor implements UserFEKEncryptor {
      * @param userType 用户角色类型 {@link UserInfo#UserTypeOwner}  {@link UserInfo#UserTypeUser}
      * @param password 加密口令
      */
-    public UserPasswordEncryptor(@NotNull String username, String userType, @NotNull String password) {
+    public UserPasswordEncryptor( String username, String userType,  String password) {
         if (username == null || username.isEmpty()) {
             throw new IllegalArgumentException("用户名称(username)为空");
         }
@@ -74,7 +74,7 @@ public class UserPasswordEncryptor implements UserFEKEncryptor {
      * @param username 用户名称
      * @param password 加密口令
      */
-    public UserPasswordEncryptor(@NotNull String username, @NotNull String password) {
+    public UserPasswordEncryptor( String username,  String password) {
         this(username, null, password);
     }
 
@@ -138,7 +138,7 @@ public class UserPasswordEncryptor implements UserFEKEncryptor {
      * @return 加密保护方案标识
      */
     @Override
-    public @NotNull String encryptCaseId() {
+    public  String encryptCaseId() {
         return ProtectionCaseID.EncryptGMPassword.getId();
     }
 }

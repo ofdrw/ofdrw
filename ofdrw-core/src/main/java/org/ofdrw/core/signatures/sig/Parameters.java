@@ -1,8 +1,8 @@
 package org.ofdrw.core.signatures.sig;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+
 import org.ofdrw.core.OFDElement;
 
 import java.util.List;
@@ -31,7 +31,7 @@ public class Parameters extends OFDElement {
      * @param parameter 签名扩展属性
      * @return this
      */
-    public Parameters addParameter(@Nullable Parameter parameter) {
+    public Parameters addParameter( Parameter parameter) {
         if (parameter == null) {
             return this;
         }
@@ -53,7 +53,7 @@ public class Parameters extends OFDElement {
      * @param value 属性的值
      * @return this
      */
-    public Parameters addParameter(@NotNull String name, String value) {
+    public Parameters addParameter( String name, String value) {
         final Parameter parameter = new Parameter(name,value);
         return this.addParameter(parameter);
     }
@@ -66,7 +66,7 @@ public class Parameters extends OFDElement {
      * @param value 属性的值
      * @return this
      */
-    public Parameters addParameter(@NotNull String name, String type, String value) {
+    public Parameters addParameter( String name, String type, String value) {
         final Parameter parameter = new Parameter(name, type, value);
         return this.addParameter(parameter);
     }
@@ -77,8 +77,8 @@ public class Parameters extends OFDElement {
      * @param name 签名扩展属性名称
      * @return 被删除的属性 或 null
      */
-    @Nullable
-    public Parameter removeParameter(@Nullable String name) {
+    
+    public Parameter removeParameter( String name) {
         if (name == null) {
             return null;
         }
@@ -95,8 +95,8 @@ public class Parameters extends OFDElement {
      * @param name 签名扩展属性名称
      * @return 签名扩展属性，或null
      */
-    @Nullable
-    public Parameter getParameter(@NotNull String name) {
+    
+    public Parameter getParameter( String name) {
         final List<Parameter> pList = getParameters();
         for (Parameter p : pList) {
             if (name.equals(p.getNameAttr())) {

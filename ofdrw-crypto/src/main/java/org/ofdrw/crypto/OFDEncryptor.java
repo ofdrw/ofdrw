@@ -11,8 +11,8 @@ import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+
 import org.ofdrw.core.crypto.ProtectionCaseID;
 import org.ofdrw.core.crypto.encryt.*;
 import org.ofdrw.core.signatures.sig.Parameters;
@@ -103,7 +103,7 @@ public class OFDEncryptor implements Closeable {
      * @param dest    加密后的OFD路径
      * @throws IOException IO操作异常
      */
-    public OFDEncryptor(@NotNull Path ofdFile, @NotNull Path dest) throws IOException {
+    public OFDEncryptor( Path ofdFile,  Path dest) throws IOException {
         if (ofdFile == null || Files.notExists(ofdFile)) {
             throw new IllegalArgumentException("文件位置(ofdFile)不正确");
         }
@@ -126,7 +126,7 @@ public class OFDEncryptor implements Closeable {
      * @param encryptor 加密用户的加密器
      * @return this
      */
-    public OFDEncryptor addUser(@NotNull UserFEKEncryptor encryptor) {
+    public OFDEncryptor addUser( UserFEKEncryptor encryptor) {
         if (encryptor == null) {
             return this;
         }
@@ -140,7 +140,7 @@ public class OFDEncryptor implements Closeable {
      * @param random 随机源
      * @return this
      */
-    public OFDEncryptor setRandom(@NotNull SecureRandom random) {
+    public OFDEncryptor setRandom( SecureRandom random) {
         if (random == null) {
             return this;
         }
@@ -403,7 +403,7 @@ public class OFDEncryptor implements Closeable {
      *
      * @return 加密操作的附加描述集合，可能为空
      */
-    @Nullable
+    
     public Parameters getParameters() {
         return parameters;
     }

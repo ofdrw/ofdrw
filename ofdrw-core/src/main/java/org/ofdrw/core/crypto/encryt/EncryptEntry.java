@@ -1,8 +1,8 @@
 package org.ofdrw.core.crypto.encryt;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.ST_Loc;
 
@@ -81,7 +81,7 @@ public class EncryptEntry extends OFDElement {
      * @param path 加密前包内文件的绝对路径
      * @return this
      */
-    public EncryptEntry setPathA(@NotNull String path) {
+    public EncryptEntry setPathA( String path) {
         if (path == null || path.isEmpty()) {
             throw new IllegalArgumentException("加密前包内文件的绝对路径(path)为空");
         }
@@ -98,7 +98,7 @@ public class EncryptEntry extends OFDElement {
      * @param path 加密前包内文件的绝对路径
      * @return this
      */
-    public EncryptEntry setPathA(@NotNull ST_Loc path) {
+    public EncryptEntry setPathA( ST_Loc path) {
         return setPathA(path == null ? null : path.toString());
     }
 
@@ -119,7 +119,7 @@ public class EncryptEntry extends OFDElement {
      * @param ePath 加密后形成的包内密文的绝对路径
      * @return this
      */
-    public EncryptEntry setEPath(@NotNull String ePath) {
+    public EncryptEntry setEPath( String ePath) {
         if (ePath == null || ePath.isEmpty()) {
             throw new IllegalArgumentException("加密后形成的包内密文的绝对路径(ePath)为空");
         }
@@ -134,7 +134,7 @@ public class EncryptEntry extends OFDElement {
      * @param ePath 加密后形成的包内密文的绝对路径
      * @return this
      */
-    public EncryptEntry setEPath(@NotNull ST_Loc ePath) {
+    public EncryptEntry setEPath( ST_Loc ePath) {
         return setEPath(ePath == null ? null : ePath.toString());
     }
 
@@ -188,7 +188,7 @@ public class EncryptEntry extends OFDElement {
      *
      * @return 此项密文独有的密钥数据文件路径，null请使用 加密操作信息中定义的通用密钥数据
      */
-    @Nullable
+    
     public ST_Loc getDecryptSeedLoc() {
         return ST_Loc.getInstance(this.attributeValue("DecryptSeedLoc"));
     }

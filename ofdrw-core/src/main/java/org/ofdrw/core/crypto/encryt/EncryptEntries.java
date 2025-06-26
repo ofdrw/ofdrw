@@ -1,8 +1,8 @@
 package org.ofdrw.core.crypto.encryt;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+
 import org.ofdrw.core.OFDElement;
 
 import java.util.List;
@@ -33,7 +33,7 @@ public class EncryptEntries extends OFDElement {
      * @param id 加密操作标识，应与解密入口描述中的一致
      * @return this
      */
-    public EncryptEntries setID(@NotNull String id) {
+    public EncryptEntries setID( String id) {
         if (id == null || id.isEmpty()) {
             throw new IllegalArgumentException("加密操作标识(id)为空");
         }
@@ -75,7 +75,7 @@ public class EncryptEntries extends OFDElement {
      * @param decryptSeedLoc 此项密文独有的密钥数据文件路径
      * @return this
      */
-    public EncryptEntries addEncryptEntry(@NotNull String path, @NotNull String ePath, @Nullable String decryptSeedLoc) {
+    public EncryptEntries addEncryptEntry( String path,  String ePath,  String decryptSeedLoc) {
         this.add(new EncryptEntry(path, ePath, decryptSeedLoc));
         return this;
     }
@@ -88,7 +88,7 @@ public class EncryptEntries extends OFDElement {
      * @param ePath 加密后形成的包内密文的绝对路径
      * @return this
      */
-    public EncryptEntries addEncryptEntry(@NotNull String path, @NotNull String ePath) {
+    public EncryptEntries addEncryptEntry( String path,  String ePath) {
         this.add(new EncryptEntry(path, ePath));
         return this;
     }

@@ -32,7 +32,7 @@ public class SES_ESPropertyInfo extends ASN1Object {
     /**
      * 印章名称
      */
-    private DERUTF8String name;
+    private ASN1UTF8String name;
 
     /**
      * 签章人证书列表
@@ -112,7 +112,7 @@ public class SES_ESPropertyInfo extends ASN1Object {
     }
 
 
-    public DERUTF8String getName() {
+    public ASN1UTF8String getName() {
         return name;
     }
 

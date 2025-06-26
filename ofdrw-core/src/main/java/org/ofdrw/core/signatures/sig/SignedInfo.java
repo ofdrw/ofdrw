@@ -2,7 +2,7 @@ package org.ofdrw.core.signatures.sig;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.dom4j.Element;
-import org.jetbrains.annotations.Nullable;
+
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.signatures.appearance.Seal;
 import org.ofdrw.core.signatures.appearance.StampAnnot;
@@ -132,7 +132,7 @@ public class SignedInfo extends OFDElement {
      * @param parameters 扩展签名属性集，null表示删除
      * @return this
      */
-    public SignedInfo setParameters(@Nullable Parameters parameters) {
+    public SignedInfo setParameters( Parameters parameters) {
         if (parameters == null) {
             this.removeOFDElemByNames("Parameters");
             return this;
@@ -147,7 +147,7 @@ public class SignedInfo extends OFDElement {
      *
      * @return 扩展签名属性集，可能为null
      */
-    @Nullable
+    
     public Parameters getParameters() {
         Element e = this.getOFDElement("Parameters");
         return e == null ? null : new Parameters(e);

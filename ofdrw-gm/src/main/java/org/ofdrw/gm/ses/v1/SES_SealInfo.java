@@ -22,7 +22,7 @@ public class SES_SealInfo extends ASN1Object {
      * <p>
      * 电子印章数据唯一标识编码
      */
-    private DERIA5String esID;
+    private ASN1IA5String esID;
 
     /**
      * 印章属性信息
@@ -84,7 +84,7 @@ public class SES_SealInfo extends ASN1Object {
         return this;
     }
 
-    public DERIA5String getEsID() {
+    public ASN1IA5String getEsID() {
         return esID;
     }
 

@@ -36,7 +36,7 @@ public class TBS_Sign extends ASN1Object {
     /**
      * 原文数据的属性
      */
-    private DERIA5String propertyInfo;
+    private ASN1IA5String propertyInfo;
 
     /**
      * 自定义数据 【可选】
@@ -71,7 +71,7 @@ public class TBS_Sign extends ASN1Object {
         if (e.hasMoreElements()) {
             Object obj = e.nextElement();
             if (obj instanceof ASN1TaggedObject) {
-                extDatas = ExtensionDatas.getInstance(((ASN1TaggedObject) obj).getObject());
+                extDatas = ExtensionDatas.getInstance(((ASN1TaggedObject) obj).getBaseObject());
             }
         }
     }
@@ -126,7 +126,7 @@ public class TBS_Sign extends ASN1Object {
         return this;
     }
 
-    public DERIA5String getPropertyInfo() {
+    public ASN1IA5String getPropertyInfo() {
         return propertyInfo;
     }
 

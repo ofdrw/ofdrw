@@ -3,9 +3,12 @@ package org.ofdrw.converter.utils;
 import org.apache.fontbox.cff.CFFFont;
 import org.apache.fontbox.cff.CFFParser;
 import org.apache.fontbox.type1.Type1Font;
+import org.apache.pdfbox.io.RandomAccessRead;
+import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.junit.jupiter.api.Test;
 
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
@@ -104,8 +107,10 @@ public class TTFPareProgram {
     public void testCFF() throws IOException {
         final Path path = Paths.get("src/test/resources/font_83_83.cff");
         CFFParser parser = new CFFParser();
-        final List<CFFFont> fontList = parser.parse(Files.readAllBytes(path));
+       try( RandomAccessReadBufferedFile buff = new RandomAccessReadBufferedFile(path.toFile())){
+           final List<CFFFont> fontList = parser.parse(buff);
+           System.out.println(fontList);
+       }
 
-        System.out.println(fontList);
     }
 }

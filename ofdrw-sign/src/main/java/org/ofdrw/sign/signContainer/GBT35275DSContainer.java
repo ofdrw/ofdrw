@@ -6,7 +6,7 @@ import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
 import org.bouncycastle.jcajce.provider.digest.SM3;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
-import org.jetbrains.annotations.NotNull;
+
 import org.ofdrw.core.signatures.SigType;
 import org.ofdrw.gm.sm2strut.ContentInfo;
 import org.ofdrw.gm.sm2strut.OIDs;
@@ -57,7 +57,7 @@ public class GBT35275DSContainer implements ExtendSignatureContainer {
      * @param cert   SM2签名证书，应符合GB/T 20518
      * @param prvKey 私钥
      */
-    public GBT35275DSContainer(@NotNull Certificate cert, @NotNull PrivateKey prvKey) {
+    public GBT35275DSContainer( Certificate cert,  PrivateKey prvKey) {
         if (cert == null) {
             throw new IllegalArgumentException("签名使用证书（cert）不能为空");
         }

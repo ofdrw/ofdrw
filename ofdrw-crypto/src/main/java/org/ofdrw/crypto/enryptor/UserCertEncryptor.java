@@ -6,7 +6,7 @@ import org.bouncycastle.crypto.engines.SM2Engine;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.crypto.params.ParametersWithRandom;
 import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil;
-import org.jetbrains.annotations.NotNull;
+
 import org.ofdrw.core.crypto.ProtectionCaseID;
 import org.ofdrw.core.crypto.encryt.UserInfo;
 import org.ofdrw.gm.sm2strut.SM2Cipher;
@@ -50,7 +50,7 @@ public class UserCertEncryptor implements UserFEKEncryptor {
      * @param userType    用户角色类型 {@link UserInfo#UserTypeOwner}  {@link UserInfo#UserTypeUser}
      * @param certificate 用户数字证书
      */
-    public UserCertEncryptor(@NotNull String username, String userType, @NotNull Certificate certificate) {
+    public UserCertEncryptor( String username, String userType,  Certificate certificate) {
         if (username == null || username.isEmpty()) {
             throw new IllegalArgumentException("用户名称(username)为空");
         }
@@ -70,7 +70,7 @@ public class UserCertEncryptor implements UserFEKEncryptor {
      * @param username    用户名称
      * @param certificate 用户数字证书
      */
-    public UserCertEncryptor(@NotNull String username, @NotNull Certificate certificate) {
+    public UserCertEncryptor( String username,  Certificate certificate) {
         this(username, null, certificate);
     }
 
@@ -117,7 +117,7 @@ public class UserCertEncryptor implements UserFEKEncryptor {
      * @return 加密保护方案标识
      */
     @Override
-    public @NotNull String encryptCaseId() {
+    public  String encryptCaseId() {
         return ProtectionCaseID.EncryptGMCert.getId();
     }
 }

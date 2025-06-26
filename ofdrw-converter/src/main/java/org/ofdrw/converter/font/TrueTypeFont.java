@@ -7,6 +7,8 @@ import org.apache.fontbox.cff.CFFParser;
 import org.apache.fontbox.ttf.CmapLookup;
 import org.apache.fontbox.ttf.CmapTable;
 import org.apache.fontbox.type1.Type1Font;
+import org.apache.pdfbox.io.RandomAccessRead;
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.ofdrw.converter.font.type1.Type1SegSplitParser;
 
 import java.awt.geom.GeneralPath;
@@ -180,7 +182,9 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
         if (!tables.containsKey("head")) {
             InputStream originalData = raf.getOriginalData();
             // head 表都不存在的情况，尝试使用CFF格式解析字体
-            List<CFFFont> fonts = new CFFParser().parse(IOUtils.toByteArray(originalData));
+            byte[] byteArray = IOUtils.toByteArray(originalData);
+            RandomAccessReadBuffer rabf = new RandomAccessReadBuffer(byteArray);
+            List<CFFFont> fonts = new CFFParser().parse(rabf);
             if (fonts != null && !fonts.isEmpty()) {
                 this.cffFont = fonts.get(0);
                 return this;

@@ -1,7 +1,7 @@
 package org.ofdrw.core.crypto.encryt;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
+
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.crypto.ProtectionCaseID;
 
@@ -43,7 +43,7 @@ public class DecyptSeed extends OFDElement {
      * @param id 加密操作标识
      * @return this
      */
-    public DecyptSeed setID(@NotNull String id) {
+    public DecyptSeed setID( String id) {
         if (id == null || id.length() == 0) {
             throw new IllegalArgumentException("加密操作标识(id)为空");
         }
@@ -58,7 +58,7 @@ public class DecyptSeed extends OFDElement {
      *
      * @return 加密操作标识
      */
-    @NotNull
+
     public String getID() {
         return this.attributeValue("ID");
     }
@@ -70,7 +70,7 @@ public class DecyptSeed extends OFDElement {
      * @param encryptCaseId 加密保护方案标识 {@link ProtectionCaseID}
      * @return this
      */
-    public DecyptSeed setEncryptCaseId(@NotNull String encryptCaseId) {
+    public DecyptSeed setEncryptCaseId( String encryptCaseId) {
         if (encryptCaseId == null) {
             throw new IllegalArgumentException("加密保护方案标识(id)为空");
         }
@@ -85,7 +85,7 @@ public class DecyptSeed extends OFDElement {
      * @param encryptCaseId 加密保护方案标识 {@link ProtectionCaseID}
      * @return this
      */
-    public DecyptSeed setEncryptCaseId(@NotNull ProtectionCaseID encryptCaseId) {
+    public DecyptSeed setEncryptCaseId( ProtectionCaseID encryptCaseId) {
         if (encryptCaseId == null) {
             throw new IllegalArgumentException("加密保护方案标识(id)为空");
         }
@@ -110,7 +110,7 @@ public class DecyptSeed extends OFDElement {
      * @param userInfo 可解密该次操作的用户
      * @return this
      */
-    public DecyptSeed addUserInfo(@NotNull UserInfo userInfo) {
+    public DecyptSeed addUserInfo( UserInfo userInfo) {
         if (userInfo == null) {
             throw new IllegalArgumentException("可解密该次操作的用户(userInfo)为空");
         }
@@ -136,7 +136,7 @@ public class DecyptSeed extends OFDElement {
      * @param extendParams 扩展参数节点
      * @return this
      */
-    public DecyptSeed setExtendParams(@NotNull ExtendParams extendParams) {
+    public DecyptSeed setExtendParams( ExtendParams extendParams) {
         if (extendParams == null) {
             throw new IllegalArgumentException("扩展参数节点(ExtendParams)为空");
         }
@@ -150,7 +150,7 @@ public class DecyptSeed extends OFDElement {
      *
      * @return 扩展参数节点
      */
-    @NotNull
+
     public ExtendParams getExtendParams() {
         Element e = this.getOFDElement("ExtendParams");
         if (e == null) {

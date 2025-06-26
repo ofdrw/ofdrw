@@ -2,7 +2,7 @@ package org.ofdrw.crypto.integrity;
 
 import org.bouncycastle.jcajce.provider.digest.SM3;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.jetbrains.annotations.NotNull;
+
 import org.ofdrw.gm.sm2strut.ContentInfo;
 import org.ofdrw.gm.sm2strut.OIDs;
 import org.ofdrw.gm.sm2strut.SignedData;
@@ -43,7 +43,7 @@ public class GMProtectSigner implements ProtectSigner {
      * @param privateKey 版式文件合成者的签名私钥
      * @param signCert   版式文件合成者的公钥证书
      */
-    public GMProtectSigner(@NotNull PrivateKey privateKey, @NotNull Certificate signCert) {
+    public GMProtectSigner( PrivateKey privateKey,  Certificate signCert) {
         if (privateKey == null) {
             throw new IllegalArgumentException("版式文件合成者的签名私钥(privateKey)为空");
         }

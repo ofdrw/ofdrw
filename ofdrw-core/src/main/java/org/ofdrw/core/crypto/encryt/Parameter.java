@@ -1,8 +1,8 @@
 package org.ofdrw.core.crypto.encryt;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+
 import org.ofdrw.core.OFDElement;
 
 /**
@@ -27,7 +27,7 @@ public class Parameter extends OFDElement {
      *
      * @param name 扩展参数名，不能为空
      */
-    public Parameter(@NotNull String name) {
+    public Parameter( String name) {
         this();
         setAttrName(name);
     }
@@ -38,7 +38,7 @@ public class Parameter extends OFDElement {
      * @param name  扩展参数名，不能为空
      * @param value 参数值，可选
      */
-    public Parameter(@NotNull String name, @Nullable String value) {
+    public Parameter( String name,  String value) {
         this();
         setAttrName(name);
         setValue(value);
@@ -52,7 +52,7 @@ public class Parameter extends OFDElement {
      * @param name 扩展参数名称
      * @return this
      */
-    public Parameter setAttrName(@NotNull String name) {
+    public Parameter setAttrName( String name) {
         if (name == null) {
             throw new IllegalArgumentException("扩展参数名称(name)为空");
         }
@@ -67,7 +67,7 @@ public class Parameter extends OFDElement {
      * @param name 扩展参数名称
      * @return this
      */
-    public Parameter setKeyName(@NotNull String name) {
+    public Parameter setKeyName( String name) {
         return setAttrName(name);
     }
 
@@ -77,7 +77,7 @@ public class Parameter extends OFDElement {
      *
      * @return 扩展参数名称
      */
-    @NotNull
+
     public String getAttrName() {
         String name = this.attributeValue("Name");
         if (name == null) {
@@ -92,7 +92,7 @@ public class Parameter extends OFDElement {
      *
      * @return 扩展参数名称
      */
-    @NotNull
+
     public String getKeyName() {
         return getAttrName();
     }
@@ -104,7 +104,7 @@ public class Parameter extends OFDElement {
      * @param value 扩展参数值
      * @return this
      */
-    public Parameter setValue(@Nullable String value) {
+    public Parameter setValue( String value) {
         if (value == null) {
             value = "";
         }
@@ -119,7 +119,7 @@ public class Parameter extends OFDElement {
      *
      * @return 扩展参数值，可能为null
      */
-    @Nullable
+    
     public String getValue() {
         return this.getTextTrim();
     }

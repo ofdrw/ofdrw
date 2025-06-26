@@ -4,7 +4,7 @@ import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FilenameUtils;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.jetbrains.annotations.Nullable;
+
 import org.ofdrw.core.basicStructure.ofd.DocBody;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicType.ST_Loc;
@@ -150,7 +150,7 @@ public class OFDDir extends VirtualContainer {
      * @return 解密入口文件 或 null（不存在）
      * @throws DocumentException 解密入口文件无法解析
      */
-    @Nullable
+    
     public Encryptions getEncryptions() throws DocumentException {
         try {
             Element obj = this.getObj(EncryptionsFileName);

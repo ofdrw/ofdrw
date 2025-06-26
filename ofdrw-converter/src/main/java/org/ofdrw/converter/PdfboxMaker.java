@@ -9,6 +9,7 @@ import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSFloat;
 import org.apache.pdfbox.cos.COSInteger;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
@@ -17,6 +18,7 @@ import org.apache.pdfbox.pdmodel.common.function.PDFunctionType2;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
@@ -67,11 +69,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -548,7 +548,7 @@ public class PdfboxMaker {
                 contentStream.clip();
                 contentStream.shadingFill(shading);
             }
-            
+
             if (pathObject.getRule() != null && pathObject.getRule().equals(Rule.Even_Odd)) {
                 contentStream.fillEvenOdd();
             } else {
@@ -626,9 +626,9 @@ public class PdfboxMaker {
                     pathObject.getBoundary().getWidth(),
                     pathObject.getBoundary().getHeight());
         }
-        
+
         clip(contentStream, box, pathObject);
-        
+
         List<PathPoint> listPoint = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(), pathObject.getBoundary(), PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()), pathObject.getCTM() != null, pathObject.getCTM(), compositeObjectBoundary, compositeObjectCTM, true, scale);
         for (int i = 0; i < listPoint.size(); i++) {
             if (listPoint.get(i).type.equals("M") || listPoint.get(i).type.equals("S")) {
@@ -678,7 +678,7 @@ public class PdfboxMaker {
                     } else if (pathPoint.type.equals("C")) {
                         contentStream.closePath();
                     }
-                }   
+                }
             }
             contentStream.clip();
         }
@@ -686,8 +686,8 @@ public class PdfboxMaker {
 
     /**
      * 计算当前盒子到目标盒子的缩放比例
-     * 
-     * @param targetBox 目标区域大小
+     *
+     * @param targetBox  目标区域大小
      * @param currentBox 当前区域大小
      * @return 缩放比例
      */
@@ -702,8 +702,8 @@ public class PdfboxMaker {
 
     /**
      * 计算图元到目标盒子的缩放比例
-     * 
-     * @param targetBox 目标盒子
+     *
+     * @param targetBox   目标盒子
      * @param graphicUnit 图元
      * @return 缩放比例
      */
@@ -718,7 +718,7 @@ public class PdfboxMaker {
 
     /**
      * 判断两个box的位置和大小是否相同
-     * 
+     *
      * @param box1 A
      * @param box2 B
      * @return true: 相同；false: 不同
@@ -728,7 +728,7 @@ public class PdfboxMaker {
             return false;
         }
         return box1.getTopLeftX().equals(box2.getTopLeftX()) && box1.getTopLeftY().equals(box2.getTopLeftY())
-            && box1.getWidth().equals(box2.getWidth()) && box1.getHeight().equals(box2.getHeight());
+                && box1.getWidth().equals(box2.getWidth()) && box1.getHeight().equals(box2.getHeight());
     }
 
     private void writeImage(ResourceManage resMgt, PDPageContentStream contentStream, ST_Box box, ImageObject imageObject, ST_Box annotBox) throws IOException {
@@ -754,9 +754,9 @@ public class PdfboxMaker {
         // 根据图片格式决定图片使用哪种创建方式
         PDImageXObject pdfImageObject;
         CT_MultiMedia multiMedia = resMgt.getMultiMedia(resourceID.toString());
-        if(multiMedia != null && "JPEG".equals(multiMedia.getFormat())){
+        if (multiMedia != null && "JPEG".equals(multiMedia.getFormat())) {
             pdfImageObject = JPEGFactory.createFromImage(pdf, bufferedImage);
-        }else {
+        } else {
             pdfImageObject = LosslessFactory.createFromImage(pdf, bufferedImage);
         }
 
@@ -796,11 +796,12 @@ public class PdfboxMaker {
 
     /**
      * 获取字号 ，若无法获取则设置为默认值 0.353。
+     *
      * @param textObject 文字对象
      * @return 字号。
      */
     private float getTextObjectSize(TextObject textObject) {
-    	float fontSize = 0.353f;
+        float fontSize = 0.353f;
         if (textObject == null) {
             return fontSize;
         }
@@ -853,49 +854,59 @@ public class PdfboxMaker {
         List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCTM() != null, textObject.getCTM(), true, scale);
         double rx = 0, ry = 0;
         for (int i = 0; i < textCodePointList.size(); i++) {
+            contentStream.saveGraphicsState();
+
+            // 初等矩阵
             TextCodePoint textCodePoint = textCodePointList.get(i);
             if (i == 0) {
                 rx = textCodePoint.x;
                 ry = textCodePoint.y;
             }
-            contentStream.saveGraphicsState();
-            contentStream.beginText();
-            contentStream.setNonStrokingColor(fillColor);
-            contentStream.newLineAtOffset((float) (textCodePoint.getX()), (float) (textCodePoint.getY()));
             if (textObject.getCTM() != null) {
                 Double[] ctm = textObject.getCTM().toDouble();
                 double a = ctm[0];
                 double b = ctm[1];
                 double c = ctm[2];
                 double d = ctm[3];
-                AffineTransform transform = new AffineTransform();
                 double angel = Math.atan2(-b, d);
-                transform.rotate(angel, rx, ry);
-                contentStream.concatenate2CTM(transform);
+                contentStream.transform(Matrix.getRotateInstance(angel, (float) rx, (float) ry));
+//                transform = transform.multiply(Matrix.getRotateInstance(angel, (float) rx, (float) ry)) ;
                 if (angel == 0 && a != 0 && d == 1) {
                     textObject.setHScale(a);
                 }
             }
             if (textObject.getHScale().floatValue() < 1) {
-                AffineTransform transform = new AffineTransform();
-                transform.setTransform(textObject.getHScale().floatValue(), 0, 0, 1, (1 - textObject.getHScale().floatValue()) * textCodePoint.getX(), 0);
-                contentStream.concatenate2CTM(transform);
+                contentStream.transform(new Matrix(
+                        textObject.getHScale().floatValue(), 0,
+                        0, 1,
+                        (1 - textObject.getHScale().floatValue()) * (float) textCodePoint.getX(), 0
+                ));
+
+//                 transform = transform.multiply(new  Matrix(
+//                        textObject.getHScale().floatValue(), 0,
+//                        0, 1,
+//                        (1 - textObject.getHScale().floatValue()) * (float) textCodePoint.getX(), 0
+//                ));
+
             }
 
             //设置字符方向
             if (textObject.getCharDirection() == Angle_90) {
-                contentStream.setTextMatrix(new Matrix(0, -1, 1, 0, (float) textCodePoint.getX(), (float) textCodePoint.getY()));
+                contentStream.transform(new Matrix(0, -1, 1, 0, (float) textCodePoint.getX(), (float) textCodePoint.getY()));
             } else if (textObject.getCharDirection() == Angle_180) {
-                contentStream.setTextMatrix(new Matrix(-1, 0, 0, -1, (float) textCodePoint.getX(), (float) textCodePoint.getY()));
+                contentStream.transform(new Matrix(-1, 0, 0, -1, (float) textCodePoint.getX(), (float) textCodePoint.getY()));
             } else if (textObject.getCharDirection() == Angle_270) {
-                contentStream.setTextMatrix(new Matrix(0, 1, -1, 0, (float) textCodePoint.getX(), (float) textCodePoint.getY()));
+                contentStream.transform(new Matrix(0, 1, -1, 0, (float) textCodePoint.getX(), (float) textCodePoint.getY()));
             }
 
+            contentStream.beginText();
+            contentStream.setNonStrokingColor(fillColor);
+            contentStream.newLineAtOffset((float) (textCodePoint.getX()), (float) (textCodePoint.getY()));
             contentStream.setFont(font, (float) converterDpi(fontSize));
             try {
                 contentStream.showText(textCodePoint.getText());
             } catch (Exception e) {
-
+                logger.debug("无法显示文字", e);
             }
             contentStream.endText();
             contentStream.restoreGraphicsState();
@@ -936,8 +947,8 @@ public class PdfboxMaker {
                 Date date = Date.from(creationDate.atZone(ZoneId.systemDefault()).toInstant());
                 calendar.setTime(date);
                 ef.setCreationDate(calendar);
-            }catch (Exception e){
-                logger.info("无法获取附件创建时间 {} : {}",attachment.attributeValue("CreationDate") ,attachment.getAttachmentName(), e);
+            } catch (Exception e) {
+                logger.info("无法获取附件创建时间 {} : {}", attachment.attributeValue("CreationDate"), attachment.getAttachmentName(), e);
             }
 
             fs.setEmbeddedFile(ef);
@@ -951,10 +962,10 @@ public class PdfboxMaker {
 
     /**
      * 加载字体
-     * 
-     * @param ctFont 字体对象
-     * @return
-     * @throws IOException
+     *
+     * @param ctFont OFD字体对象
+     * @return PDFBox字体对象
+     * @throws IOException 加载失败
      */
     private PDFont loadFont(CT_Font ctFont) throws IOException {
         // 字体是否嵌入
@@ -969,7 +980,7 @@ public class PdfboxMaker {
                 fontPath = resourceLocator.getFile(ctFont.getFontFile()).toAbsolutePath();
             } catch (Exception e) {
                 logger.warn(
-                    "无法加载内嵌字体: " + ctFont.getFamilyName() + " " + ctFont.getFontName() + " " + ctFont.getFontFile(), e);
+                        "无法加载内嵌字体: " + ctFont.getFamilyName() + " " + ctFont.getFontName() + " " + ctFont.getFontFile(), e);
             }
         }
         if (fontPath != null) {
@@ -987,17 +998,17 @@ public class PdfboxMaker {
             fontPath = FontLoader.getInstance().getDefaultFontPath();
         }
 
-        ByteArrayInputStream fontStream = new ByteArrayInputStream(Files.readAllBytes(fontPath));
         String name = fontPath.toFile().getName().toLowerCase();
         TrueTypeFont ttf = null;
         if (name.endsWith(".ttf")) {
+            RandomAccessReadBuffer fontStream = new RandomAccessReadBuffer(Files.readAllBytes(fontPath));
             try {
                 ttf = new TTFParser(embedSubset).parse(fontStream);
             } catch (Exception ex) {
                 ttf = new TTFParser(!embedSubset).parse(fontStream);
             }
-
         } else if (name.endsWith(".otf")) {
+            RandomAccessReadBuffer fontStream = new RandomAccessReadBuffer(Files.readAllBytes(fontPath));
             try {
                 ttf = new OTFParser(embedSubset).parse(fontStream);
             } catch (Exception ex) {
@@ -1005,7 +1016,7 @@ public class PdfboxMaker {
             }
 
         } else if (name.endsWith(".ttc")) {
-            TrueTypeCollection ttc = new TrueTypeCollection(fontStream);
+            TrueTypeCollection ttc = new TrueTypeCollection(fontPath.toFile());
             if (ttc != null) {
                 ttf = ttc.getFontByName(ctFont.getFontName());
                 if (ttf == null) {
@@ -1015,11 +1026,11 @@ public class PdfboxMaker {
                 embedSubset = true;
                 ttc.close();
             }
-        } else {
-            fontStream.close();
         }
-        PDFont font = PDType0Font.load(pdf, ttf, embedSubset);
-        return font;
+        if (ttf == null) {
+            throw new IOException("无法加载字体 " + ctFont.getFamilyName() + " " + ctFont.getFontName() + " " + ctFont.getFontFile());
+        }
+        return PDType0Font.load(pdf, ttf, embedSubset);
     }
 
     /**
@@ -1042,7 +1053,40 @@ public class PdfboxMaker {
             if (ctFont != null && ctFont.getFontFile() != null) {
                 logger.info("无法使用字体: {} {} {}", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile());
             }
-            return PDType1Font.HELVETICA_BOLD;
+            return new PDType1Font(Standard14Fonts.FontName.HELVETICA);
         }
+    }
+
+    /**
+     * 转换OFD变换矩阵为PDF变换矩阵
+     *
+     * 1. PDF的坐标系原点是在页面的左下角，从左至右为X轴的正方向，从下至上为Y轴的正方向
+     * 2. OFD的坐标系原点是在页面的左上角，从左至右为X轴的正方向，从上至下为Y轴的正方向
+     * 3. OFD坐标采用毫米，PDF坐标采用英寸，已知转换关系为 (mm*dpi /25.4)，可以获取OFD的页面宽度和高度。
+     * 4. OFD变换矩阵与OFD的变换矩阵格式相同 [a,b,c,d,e,f]
+     *
+     * @param ctm OFD变换矩阵
+     * @param pageBox OFD页面大小
+     * @param dpi 缩放因子
+     * @return PDF变换矩阵
+     */
+    public static Matrix matrix2(ST_Array ctm,ST_Box pageBox,  double dpi) {
+        double pageWidthMM = pageBox.getWidth().floatValue();
+        double pageHeightMM = pageBox.getHeight().floatValue();
+
+        Double[] ofdMatrix = ctm.toDouble();
+        // 计算单位转换因子：毫米 -> 点
+        double scale = dpi / 25.4;
+        double flipYTranslate = pageHeightMM * scale; // 翻转平移量（点单位）
+        // 创建翻转+缩放矩阵 [scale, 0, 0, -scale, 0, flipYTranslate]
+        Matrix flipScaleMatrix = new Matrix((float) scale, 0, 0, (float) -scale, 0, (float) flipYTranslate);
+        // 创建OFD原始矩阵（参数顺序: a, b, c, d, e, f）
+        Matrix ofdMatrixObj = new Matrix(
+                ofdMatrix[0].floatValue(), ofdMatrix[1].floatValue(),
+                ofdMatrix[2].floatValue(), ofdMatrix[3].floatValue(),
+                ofdMatrix[4].floatValue(), ofdMatrix[5].floatValue()
+        );
+        // 计算最终PDF矩阵：M_ofd × M_flip_scale
+        return ofdMatrixObj.multiply(flipScaleMatrix);
     }
 }

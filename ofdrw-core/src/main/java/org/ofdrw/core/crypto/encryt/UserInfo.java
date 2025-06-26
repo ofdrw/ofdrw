@@ -1,8 +1,8 @@
 package org.ofdrw.core.crypto.encryt;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+
 import org.ofdrw.core.OFDElement;
 
 import java.util.Base64;
@@ -42,7 +42,7 @@ public class UserInfo extends OFDElement {
      * @param userName 用户名称，如果为null则删除该属性。
      * @return this
      */
-    public UserInfo setUserName(@Nullable String userName) {
+    public UserInfo setUserName( String userName) {
         if (userName == null) {
             this.removeAttr("UserName");
             return this;
@@ -57,7 +57,7 @@ public class UserInfo extends OFDElement {
      *
      * @return 用户名称，可能为null。
      */
-    @Nullable
+    
     public String getUserName() {
         return this.attributeValue("UserName");
     }
@@ -74,7 +74,7 @@ public class UserInfo extends OFDElement {
      * @param userType 用户角色类型，如果为null则删除该属性。
      * @return this
      */
-    public UserInfo setUserType(@Nullable String userType) {
+    public UserInfo setUserType( String userType) {
         if (userType == null) {
             this.removeAttr("UserType");
             return this;
@@ -91,7 +91,7 @@ public class UserInfo extends OFDElement {
      *
      * @return 用户角色类型，默认值 用户（User）
      */
-    @NotNull
+
     public String getUserType() {
         String userType = this.attributeValue("UserType");
         return userType == null ? UserTypeUser : userType;
@@ -106,7 +106,7 @@ public class UserInfo extends OFDElement {
      * @param userCert 用户的加解密公钥证书，null时表示删除属性
      * @return this
      */
-    public UserInfo setUserCert(@Nullable byte[] userCert) {
+    public UserInfo setUserCert( byte[] userCert) {
         if (userCert == null) {
             this.removeOFDElemByNames("UserCert");
             return this;
@@ -121,7 +121,7 @@ public class UserInfo extends OFDElement {
      *
      * @return 用户的加解密公钥证书，可能为null
      */
-    @Nullable
+    
     public byte[] getUserCert() {
         final Element e = this.getOFDElement("UserCert");
         if (e == null) {
@@ -137,7 +137,7 @@ public class UserInfo extends OFDElement {
      * @param encryptedWk 文件对称加密的包装密钥
      * @return this
      */
-    public UserInfo setEncryptedWK(@NotNull byte[] encryptedWk) {
+    public UserInfo setEncryptedWK( byte[] encryptedWk) {
         if (encryptedWk == null) {
             throw new IllegalArgumentException("文件对称加密的包装密钥（EncrypteWk）为空");
         }
@@ -152,7 +152,7 @@ public class UserInfo extends OFDElement {
      *
      * @return 文件对称加密的包装密钥
      */
-    @NotNull
+
     public byte[] getEncryptedWK() {
         final Element e = this.getOFDElement("EncryptedWK");
         if (e == null) {

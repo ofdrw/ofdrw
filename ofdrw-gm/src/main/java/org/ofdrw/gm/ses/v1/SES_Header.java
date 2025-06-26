@@ -28,7 +28,7 @@ public class SES_Header extends ASN1Object {
      * <p>
      * 固定值“ES”
      */
-    private DERIA5String id;
+    private ASN1IA5String id;
 
     /**
      * 电子印章数据版本号标识
@@ -40,7 +40,7 @@ public class SES_Header extends ASN1Object {
      * <p>
      * 在互联互通时，用于识别不同的软件厂商实现
      */
-    private DERIA5String vid;
+    private ASN1IA5String vid;
 
     public SES_Header() {
         super();
@@ -69,7 +69,7 @@ public class SES_Header extends ASN1Object {
         return null;
     }
 
-    public DERIA5String getId() {
+    public ASN1IA5String getId() {
         return id;
     }
 
@@ -87,7 +87,7 @@ public class SES_Header extends ASN1Object {
         return this;
     }
 
-    public DERIA5String getVid() {
+    public ASN1IA5String getVid() {
         return vid;
     }
 

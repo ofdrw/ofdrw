@@ -8,8 +8,8 @@ import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import org.apache.commons.io.IOUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+
 import org.ofdrw.converter.font.*;
 import org.ofdrw.converter.utils.OSinfo;
 import org.ofdrw.core.Holder;
@@ -258,7 +258,7 @@ public final class FontLoader {
      * @deprecated {@link #addAliasMapping(String, String)}
      */
     @Deprecated
-    public FontLoader addAliasMapping(@Nullable String familyName, String fontName, @Nullable String aliasFamilyName, String aliasFontName) {
+    public FontLoader addAliasMapping( String familyName, String fontName,  String aliasFamilyName, String aliasFontName) {
         addAliasMapping(familyName, aliasFamilyName);
         addAliasMapping(fontName, aliasFontName);
         return this;
@@ -293,7 +293,7 @@ public final class FontLoader {
      * @deprecated {@link #addSimilarFontReplaceRegexMapping(String, String)}
      */
     @Deprecated
-    public FontLoader addSimilarFontReplaceRegexMapping(@Nullable String familyNameRegex, String fontNameRegex, @Nullable String aliasFamilyName, String aliasFontName) {
+    public FontLoader addSimilarFontReplaceRegexMapping( String familyNameRegex, String fontNameRegex,  String aliasFamilyName, String aliasFontName) {
         addSimilarFontReplaceRegexMapping(familyNameRegex, aliasFamilyName);
         addSimilarFontReplaceRegexMapping(fontNameRegex, aliasFontName);
         return this;
@@ -334,7 +334,7 @@ public final class FontLoader {
      * @deprecated {@link #addSystemFontMapping(String, String)}
      */
     @Deprecated
-    public FontLoader addSystemFontMapping(@Nullable String familyName, String fontName, String fontFilePath) {
+    public FontLoader addSystemFontMapping( String familyName, String fontName, String fontFilePath) {
         addSystemFontMapping(familyName, fontFilePath);
         addSystemFontMapping(fontName, fontFilePath);
         return this;
@@ -387,7 +387,7 @@ public final class FontLoader {
      * @param fontName   字体名
      * @return 字体操作系统内绝对路径，如果不存在返还null
      */
-    public String getSystemFontPath(@Nullable String familyName, String fontName) {
+    public String getSystemFontPath( String familyName, String fontName) {
         if (fontName == null && familyName == null) {
             return null;
         }
@@ -428,7 +428,7 @@ public final class FontLoader {
      * @param fontName   字体名
      * @return 字体操作系统内绝对路径，如果不存在返还 null
      */
-    public String getReplaceSimilarFontPath(@Nullable String familyName, String fontName) {
+    public String getReplaceSimilarFontPath( String familyName, String fontName) {
         if (fontName == null && familyName == null) {
             return null;
         }
@@ -495,7 +495,7 @@ public final class FontLoader {
      * @param fontName   字体名
      * @return 字体
      */
-    public TrueTypeFont loadExternalFont(@NotNull String absPath, @Nullable String familyName, @Nullable String fontName) {
+    public TrueTypeFont loadExternalFont( String absPath,  String familyName,  String fontName) {
         try {
             // 内存中不用主动关闭
             TTFDataStream raf = new MemoryTTFDataStream(new FileInputStream(absPath));

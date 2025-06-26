@@ -40,7 +40,7 @@ public class TBS_Sign extends ASN1Object {
      * <p>
      * 自行定义
      */
-    private DERIA5String propertyInfo;
+    private ASN1IA5String propertyInfo;
 
     /**
      * 签章人对应的签名证书
@@ -147,7 +147,7 @@ public class TBS_Sign extends ASN1Object {
         return this;
     }
 
-    public DERIA5String getPropertyInfo() {
+    public ASN1IA5String getPropertyInfo() {
         return propertyInfo;
     }
 

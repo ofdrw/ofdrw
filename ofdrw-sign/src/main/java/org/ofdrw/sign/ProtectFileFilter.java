@@ -1,6 +1,6 @@
 package org.ofdrw.sign;
 
-import org.jetbrains.annotations.NotNull;
+
 import org.ofdrw.core.basicType.ST_Loc;
 
 /**
@@ -20,5 +20,5 @@ public interface ProtectFileFilter {
      * @param absPath 待保护文件在OFD容器内的绝对路径
      * @return true - 需要保护; false - 不需要保护
      */
-    boolean filter(@NotNull ST_Loc absPath);
+    boolean filter( ST_Loc absPath);
 }

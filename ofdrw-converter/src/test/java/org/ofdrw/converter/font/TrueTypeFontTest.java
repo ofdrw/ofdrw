@@ -3,6 +3,8 @@ package org.ofdrw.converter.font;
 import org.apache.fontbox.cff.CFFFont;
 import org.apache.fontbox.cff.CFFParser;
 import org.apache.fontbox.ttf.GlyphDescription;
+import org.apache.pdfbox.io.RandomAccessRead;
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -22,9 +24,10 @@ class TrueTypeFontTest {
     public void cffParse() throws Exception {
         final Path path = Paths.get("C:\\Users\\pc\\Desktop\\ks\\Doc_0\\Res\\font_115.otf");
         final byte[] fileData = Files.readAllBytes(path);
+        RandomAccessReadBuffer buffer = new RandomAccessReadBuffer(fileData);
 
         CFFParser cffParser = new CFFParser();
-        CFFFont cffFont = cffParser.parse(fileData).get(0);
+        CFFFont cffFont = cffParser.parse(buffer).get(0);
         System.out.println(cffFont);
     }
 

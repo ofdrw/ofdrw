@@ -15,32 +15,40 @@ import java.nio.file.Paths;
 
 public class OFD2PDFTest {
 
-
-    @Deprecated
     @Test
-    public void convertPdf() {
-//        Path src = Paths.get("src/test/resources/1.ofd");
-//        Path dst = Paths.get("target/1.pdf");
-//        Path src = Paths.get("src/test/resources/zsbk.ofd");
-//        Path dst = Paths.get("target/zsbk.pdf");
-
+    public void convertPdf() throws Exception {
         FontLoader.DEBUG = true;
         // 为不规范的字体名创建映射
         FontLoader.getInstance()
                 .addAliasMapping("小标宋体", "方正小标宋简体")
                 .addSimilarFontReplaceRegexMapping(".*SimSun.*", "SimSun");
         long start = System.currentTimeMillis();
+
         try {
-//            ConvertHelper.toPdf(src, dst);
-            ConvertHelper.toPdf(Paths.get("src/test/resources/发票示例.ofd"), Paths.get("target/发票示例.pdf"));
-            ConvertHelper.toPdf(Paths.get("src/test/resources/zsbk.ofd"), Paths.get("target/zsbk.pdf"));
-            ConvertHelper.toPdf(Paths.get("src/test/resources/999.ofd"), Paths.get("target/999.pdf"));
+
+            try (PDFExporterPDFBox pdfExporter = new PDFExporterPDFBox(
+                    Paths.get("src/test/resources/发票示例.ofd"), Paths.get("target/发票示例.pdf")
+            )) {
+                pdfExporter.export();
+            }
+
+            try (PDFExporterPDFBox pdfExporter = new PDFExporterPDFBox(
+                    Paths.get("src/test/resources/zsbk.ofd"), Paths.get("target/zsbk.pdf")
+            )) {
+                pdfExporter.export();
+            }
+
+            try (PDFExporterPDFBox pdfExporter = new PDFExporterPDFBox(
+                    Paths.get("src/test/resources/999.ofd"), Paths.get("target/999.pdf")
+            )) {
+                pdfExporter.export();
+            }
+
             System.out.printf(">> 总计花费: %dms\n", System.currentTimeMillis() - start);
         } catch (GeneralConvertException e) {
             e.printStackTrace();
         }
     }
-
 
 //    @Test
 //    public void itextGlyph() throws IOException {
@@ -78,15 +86,15 @@ public class OFD2PDFTest {
      * 验证转换颜色值异常
      */
     @Test
-    void testExportCE() throws Exception{
-        Path dst = Paths.get("target","HelloWorld.ofd");
+    void testExportCE() throws Exception {
+        Path dst = Paths.get("target", "HelloWorld.ofd");
         try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
             OFDPageGraphics2D g = doc.newPage(null);
             g.setColor(Color.BLACK);
             g.setFont(new Font("宋体", Font.PLAIN, 7));
             g.drawString("你好OFD Reader & Writer Graphics-2D", 40, 40);
         }
-        Path pdfPath = Paths.get("target","HelloWorld.pdf");
+        Path pdfPath = Paths.get("target", "HelloWorld.pdf");
         try (OFDExporter exporter = new PDFExporterPDFBox(dst, pdfPath)) {
             exporter.export();
         }
@@ -96,7 +104,7 @@ public class OFD2PDFTest {
      * 验证包含 JPEG 图片的 OFD 文件转换为 PDF 后文件大小是否正常
      */
     @Test
-    void testExportContainsJpeg() throws Exception{
+    void testExportContainsJpeg() throws Exception {
         Path dst = Paths.get("src/test/resources/containsJPEG.ofd");
         Assertions.assertNotNull(dst);
         Path pdfPath = Paths.get("target/containsJPEG.pdf");

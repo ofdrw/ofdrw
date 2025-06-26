@@ -15,7 +15,7 @@ public class CertDigestObj extends ASN1Object {
     /**
      * 自定义类型
      */
-    private DERPrintableString type;
+    private ASN1PrintableString type;
 
     /**
      * 证书杂凑值
@@ -47,7 +47,7 @@ public class CertDigestObj extends ASN1Object {
         return null;
     }
 
-    public DERPrintableString getType() {
+    public ASN1PrintableString getType() {
         return type;
     }
 

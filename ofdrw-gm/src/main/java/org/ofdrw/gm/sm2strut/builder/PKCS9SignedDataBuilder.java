@@ -5,8 +5,8 @@ import org.bouncycastle.asn1.cms.CMSAttributes;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.Attribute;
 import org.bouncycastle.jcajce.provider.digest.SM3;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+
 import org.ofdrw.gm.cert.CertTools;
 import org.ofdrw.gm.sm2strut.*;
 
@@ -43,10 +43,10 @@ public final class PKCS9SignedDataBuilder {
      * @throws GeneralSecurityException 证书解析异常
      * @throws IOException              IO操作异常
      */
-    public static SignedData signedData(@NotNull byte[] plaintext,
-                                        @NotNull Signature signFnc,
-                                        @NotNull Certificate signCert,
-                                        @Nullable List<Certificate> extCertArr) throws GeneralSecurityException, IOException {
+    public static SignedData signedData( byte[] plaintext,
+                                         Signature signFnc,
+                                         Certificate signCert,
+                                         List<Certificate> extCertArr) throws GeneralSecurityException, IOException {
         if (plaintext == null || plaintext.length == 0) {
             throw new IllegalArgumentException("签名原文(plaintext)为空");
         }

@@ -1,8 +1,8 @@
 package org.ofdrw.core.crypto.encryt;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+
 import org.ofdrw.core.Const;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.ST_Loc;
@@ -39,7 +39,7 @@ public class CT_EncryptInfo extends OFDElement {
      * @param id 加密操作标识
      * @return this
      */
-    public CT_EncryptInfo setID(@NotNull String id) {
+    public CT_EncryptInfo setID( String id) {
         if (id == null || id.length() == 0) {
             throw new IllegalArgumentException("加密操作标识(id)为空");
         }
@@ -54,7 +54,7 @@ public class CT_EncryptInfo extends OFDElement {
      *
      * @return 加密操作标识
      */
-    @NotNull
+
     public String getID() {
         return this.attributeValue("ID");
     }
@@ -82,7 +82,7 @@ public class CT_EncryptInfo extends OFDElement {
      *
      * @return 上一次加密操作标识，可能为null
      */
-    @Nullable
+    
     public String getRelative() {
         return this.attributeValue("Relative");
     }
@@ -94,7 +94,7 @@ public class CT_EncryptInfo extends OFDElement {
      * @param provider 加密组件的相关信息
      * @return this
      */
-    public CT_EncryptInfo setProvider(@NotNull Provider provider) {
+    public CT_EncryptInfo setProvider( Provider provider) {
         if (provider == null) {
             throw new IllegalArgumentException("加密组件的相关信息（Provider）为空");
         }
@@ -108,7 +108,7 @@ public class CT_EncryptInfo extends OFDElement {
      *
      * @return 加密组件的相关信息
      */
-    @NotNull
+
     public Provider getProvider() {
         Element e = this.getOFDElement("Provider");
         if (e == null) {
@@ -127,7 +127,7 @@ public class CT_EncryptInfo extends OFDElement {
      * @param encryptScope 文档加密相关内容的描述（文档加密类型或范围）
      * @return this
      */
-    public CT_EncryptInfo setEncryptScope(@NotNull String encryptScope) {
+    public CT_EncryptInfo setEncryptScope( String encryptScope) {
         if (encryptScope == null) {
             throw new IllegalArgumentException("文档加密相关内容的描述（EncryptScope）为空");
         }
@@ -143,7 +143,7 @@ public class CT_EncryptInfo extends OFDElement {
      *
      * @return 文档加密相关内容的描述（文档加密类型或范围）
      */
-    @NotNull
+
     public String getEncryptScope() {
         Element e = this.getOFDElement("EncryptScope");
         if (e == null) {
@@ -159,7 +159,7 @@ public class CT_EncryptInfo extends OFDElement {
      * @param parameters 加密操作的附加描述集合，null表示删除
      * @return this
      */
-    public CT_EncryptInfo setParameters(@Nullable Parameters parameters) {
+    public CT_EncryptInfo setParameters( Parameters parameters) {
         if (parameters == null) {
             this.removeOFDElemByNames("Parameters");
             return this;
@@ -174,7 +174,7 @@ public class CT_EncryptInfo extends OFDElement {
      *
      * @return 加密操作的附加描述集合，可能为null
      */
-    @Nullable
+    
     public Parameters getParameters() {
         Element e = this.getOFDElement("Parameters");
         return e == null ? null : new Parameters(e);
@@ -230,7 +230,7 @@ public class CT_EncryptInfo extends OFDElement {
      * @param decryptSeedLoc 指向包内的二进制密钥描述文件，路径
      * @return this
      */
-    public CT_EncryptInfo setDecryptSeedLoc(@NotNull ST_Loc decryptSeedLoc) {
+    public CT_EncryptInfo setDecryptSeedLoc( ST_Loc decryptSeedLoc) {
         if (decryptSeedLoc == null) {
             throw new IllegalArgumentException("指向包内的二进制密钥描述文件(decryptSeedLoc)为空");
         }
@@ -247,7 +247,7 @@ public class CT_EncryptInfo extends OFDElement {
      * @param decryptSeedLoc 指向包内的二进制密钥描述文件，路径
      * @return this
      */
-    public CT_EncryptInfo setDecryptSeedLoc(@NotNull String decryptSeedLoc) {
+    public CT_EncryptInfo setDecryptSeedLoc( String decryptSeedLoc) {
         if (decryptSeedLoc == null) {
             throw new IllegalArgumentException("指向包内的二进制密钥描述文件(decryptSeedLoc)为空");
         }
@@ -263,7 +263,7 @@ public class CT_EncryptInfo extends OFDElement {
      *
      * @return 指向包内的二进制密钥描述文件，路径
      */
-    @NotNull
+
     public ST_Loc getDecryptSeedLoc() {
         return ST_Loc.getInstance(this.getOFDElementText("DecryptSeedLoc"));
     }
