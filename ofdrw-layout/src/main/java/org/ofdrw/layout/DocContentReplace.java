@@ -240,7 +240,7 @@ public class DocContentReplace {
     /**
      * 内容替换处理器
      */
-    interface ReplaceTextHandler {
+    public interface ReplaceTextHandler {
 
         /**
          * 扩展预留，为对应的文字构造CgTransform
