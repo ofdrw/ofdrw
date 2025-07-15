@@ -6,6 +6,7 @@ import org.ofdrw.core.text.CT_CGTransform;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.font.Font;
 import org.ofdrw.font.FontName;
+import org.ofdrw.layout.edit.ReplaceTextHandler;
 import org.ofdrw.layout.element.Paragraph;
 import org.ofdrw.reader.ContentExtractor;
 import org.ofdrw.reader.OFDReader;
@@ -207,7 +208,7 @@ public class DocContentReplace {
      * @deprecated 请改用新的接口实现 {@link ReplaceTextHandler}
      */
     @Deprecated
-    interface ReplaceTextCgTransformHandler {
+    public interface ReplaceTextCgTransformHandler {
 
         /**
          * 扩展预留，为对应的文字构造CgTransform
@@ -237,35 +238,6 @@ public class DocContentReplace {
         this.replaceTextCgTransformHandler = replaceTextCgTransformHandler;
     }
 
-    /**
-     * 内容替换处理器
-     */
-    interface ReplaceTextHandler {
 
-        /**
-         * 扩展预留，为对应的文字构造CgTransform
-         *
-         * @param textObject   TextObject对象
-         * @param newText      替换后的文字
-         * @param beforeCtFont 原文字内容的字体文件
-         * @return 替换后的字体形变对象
-         */
-        default CT_CGTransform handleCgTransform(TextObject textObject, String newText, CT_Font beforeCtFont) {
-            return null;
-        }
-
-        /**
-         * 创建新的字体
-         *
-         * @param textObject   TextObject对象
-         * @param newText      替换后的文字
-         * @param beforeCtFont 原文字内容的字体文件
-         * @return 替换文字使用的字体对象
-         */
-        default Font handleNewFont(TextObject textObject, String newText, CT_Font beforeCtFont) {
-            return null;
-        }
-
-    }
 
 }

@@ -4,13 +4,8 @@ package org.ofdrw.layout;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.core.annotation.pageannot.AnnotType;
 import org.ofdrw.core.basicStructure.pageObj.layer.Type;
-import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
-import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
-import org.ofdrw.core.basicType.ST_RefID;
-import org.ofdrw.core.text.CT_CGTransform;
-import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.core.text.text.Weight;
 import org.ofdrw.font.Font;
 import org.ofdrw.font.FontName;
@@ -712,24 +707,6 @@ class OFDDocTest {
             ST_ID newFontID = ofdDoc.getResManager().addFont(newFont);
 
             DocContentReplace docContentReplace = new DocContentReplace(ofdDoc);
-            docContentReplace.setReplaceTextHandler(new DocContentReplace.ReplaceTextHandler() {
-                @Override
-                public CT_CGTransform handleCgTransform(TextObject textObject, String newText, CT_Font beforeCtFont) {
-                    // 这里构造文字的CgTransform
-                    if (newText.equals("杭州钧硕科技有限公司"))
-                        return new CT_CGTransform().setCodeCount(10).setCodePosition(0).setGlyphCount(10).setGlyphs(ST_Array.getInstance("25 26 27 28 29 30 31 32 33 34"));
-                    return null;
-                }
-
-                @Override
-                public Font handleNewFont(TextObject textObject, String newText, CT_Font beforeCtFont) {
-                    if (newText.equals("红宇测试有限公司")) {
-                        textObject.setFont(new ST_RefID(newFontID));
-                        return newFont;
-                    }
-                    return null;
-                }
-            });
 
             Map<String, String> map = new HashMap<>();
             map.put("Evaluation Warning", "Hi, Tom. Welcome to China.");
@@ -739,7 +716,32 @@ class OFDDocTest {
             map.put("重庆呼我出行网络科技有限公司", "红宇测试有限公司");
             map.put("赵笑林", "单红宇");
             docContentReplace.replaceText(map);
+
+
+//            // 高级变换
+//            docContentReplace.setReplaceTextHandler(new ReplaceTextHandler() {
+//                @Override
+//                public CT_CGTransform handleCgTransform(TextObject textObject, String newText, CT_Font beforeCtFont) {
+//                    // 这里构造文字的CgTransform
+//                    if (newText.equals("杭州钧硕科技有限公司"))
+//                        return new CT_CGTransform().setCodeCount(10).setCodePosition(0).setGlyphCount(10).setGlyphs(ST_Array.getInstance("25 26 27 28 29 30 31 32 33 34"));
+//                    return null;
+//                }
+//
+//                @Override
+//                public Font handleNewFont(TextObject textObject, String newText, CT_Font beforeCtFont) {
+//                    if (newText.equals("红宇测试有限公司")) {
+//                        textObject.setFont(new ST_RefID(newFontID));
+//                        return newFont;
+//                    }
+//                    return null;
+//                }
+//            });
+
             System.out.println("生成文档位置：" + outP.toAbsolutePath());
+
+
+
         }
     }
 
