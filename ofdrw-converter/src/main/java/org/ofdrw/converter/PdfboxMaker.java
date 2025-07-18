@@ -58,6 +58,7 @@ import org.ofdrw.core.pageDescription.color.color.CT_RadialShd;
 import org.ofdrw.core.pageDescription.color.color.ColorClusterType;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.signatures.appearance.StampAnnot;
+import org.ofdrw.core.text.TextCode;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
@@ -814,14 +815,14 @@ public class PdfboxMaker {
     }
 
     private void writeText(ResourceManage resMgt, PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, TextObject textObject, PDColor defaultFontColor, int alpha) throws IOException {
-        double scale = scaling(sealBox, textObject);
-        float fontSize = Double.valueOf(textObject.getSize() * scale).floatValue();
-        if (sealBox != null && textObject.getBoundary() != null) {
-            textObject.setBoundary(textObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
-                    textObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
-                    textObject.getBoundary().getWidth(),
-                    textObject.getBoundary().getHeight());
+        if (textObject == null) {
+            return;
         }
+        List<TextCode> textCodes = textObject.getTextCodes();
+        if (textCodes == null || textCodes.size() == 0) {
+            return;
+        }
+
 
         PDColor fillColor = defaultFontColor;
         CT_DrawParam ctDrawParam = resMgt.superDrawParam(textObject);
@@ -837,6 +838,53 @@ public class PdfboxMaker {
         CT_Font ctFont = resMgt.getFont(textObject.getFont().toString());
         PDFont font = getFont(ctFont);
 
+        // 图形空间变换矩阵
+        Matrix transform = new Matrix();
+        ST_Array ctm = textObject.getCTM();
+        if (ctm != null) {
+            double a = ctm.get(0);
+            double b = ctm.get(1);
+            double c = ctm.get(2);
+            double d = ctm.get(3);
+            double e = ctm.get(4);
+            double f = ctm.get(5);
+            List<Matrix> matrixs = MatrixDecomposer.decompose(a, b, c, d, e, f);
+            System.out.println("分解结果:");
+            System.out.println("K (斜切): " + matrixs.get(0));
+            System.out.println("S (缩放): " + matrixs.get(1));
+            System.out.println("Q (旋转): " + matrixs.get(2));
+            System.out.println("T (平移): " + matrixs.get(3));
+
+            // 应用旋转矩阵
+            transform = transform.multiply(matrixs.get(2));
+        }
+
+        contentStream.saveGraphicsState();
+        // 应用变换矩阵
+        contentStream.transform(transform);
+        // 设置字体颜色
+        contentStream.setNonStrokingColor(fillColor);
+        // 设置字体
+        contentStream.setFont(font, (float) converterDpi(textObject.getSize()));
+
+        for (TextCode textCode : textCodes) {
+            String text = textCode.getText();
+            if (text == null || text.length() == 0) {
+                continue;
+            }
+
+
+            contentStream.beginText();
+            contentStream.newLineAtOffset(
+                    textCode.getX().floatValue(),
+                    textCode.getY().floatValue()
+            );
+
+            contentStream.showText(text);
+//            contentStream.setCharacterSpacing();
+            contentStream.endText();
+        }
+        contentStream.restoreGraphicsState();
 
     }
 
@@ -1086,18 +1134,18 @@ public class PdfboxMaker {
 
     /**
      * 转换OFD变换矩阵为PDF变换矩阵
-     *
+     * <p>
      * 1. PDF的坐标系原点是在页面的左下角，从左至右为X轴的正方向，从下至上为Y轴的正方向
      * 2. OFD的坐标系原点是在页面的左上角，从左至右为X轴的正方向，从上至下为Y轴的正方向
      * 3. OFD坐标采用毫米，PDF坐标采用英寸，已知转换关系为 (mm*dpi /25.4)，可以获取OFD的页面宽度和高度。
      * 4. OFD变换矩阵与OFD的变换矩阵格式相同 [a,b,c,d,e,f]
      *
-     * @param ctm OFD变换矩阵
+     * @param ctm     OFD变换矩阵
      * @param pageBox OFD页面大小
-     * @param dpi 缩放因子
+     * @param dpi     缩放因子
      * @return PDF变换矩阵
      */
-    public static Matrix matrix2(ST_Array ctm,ST_Box pageBox,  double dpi) {
+    public static Matrix matrix2(ST_Array ctm, ST_Box pageBox, double dpi) {
         double pageWidthMM = pageBox.getWidth().floatValue();
         double pageHeightMM = pageBox.getHeight().floatValue();
 
