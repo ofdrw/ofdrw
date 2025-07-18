@@ -822,6 +822,33 @@ public class PdfboxMaker {
                     textObject.getBoundary().getWidth(),
                     textObject.getBoundary().getHeight());
         }
+
+        PDColor fillColor = defaultFontColor;
+        CT_DrawParam ctDrawParam = resMgt.superDrawParam(textObject);
+        if (ctDrawParam != null) {
+            // 使用绘制参数补充缺省的颜色
+            if (textObject.getFillColor() == null
+                    && ctDrawParam.getFillColor() != null) {
+                fillColor = convertPDColor(ctDrawParam.getFillColor().getValue());
+            }
+        }
+
+        // 加载字体
+        CT_Font ctFont = resMgt.getFont(textObject.getFont().toString());
+        PDFont font = getFont(ctFont);
+
+
+    }
+
+    private void writeText2(ResourceManage resMgt, PDPageContentStream contentStream, ST_Box box, ST_Box sealBox, TextObject textObject, PDColor defaultFontColor, int alpha) throws IOException {
+        double scale = scaling(sealBox, textObject);
+        float fontSize = Double.valueOf(textObject.getSize() * scale).floatValue();
+        if (sealBox != null && textObject.getBoundary() != null) {
+            textObject.setBoundary(textObject.getBoundary().getTopLeftX() + sealBox.getTopLeftX(),
+                    textObject.getBoundary().getTopLeftY() + sealBox.getTopLeftY(),
+                    textObject.getBoundary().getWidth(),
+                    textObject.getBoundary().getHeight());
+        }
         if (textObject.getCTM() != null) {
             Double[] ctm = textObject.getCTM().toDouble();
             double a = ctm[0];
