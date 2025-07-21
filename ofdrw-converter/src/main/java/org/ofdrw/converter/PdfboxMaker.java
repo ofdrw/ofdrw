@@ -60,10 +60,7 @@ import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
 import org.ofdrw.core.signatures.appearance.StampAnnot;
 import org.ofdrw.core.text.TextCode;
 import org.ofdrw.core.text.font.CT_Font;
-import org.ofdrw.reader.OFDReader;
-import org.ofdrw.reader.PageInfo;
-import org.ofdrw.reader.ResourceLocator;
-import org.ofdrw.reader.ResourceManage;
+import org.ofdrw.reader.*;
 import org.ofdrw.reader.model.AnnotionEntity;
 import org.ofdrw.reader.model.StampAnnotEntity;
 import org.slf4j.Logger;
@@ -818,12 +815,16 @@ public class PdfboxMaker {
         if (textObject == null) {
             return;
         }
+        ST_Box boundary = textObject.getBoundary();
+        if (boundary == null) {
+            return;
+        }
         List<TextCode> textCodes = textObject.getTextCodes();
         if (textCodes == null || textCodes.size() == 0) {
             return;
         }
 
-
+        // 处理颜色继承关系
         PDColor fillColor = defaultFontColor;
         CT_DrawParam ctDrawParam = resMgt.superDrawParam(textObject);
         if (ctDrawParam != null) {
@@ -840,7 +841,26 @@ public class PdfboxMaker {
 
         // 图形空间变换矩阵
         Matrix transform = new Matrix();
+        // 解决PDF和OFD坐标单位比例不同问题 毫米转像素
+        float scale = 1 * 72f / 25.4f;
+        transform.scale(scale, scale);
+        // 由于坐标系不同，需要将坐标系转换成PDF坐标系
+        double pdfBoxLeftX = boundary.getTopLeftX();
+        double pdfBoxLeftY = box.getHeight() - boundary.getTopLeftY() - boundary.getHeight();
+        transform.translate((float) pdfBoxLeftX, (float) pdfBoxLeftY);
+
         ST_Array ctm = textObject.getCTM();
+//        if (ctm != null) {
+//            Matrix m = new Matrix(
+//                    ctm.get(0).floatValue(),
+//                    ctm.get(1).floatValue(),
+//                    ctm.get(2).floatValue(),
+//                    ctm.get(3).floatValue(),
+//                    ctm.get(4).floatValue(),
+//                    ctm.get(5).floatValue()
+//            );
+//            transform.concatenate(m);
+//        }
         if (ctm != null) {
             double a = ctm.get(0);
             double b = ctm.get(1);
@@ -855,8 +875,12 @@ public class PdfboxMaker {
             System.out.println("Q (旋转): " + matrixs.get(2));
             System.out.println("T (平移): " + matrixs.get(3));
 
+
             // 应用旋转矩阵
-            transform = transform.multiply(matrixs.get(2));
+            transform.concatenate(matrixs.get(0));
+            transform.concatenate(matrixs.get(1));
+            transform.concatenate(matrixs.get(2));
+            transform.concatenate(matrixs.get(3));
         }
 
         contentStream.saveGraphicsState();
@@ -865,25 +889,43 @@ public class PdfboxMaker {
         // 设置字体颜色
         contentStream.setNonStrokingColor(fillColor);
         // 设置字体
-        contentStream.setFont(font, (float) converterDpi(textObject.getSize()));
+        contentStream.setFont(font, textObject.getSize().floatValue());
 
         for (TextCode textCode : textCodes) {
             String text = textCode.getText();
             if (text == null || text.length() == 0) {
                 continue;
             }
-
-
             contentStream.beginText();
-            contentStream.newLineAtOffset(
-                    textCode.getX().floatValue(),
-                    textCode.getY().floatValue()
-            );
+            List<Float> deltaX = DeltaTool.getDelta(textCode.getDeltaX(), text.length());
+            List<Float> deltaY = DeltaTool.getDelta(textCode.getDeltaY(), text.length());
+            for (int i = 0; i < text.length(); i++) {
+                char c = text.charAt(i);
+                if (c == '\r' || c == '\n') {
+                    continue;
+                }
+                float offsetX = 0;
+                float offsetY = 0;
+                // 不需要对第1个字符计算偏移量
+                if (i > 0){
+                    // 计算后续字符偏移量
+                    if (deltaX.size() > i) {
+                        offsetX = deltaX.get(i);
+                    }
+                    if (deltaY.size() > i) {
+                        offsetY = deltaY.get(i);
+                    }
+                }
+                contentStream.newLineAtOffset(offsetX, offsetY);
+                contentStream.showText(String.valueOf(c));
+            }
 
-            contentStream.showText(text);
-//            contentStream.setCharacterSpacing();
             contentStream.endText();
         }
+
+        contentStream.addRect((float) pdfBoxLeftX,(float) pdfBoxLeftY, boundary.getWidth().floatValue(), boundary.getHeight().floatValue());
+        contentStream.clip();
+
         contentStream.restoreGraphicsState();
 
     }
@@ -1132,36 +1174,4 @@ public class PdfboxMaker {
         }
     }
 
-    /**
-     * 转换OFD变换矩阵为PDF变换矩阵
-     * <p>
-     * 1. PDF的坐标系原点是在页面的左下角，从左至右为X轴的正方向，从下至上为Y轴的正方向
-     * 2. OFD的坐标系原点是在页面的左上角，从左至右为X轴的正方向，从上至下为Y轴的正方向
-     * 3. OFD坐标采用毫米，PDF坐标采用英寸，已知转换关系为 (mm*dpi /25.4)，可以获取OFD的页面宽度和高度。
-     * 4. OFD变换矩阵与OFD的变换矩阵格式相同 [a,b,c,d,e,f]
-     *
-     * @param ctm     OFD变换矩阵
-     * @param pageBox OFD页面大小
-     * @param dpi     缩放因子
-     * @return PDF变换矩阵
-     */
-    public static Matrix matrix2(ST_Array ctm, ST_Box pageBox, double dpi) {
-        double pageWidthMM = pageBox.getWidth().floatValue();
-        double pageHeightMM = pageBox.getHeight().floatValue();
-
-        Double[] ofdMatrix = ctm.toDouble();
-        // 计算单位转换因子：毫米 -> 点
-        double scale = dpi / 25.4;
-        double flipYTranslate = pageHeightMM * scale; // 翻转平移量（点单位）
-        // 创建翻转+缩放矩阵 [scale, 0, 0, -scale, 0, flipYTranslate]
-        Matrix flipScaleMatrix = new Matrix((float) scale, 0, 0, (float) -scale, 0, (float) flipYTranslate);
-        // 创建OFD原始矩阵（参数顺序: a, b, c, d, e, f）
-        Matrix ofdMatrixObj = new Matrix(
-                ofdMatrix[0].floatValue(), ofdMatrix[1].floatValue(),
-                ofdMatrix[2].floatValue(), ofdMatrix[3].floatValue(),
-                ofdMatrix[4].floatValue(), ofdMatrix[5].floatValue()
-        );
-        // 计算最终PDF矩阵：M_ofd × M_flip_scale
-        return ofdMatrixObj.multiply(flipScaleMatrix);
-    }
 }

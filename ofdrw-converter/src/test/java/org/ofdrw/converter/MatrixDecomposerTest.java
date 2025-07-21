@@ -1,5 +1,6 @@
 package org.ofdrw.converter;
 
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -40,37 +41,22 @@ class MatrixDecomposerTest {
         System.out.println("组合矩阵: " + composed);
         assertEquals(original, composed);
     }
-//
-//    @Test
-//    void testpdf() throws Exception {
-//        try (PDDocument doc = new PDDocument()) {
-//            PDPage page = new PDPage();
-//            doc.addPage(page);
-//            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
-//                cs.setFont(new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN), 12);
-//
-//
-//                cs.beginText();
-//                cs.newLineAtOffset(50, 700);  // 起始位置
-//                // 构造位置调整数组
-//                Object[] textWithOffsets = new Object[] {
-//                        "H", -5f,  // H后左移5单位
-//                        "e", 15f,  // e后右移15单位
-//                        "l", -8f,   // l后左移8单位
-//                        "l", 25f,  // l后右移25单位
-//                        "o", 0f,    // o后不移位
-//                        " ", 40f,   // 空格后大幅右移
-//                        "W", 10f,
-//                        "o", -7f,
-//                        "r", 5f,
-//                        "l", -3f,
-//                        "d"
-//                };
-//                // 绘制带位置调整的文本
-//                cs.showTextWithPositioning(textWithOffsets);
-//                cs.endText();
-//            }
-//            doc.save("target/text_positioning_example.pdf");
-//        }
-//    }
+
+    @Test
+    void testpdf() throws Exception {
+
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage();
+            doc.addPage(page);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false, false)) {
+                cs.setFont(new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN), 12);
+                cs.beginText();
+                cs.newLineAtOffset(50, 700);  // 起始位置
+                // 绘制带位置调整的文本
+                cs.showText("Hello World");
+                cs.endText();
+            }
+            doc.save("target/text_positioning_example.pdf", CompressParameters.NO_COMPRESSION);
+        }
+    }
 }

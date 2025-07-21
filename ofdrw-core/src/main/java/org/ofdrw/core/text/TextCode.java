@@ -250,11 +250,12 @@ public class TextCode extends OFDElement implements ClipAble {
 
     /**
      * 解析delta的值，处理g的格式
-     * @param delta
-     * @return
+     *
+     * @param delta delta值，可能包含G
+     * @return 处理后的delta值，所有g都会被替换为数值
      */
     private String deltaFormatter(String delta) {
-        if(!delta.contains("g")) {
+        if (!delta.contains("g")) {
             return delta;
         } else {
             List<String> tempList = Arrays.stream(delta.split(" "))

@@ -17,7 +17,7 @@ public class OFD2PDFTest {
 
     @Test
     public void convertPdf() throws Exception {
-        FontLoader.DEBUG = true;
+//        FontLoader.DEBUG = true;
         // 为不规范的字体名创建映射
         FontLoader.getInstance()
                 .addAliasMapping("小标宋体", "方正小标宋简体")
@@ -25,24 +25,28 @@ public class OFD2PDFTest {
         long start = System.currentTimeMillis();
 
         try {
-
             try (PDFExporterPDFBox pdfExporter = new PDFExporterPDFBox(
-                    Paths.get("src/test/resources/发票示例.ofd"), Paths.get("target/发票示例.pdf")
+                    Paths.get("src/test/resources/ctm_rotate.ofd"), Paths.get("target/ctm_rotate.pdf")
             )) {
                 pdfExporter.export();
             }
-
-            try (PDFExporterPDFBox pdfExporter = new PDFExporterPDFBox(
-                    Paths.get("src/test/resources/zsbk.ofd"), Paths.get("target/zsbk.pdf")
-            )) {
-                pdfExporter.export();
-            }
-
-            try (PDFExporterPDFBox pdfExporter = new PDFExporterPDFBox(
-                    Paths.get("src/test/resources/999.ofd"), Paths.get("target/999.pdf")
-            )) {
-                pdfExporter.export();
-            }
+//            try (PDFExporterPDFBox pdfExporter = new PDFExporterPDFBox(
+//                    Paths.get("src/test/resources/发票示例.ofd"), Paths.get("target/发票示例.pdf")
+//            )) {
+//                pdfExporter.export();
+//            }
+//
+//            try (PDFExporterPDFBox pdfExporter = new PDFExporterPDFBox(
+//                    Paths.get("src/test/resources/zsbk.ofd"), Paths.get("target/zsbk.pdf")
+//            )) {
+//                pdfExporter.export();
+//            }
+//
+//            try (PDFExporterPDFBox pdfExporter = new PDFExporterPDFBox(
+//                    Paths.get("src/test/resources/999.ofd"), Paths.get("target/999.pdf")
+//            )) {
+//                pdfExporter.export();
+//            }
 
             System.out.printf(">> 总计花费: %dms\n", System.currentTimeMillis() - start);
         } catch (GeneralConvertException e) {
