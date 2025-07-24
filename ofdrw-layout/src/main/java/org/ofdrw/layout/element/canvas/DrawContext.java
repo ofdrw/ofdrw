@@ -472,7 +472,7 @@ public class DrawContext implements Closeable {
         applyDrawParam(p);
         container.add(p);
         // 绘制后清空路径
-        this.state.path = new AbbreviatedData();
+        this.state.path = null;
         return this;
     }
 
@@ -497,7 +497,7 @@ public class DrawContext implements Closeable {
         applyDrawParam(p);
         container.add(p);
         // 绘制后清空路径
-        this.state.path = new AbbreviatedData();
+        this.state.path = null;
 
         return this;
     }
