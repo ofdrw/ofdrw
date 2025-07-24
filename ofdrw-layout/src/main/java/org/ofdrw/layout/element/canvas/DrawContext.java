@@ -456,6 +456,8 @@ public class DrawContext implements Closeable {
 
     /**
      * 绘制已定义的路径
+     * <p>
+     * 注意stroke()和fill()方法会清空路径
      *
      * @return this
      */
@@ -469,6 +471,8 @@ public class DrawContext implements Closeable {
         p.setStroke(true);
         applyDrawParam(p);
         container.add(p);
+        // 绘制后清空路径
+        this.state.path = new AbbreviatedData();
         return this;
     }
 
@@ -476,6 +480,8 @@ public class DrawContext implements Closeable {
      * 填充已定义路径
      * <p>
      * 默认的填充颜色是黑色。
+     * <p>
+     * 注意stroke()和fill()方法会清空路径
      *
      * @return this
      */
@@ -490,6 +496,9 @@ public class DrawContext implements Closeable {
         p.setLineWidth(0d);
         applyDrawParam(p);
         container.add(p);
+        // 绘制后清空路径
+        this.state.path = new AbbreviatedData();
+
         return this;
     }
 
