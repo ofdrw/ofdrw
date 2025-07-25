@@ -785,4 +785,44 @@ class OFDDocTest {
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath());
     }
+
+
+    @Test
+    public void genSimple() throws IOException {
+        Path path = Paths.get("target/rotate.ofd").toAbsolutePath();
+        try (OFDDoc ofdDoc = new OFDDoc(path)) {
+
+            VirtualPage vPage = new VirtualPage(50d,50d);
+
+            Canvas canvas = new Canvas(50d, 50d);
+            canvas.setPosition(Position.Absolute)
+                    .setX(0d)
+                    .setY(0d);
+            canvas.setDrawer(ctx -> {
+                ctx.setDefaultFont(10);
+
+                ctx.save();
+                ctx.setStrokeColor(255, 0, 0);
+                ctx.moveTo(0, 25).lineTo(50, 25).moveTo(25, 0).lineTo(25, 50).setLineDash(1d,1d).stroke();
+                ctx.translate(25, 25);
+//                ctx.rotate(45d);
+//                ctx.scale(0.5, 2);
+                ctx.shear(0, 60);
+                ctx.rect(-5, -5, 10, 10).stroke();
+                ctx.fillText("你", -5, 2.5);
+                ctx.restore();
+
+
+
+//                ctx.moveTo(25,25);
+//                ctx.translate(50, 50);
+//                ctx.lineTo(25,25);
+//                ctx.stroke();
+            });
+
+            vPage.add(canvas);
+            ofdDoc.addVPage(vPage);
+        }
+        System.out.println("生成文档位置：" + path.toAbsolutePath());
+    }
 }

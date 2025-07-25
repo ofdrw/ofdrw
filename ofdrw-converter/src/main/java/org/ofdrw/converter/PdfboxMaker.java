@@ -841,6 +841,8 @@ public class PdfboxMaker {
 
         // 图形空间变换矩阵
         Matrix transform = new Matrix();
+//        transform.concatenate(MatrixDecomposer.conv(boundary.getHeight()));
+
         // 解决PDF和OFD坐标单位比例不同问题 毫米转像素
         float scale = 1 * 72f / 25.4f;
         transform.scale(scale, scale);
@@ -850,37 +852,32 @@ public class PdfboxMaker {
         transform.translate((float) pdfBoxLeftX, (float) pdfBoxLeftY);
 
         ST_Array ctm = textObject.getCTM();
-//        if (ctm != null) {
-//            Matrix m = new Matrix(
-//                    ctm.get(0).floatValue(),
-//                    ctm.get(1).floatValue(),
-//                    ctm.get(2).floatValue(),
-//                    ctm.get(3).floatValue(),
-//                    ctm.get(4).floatValue(),
-//                    ctm.get(5).floatValue()
-//            );
-//            transform.concatenate(m);
-//        }
+
+
         if (ctm != null) {
-            double a = ctm.get(0);
-            double b = ctm.get(1);
-            double c = ctm.get(2);
-            double d = ctm.get(3);
-            double e = ctm.get(4);
-            double f = ctm.get(5);
-            List<Matrix> matrixs = MatrixDecomposer.decompose(a, b, c, d, e, f);
-            System.out.println("分解结果:");
-            System.out.println("K (斜切): " + matrixs.get(0));
-            System.out.println("S (缩放): " + matrixs.get(1));
-            System.out.println("Q (旋转): " + matrixs.get(2));
-            System.out.println("T (平移): " + matrixs.get(3));
+            float a = ctm.get(0).floatValue();
+            float b = ctm.get(1).floatValue();
+            float c = ctm.get(2).floatValue();
+            float d = ctm.get(3).floatValue();
+            float e = ctm.get(4).floatValue();
+            float f = ctm.get(5).floatValue();
+//            Matrix m = new Matrix(a, b, c, d, e, f);
+//            m.concatenate(transform);
+//            transform = m;
+
+            List<Matrix> matrices = MatrixDecomposer.ofd2pdfDecompose(box.getHeight(), a, b, c, d, e, f);
+
+            Matrix k = matrices.get(0);
+            Matrix s = matrices.get(1);
+            Matrix q = matrices.get(2);
+            Matrix t = matrices.get(3);
+            // 应用变换
+            transform.concatenate(t);
+            transform.concatenate(q);
+            transform.concatenate(s);
+            transform.concatenate(k);
 
 
-            // 应用旋转矩阵
-            transform.concatenate(matrixs.get(0));
-            transform.concatenate(matrixs.get(1));
-            transform.concatenate(matrixs.get(2));
-            transform.concatenate(matrixs.get(3));
         }
 
         contentStream.saveGraphicsState();
@@ -906,16 +903,25 @@ public class PdfboxMaker {
                 }
                 float offsetX = 0;
                 float offsetY = 0;
-                // 不需要对第1个字符计算偏移量
-                if (i > 0){
+                if (i == 0) {
+                    if (textCode.getX() != null) {
+                        offsetX = textCode.getX().floatValue();
+                    }
+                    if (textCode.getY() != null) {
+//                        offsetY = -textCode.getY().floatValue();
+                        offsetY = textCode.getY().floatValue();
+                    }
+                } else {
                     // 计算后续字符偏移量
                     if (deltaX.size() > i) {
                         offsetX = deltaX.get(i);
                     }
                     if (deltaY.size() > i) {
+//                        offsetY = -deltaY.get(i);
                         offsetY = deltaY.get(i);
                     }
                 }
+
                 contentStream.newLineAtOffset(offsetX, offsetY);
                 contentStream.showText(String.valueOf(c));
             }
@@ -923,10 +929,11 @@ public class PdfboxMaker {
             contentStream.endText();
         }
 
-        contentStream.addRect((float) pdfBoxLeftX,(float) pdfBoxLeftY, boundary.getWidth().floatValue(), boundary.getHeight().floatValue());
-        contentStream.clip();
+
 
         contentStream.restoreGraphicsState();
+//        contentStream.addRect((float) pdfBoxLeftX,(float) pdfBoxLeftY, boundary.getWidth().floatValue(), boundary.getHeight().floatValue());
+//        contentStream.clip();
 
     }
 

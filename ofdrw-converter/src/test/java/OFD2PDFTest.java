@@ -26,7 +26,7 @@ public class OFD2PDFTest {
 
         try {
             try (PDFExporterPDFBox pdfExporter = new PDFExporterPDFBox(
-                    Paths.get("src/test/resources/ctm_rotate.ofd"), Paths.get("target/ctm_rotate.pdf")
+                    Paths.get("src/test/resources/rotate.ofd"), Paths.get("target/rotate.pdf")
             )) {
                 pdfExporter.export();
             }

@@ -535,6 +535,23 @@ public class DrawContext implements Closeable {
     }
 
     /**
+     * 切变
+     *
+     * @param x X方向 切变度数（0~360，不包含90、270）
+     * @param y Y方向 切变度数（0~360，不包含90、270）
+     * @return this
+     */
+    public DrawContext shear(double x, double y) {
+        if (this.state.ctm == null) {
+            this.state.ctm = ST_Array.unitCTM();
+        }
+
+        ST_Array r = new ST_Array(1, Math.tan(x*Math.PI/180d), Math.tan(y*Math.PI/180d), 1, 0, 0);
+        this.state.ctm = r.mtxMul(this.state.ctm);
+        return this;
+    }
+
+    /**
      * 重新映射画布上的 (0,0) 位置
      *
      * @param x 添加到水平坐标（x）上的值
