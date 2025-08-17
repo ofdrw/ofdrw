@@ -36,6 +36,25 @@ class OFDPageGraphics2DTest {
     }
 
     /**
+     * 渐变填充
+     */
+    @Test
+    void setPaintGradientPaint() throws Exception {
+        final Path dst = Paths.get("target/GradientPaint.ofd");
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(null);
+
+            Point2D start = new Point2D.Float(0, 0);
+            Point2D end = new Point2D.Float(50, 50);
+            GradientPaint p = new GradientPaint(start, Color.YELLOW, end, Color.ORANGE, false);
+            
+            g.setPaint(p);
+            g.fillRect(0, 0, 50, 50);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
      * 矩形描边
      */
 
