@@ -55,6 +55,25 @@ class OFDPageGraphics2DTest {
     }
 
     /**
+     * 纹理填充
+     */
+    @Test
+    void setPaintTexturePaint() throws Exception {
+        final Path dst = Paths.get("target/setPaintTexturePaint.ofd");
+        try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
+            OFDPageGraphics2D g = doc.newPage(500, 500);
+
+            int ts = 50;
+            BufferedImage bi = new BufferedImage(ts * 2, ts * 2, BufferedImage.TYPE_INT_RGB);
+            Rectangle2D anchor = new Rectangle2D.Float(0, 0, ts * 2, ts * 2);
+            TexturePaint p = new TexturePaint(bi, anchor);
+            g.setPaint(p);
+            g.fillRect(0, 0, 500, 500);
+        }
+        System.out.println(">> " + dst.toAbsolutePath());
+    }
+
+    /**
      * 矩形描边
      */
 
