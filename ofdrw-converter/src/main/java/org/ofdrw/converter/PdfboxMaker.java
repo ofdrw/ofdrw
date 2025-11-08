@@ -751,6 +751,20 @@ public class PdfboxMaker {
             return;
         }
         contentStream.saveGraphicsState();
+
+        // 设置图片混合模式为 Multiply（正片叠底），防止图片遮挡文字
+        // 参考 AWTMaker 使用 AlphaComposite.SRC_ATOP 的效果
+        PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+        graphicsState.setBlendMode(org.apache.pdfbox.pdmodel.graphics.blend.BlendMode.MULTIPLY);
+
+        // 处理图片透明度
+        Integer alpha = imageObject.getAlpha();
+        if (alpha != null && alpha < 255) {
+            graphicsState.setNonStrokingAlphaConstant(alpha * 1.0f / 255);
+        }
+
+        contentStream.setGraphicsStateParameters(graphicsState);
+
         // 根据图片格式决定图片使用哪种创建方式
         PDImageXObject pdfImageObject;
         CT_MultiMedia multiMedia = resMgt.getMultiMedia(resourceID.toString());

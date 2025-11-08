@@ -720,6 +720,19 @@ public class ItextMaker {
         }
         pdfCanvas.saveState();
 
+        // 设置图片混合模式为 Multiply（正片叠底），防止图片遮挡文字
+        // 参考 AWTMaker 使用 AlphaComposite.SRC_ATOP 的效果
+        PdfExtGState extGState = new PdfExtGState();
+        extGState.setBlendMode(PdfExtGState.BM_MULTIPLY);
+
+        // 处理图片透明度
+        Integer alpha = imageObject.getAlpha();
+        if (alpha != null && alpha < 255) {
+            extGState.setFillOpacity(alpha * 1.0f / 255);
+        }
+
+        pdfCanvas.setExtGState(extGState);
+
         ImageData image = ImageDataFactory.create(imageByteArray);
         if (annotBox != null && !isSameBox(annotBox, imageObject.getBoundary())) {
             float x = annotBox.getTopLeftX().floatValue();
