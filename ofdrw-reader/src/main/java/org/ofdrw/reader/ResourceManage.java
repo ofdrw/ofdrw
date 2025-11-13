@@ -30,10 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 资源管理器（只读）
@@ -133,12 +130,17 @@ public class ResourceManage {
      * @return 绘制参数，不存在返回null
      */
     public CT_DrawParam getDrawParamFinal(String id) {
-        if (id == null) {
-            return null;
+        return getDrawParamFinal(id, new HashSet<>());
+    }
+
+    private CT_DrawParam getDrawParamFinal(String id, Set<String> visited) {
+        if (id == null || visited.contains(id)) {
+            return null; // 避免循环引用
         }
+        visited.add(id);
+
         CT_DrawParam current = drawParamMap.get(id);
-        // 使用继承属性填充本机
-        return superDrawParam(current);
+        return superDrawParam(current, visited);
     }
 
     /**
@@ -147,7 +149,7 @@ public class ResourceManage {
      * @param current 当前需要子节点
      * @return 补全后的子节点副本
      */
-    public CT_DrawParam superDrawParam(CT_DrawParam current) {
+    public CT_DrawParam superDrawParam(CT_DrawParam current, Set<String> visited) {
         if (current == null) {
             return null;
         }
@@ -158,7 +160,7 @@ public class ResourceManage {
             return current;
         }
         // 递归的寻找上一级继承的参数的最终参数
-        CT_DrawParam parent = getDrawParamFinal(relative.toString());
+        CT_DrawParam parent = getDrawParamFinal(relative.toString(), visited);
         if (parent == null) {
             return current;
         }
