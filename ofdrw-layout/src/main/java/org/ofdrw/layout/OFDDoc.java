@@ -760,7 +760,8 @@ public class OFDDoc implements Closeable {
         } finally {
             if (reader != null) {
                 reader.close();
-            } else if (ofdDir != null) {
+            }
+            if (ofdDir != null) {
                 // 清除在生成OFD过程中的工作区产生的文件
                 ofdDir.clean();
             }
