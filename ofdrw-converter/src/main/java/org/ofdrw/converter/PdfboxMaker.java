@@ -964,43 +964,14 @@ public class PdfboxMaker {
     }
 
     /**
-     * 加载字体
-     * 
-     * @param ctFont 字体对象
+     * 通过字体信息获取字体对象
+     * @param ctFont
+     * @param fontPath
+     * @param embedSubset
      * @return
      * @throws IOException
      */
-    private PDFont loadFont(CT_Font ctFont) throws IOException {
-        // 字体是否嵌入
-        boolean embedSubset = false;
-
-        // 获取嵌入式字体路径
-        Path fontPath = null;
-        if (ctFont != null && ctFont.getFontFile() != null) {
-            // 内嵌字体绝对路径
-            try {
-                ResourceLocator resourceLocator = reader.getResourceLocator();
-                fontPath = resourceLocator.getFile(ctFont.getFontFile()).toAbsolutePath();
-            } catch (Exception e) {
-                logger.warn(
-                    "无法加载内嵌字体: " + ctFont.getFamilyName() + " " + ctFont.getFontName() + " " + ctFont.getFontFile(), e);
-            }
-        }
-        if (fontPath != null) {
-            embedSubset = true;
-        } else {
-            // 获取系统字体
-            String systemFontPath = FontLoader.getInstance().getReplaceSimilarFontPath(ctFont.getFamilyName(),
-                    ctFont.getFontName());
-            if (systemFontPath != null) {
-                fontPath = Paths.get(systemFontPath);
-            }
-        }
-        if (fontPath == null) {
-            // 获取默认字体
-            fontPath = FontLoader.getInstance().getDefaultFontPath();
-        }
-
+    private TrueTypeFont getTrueTypeFont(CT_Font ctFont,Path fontPath,boolean embedSubset) throws IOException {
         ByteArrayInputStream fontStream = new ByteArrayInputStream(Files.readAllBytes(fontPath));
         String name = fontPath.toFile().getName().toLowerCase();
         TrueTypeFont ttf = null;
@@ -1032,7 +1003,62 @@ public class PdfboxMaker {
         } else {
             fontStream.close();
         }
-        PDFont font = PDType0Font.load(pdf, ttf, embedSubset);
+        return ttf;
+    }
+
+
+    /**
+     * 加载字体
+     * 
+     * @param ctFont 字体对象
+     * @return
+     * @throws IOException
+     */
+    private PDFont loadFont(CT_Font ctFont) throws IOException {
+        // 字体是否嵌入
+        boolean embedSubset = false;
+
+        // 获取嵌入式字体路径
+        Path fontPath = null;
+        TrueTypeFont ttf = null;
+        if (ctFont != null && ctFont.getFontFile() != null) {
+            // 内嵌字体绝对路径
+            try {
+                ResourceLocator resourceLocator = reader.getResourceLocator();
+                fontPath = resourceLocator.getFile(ctFont.getFontFile()).toAbsolutePath();
+            } catch (Exception e) {
+                logger.warn(
+                    "无法加载内嵌字体: " + ctFont.getFamilyName() + " " + ctFont.getFontName() + " " + ctFont.getFontFile(), e);
+            }
+        }
+        if (fontPath != null) {
+            embedSubset = true;
+            ttf=getTrueTypeFont(ctFont, fontPath, embedSubset);
+        }
+        // 如果内嵌字体的OS/2 Table为空, 则尝试使用系统字体替代
+        if ( ttf == null || ttf.getOS2Windows() == null) {
+            // 获取系统字体
+            String systemFontPath = FontLoader.getInstance().getReplaceSimilarFontPath(ctFont.getFamilyName(),
+                    ctFont.getFontName());
+            if (systemFontPath != null) {
+                fontPath = Paths.get(systemFontPath);
+                ttf = getTrueTypeFont(ctFont, fontPath, embedSubset);
+                if (ttf !=null ) {
+                    logger.debug("内嵌字体OS/2 Table为null， 使用系统字体替代: " + ttf.getName());
+                }
+            }
+        }
+        if (ttf == null || ttf.getOS2Windows() == null) {
+            // 获取默认字体
+            fontPath = FontLoader.getInstance().getDefaultFontPath();
+            ttf = getTrueTypeFont(ctFont, fontPath, embedSubset);
+            if (ttf !=null ) {
+                logger.debug("使用默认字体: " + ttf.getName());
+            }
+        }
+
+        // embedSubset设置为true ,使用裁剪字库，减小生成的PDF文件大小
+        PDFont font = PDType0Font.load(pdf, ttf, true);
         return font;
     }
 

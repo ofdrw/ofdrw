@@ -23,12 +23,12 @@ public enum MediaType {
     Video;
 
     public static MediaType getInstance(String str) {
-        switch (str) {
-            case "Image":
+        switch (str.toLowerCase()) {
+            case "image":
                 return Image;
-            case "Audio":
+            case "audio":
                 return Audio;
-            case "Video":
+            case "video":
                 return Video;
             default:
                 throw new IllegalArgumentException("多媒体格式不支持：" + str);

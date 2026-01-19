@@ -101,6 +101,7 @@ public class ZipUtil {
 
         try (ZipArchiveInputStream zipFile = new ZipArchiveInputStream(src, charset, false, true)) {
             ZipArchiveEntry entry = null;
+
             while ((entry = zipFile.getNextEntry()) != null) {
                 //校验路径合法性
                 Path f = null;
@@ -124,6 +125,8 @@ public class ZipUtil {
                     }
                 }
             }
+        } catch (EOFException e) {
+            //捕获异常的文件结尾，部份OFD压缩包会报此错误，忽略异常结尾以期望可以继续处理该OFD文件
         }
     }
 }
