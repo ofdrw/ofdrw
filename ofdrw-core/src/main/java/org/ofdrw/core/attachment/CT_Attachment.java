@@ -277,12 +277,14 @@ public class CT_Attachment extends OFDElement {
                 Const.LOCAL_DATETIME_FORMATTER,
                 // 兼容非标准日期格式解析
                 DateTimeFormatter.ofPattern("[yyyy-MM-dd][yyyy/MM/dd] HH:mm:ss"),
+                DateTimeFormatter.ofPattern("yyyy[-][/][MM][M][ M][-][/][dd][d][ d] [HH][H][ H]:[mm][m][ m]:[ss][s][ s]"),
                 Const.DATETIME_FORMATTER
         );
         for (DateTimeFormatter formatter : formatters) {
             try {
                 return LocalDateTime.parse(dateTimeStr, formatter);
             } catch (Exception ignore) {
+                // 忽略解析失败，继续下一轮循环
             }
         }
         throw new IllegalArgumentException("日期时间格式不正确：" + dateTimeStr);
