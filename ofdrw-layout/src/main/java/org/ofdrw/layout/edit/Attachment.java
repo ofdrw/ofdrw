@@ -25,16 +25,34 @@ public class Attachment {
      */
     private CT_Attachment atmObj;
 
+    /**
+     * 是否禁用同名替换
+     * <p>
+     * 默认值为 false（同名替换）
+     */
+    private boolean disableReplace;
+
     private Attachment() {
     }
 
     /**
-     * 附件对象构造对象
+     * 附件对象构造对象，同名文件将被替换
      *
      * @param name 附件名称
      * @param file 附件文件
      */
     public Attachment(String name, Path file) {
+        this(name, file, false);
+    }
+
+    /**
+     * 附件对象构造对象
+     *
+     * @param name           附件名称
+     * @param file           附件文件
+     * @param disableReplace 是否禁用同名替换，默认为 false（同名替换）
+     */
+    public Attachment(String name, Path file, boolean disableReplace) {
         if (file == null || Files.notExists(file)) {
             throw new IllegalArgumentException("附件文件(file)为空或不存在");
         }
@@ -42,6 +60,7 @@ public class Attachment {
             throw new IllegalArgumentException("附件名称(name)不能为空");
         }
         this.file = file;
+        this.disableReplace = disableReplace;
         this.atmObj = new CT_Attachment();
         this.setName(name);
     }
@@ -260,5 +279,29 @@ public class Attachment {
 
     public CT_Attachment getAttachment() {
         return atmObj;
+    }
+
+    /**
+     * 设置是否禁用同名替换
+     * <p>
+     * 默认值为 false（同名替换）
+     *
+     * @param disableReplace 是否禁用同名替换
+     * @return this
+     */
+    public Attachment setDisableReplace(boolean disableReplace) {
+        this.disableReplace = disableReplace;
+        return this;
+    }
+
+    /**
+     * 获取是否禁用同名替换
+     * <p>
+     * 默认值为 false（同名替换）
+     *
+     * @return 是否禁用同名替换
+     */
+    public boolean isDisableReplace() {
+        return disableReplace;
     }
 }

@@ -70,20 +70,47 @@ class Main {
 
 - 替换附件：替换附件与添加附件采用相同接口，如果附件名称相同，则会替换原有附件。
 
+**同名替换控制**：
+
+`Attachment` 对象支持控制是否启用同名替换功能，默认情况下启用同名替换。
+
+- **禁用同名替换**：当设置为禁用同名替换时，如果存在同名附件，新附件将被添加到文档中，而不会替换原有的同名附件。这在需要保留多个同名文件的场景下非常有用。
+
 ```java
 class Main {
     public static void main(String[] args) {
         // define path ... 
         try (OFDReader reader = new OFDReader(inP);
              OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
-            // 默认存储位置加入附件文件
+            
+            // 方式1：默认行为（同名替换）
             ofdDoc.addAttachment(new Attachment("youfilename.txt", file));
-            // 指定存储位置加入附件文件
-            ofdDoc.addAttachment("/Doc_0/MY_DIR/MY_PATH/", new Attachment("Gao", file));
+            
+            // 方式2：禁用同名替换
+            ofdDoc.addAttachment(new Attachment("youfilename.txt", file, true));
+            
+            // 方式3：通过set方法禁用同名替换
+            Attachment attachment = new Attachment("youfilename.txt", file);
+            attachment.setDisableReplace(true);
+            ofdDoc.addAttachment(attachment);
+            
+            // 方式4：指定存储位置，禁用同名替换
+            ofdDoc.addAttachment("/Doc_0/MY_DIR/MY_PATH/", 
+                new Attachment("Gao", file, true));
         }
     }
 }
 ```
+
+**构造方法**：
+
+- `Attachment(String name, Path file)`：创建附件对象，默认启用同名替换（`disableReplace = false`）
+- `Attachment(String name, Path file, boolean disableReplace)`：创建附件对象，`disableReplace` 参数控制是否禁用同名替换
+
+**方法**：
+
+- `setDisableReplace(boolean disableReplace)`：设置是否禁用同名替换
+- `isDisableReplace()`：获取是否禁用同名替换的状态
 
 完整示例代码见：
 

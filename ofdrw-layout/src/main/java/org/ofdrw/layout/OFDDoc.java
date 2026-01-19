@@ -26,7 +26,6 @@ import org.ofdrw.layout.handler.RenderFinishHandler;
 import org.ofdrw.layout.handler.VPageHandler;
 import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
-import org.ofdrw.pkg.container.VirtualContainer;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.ResourceLocator;
@@ -462,7 +461,8 @@ public class OFDDoc implements Closeable {
     /**
      * 向文档中添加附件文件
      * <p>
-     * 如果名称相同原有附件将会被替换，附件文件将被放置于指定目录下。
+     * 如果名称相同原有附件将会被替换，附件文件将被放置于指定目录下，若需要
+     * 创建同名文件请Attachment启用disableReplace参数。
      *
      * @param absPath    附件在OFD容器内的绝对位置，若不存在则创建，例如 "/Doc_0/Res/
      * @param attachment 附件文件对象
@@ -499,8 +499,10 @@ public class OFDDoc implements Closeable {
 
         // 获取附件目录，并切换目录到与附件列表文件同级
         Attachments attachments = obtainAttachments(docDefault, rl);
-        // 清理已经存在的同名附件
-        cleanOldAttachment(rl, attachments, attachment.getName());
+        // 如果没有禁用同名替换，则清理已经存在的同名附件
+        if (attachment.isDisableReplace() == false) {
+            cleanOldAttachment(rl, attachments, attachment.getName());
+        }
         // 加入附件记录
         attachments.addAttachment(ctAttachment);
         return this;
