@@ -133,21 +133,33 @@ public class ResourceManage {
      * @return 绘制参数，不存在返回null
      */
     public CT_DrawParam getDrawParamFinal(String id) {
+        return getDrawParamFinal(id, new ArrayList<>());
+    }
+
+    /**
+     * 递归的解析绘制参数并覆盖配置参数内容（内部使用，带访问路径跟踪）
+     *
+     * @param id 资源ID
+     * @param visited 访问路径（用于检测循环引用）
+     * @return 绘制参数，不存在返回null
+     */
+    private CT_DrawParam getDrawParamFinal(String id, List<String> visited) {
         if (id == null) {
             return null;
         }
         CT_DrawParam current = drawParamMap.get(id);
         // 使用继承属性填充本机
-        return superDrawParam(current);
+        return superDrawParam(current, visited);
     }
 
     /**
      * 寻找继承属性用于覆盖当前为空的属性
      *
      * @param current 当前需要子节点
+     * @param visited 访问路径（用于检测循环引用）
      * @return 补全后的子节点副本
      */
-    public CT_DrawParam superDrawParam(CT_DrawParam current) {
+    public CT_DrawParam superDrawParam(CT_DrawParam current, List<String> visited) {
         if (current == null) {
             return null;
         }
@@ -157,8 +169,22 @@ public class ResourceManage {
         if (relative == null) {
             return current;
         }
+        // 检测循环引用
+        String relativeId = relative.toString();
+        if (visited.contains(relativeId)) {
+            // 发现循环引用，直接返回当前副本
+            return current;
+        }
+        // 添加当前节点ID到访问路径
+        if (current.getID() != null) {
+            visited.add(current.getID().toString());
+        }
         // 递归的寻找上一级继承的参数的最终参数
-        CT_DrawParam parent = getDrawParamFinal(relative.toString());
+        CT_DrawParam parent = getDrawParamFinal(relativeId, visited);
+        // 移除当前节点ID（避免影响其他调用链）
+        if (current.getID() != null && !visited.isEmpty()) {
+            visited.remove(visited.size() - 1);
+        }
         if (parent == null) {
             return current;
         }
@@ -196,6 +222,16 @@ public class ResourceManage {
             current.setStrokeColor(parent.getStrokeColor());
         }
         return current;
+    }
+
+    /**
+     * 寻找继承属性用于覆盖当前为空的属性
+     *
+     * @param current 当前需要子节点
+     * @return 补全后的子节点副本
+     */
+    public CT_DrawParam superDrawParam(CT_DrawParam current) {
+        return superDrawParam(current, new ArrayList<>());
     }
 
     /**
