@@ -826,9 +826,15 @@ public abstract class AWTMaker {
             ctColorSpace = resourceManage.getColorSpace(refID.toString());
         }
         if (ctColorSpace != null) {
-            if (ctColorSpace.getType() != null) {
-                type = ctColorSpace.getType();
+            try{
+                OFDColorSpaceType otype = ctColorSpace.getType();
+                if (otype != null) {
+                    type = otype;
+                }
+            }catch (Exception e){
+                logger.warn("获取颜色空间类型失败", e);
             }
+
             if (array == null && ctColor.getIndex() != null) {
                 array = ctColorSpace.getPalette().getColorByIndex(ctColor.getIndex());
             }
