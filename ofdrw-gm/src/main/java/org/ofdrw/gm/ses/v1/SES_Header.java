@@ -55,9 +55,9 @@ public class SES_Header extends ASN1Object {
 
     public SES_Header(ASN1Sequence seq) {
         Enumeration<?> e = seq.getObjects();
-        id = DERIA5String.getInstance(e.nextElement());
+        id = new DERIA5String(ASN1IA5String.getInstance(e.nextElement()).getString());
         version = ASN1Integer.getInstance(e.nextElement());
-        vid = DERIA5String.getInstance(e.nextElement());
+        vid = new DERIA5String(ASN1IA5String.getInstance(e.nextElement()).getString());
     }
 
     public static SES_Header getInstance(Object o) {

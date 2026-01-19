@@ -65,7 +65,7 @@ public class SES_Signature extends ASN1Object {
         if (e.hasMoreElements()) {
             Object obj = e.nextElement();
             if (obj instanceof ASN1TaggedObject) {
-                timeStamp = DERBitString.getInstance(((ASN1TaggedObject) obj).getObject());
+                timeStamp = DERBitString.getInstance(((ASN1TaggedObject) obj).getExplicitBaseObject());
             }
         }
     }

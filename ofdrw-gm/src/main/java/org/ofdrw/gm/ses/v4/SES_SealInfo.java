@@ -61,7 +61,7 @@ public class SES_SealInfo extends ASN1Object {
     public SES_SealInfo(ASN1Sequence seq) {
         Enumeration<?> e = seq.getObjects();
         header = SES_Header.getInstance(e.nextElement());
-        esID = DERIA5String.getInstance(e.nextElement());
+        esID = new DERIA5String(ASN1IA5String.getInstance(e.nextElement()).getString());
         property = SES_ESPropertyInfo.getInstance(e.nextElement());
         picture = SES_ESPictrueInfo.getInstance(e.nextElement());
         if (e.hasMoreElements()) {

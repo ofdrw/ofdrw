@@ -61,7 +61,7 @@ public class SES_ESPropertyInfo extends ASN1Object {
     public SES_ESPropertyInfo(ASN1Sequence seq) {
         Enumeration<?> e = seq.getObjects();
         type = ASN1Integer.getInstance(e.nextElement());
-        name = DERUTF8String.getInstance(e.nextElement());
+        name = new DERUTF8String(ASN1UTF8String.getInstance(e.nextElement()).getString());
         certList = ASN1Sequence.getInstance(e.nextElement());
 
         /*

@@ -25,31 +25,31 @@ public final class OIDs {
     /**
      * 数据类型
      */
-    public static final ASN1ObjectIdentifier data = gmt35275_sm2.branch("1").intern();
+    public static final ASN1ObjectIdentifier data = gmt35275_sm2.branch("1");
     /**
      * 签名数据类型
      */
-    public static final ASN1ObjectIdentifier signedData = gmt35275_sm2.branch("2").intern();
+    public static final ASN1ObjectIdentifier signedData = gmt35275_sm2.branch("2");
 
     /**
      * 数字信封类型
      */
-    public static final ASN1ObjectIdentifier envelopedData = gmt35275_sm2.branch("3").intern();
+    public static final ASN1ObjectIdentifier envelopedData = gmt35275_sm2.branch("3");
 
     /**
      * 签名及数字信封类型
      */
-    public static final ASN1ObjectIdentifier signedAndEnvelopedData = gmt35275_sm2.branch("4").intern();
+    public static final ASN1ObjectIdentifier signedAndEnvelopedData = gmt35275_sm2.branch("4");
 
     /**
      * 加密数据类型
      */
-    public static final ASN1ObjectIdentifier encryptedData = gmt35275_sm2.branch("5").intern();
+    public static final ASN1ObjectIdentifier encryptedData = gmt35275_sm2.branch("5");
 
     /**
      * 密钥协商类型
      */
-    public static final ASN1ObjectIdentifier keyAgreementInfo = gmt35275_sm2.branch("6").intern();
+    public static final ASN1ObjectIdentifier keyAgreementInfo = gmt35275_sm2.branch("6");
 
     /*
                 GMT 33560-2017 附录 A 部分
@@ -67,15 +67,15 @@ public final class OIDs {
     /**
      * SM2-1 数字签名算法
      */
-    public static final ASN1ObjectIdentifier sm2Sign = sm2.branch("1").intern();
+    public static final ASN1ObjectIdentifier sm2Sign = sm2.branch("1");
     /**
      * SM2-2 密钥交换协议
      */
-    public static final ASN1ObjectIdentifier sm2KeyExchange = sm2.branch("2").intern();
+    public static final ASN1ObjectIdentifier sm2KeyExchange = sm2.branch("2");
     /**
      * SM2-3 公钥加密算法
      */
-    public static final ASN1ObjectIdentifier sm2Encrypt = sm2.branch("3").intern();
+    public static final ASN1ObjectIdentifier sm2Encrypt = sm2.branch("3");
 
 
     /**
