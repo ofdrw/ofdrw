@@ -40,19 +40,18 @@ public enum DestType {
      */
     public static DestType getInstance(String type) {
         type = type == null ? "" : type.trim();
-        switch (type) {
-            case "XYZ":
-                return XYZ;
-            case "Fit":
-                return Fit;
-            case "FitH":
-                return FitH;
-            case "FitV":
-                return FitV;
-            case "FitR":
-                return FitR;
-            default:
-                throw new IllegalArgumentException("未知目标区域类型：" + type);
+        if (type.equalsIgnoreCase("XYZ")){
+            return XYZ;
+        } else if (type.equalsIgnoreCase("Fit")){
+            return Fit;
+        } else if (type.equalsIgnoreCase("FitH")){
+            return FitH;
+        } else if (type.equalsIgnoreCase("FitV")){
+            return FitV;
+        } else if (type.equalsIgnoreCase("FitR")){
+            return FitR;
+        } else {
+            throw new IllegalArgumentException("未知目标区域类型：" + type);
         }
     }
 }

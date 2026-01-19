@@ -26,16 +26,25 @@ public enum LineJoinType {
      */
     public static LineJoinType getInstance(String type) {
         type = type == null ? "" : type.trim();
-        switch (type) {
-            case "":
-            case "Miter":
-                return Miter;
-            case "Round":
-                return Round;
-            case "Bevel":
-                return Bevel;
-            default:
-                throw new IllegalArgumentException("未知线条连接样式：" + type);
+        // switch (type) {
+        // case "":
+        // case "Miter":
+        // return Miter;
+        // case "Round":
+        // return Round;
+        // case "Bevel":
+        // return Bevel;
+        // default:
+        // throw new IllegalArgumentException("未知线条连接样式：" + type);
+        // }
+        if (type.equals("") || type.equalsIgnoreCase("Miter")) {
+            return Miter;
+        } else if (type.equalsIgnoreCase("Round")) {
+            return Round;
+        } else if (type.equalsIgnoreCase("Bevel")) {
+            return Bevel;
+        } else {
+            throw new IllegalArgumentException("未知线条连接样式：" + type);
         }
     }
 }

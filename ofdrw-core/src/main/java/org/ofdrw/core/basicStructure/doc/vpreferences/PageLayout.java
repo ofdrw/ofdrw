@@ -37,23 +37,37 @@ public enum PageLayout {
 
     public static PageLayout getInstance(String pageLayout) {
         pageLayout = pageLayout == null ? "" : pageLayout.trim();
-
-        switch (pageLayout) {
-            case "":
-            case "OnePage":
-                return OnePage;
-            case "OneColumn":
-                return OneColumn;
-            case "TwoPageL":
-                return TwoPageL;
-            case "TwoColumnL":
-                return TwoColumnL;
-            case "TwoPageR":
-                return TwoPageR;
-            case "TwoColumnR":
-                return TwoColumnR;
-            default:
-                throw new IllegalArgumentException("未知页面布局类型： " + pageLayout);
+        // switch (pageLayout) {
+        // case "":
+        // case "OnePage":
+        // return OnePage;
+        // case "OneColumn":
+        // return OneColumn;
+        // case "TwoPageL":
+        // return TwoPageL;
+        // case "TwoColumnL":
+        // return TwoColumnL;
+        // case "TwoPageR":
+        // return TwoPageR;
+        // case "TwoColumnR":
+        // return TwoColumnR;
+        // default:
+        // throw new IllegalArgumentException("未知页面布局类型： " + pageLayout);
+        // }
+        if (pageLayout.equalsIgnoreCase("OnePage") || pageLayout.equals("")) {
+            return OnePage;
+        } else if (pageLayout.equalsIgnoreCase("OneColumn")) {
+            return OneColumn;
+        } else if (pageLayout.equalsIgnoreCase("TwoPageL")) {
+            return TwoPageL;
+        } else if (pageLayout.equalsIgnoreCase("TwoColumnL")) {
+            return TwoColumnL;
+        } else if (pageLayout.equalsIgnoreCase("TwoPageR")) {
+            return TwoPageR;
+        } else if (pageLayout.equalsIgnoreCase("TwoColumnR")) {
+            return TwoColumnR;
+        } else {
+            throw new IllegalArgumentException("未知页面布局类型： " + pageLayout);
         }
     }
 }

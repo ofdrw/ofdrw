@@ -24,14 +24,21 @@ public enum SigType {
 
     public static SigType getInstance(String str) {
         str = (str == null) ? "" : str.trim();
-        switch (str) {
-            case "":
-            case "Seal":
-                return Seal;
-            case "Sign":
-                return Sign;
-            default:
-                throw new IllegalArgumentException("未知的签名节点的类型：" + str);
+        // switch (str) {
+        //     case "":
+        //     case "Seal":
+        //         return Seal;
+        //     case "Sign":
+        //         return Sign;
+        //     default:
+        //         throw new IllegalArgumentException("未知的签名节点的类型：" + str);
+        // }
+        if  (str.equals("") || str.equalsIgnoreCase("Seal")) {
+            return Seal;
+        } else if (str.equalsIgnoreCase("Sign")) {
+            return Sign;
+        } else {
+            throw new IllegalArgumentException("未知的签名节点的类型：" + str);
         }
     }
 }

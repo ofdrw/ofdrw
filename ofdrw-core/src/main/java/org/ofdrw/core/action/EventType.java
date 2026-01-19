@@ -31,15 +31,14 @@ public enum EventType {
      */
     public static EventType getInstance(String event) {
         event = event == null ? "" : event.trim();
-        switch (event) {
-            case "DO":
-                return DO;
-            case "PO":
-                return PO;
-            case "CLICK":
-                return CLICK;
-            default:
-                throw new IllegalArgumentException("未知类型事件： " + event);
+        if (event.equalsIgnoreCase("DO")){
+            return DO;
+        } else if (event.equalsIgnoreCase("PO")){
+            return PO;
+        } else if (event.equalsIgnoreCase("CLICK")){
+            return CLICK;
+        } else {
+            throw new IllegalArgumentException("未知类型事件： " + event);
         }
     }
 }

@@ -42,18 +42,29 @@ public enum ReflectMethod {
      */
     public static ReflectMethod getInstance(String method) {
         method = (method == null) ? "" : method.trim();
-        switch (method) {
-            case "":
-            case "Normal":
-                return Normal;
-            case "Column":
-                return Column;
-            case "Row":
-                return Row;
-            case "RowAndColumn":
-                return RowAndColumn;
-            default:
-                throw new IllegalArgumentException("未知的翻转绘制效果：" + method);
+        // switch (method) {
+        //     case "":
+        //     case "Normal":
+        //         return Normal;
+        //     case "Column":
+        //         return Column;
+        //     case "Row":
+        //         return Row;
+        //     case "RowAndColumn":
+        //         return RowAndColumn;
+        //     default:
+        //         throw new IllegalArgumentException("未知的翻转绘制效果：" + method);
+        // }
+        if (method.equalsIgnoreCase("Normal") || method.equals("")) {
+            return Normal;
+        } else if (method.equalsIgnoreCase("Column")) {
+            return Column;
+        } else if (method.equalsIgnoreCase("Row")) {
+            return Row;
+        } else if (method.equalsIgnoreCase("RowAndColumn")) {
+            return RowAndColumn;
+        } else {
+            throw new IllegalArgumentException("未知的翻转绘制效果：" + method);
         }
     }
 }

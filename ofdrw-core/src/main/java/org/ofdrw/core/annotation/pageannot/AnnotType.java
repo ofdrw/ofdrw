@@ -30,20 +30,33 @@ public enum AnnotType {
     Watermark;
 
     public static AnnotType getInstance(String str) {
-        switch (str) {
-            case "Link":
-                return Link;
-            case "Path":
-                return Path;
-            case "Highlight":
-                return Highlight;
-            case "Stamp":
-                return Stamp;
-            case "Watermark":
-                return Watermark;
-            default:
-                throw new IllegalArgumentException("未知的注释类型取值：" + str);
+        str = str == null ? "" : str.trim();
+        // switch (str) {
+        //     case "Link":
+        //         return Link;
+        //     case "Path":
+        //         return Path;
+        //     case "Highlight":
+        //         return Highlight;
+        //     case "Stamp":
+        //         return Stamp;
+        //     case "Watermark":
+        //         return Watermark;
+        //     default:
+        //         throw new IllegalArgumentException("未知的注释类型取值：" + str);
+        // }
+        if (str.equalsIgnoreCase("Link")) {
+            return Link;
+        } else if (str.equalsIgnoreCase("Path")) {
+            return Path;
+        } else if (str.equalsIgnoreCase("Highlight")) {
+            return Highlight;
+        } else if (str.equalsIgnoreCase("Stamp")) {
+            return Stamp;
+        } else if (str.equalsIgnoreCase("Watermark")) {
+            return Watermark;
+        } else {
+            throw new IllegalArgumentException("未知的注释类型取值：" + str);
         }
-
     }
 }

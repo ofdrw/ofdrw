@@ -28,16 +28,25 @@ public enum LineCapType {
      */
     public static LineCapType getInstance(String type) {
         type = type == null ? "" : type.trim();
-        switch (type) {
-            case "":
-            case "Butt":
-                return Butt;
-            case "Round":
-                return Round;
-            case "Square":
-                return Square;
-            default:
-                throw new IllegalArgumentException("未知的线端点样式：" + type);
+        // switch (type) {
+        //     case "":
+        //     case "Butt":
+        //         return Butt;
+        //     case "Round":
+        //         return Round;
+        //     case "Square":
+        //         return Square;
+        //     default:
+        //         throw new IllegalArgumentException("未知的线端点样式：" + type);
+        // }
+        if (type.equalsIgnoreCase("Butt")|| "".equals(type)){
+            return Butt;
+        } else if (type.equalsIgnoreCase("Round")) {
+            return Round;
+        } else if (type.equalsIgnoreCase("Square")) {
+            return Square;
+        } else {
+            throw new IllegalArgumentException("未知的线端点样式：" + type);
         }
     }
 }

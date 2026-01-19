@@ -23,16 +23,26 @@ public enum MediaType {
     Video;
 
     public static MediaType getInstance(String str) {
-        switch (str.toLowerCase()) {
-            case "image":
-                return Image;
-            case "audio":
-                return Audio;
-            case "video":
-                return Video;
-            default:
-                throw new IllegalArgumentException("多媒体格式不支持：" + str);
+        str = str == null ? "" : str.trim();
+        if (str.equalsIgnoreCase("Image")) {
+            return Image;
+        } else if (str.equalsIgnoreCase("Audio")) {
+            return Audio;
+        } else if (str.equalsIgnoreCase("Video")) {
+            return Video;
+        } else {
+            throw new IllegalArgumentException("多媒体格式不支持：" + str);
         }
+        // switch (str.toLowerCase()) {
+        //     case "image":
+        //         return Image;
+        //     case "audio":
+        //         return Audio;
+        //     case "video":
+        //         return Video;
+        //     default:
+        //         throw new IllegalArgumentException("多媒体格式不支持：" + str);
+        // }
     }
 
 

@@ -21,14 +21,21 @@ public enum Rule {
 
     public static Rule getInstance(String type) {
         type = type == null ? "" : type.trim();
-        switch (type) {
-            case "":
-            case "NonZero":
-                return NonZero;
-            case "Even-Odd":
-                return Even_Odd;
-            default:
-                throw new IllegalArgumentException("未知的图形的填充规则类型：" + type);
+        // switch (type) {
+        //     case "":
+        //     case "NonZero":
+        //         return NonZero;
+        //     case "Even-Odd":
+        //         return Even_Odd;
+        //     default:
+        //         throw new IllegalArgumentException("未知的图形的填充规则类型：" + type);
+        // }
+        if (type.equalsIgnoreCase("NonZero") || "".equals(type)) {
+            return NonZero;
+        } else if (type.equalsIgnoreCase("Even-Odd")) {
+            return Even_Odd;
+        } else {
+            throw new IllegalArgumentException("未知的图形的填充规则类型：" + type);
         }
     }
 

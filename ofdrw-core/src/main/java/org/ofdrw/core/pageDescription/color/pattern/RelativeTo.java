@@ -26,15 +26,21 @@ public enum RelativeTo {
      */
     public static RelativeTo getInstance(String to) {
         to = (to == null) ? "" : to.trim();
-        switch (to) {
-            case "":
-            case "Object":
-                return Object;
-            case "Page":
-                return Page;
-            default:
-                throw new IllegalArgumentException("未知的底纹单元起始绘制位置：" + to);
+        // switch (to) {
+        //     case "":
+        //     case "Object":
+        //         return Object;
+        //     case "Page":
+        //         return Page;
+        //     default:
+        //         throw new IllegalArgumentException("未知的底纹单元起始绘制位置：" + to);
+        // }
+        if ("".equals(to) ||to.equalsIgnoreCase("Object")) {
+            return Object;
+        } else if (to.equalsIgnoreCase("Page")) {
+            return Page;
+        } else {
+            throw new IllegalArgumentException("未知的底纹单元起始绘制位置：" + to);
         }
-
     }
 }

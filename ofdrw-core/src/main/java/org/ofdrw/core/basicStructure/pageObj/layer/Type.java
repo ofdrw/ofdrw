@@ -57,16 +57,25 @@ public enum Type {
      */
     public static Type getInstance(String type) {
         type = (type == null) ? "" : type.trim();
-        switch (type) {
-            case "":
-            case "Body":
-                return Body;
-            case "Foreground":
-                return Foreground;
-            case "Background":
-                return Background;
-            default:
-                throw new IllegalArgumentException("未知的图层类型：" + type);
+        // switch (type) {
+        //     case "":
+        //     case "Body":
+        //         return Body;
+        //     case "Foreground":
+        //         return Foreground;
+        //     case "Background":
+        //         return Background;
+        //     default:
+        //         throw new IllegalArgumentException("未知的图层类型：" + type);
+        // }
+        if (type.equalsIgnoreCase("Body") || "".equals(type)) {
+            return Body;
+        } else if (type.equalsIgnoreCase("Foreground")) {
+            return Foreground;
+        } else if (type.equalsIgnoreCase("Background")) {
+            return Background;
+        } else {
+            throw new IllegalArgumentException("未知的图层类型：" + type);
         }
     }
 

@@ -33,17 +33,28 @@ public enum DocUsage {
      */
     public static DocUsage getInstance(String usage) {
         usage = usage == null ? "" : usage.trim();
-        switch (usage) {
-            case "Normal":
-                return Normal;
-            case "EBook":
-                return EBook;
-            case "ENewsPaper":
-                return ENewsPaper;
-            case "EMagzine":
-                return EMagzine;
-            default:
-                return Normal;
+        // switch (usage) {
+        //     case "Normal":
+        //         return Normal;
+        //     case "EBook":
+        //         return EBook;
+        //     case "ENewsPaper":
+        //         return ENewsPaper;
+        //     case "EMagzine":
+        //         return EMagzine;
+        //     default:
+        //         return Normal;
+        // }
+        if (usage.equalsIgnoreCase("Normal")) {
+            return Normal;
+        } else if (usage.equalsIgnoreCase("EBook")) {
+            return EBook;
+        } else if (usage.equalsIgnoreCase("ENewsPaper")) {
+            return ENewsPaper;
+        } else if (usage.equalsIgnoreCase("EMagzine")) {
+            return EMagzine;
+        } else {
+            return Normal;
         }
     }
 }

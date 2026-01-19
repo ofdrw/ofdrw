@@ -17,17 +17,26 @@ public enum MapType {
     Reflect;
 
     public static MapType getInstance(String type) {
-        type = (type == null)? "" : type.trim();
-        switch (type){
-            case "":
-            case "Direct":
-                return Direct;
-            case "Repeat":
-                return Repeat;
-            case "Reflect":
-                return Reflect;
-            default:
-                throw new IllegalArgumentException("位置渐变绘制的方式：" + type);
+        type = (type == null) ? "" : type.trim();
+        // switch (type){
+        //     case "":
+        //     case "Direct":
+        //         return Direct;
+        //     case "Repeat":
+        //         return Repeat;
+        //     case "Reflect":
+        //         return Reflect;
+        //     default:
+        //         throw new IllegalArgumentException("位置渐变绘制的方式：" + type);
+        // }
+        if (type.equalsIgnoreCase("Direct") || type.equals("")) {
+            return Direct;
+        } else if (type.equalsIgnoreCase("Repeat")) {
+            return Repeat;
+        } else if (type.equalsIgnoreCase("Reflect")) {
+            return Reflect;
+        } else {
+            throw new IllegalArgumentException("位置渐变绘制的方式：" + type);
         }
     }
 }

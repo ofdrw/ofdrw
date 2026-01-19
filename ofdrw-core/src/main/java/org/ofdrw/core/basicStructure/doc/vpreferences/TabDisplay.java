@@ -25,13 +25,20 @@ public enum TabDisplay {
         if (tabDisplay == null || tabDisplay.trim().length() == 0) {
             return FileName;
         }
-        switch (tabDisplay) {
-            case "FileName":
-                return FileName;
-            case "DocTitle":
-                return DocTitle;
-            default:
-                throw new IllegalArgumentException("未知的标题栏显示模式： " + tabDisplay);
+        // switch (tabDisplay) {
+        //     case "FileName":
+        //         return FileName;
+        //     case "DocTitle":
+        //         return DocTitle;
+        //     default:
+        //         throw new IllegalArgumentException("未知的标题栏显示模式： " + tabDisplay);
+        // }
+        if (tabDisplay.equalsIgnoreCase("FileName")) {
+            return FileName;
+        } else if (tabDisplay.equalsIgnoreCase("DocTitle")) {
+            return DocTitle;
+        } else {
+            throw new IllegalArgumentException("未知的标题栏显示模式： " + tabDisplay);
         }
     }
 }

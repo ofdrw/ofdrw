@@ -24,22 +24,32 @@ public enum OFDColorSpaceType {
 
     /**
      * 获取实例
+     * 
      * @param type 类型字符串
      * @return 实例
      * @throws IllegalArgumentException 未知的颜色空间类型
      */
     public static OFDColorSpaceType getInstance(String type) {
-      type = (type == null)? "" : type.trim();
-        type = type.toUpperCase();
-        switch (type) {
-            case "GRAY":
-                return GRAY;
-            case "RGB":
-                return RGB;
-            case "CMYK":
-                return CMYK;
-            default:
-                throw new IllegalArgumentException("未知的颜色空间类型：" + type);
+        type = (type == null) ? "" : type.trim();
+
+        // switch (type) {
+        // case "GRAY":
+        // return GRAY;
+        // case "RGB":
+        // return RGB;
+        // case "CMYK":
+        // return CMYK;
+        // default:
+        // throw new IllegalArgumentException("未知的颜色空间类型：" + type);
+        // }
+        if (type.equalsIgnoreCase("GRAY")) {
+            return GRAY;
+        } else if (type.equalsIgnoreCase("RGB")) {
+            return RGB;
+        } else if (type.equalsIgnoreCase("CMYK")) {
+            return CMYK;
+        } else {
+            throw new IllegalArgumentException("未知的颜色空间类型：" + type);
         }
     }
 }

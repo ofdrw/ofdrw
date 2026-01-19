@@ -34,17 +34,28 @@ public enum PlayType {
      */
     public static PlayType getInstance(String type) {
         type = type == null ? "" : type.trim();
-        switch (type) {
-            case "Play":
-                return Play;
-            case "Stop":
-                return Stop;
-            case "Pause":
-                return Pause;
-            case "Resume":
-                return Resume;
-            default:
-                throw new IllegalArgumentException("未知的放映参数： " + type);
+        // switch (type) {
+        //     case "Play":
+        //         return Play;
+        //     case "Stop":
+        //         return Stop;
+        //     case "Pause":
+        //         return Pause;
+        //     case "Resume":
+        //         return Resume;
+        //     default:
+        //         throw new IllegalArgumentException("未知的放映参数： " + type);
+        // }
+        if (type.equalsIgnoreCase("Play")) {
+            return Play;
+        } else if (type.equalsIgnoreCase("Stop")) {
+            return Stop;
+        } else if (type.equalsIgnoreCase("Pause")) {
+            return Pause;
+        } else if (type.equalsIgnoreCase("Resume")) {
+            return Resume;
+        } else {
+            throw new IllegalArgumentException("未知的放映参数： " + type);
         }
     }
 }
