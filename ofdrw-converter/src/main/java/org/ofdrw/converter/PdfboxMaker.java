@@ -115,6 +115,11 @@ public class PdfboxMaker {
      */
     private Map<String, PDFont> fontCache = new HashMap<>();
 
+    /**
+     * 默认字体，当无法获取字体时使用
+     */
+    private PDFont defaultFont = PDType1Font.HELVETICA_BOLD;
+
 
     public PdfboxMaker(OFDReader reader, PDDocument pdf) throws IOException {
         this.reader = reader;
@@ -1082,7 +1087,29 @@ public class PdfboxMaker {
             if (ctFont != null && ctFont.getFontFile() != null) {
                 logger.info("无法使用字体: {} {} {}", ctFont.getFamilyName(), ctFont.getFontName(), ctFont.getFontFile());
             }
-            return PDType1Font.HELVETICA_BOLD;
+            return defaultFont;
         }
+    }
+
+    /**
+     * 设置默认字体
+     * <p>
+     * 当无法获取字体时将返回此字体
+     *
+     * @param font 默认字体
+     */
+    public void setDefaultFont(PDFont font) {
+        if (font != null) {
+            this.defaultFont = font;
+        }
+    }
+
+    /**
+     * 获取默认字体
+     *
+     * @return 默认字体
+     */
+    public PDFont getDefaultFont() {
+        return defaultFont;
     }
 }
