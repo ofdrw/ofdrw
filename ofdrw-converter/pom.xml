@@ -101,8 +101,8 @@
         <!--SVG-->
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
-            <artifactId>batik-transcoder</artifactId>
-            <version>1.17</version>
+            <artifactId>batik-all</artifactId>
+            <version>1.19</version>
         </dependency>
     </dependencies>
 </project>

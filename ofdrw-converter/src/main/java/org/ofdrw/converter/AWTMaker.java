@@ -177,7 +177,7 @@ public abstract class AWTMaker {
                             (int) (stampImage.getWidth() * m1.getAsDouble(0, 0) * (clip.getWidth() / stBox.getWidth())),
                             (int) (stampImage.getHeight() * m1.getAsDouble(1, 1) * (clip.getHeight() / stBox.getHeight())));
                 }
-                graphics.setComposite(getStampComposite());
+                graphics.setComposite(BlendComposite.getInstance(BlendMode.MULTIPLY, 1));
                 graphics.drawImage(stampImage, MatrixUtils.createAffineTransform(m), null);
             }
         } catch (Exception e) {
@@ -187,15 +187,15 @@ public abstract class AWTMaker {
         }
     }
 
-    /**
-     * 印章混合模式
-     *
-     * @return 正片叠底复合对象
-     */
-    protected Composite getStampComposite() {
-        // 正片叠底
-        return BlendComposite.getInstance(BlendMode.MULTIPLY, 1);
-    }
+//    /**
+//     * 印章混合模式
+//     *
+//     * @return 正片叠底复合对象
+//     */
+//    protected Composite getStampComposite() {
+//        // 正片叠底
+//        return BlendComposite.getInstance(BlendMode.MULTIPLY, 1);
+//    }
 
     /**
      * 绘制页面
@@ -408,7 +408,7 @@ public abstract class AWTMaker {
             alpha = imageObject.getAlpha() / 255.0f;
         }
         Composite oldComposite = graphics.getComposite();
-        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, alpha));
+        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
         graphics.setTransform(MatrixUtils.createAffineTransform(MatrixUtils.base()));
         graphics.drawImage(image, MatrixUtils.createAffineTransform(m), null);
         graphics.setComposite(oldComposite);

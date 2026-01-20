@@ -1,5 +1,6 @@
 package org.ofdrw.converter;
 
+import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.batik.svggen.SVGGraphics2DIOException;
@@ -69,8 +70,7 @@ public class SVGMaker extends AWTMaker {
         DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
 
         // Create an instance of org.w3c.dom.Document.
-        String svgNS = "http://www.w3.org/2000/svg";
-        Document document = domImpl.createDocument(svgNS, "svg", null);
+        Document document = domImpl.createDocument(SVGDOMImplementation.SVG_NAMESPACE_URI, "svg", null);
 
         // Create an instance of the SVG Generator.
         SVGGraphics2D svgGenerator = new SVGGraphics2D(document);
@@ -95,11 +95,11 @@ public class SVGMaker extends AWTMaker {
         return null;
     }
 
-    /**
-     * SVG只支持有限的颜色混合，使用透明度混合
-     */
-    @Override
-    protected Composite getStampComposite() {
-        return AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, config.getStampOpacity());
-    }
+//    /**
+//     * SVG只支持有限的颜色混合，使用透明度混合
+//     */
+//    @Override
+//    protected Composite getStampComposite() {
+//        return AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, config.getStampOpacity());
+//    }
 }
