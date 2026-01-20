@@ -1,0 +1,49 @@
+name: Build and Deploy to Maven Central
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., 2.3.8)'
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: 'maven'
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+
+      - name: Configure Maven settings
+        uses: whelk-io/maven-settings-xml-action@v22
+        with:
+          servers: '[{"id": "sonatype", "username": "${{ secrets.OSSRH_USERNAME }}", "password": "${{ secrets.OSSRH_TOKEN }}"}]'
+
+      - name: Build and Deploy to Maven Central
+        run: mvn -Pup clean deploy -DskipTests
+
+      - name: Display build artifacts
+        run: |
+          echo "Build artifacts:"
+          find target -name "*.jar" -o -name "*.pom" | head -20 || true
