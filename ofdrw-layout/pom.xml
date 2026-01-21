@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ofdrw-layout</artifactId>
 
-    <name>OFDRW layout</name>
+    <name>OFDRW Layout</name>
     <description>OFD 布局应用库</description>
 
     <properties>
