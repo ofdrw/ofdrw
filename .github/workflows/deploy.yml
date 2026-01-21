@@ -33,3 +33,6 @@ jobs:
             -DskipTests \
             --batch-mode \
             --no-transfer-progress
+        env:
+          SONATYPE_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
