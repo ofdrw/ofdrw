@@ -21,9 +21,6 @@ jobs:
         with:
           java-version: '8'
           distribution: 'temurin'
-          server-id: sonatype
-          server-username: ${{ secrets.OSSRH_USERNAME }}
-          server-password: ${{ secrets.OSSRH_TOKEN }}
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
