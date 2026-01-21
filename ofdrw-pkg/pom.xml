@@ -12,6 +12,7 @@
 
 
     <artifactId>ofdrw-pkg</artifactId>
+    <name>OFDRW Package</name>
 
     <dependencies>
         <dependency>

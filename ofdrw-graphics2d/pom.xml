@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>ofdrw-graphics2d</artifactId>
+    <name>OFDRW Graphics2D</name>
     <description>OFD Reader and Writer AWT graphics 2D 实现，通过AWT API生成OFD。</description>
 
     <properties>

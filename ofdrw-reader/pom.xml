@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>ofdrw-reader</artifactId>
+    <name>OFDRW Reader</name>
     <description>OFD 文件解析器，用于解析文件内容，为修改和签名提供基本的API访问能力。</description>
 
     <dependencies>

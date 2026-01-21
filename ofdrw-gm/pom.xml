@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>ofdrw-gm</artifactId>
+    <name>OFDRW GM</name>
     <description>符合《GMT 0031-2014 安全电子签章密码技术规范》与
         《GB/T 38540-2020 信息安全技术 安全电子签章密码技术规范》的ASN1数据结构。
     </description>

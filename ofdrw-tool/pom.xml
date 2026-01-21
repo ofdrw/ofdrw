@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>ofdrw-tool</artifactId>
+    <name>OFDRW Tool</name>
     <description>OFD Reader and Writer 文档操作工具，提供如文档合并等操作。</description>
 
     <properties>

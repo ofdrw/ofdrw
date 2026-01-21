@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>ofdrw-crypto</artifactId>
+    <name>OFDRW Crypto</name>
 
     <description>依照《GM/T 0099-2020 开放板式文档密码应用技术规范》实现OFD加解密、完整性保护等密码操作。</description>
 

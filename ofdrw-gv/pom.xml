@@ -9,6 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>ofdrw-gv</artifactId>
+    <name>RW Global Variables</name>
     <description>OFD Reader and Writer 全局变量</description>
 
 </project>
