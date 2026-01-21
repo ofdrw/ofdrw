@@ -32,7 +32,8 @@ jobs:
           mvn clean deploy \
             -DskipTests \
             --batch-mode \
-            --no-transfer-progress
+            --no-transfer-progress \
+            -Dgpg.passphrase=${{ secrets.GPG_PASSPHRASE }}
         env:
           SONATYPE_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.OSSRH_TOKEN }}

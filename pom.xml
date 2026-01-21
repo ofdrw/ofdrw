@@ -159,6 +159,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <passphraseServerId>gpg.passphrase</passphraseServerId>
                     <gpgArguments>
                         <arg>--pinentry-mode</arg>
                         <arg>loopback</arg>
