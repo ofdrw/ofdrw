@@ -1,33 +1,33 @@
-name: Create Release
+name: Release to Maven Central
 
 on:
   push:
-    tags:
-      - '*.*.*'
-
-permissions:
-  contents: write
+    branches: [ master, main ]
+  workflow_dispatch:
 
 jobs:
-  create-release:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Get version from tag
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
         with:
-          tag_name: ${{ steps.get_version.outputs.VERSION }}
-          name: Release ${{ steps.get_version.outputs.VERSION }}
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          java-version: '8'
+          distribution: 'temurin'
+
+      - name: Build Project
+        run: |
+          mvn clean package -DskipTests -B
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar-files
+          path: target/*.jar
+          retention-days: 7
