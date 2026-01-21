@@ -17,10 +17,11 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Apache Maven Central
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '8'
           server-id: central
+          distribution: 'temurin'
           server-username: SERVER_USERNAME
           server-password: SERVER_PASSWORD
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
