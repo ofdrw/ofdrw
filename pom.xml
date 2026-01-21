@@ -158,6 +158,12 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <gpgArguments>
+                        <arg>--pinentry-mode</arg>
+                        <arg>loopback</arg>
+                    </gpgArguments>
+                </configuration>
             </plugin>
 
             <!-- Surefire Plugin: Skip tests during build -->
@@ -190,7 +196,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <serverId>sonatype</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                      <nexusUrl>https://s01.oss.sonatype.org</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
