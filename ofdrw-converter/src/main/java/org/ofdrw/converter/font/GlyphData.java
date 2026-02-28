@@ -35,10 +35,30 @@ public class GlyphData {
     private BoundingBox boundingBox = null;
     private short numberOfContours;
     private GlyfDescript glyphDescription = null;
+    
+    /**
+     * CFF 字体的直接路径（用于 OpenType/CFF 格式字体）
+     */
+    private GeneralPath cffPath = null;
 
     public GlyphData() {
         glyphDescription = new GlyfSimpleDescript();
         boundingBox = new BoundingBox();
+    }
+    
+    /**
+     * 创建包含 CFF 路径的 GlyphData
+     *
+     * @param path CFF 字体路径
+     */
+    public GlyphData(GeneralPath path) {
+        this.cffPath = path;
+        if (path != null) {
+            java.awt.Rectangle r = path.getBounds();
+            this.boundingBox = new BoundingBox((float)r.getX(), (float)r.getY(), (float)r.getMaxX(), (float)r.getMaxY());
+        } else {
+            this.boundingBox = new BoundingBox();
+        }
     }
 
     /**
@@ -110,6 +130,10 @@ public class GlyphData {
      * @return the path
      */
     public GeneralPath getPath() {
+        // 如果是 CFF 字体路径，直接返回
+        if (cffPath != null) {
+            return cffPath;
+        }
         return new GlyphRenderer(glyphDescription).getPath();
     }
 
