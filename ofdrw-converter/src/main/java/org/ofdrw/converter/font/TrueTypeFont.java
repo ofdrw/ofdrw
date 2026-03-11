@@ -4,6 +4,7 @@ package org.ofdrw.converter.font;
 import org.apache.commons.io.IOUtils;
 import org.apache.fontbox.cff.CFFFont;
 import org.apache.fontbox.cff.CFFParser;
+import org.apache.fontbox.cff.Type2CharString;
 import org.apache.fontbox.ttf.CmapLookup;
 import org.apache.fontbox.ttf.CmapTable;
 import org.apache.fontbox.type1.Type1Font;
@@ -304,8 +305,11 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
         if (cffFont != null) {
             // CFF 字体：通过 CFF 获取路径，包装成 GlyphData 返回
             try {
-                GeneralPath path = this.cffFont.getType2CharString(gid).getPath();
-                return new GlyphData(path);
+                Type2CharString cs = this.cffFont.getType2CharString(gid);
+                if (cs != null) {
+                    return new GlyphData(cs.getPath());
+                }
+                return new GlyphData();
             } catch (Exception e) {
                 // 如果获取失败，返回空 GlyphData
                 if (numGlyphs > 0) {

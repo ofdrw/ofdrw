@@ -11,7 +11,6 @@ import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.ofdrw.converter.font.*;
-import org.ofdrw.converter.utils.FontConfigHelper;
 import org.ofdrw.converter.utils.OSinfo;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.text.font.CT_Font;
@@ -435,32 +434,6 @@ public final class FontLoader {
             }
         }
 
-        // 如果以上都未找到，在 Linux 系统上尝试使用 fontconfig 进行字体匹配
-        if (OSinfo.isLinux()) {
-            // 优先使用非空的 fontName，否则使用 familyName
-            String queryName = (fontName != null && !fontName.trim().isEmpty()) ? fontName : familyName;
-            // 无论 queryName 是否为 null，都尝试调用 fontconfig，传递原始参数
-            String fcPath = FontConfigHelper.queryFontConfig(fontName, familyName);
-            if (fcPath != null && !fcPath.isEmpty()) {
-                // 使用 synchronized 保护并发访问
-                synchronized (fontNamePathMapping) {
-                    // 缓存到 fontName，如果非空且非 null
-                    if (fontName != null && !fontName.trim().isEmpty()) {
-                        fontNamePathMapping.putIfAbsent(fontName, fcPath);
-                    }
-                    // 缓存到 familyName，如果非空且非 null，并且与 fontName 不同
-                    if (familyName != null && !familyName.trim().isEmpty()) {
-                        fontNamePathMapping.putIfAbsent(familyName, fcPath);
-                    }
-                    // 同时缓存到 queryName，确保后续相同查询能直接命中
-                    if (queryName != null && !queryName.trim().isEmpty()) {
-                        fontNamePathMapping.putIfAbsent(queryName, fcPath);
-                    }
-                }
-                return fcPath;
-            }
-        }
-
         return null;
     }
 
@@ -553,91 +526,48 @@ public final class FontLoader {
                     TrueTypeCollection ttc = new TrueTypeCollection().parse(raf);
                     TrueTypeFont selectedFont = null;
 
-                    // 在 Linux 上优先使用 fontconfig 进行智能匹配
-                    if (OSinfo.isLinux()) {
-                        // 尝试通过 fontconfig 查询最佳匹配字体
-                        String fontConfigPath = FontConfigHelper.queryFontConfig(fontName, familyName);
-                        if (fontConfigPath != null && !fontConfigPath.equals(absPath)) {
-                            // fontconfig 返回了不同的字体文件，记录日志
-                            if (DEBUG) {
-                                log.debug("fontconfig 推荐使用其他字体: {} -> {}", absPath, fontConfigPath);
-                            }
+                    // 中文字体标识，用于优先选择中文变体
+                    String[] chineseIndicators = {"SC","TC","HK","TW","JP","KR","CJK"};
+
+                    boolean hasExactMatch = false;
+
+                    // 单次遍历完成所有匹配逻辑
+                    for (int i = 0; i < ttc.getNumFonts(); i++) {
+                        TrueTypeFont font = ttc.getFontAtIndex(i);
+                        String psName = font.psName;
+
+                        // 1. 精确匹配 PS Name（最高优先级）
+                        if (fontName != null && psName != null && psName.equals(fontName)) {
+                            selectedFont = font;
+                            hasExactMatch = true;
+                            break;
                         }
 
-                        // 尝试使用 fontconfig 确定 TTC 中的字体索引
-                        int preferredIndex = FontConfigHelper.queryTtcFontIndex(absPath, fontName, familyName);
-                        // 尝试从 preferredIndex 开始，如果失败则尝试其他索引
-                        boolean fontLoaded = false;
-                        int startIndex = (preferredIndex >= 0 && preferredIndex < ttc.getNumFonts()) ? preferredIndex : 0;
-                        for (int attempt = 0; attempt < ttc.getNumFonts(); attempt++) {
-                            int idx = (startIndex + attempt) % ttc.getNumFonts();
-                            try {
-                                selectedFont = ttc.getFontAtIndex(idx);
-                                fontLoaded = true;
-                                break;
-                            } catch (Exception e) {
-                                log.warn("无法加载 TTC 索引 {}: {}", idx, e.getMessage());
+                        // 2. 如果还没有选中，评估字体优先级
+                        if (selectedFont == null) {
+                            // 第一次遍历，先选择第一个字体作为后备
+                            selectedFont = font;
+                        } else {
+                            // 比较优先级：检查是否为中文变体
+                            boolean currentIsChinese = isChineseVariant(selectedFont.psName, selectedFont.fontFamily, chineseIndicators);
+                            boolean candidateIsChinese = isChineseVariant(psName, font.fontFamily, chineseIndicators);
+
+                            // 优先选择中文变体
+                            if (!currentIsChinese && candidateIsChinese) {
+                                selectedFont = font;
                             }
-                        }
-                        if (!fontLoaded) {
-                            log.warn("无法加载 TTC 文件中的任何字体: {}", absPath);
+                            // 如果两者都是或都不是中文变体，保持原选择（即第一个遇到的）
                         }
                     }
 
-                    // 如果 fontconfig 未提供索引，使用智能匹配逻辑
-                    if (selectedFont == null) {
-                        // 中文字体标识，用于优先选择中文变体
-                        String[] chineseIndicators = {"SC", "CN", "CHS", "GB", "简体", "中文", "BIG5", "HK", "TW"};
-
-                        // 遍历所有字体，选择最合适的
+                    // 只有在没有精确匹配时，才尝试部分匹配
+                    if (!hasExactMatch && fontName != null && selectedFont != null) {
                         for (int i = 0; i < ttc.getNumFonts(); i++) {
                             TrueTypeFont font = ttc.getFontAtIndex(i);
                             String psName = font.psName;
-
-                            // 1. 精确匹配 PS Name（最高优先级）
-                            if (fontName != null && psName != null && psName.equals(fontName)) {
+                            if (psName != null && psName.contains(fontName)) {
                                 selectedFont = font;
                                 break;
-                            }
-
-                            // 2. 如果还没有选中，评估字体优先级
-                            if (selectedFont == null) {
-                                // 第一次遍历，先选择第一个字体作为后备
-                                selectedFont = font;
-                            } else {
-                                // 比较优先级：检查是否为中文变体
-                                boolean currentIsChinese = isChineseVariant(selectedFont.psName, selectedFont.fontFamily, chineseIndicators);
-                                boolean candidateIsChinese = isChineseVariant(psName, font.fontFamily, chineseIndicators);
-
-                                // 优先选择中文变体
-                                if (!currentIsChinese && candidateIsChinese) {
-                                    selectedFont = font;
-                                }
-                                // 如果两者都是或都不是中文变体，保持原选择（即第一个遇到的）
-                            }
-                        }
-
-                        // 只有在前面没有找到精确匹配时，才尝试部分匹配
-                        if (fontName != null && selectedFont != null) {
-                            // 检查是否已经精确匹配
-                            boolean hasExactMatch = false;
-                            for (int i = 0; i < ttc.getNumFonts(); i++) {
-                                TrueTypeFont font = ttc.getFontAtIndex(i);
-                                if (fontName != null && font.psName != null && font.psName.equals(fontName)) {
-                                    hasExactMatch = true;
-                                    break;
-                                }
-                            }
-                            // 只有在没有精确匹配时，才尝试部分匹配
-                            if (!hasExactMatch) {
-                                for (int i = 0; i < ttc.getNumFonts(); i++) {
-                                    TrueTypeFont font = ttc.getFontAtIndex(i);
-                                    String psName = font.psName;
-                                    if (psName != null && psName.contains(fontName)) {
-                                        selectedFont = font;
-                                        break;
-                                    }
-                                }
                             }
                         }
                     }
