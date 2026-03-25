@@ -4,6 +4,7 @@ package org.ofdrw.converter.font;
 import org.apache.commons.io.IOUtils;
 import org.apache.fontbox.cff.CFFFont;
 import org.apache.fontbox.cff.CFFParser;
+import org.apache.fontbox.cff.Type2CharString;
 import org.apache.fontbox.ttf.CmapLookup;
 import org.apache.fontbox.ttf.CmapTable;
 import org.apache.fontbox.type1.Type1Font;
@@ -175,6 +176,7 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
             maxp  字形数量
             loca  配置参数
             glyf  字形数据
+            CFF   CFF 数据（OpenType/CFF 格式）
          */
         // =========> head
         if (!tables.containsKey("head")) {
@@ -186,6 +188,46 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
                 return this;
             } else {
                 throw new IllegalArgumentException("没有 head 表");
+            }
+        }
+
+        // =========> CFF 表（OpenType/CFF 格式）
+        if (tables.containsKey("CFF ")) {
+            // CFF 格式字体，不需要 loca/glyf 表
+            // 读取 CFF 表
+            long cffOffset = tables.get("CFF ")[0];
+            long cffLength = tables.get("CFF ")[1];
+            raf.seek(cffOffset);
+            byte[] cffData = new byte[(int) cffLength];
+            raf.read(cffData, 0, (int) cffLength);
+            List<CFFFont> fonts = new CFFParser().parse(cffData);
+            if (fonts != null && !fonts.isEmpty()) {
+                this.cffFont = fonts.get(0);
+                // CFF 字体仍需要从 head 读取 unitsPerEm
+                raf.seek(tables.get("head")[0] + 18);
+                unitsPerEm = raf.readUnsignedShort();
+
+                // =========> maxp (CFF 字体也需要读取字形数量)
+                if (tables.containsKey("maxp")) {
+                    raf.seek(tables.get("maxp")[0] + 4);
+                    numGlyphs = raf.readUnsignedShort();
+                }
+
+                // =========> cmap (CFF 字体也需要字符到字形的映射)
+                if (tables.containsKey("cmap")) {
+                    this.cmaps = readCMap(tables.get("cmap")[0], raf);
+                }
+
+                // =========> name
+                if (tables.containsKey("name")) {
+                    NamingTable nt = new NamingTable(tables.get("name")).read(raf);
+                    this.fontFamily = nt.getFontFamily();
+                    this.fontSubFamily = nt.getFontSubFamily();
+                    this.psName = nt.getPostScriptName();
+                    // GC
+                    nt = null;
+                }
+                return this;
             }
         }
 
@@ -261,8 +303,21 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
         }
 
         if (cffFont != null) {
-            // CFF 字体不含字形信息，只有路径，因此直接返回null
-            return null;
+            // CFF 字体：通过 CFF 获取路径，包装成 GlyphData 返回
+            try {
+                Type2CharString cs = this.cffFont.getType2CharString(gid);
+                if (cs != null) {
+                    return new GlyphData(cs.getPath());
+                }
+                return new GlyphData();
+            } catch (Exception e) {
+                // 如果获取失败，返回空 GlyphData
+                if (numGlyphs > 0) {
+                    // 仅在有字形时记录警告，避免初始化阶段误报
+                    System.err.println("警告: CFF 字体获取字形路径失败, gid=" + gid + ", 原因: " + e.getMessage());
+                }
+                return new GlyphData();
+            }
         }
 
 
@@ -313,7 +368,8 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
     public GeneralPath getPath(int gid) throws IOException {
         // 存在CFF的时候采用CFF直接获取字形
         if (this.cffFont != null) {
-            return this.cffFont.getType2CharString(gid).getPath();
+            org.apache.fontbox.cff.Type2CharString charString = this.cffFont.getType2CharString(gid);
+            return charString != null ? charString.getPath() : null;
         }
         return getGlyph(gid).getPath();
     }

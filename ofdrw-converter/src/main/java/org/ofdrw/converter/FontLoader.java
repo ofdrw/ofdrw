@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.ofdrw.converter.font.*;
 import org.ofdrw.converter.utils.OSinfo;
-import org.ofdrw.core.Holder;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.reader.ResourceLocator;
@@ -96,6 +95,23 @@ public final class FontLoader {
             singleInstance.init();
             instance = singleInstance;
         }
+    }
+
+    /**
+     * 判断字体是否为中文变体
+     */
+    private static boolean isChineseVariant(String psName, String fontFamily, String[] chineseIndicators) {
+        if (psName == null && fontFamily == null) {
+            return false;
+        }
+        String text = (psName != null ? psName : "") + " " + (fontFamily != null ? fontFamily : "");
+        text = text.toLowerCase();
+        for (String indicator : chineseIndicators) {
+            if (text.contains(indicator.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -374,7 +390,6 @@ public final class FontLoader {
             if (DEBUG) {
                 log.info("建立字体映射 {} --> {}", fontName, fontFilePath);
             }
-//            System.out.printf("建立字体映射 %s --> %s\n", fontName, fontFilePath);
 
         }
         return this;
@@ -411,10 +426,12 @@ public final class FontLoader {
             return fontNamePathMapping.get(name);
         }
 
-        if (familyName == null) return null;
-        name = fontNameAliasMapping.get(familyName);
-        if (name != null && fontNamePathMapping.containsKey(name)) {
-            return fontNamePathMapping.get(name);
+        // 如果 familyName 不为 null，尝试通过 familyName 别名查找
+        if (familyName != null) {
+            name = fontNameAliasMapping.get(familyName);
+            if (name != null && fontNamePathMapping.containsKey(name)) {
+                return fontNamePathMapping.get(name);
+            }
         }
 
         return null;
@@ -506,18 +523,64 @@ public final class FontLoader {
                 case ".otf":
                     return new TrueTypeFont().parse(raf);
                 case ".ttc":
-                    Holder<TrueTypeFont> holder = new Holder<>();
                     TrueTypeCollection ttc = new TrueTypeCollection().parse(raf);
+                    TrueTypeFont selectedFont = null;
 
-                    ttc.foreach(font -> {
-                        if (font.psName.equals(fontName)) {
-                            holder.value = font;
+                    // 中文字体标识，用于优先选择中文变体
+                    String[] chineseIndicators = {"SC","TC","HK","TW","JP","KR","CJK"};
+
+                    boolean hasExactMatch = false;
+
+                    // 单次遍历完成所有匹配逻辑
+                    for (int i = 0; i < ttc.getNumFonts(); i++) {
+                        TrueTypeFont font = ttc.getFontAtIndex(i);
+                        String psName = font.psName;
+
+                        // 1. 精确匹配 PS Name（最高优先级）
+                        if (fontName != null && psName != null && psName.equals(fontName)) {
+                            selectedFont = font;
+                            hasExactMatch = true;
+                            break;
                         }
-                    });
-                    if (holder.value == null) {
-                        holder.value = ttc.getFontAtIndex(0);
+
+                        // 2. 如果还没有选中，评估字体优先级
+                        if (selectedFont == null) {
+                            // 第一次遍历，先选择第一个字体作为后备
+                            selectedFont = font;
+                        } else {
+                            // 比较优先级：检查是否为中文变体
+                            boolean currentIsChinese = isChineseVariant(selectedFont.psName, selectedFont.fontFamily, chineseIndicators);
+                            boolean candidateIsChinese = isChineseVariant(psName, font.fontFamily, chineseIndicators);
+
+                            // 优先选择中文变体
+                            if (!currentIsChinese && candidateIsChinese) {
+                                selectedFont = font;
+                            }
+                            // 如果两者都是或都不是中文变体，保持原选择（即第一个遇到的）
+                        }
                     }
-                    return holder.value;
+
+                    // 只有在没有精确匹配时，才尝试部分匹配
+                    if (!hasExactMatch && fontName != null && selectedFont != null) {
+                        for (int i = 0; i < ttc.getNumFonts(); i++) {
+                            TrueTypeFont font = ttc.getFontAtIndex(i);
+                            String psName = font.psName;
+                            if (psName != null && psName.contains(fontName)) {
+                                selectedFont = font;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (DEBUG) {
+                        log.debug("TTC字体选择结果: 文件={}, 字体名={}, 字族名={}, 选中字体PSName={}, 字体族={}",
+                                absPath,
+                                fontName != null ? fontName : "null",
+                                familyName != null ? familyName : "null",
+                                selectedFont != null ? selectedFont.psName : "null",
+                                selectedFont != null ? selectedFont.fontFamily : "null");
+                    }
+                    return selectedFont;
             }
         } catch (IOException e) {
             if (DEBUG) {
@@ -570,7 +633,12 @@ public final class FontLoader {
                 // 无法从内部加载时，通过相似字体查找
                 String similarFontPath = getReplaceSimilarFontPath(ctFont.getFamilyName(), ctFont.getFontName());
                 if (similarFontPath != null) {
-                    trueTypeFont = loadExternalFont(similarFontPath, null, null);
+                    // 传递原始字体名称，帮助 TTC 选择正确的字体索引
+                    trueTypeFont = loadExternalFont(similarFontPath, ctFont.getFamilyName(), ctFont.getFontName());
+                    if (DEBUG && trueTypeFont != null) {
+                        log.debug("相似字体替换成功: 原始字体={}/{}, 系统字体路径={}, 加载字体PSName={}",
+                                ctFont.getFamilyName(), ctFont.getFontName(), similarFontPath, trueTypeFont.psName);
+                    }
                 }
                 hasReplace = true;
             }
@@ -630,7 +698,7 @@ public final class FontLoader {
 
     /**
      * 获取字体别名
-     * 
+     *
      * @param ctFont 字体对象
      * @return
      */
