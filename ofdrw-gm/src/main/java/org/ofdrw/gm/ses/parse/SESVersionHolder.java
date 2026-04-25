@@ -54,6 +54,12 @@ public class SESVersionHolder {
                 if (this.objSeq.size() >= 4) {
                     obj = new org.ofdrw.gm.ses.v4.SES_Signature(this.objSeq);
                 }
+                break;
+            case v5:
+                if (this.objSeq.size() >= 4) {
+                    obj = new org.ofdrw.gm.ses.v5.SES_Signature(this.objSeq);
+                }
+                break;
         }
         return (T) obj;
     }
@@ -79,6 +85,11 @@ public class SESVersionHolder {
                     obj = new org.ofdrw.gm.ses.v4.SESeal(this.objSeq);
                 }
                 break;
+            case v5:
+                if (this.objSeq.size() >= 4) {
+                    obj = new org.ofdrw.gm.ses.v5.SESeal(this.objSeq);
+                }
+                break;
         }
         return (T) obj;
     }
@@ -101,6 +112,15 @@ public class SESVersionHolder {
         return this.SESObject();
     }
 
+    /**
+     * 强制获取v5版本的电子签章数据
+     *
+     * @return v5电子签章数据
+     */
+    public org.ofdrw.gm.ses.v5.SES_Signature getInstanceV5() {
+        return this.SESObject();
+    }
+
 
     /**
      * 强制获取v1版本的电子印章数据
@@ -117,6 +137,15 @@ public class SESVersionHolder {
      * @return v4电子印章数据
      */
     public org.ofdrw.gm.ses.v4.SESeal getInstanceV4Seal() {
+        return this.SealObject();
+    }
+
+    /**
+     * 强制获取v5版本的电子印章数据
+     *
+     * @return v5电子印章数据
+     */
+    public org.ofdrw.gm.ses.v5.SESeal getInstanceV5Seal() {
         return this.SealObject();
     }
 }

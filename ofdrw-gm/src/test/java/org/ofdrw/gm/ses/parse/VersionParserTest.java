@@ -49,4 +49,37 @@ class VersionParserTest {
             System.out.println(Base64.toBase64String(sesSig.getCert().getOctets()));
         }
     }
+
+    @Test
+    void parseSES_SealVersionV5() throws IOException {
+        Path userSealV5Path = Paths.get("src/test/resources", "UserV5.esl");
+        SESVersionHolder holder = VersionParser.parseSES_SealVersion(Files.readAllBytes(userSealV5Path));
+        assertEquals(SESVersion.v5, holder.getVersion());
+        assertTrue(holder.SealObject() instanceof org.ofdrw.gm.ses.v5.SESeal);
+
+        org.ofdrw.gm.ses.v5.SESeal seal = holder.SealObject();
+        assertEquals(5, seal.geteSealInfo().getHeader().getVersion().getValue().intValue());
+    }
+
+    @Test
+    void parseSES_SealVersionV5WithTimeStamp() throws IOException {
+        Path userSealV5TsPath = Paths.get("src/test/resources", "UserV5_ts.esl");
+        SESVersionHolder holder = VersionParser.parseSES_SealVersion(Files.readAllBytes(userSealV5TsPath));
+        assertEquals(SESVersion.v5, holder.getVersion());
+        assertTrue(holder.SealObject() instanceof org.ofdrw.gm.ses.v5.SESeal);
+
+        org.ofdrw.gm.ses.v5.SESeal seal = holder.SealObject();
+        assertNotNull(seal.getTimeStamp());
+    }
+
+    @Test
+    void parseSES_SignatureVersionV5() throws IOException {
+        Path sESValueV5 = Paths.get("src/test/resources", "SignedValueV5.dat");
+        SESVersionHolder holder = VersionParser.parseSES_SignatureVersion(Files.readAllBytes(sESValueV5));
+        assertEquals(SESVersion.v5, holder.getVersion());
+        assertTrue(holder.SESObject() instanceof org.ofdrw.gm.ses.v5.SES_Signature);
+
+        org.ofdrw.gm.ses.v5.SES_Signature sesSig = holder.SESObject();
+        assertEquals(5, sesSig.getToSign().getVersion().getValue().intValue());
+    }
 }
