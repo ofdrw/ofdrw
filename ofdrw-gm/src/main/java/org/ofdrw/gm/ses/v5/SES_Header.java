@@ -1,0 +1,83 @@
+package org.ofdrw.gm.ses.v5;
+
+import org.bouncycastle.asn1.*;
+
+import java.util.Enumeration;
+
+/**
+ * 头信息
+ *
+ * @since 2026-04-24
+ * @author minghu.zhang
+ */
+public class SES_Header extends ASN1Object {
+
+    public static final ASN1Integer V5 = new ASN1Integer(5);
+
+    public static final DERIA5String ID = new DERIA5String("ES");
+
+    private DERIA5String id;
+    private ASN1Integer version;
+    private DERIA5String vid;
+
+    public SES_Header() {
+        super();
+    }
+
+    public SES_Header(ASN1Integer version, DERIA5String vid) {
+        this.id = ID;
+        this.version = version;
+        this.vid = vid;
+    }
+
+    public SES_Header(ASN1Sequence seq) {
+        Enumeration<?> e = seq.getObjects();
+        id = (DERIA5String) DERIA5String.getInstance(e.nextElement());
+        version = ASN1Integer.getInstance(e.nextElement());
+        vid = (DERIA5String) DERIA5String.getInstance(e.nextElement());
+    }
+
+    public static SES_Header getInstance(Object o) {
+        if (o instanceof SES_Header) {
+            return (SES_Header) o;
+        } else if (o != null) {
+            return new SES_Header(ASN1Sequence.getInstance(o));
+        }
+        return null;
+    }
+
+    public DERIA5String getId() { return id; }
+
+    public ASN1Integer getVersion() { return version; }
+
+    public SES_Header setVersion(ASN1Integer version) {
+        this.version = version;
+        return this;
+    }
+
+    public SES_Header setVersion(int version) {
+        this.version = new ASN1Integer(version);
+        return this;
+    }
+
+    public DERIA5String getVid() { return vid; }
+
+    public SES_Header setVid(DERIA5String vid) {
+        this.vid = vid;
+        return this;
+    }
+
+    public SES_Header setVid(String vid) {
+        this.vid = new DERIA5String(vid);
+        return this;
+    }
+
+    @Override
+    public ASN1Primitive toASN1Primitive() {
+        ASN1EncodableVector v = new ASN1EncodableVector(3);
+        v.add(ID);
+        v.add(version);
+        v.add(vid);
+        return new DERSequence(v);
+    }
+}
