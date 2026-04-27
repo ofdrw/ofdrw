@@ -72,6 +72,12 @@ public class StampAnnotEntity {
             final SES_ESPictrueInfo picture = toSign.getEseal().geteSealInfo().getPicture();
             this.imgType = picture.getType().getString();
             this.imageByte = picture.getData().getOctets();
+        } else if (sesVersionHolder.getVersion() == SESVersion.v5) {
+            org.ofdrw.gm.ses.v5.SES_Signature sesSignature = sesVersionHolder.getInstanceV5();
+            org.ofdrw.gm.ses.v5.TBS_Sign toSign = sesSignature.getToSign();
+            final org.ofdrw.gm.ses.v5.SES_ESPictrueInfo picture = toSign.getEseal().geteSealInfo().getPicture();
+            this.imgType = picture.getType().getString();
+            this.imageByte = picture.getData().getOctets();
         } else {
             org.ofdrw.gm.ses.v1.SES_Signature sesSignature = sesVersionHolder.getInstanceV1();
             org.ofdrw.gm.ses.v1.TBS_Sign toSign = sesSignature.getToSign();

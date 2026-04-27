@@ -246,6 +246,11 @@ public class OFDValidator implements Closeable {
             SES_Signature sesSignature = SES_Signature.getInstance(v.getObjSeq());
             SESeal eseal = sesSignature.getToSign().getEseal();
             expect = eseal.getEncoded("DER");
+        } else if (v.getVersion() == SESVersion.v5) {
+            org.ofdrw.gm.ses.v5.SES_Signature sesSignature
+                    = org.ofdrw.gm.ses.v5.SES_Signature.getInstance(v.getObjSeq());
+            org.ofdrw.gm.ses.v5.SESeal eseal = sesSignature.getToSign().getEseal();
+            expect = eseal.getEncoded("DER");
         } else if (v.getVersion() == SESVersion.v1) {
             org.ofdrw.gm.ses.v1.SES_Signature sesSignature
                     = org.ofdrw.gm.ses.v1.SES_Signature.getInstance(v.getObjSeq());

@@ -8,7 +8,8 @@ package org.ofdrw.gm.ses.parse;
  */
 public enum SESVersion {
     v1(1),
-    v4(4);
+    v4(4),
+    v5(5);
 
     /**
      * 版本号
