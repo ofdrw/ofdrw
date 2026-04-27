@@ -2,8 +2,10 @@ package org.ofdrw.font;
 
 import java.awt.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * 字体
@@ -35,9 +37,9 @@ public class Font {
      * 缓存的AWT字体
      */
     private java.awt.Font fontObj;
-    
+
     /**
-     *  是否可嵌入OFD文件包
+     * 是否可嵌入OFD文件包
      */
     private boolean embeddable = true;
 
@@ -186,8 +188,8 @@ public class Font {
      */
     public Font setFontFile(Path fontFile) {
         this.fontFile = fontFile;
-        try {
-            this.fontObj = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, fontFile.toFile());
+        try (InputStream in = Files.newInputStream(fontFile)) {
+            this.fontObj = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, in);
         } catch (FontFormatException | IOException e) {
             throw new IllegalArgumentException("字体文件(fontFile)格式错误");
         }
@@ -199,21 +201,23 @@ public class Font {
      *
      * @return 字体对象 或  null
      */
-    public java.awt.Font getFontObj(){
+    public java.awt.Font getFontObj() {
         return this.fontObj;
     }
-    
+
     /**
      * 获取字体嵌入标识
+     *
      * @return true-代表字体文件会被嵌入到OFD文件中，false-表示不嵌入
      */
     public boolean isEmbeddable() {
         return embeddable;
     }
-    
+
     /**
      * 是否可嵌入OFD文件包。 如果设置为false,则字体文件仅在生成OFD文档的过程中被引用，不会包包含到OFD文件内。
      * 默认值为true。
+     *
      * @param embeddable true-嵌入，false-不嵌入
      * @return this
      */
