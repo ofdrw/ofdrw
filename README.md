@@ -123,14 +123,23 @@ HTML5前端预览解决方案：
 - 基于cairo库渲染OFD。
 - Windows客户端阅读器
 
-#### 图片转换
+#### 转换
 
-> 目前已经被合并到`ofdrw-converter` 模块
+***HTML转换****
+
+**ofd2html**：[NullYing/ofd2html-python . https://github.com/NullYing/ofd2html-python](https://github.com/NullYing/ofd2html-python)
+
+- Python实现的OFD转换HTML
+
+
+***图片转换***
 
 推荐开源OFD图片转换解决方案： [QAQtutu/ofdbox . https://github.com/QAQtutu/ofdbox](https://github.com/QAQtutu/ofdbox)
 
 - 支持OFD解析。
 - 基于java.awt解析OFD实现图片绘制。
+
+> 目前已经被合并到`ofdrw-converter` 模块
 
 #### 阅读器
 
@@ -152,24 +161,6 @@ mvn install
 就可以完成项目的构建打包，安装到本地Maven仓库中。
 
 ## 社区交流
-
-***Share and Communicate***
-
-<p align="center">
-  <img width="150" height="150" src="./img/comm.png">
-</p>
-为方便社区建设与交流，提供社区QQ群： 
-
-
-- 05群号： **762837395**
-- 04群号： **690642037**（满）
-- 03群号： **717320255**（满）
-- 02群号： **745517934**（满）
-- 01群号： **577682453**（满）
-
-<p align="center">
-  <img  width="375" height="672" src="./img/QQLink.jpg">
-</p>
 
 
 > - 若您遇到与OFD相关的技术问题，欢迎进群交流!
