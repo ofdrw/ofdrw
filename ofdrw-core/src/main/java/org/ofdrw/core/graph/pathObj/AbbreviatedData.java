@@ -60,6 +60,10 @@ public class AbbreviatedData extends OFDElement implements Cloneable, Iterator<O
         String opt = null;
         List<String> values = new LinkedList<>();
         for (String s : arr) {
+            if (s.isEmpty()) {
+                // 跳过split产生的空字符串（如前导空格导致的""）
+                continue;
+            }
             switch (s) {
                 case "S":
                 case "M":
@@ -71,9 +75,8 @@ public class AbbreviatedData extends OFDElement implements Cloneable, Iterator<O
                 case "CM":
                     if (opt != null) {
                         res.add(new OptVal(opt, values));
-                        values.clear();
-                        opt = null;
                     }
+                    values = new LinkedList<>();
                     opt = s;
                     break;
                 default:
