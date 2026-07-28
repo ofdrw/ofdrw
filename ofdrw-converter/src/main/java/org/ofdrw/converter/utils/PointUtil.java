@@ -160,6 +160,12 @@ public class PointUtil {
         return new double[]{ctmX, ctmY};
     }
 
+    private static double[] ctmCalTextVector(double deltaX, double deltaY, Double[] ctm) {
+        double ctmX = deltaX * ctm[0] + deltaY * ctm[2];
+        double ctmY = deltaX * ctm[1] + deltaY * ctm[3];
+        return new double[]{ctmX, ctmY};
+    }
+
     public static List<PathPoint> calPdfPathPoint(double width, double height, ST_Box boundary, List<PathPoint> abbreviatedPoint, boolean hasCtm, ST_Array ctm, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM, boolean fixOriginToPdf) {
     	return calPdfPathPoint(width, height, boundary, abbreviatedPoint, hasCtm, ctm, compositeObjectBoundary, compositeObjectCTM, fixOriginToPdf, 1.0);
     }
@@ -260,15 +266,18 @@ public class PointUtil {
     }
 
     public static List<TextCodePoint> calPdfTextCoordinate(double width, double height, ST_Box boundary, float fontSize, List<TextCode> textCodes, boolean hasCtm, ST_Array ctm, boolean fixOriginToPdf, double scale) {
-        double x = 0, y = 0;
         List<TextCodePoint> textCodePointList = new ArrayList<>();
+        Double[] textCtm = hasCtm && ctm != null ? ctm.toDouble() : null;
         for (TextCode textCode : textCodes) {
-            x = textCode.getX() == null ? 0 : textCode.getX();
-            y = textCode.getY() == null ? 0 : textCode.getY();
-            if (hasCtm) {
-                double[] newPoint = ctmCalPoint(x, y, ctm.toDouble());
-                x = newPoint[0];
-                y = newPoint[1];
+            double localX = textCode.getX() == null ? 0 : textCode.getX();
+            double localY = textCode.getY() == null ? 0 : textCode.getY();
+            double transformedX = localX;
+            double transformedY = localY;
+            if (textCtm != null) {
+                // The TextCode origin is a point, so the CTM translation is applied once here.
+                double[] transformedPoint = ctmCalPoint(localX, localY, textCtm);
+                transformedX = transformedPoint[0];
+                transformedY = transformedPoint[1];
             }
             List<Float> deltaXList = null;
             List<Float> deltaYList = null;
@@ -289,52 +298,22 @@ public class PointUtil {
             textStr = textStr.replaceAll("&copy;", "");
             textStr = textStr.replaceAll("&apos;", "'");
             for (int i = 0; i < textStr.length(); i++) {
-                float decent = 0;
-
-//                if (textCode.getY() > 0) {
-//                    decent = fontSize - textCode.getY().floatValue();
-//                }
-                if (i > 0 && Objects.nonNull(deltaXList)) {
-                    if (hasCtm) {
-                        Double[] ctms = ctm.toDouble();
-                        double a = ctms[0].doubleValue();
-                        double b = ctms[1].doubleValue();
-                        double c = ctms[2].doubleValue();
-                        double d = ctms[3].doubleValue();
-                        double e = ctms[4].doubleValue();
-                        double f = ctms[5].doubleValue();
-                        double angel = Math.atan2(-b, d);
-                        if (angel == 0) {
-                            double[] newPoint = ctmCalPoint(deltaXList.get(i - 1), 0, ctm.toDouble());
-                            x += newPoint[0];
-                        } else {
-                            x += deltaXList.get(i - 1);
-                        }
+                if (i > 0) {
+                    double deltaX = Objects.nonNull(deltaXList) ? deltaXList.get(i - 1) : 0;
+                    double deltaY = Objects.nonNull(deltaYList) ? deltaYList.get(i - 1) : 0;
+                    localX += deltaX;
+                    localY += deltaY;
+                    if (textCtm != null) {
+                        // DeltaX and DeltaY form one vector and must not include CTM translation.
+                        double[] transformedDelta = ctmCalTextVector(deltaX, deltaY, textCtm);
+                        transformedX += transformedDelta[0];
+                        transformedY += transformedDelta[1];
                     } else {
-                        x += deltaXList.get(i - 1);
+                        transformedX = localX;
+                        transformedY = localY;
                     }
                 }
-                if (i > 0 && Objects.nonNull(deltaYList)) {
-                    if (hasCtm) {
-                        Double[] ctms = ctm.toDouble();
-                        double a = ctms[0].doubleValue();
-                        double b = ctms[1].doubleValue();
-                        double c = ctms[2].doubleValue();
-                        double d = ctms[3].doubleValue();
-                        double e = ctms[4].doubleValue();
-                        double f = ctms[5].doubleValue();
-                        double angel = Math.atan2(-b, d);
-                        if (angel == 0) {
-                            double[] newPoint = ctmCalPoint(0, deltaYList.get(i - 1), ctm.toDouble());
-                            y += newPoint[1];
-                        } else {
-                            y += deltaYList.get(i - 1);
-                        }
-                    } else {
-                        y += deltaYList.get(i - 1);
-                    }
-                }
-                double[] realPos = adjustPos(width, height, x * scale, y * scale, boundary);
+                double[] realPos = adjustPos(width, height, transformedX * scale, transformedY * scale, boundary);
                 String text = textStr.substring(i, i + 1);
                 TextCodePoint textCodePoint = new TextCodePoint(converterDpi(realPos[0]), converterDpi(fixOriginToPdf ? (height - realPos[1]) : realPos[1]), text);
                 textCodePointList.add(textCodePoint);

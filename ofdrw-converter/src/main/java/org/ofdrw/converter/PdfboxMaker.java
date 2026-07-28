@@ -67,7 +67,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -840,20 +839,6 @@ public class PdfboxMaker {
                     textObject.getBoundary().getWidth(),
                     textObject.getBoundary().getHeight());
         }
-        if (textObject.getCTM() != null) {
-            Double[] ctm = textObject.getCTM().toDouble();
-            double a = ctm[0];
-            double b = ctm[1];
-            double c = ctm[2];
-            double d = ctm[3];
-            double sx = a > 0 ? Math.signum(a) * Math.sqrt(a * a + c * c) : Math.sqrt(a * a + c * c);
-            double sy = Math.signum(d) * Math.sqrt(b * b + d * d);
-            double angel = Math.atan2(-b, d);
-            if (!(angel == 0 && a != 0 && d == 1)) {
-                fontSize = (float) (fontSize * sx);
-            }
-        }
-
         PDColor fillColor = defaultFontColor;
         CT_DrawParam ctDrawParam = resMgt.superDrawParam(textObject);
         if (ctDrawParam != null) {
@@ -870,46 +855,11 @@ public class PdfboxMaker {
         PDFont font = getFont(ctFont);
 
         List<TextCodePoint> textCodePointList = PointUtil.calPdfTextCoordinate(box.getWidth(), box.getHeight(), textObject.getBoundary(), fontSize, textObject.getTextCodes(), textObject.getCTM() != null, textObject.getCTM(), true, scale);
-        double rx = 0, ry = 0;
-        for (int i = 0; i < textCodePointList.size(); i++) {
-            TextCodePoint textCodePoint = textCodePointList.get(i);
-            if (i == 0) {
-                rx = textCodePoint.x;
-                ry = textCodePoint.y;
-            }
+        for (TextCodePoint textCodePoint : textCodePointList) {
             contentStream.saveGraphicsState();
             contentStream.beginText();
             contentStream.setNonStrokingColor(fillColor);
-            contentStream.newLineAtOffset((float) (textCodePoint.getX()), (float) (textCodePoint.getY()));
-            if (textObject.getCTM() != null) {
-                Double[] ctm = textObject.getCTM().toDouble();
-                double a = ctm[0];
-                double b = ctm[1];
-                double c = ctm[2];
-                double d = ctm[3];
-                AffineTransform transform = new AffineTransform();
-                double angel = Math.atan2(-b, d);
-                transform.rotate(angel, rx, ry);
-                contentStream.concatenate2CTM(transform);
-                if (angel == 0 && a != 0 && d == 1) {
-                    textObject.setHScale(a);
-                }
-            }
-            if (textObject.getHScale().floatValue() < 1) {
-                AffineTransform transform = new AffineTransform();
-                transform.setTransform(textObject.getHScale().floatValue(), 0, 0, 1, (1 - textObject.getHScale().floatValue()) * textCodePoint.getX(), 0);
-                contentStream.concatenate2CTM(transform);
-            }
-
-            //设置字符方向
-            if (textObject.getCharDirection() == Angle_90) {
-                contentStream.setTextMatrix(new Matrix(0, -1, 1, 0, (float) textCodePoint.getX(), (float) textCodePoint.getY()));
-            } else if (textObject.getCharDirection() == Angle_180) {
-                contentStream.setTextMatrix(new Matrix(-1, 0, 0, -1, (float) textCodePoint.getX(), (float) textCodePoint.getY()));
-            } else if (textObject.getCharDirection() == Angle_270) {
-                contentStream.setTextMatrix(new Matrix(0, 1, -1, 0, (float) textCodePoint.getX(), (float) textCodePoint.getY()));
-            }
-
+            contentStream.setTextMatrix(textMatrix(textObject, textCodePoint));
             contentStream.setFont(font, (float) converterDpi(fontSize));
             try {
                 contentStream.showText(textCodePoint.getText());
@@ -920,6 +870,49 @@ public class PdfboxMaker {
             contentStream.restoreGraphicsState();
         }
 
+    }
+
+    private Matrix textMatrix(TextObject textObject, TextCodePoint textCodePoint) {
+        double a = 1;
+        double b = 0;
+        double c = 0;
+        double d = 1;
+        if (textObject.getCTM() != null) {
+            Double[] ctm = textObject.getCTM().toDouble();
+            // Character positions already contain the complete CTM. Tm only needs its linear
+            // part, converted from OFD's downward Y axis to PDF text space's upward Y axis.
+            a = ctm[0];
+            b = -ctm[1];
+            c = -ctm[2];
+            d = ctm[3];
+        }
+
+        double charA = 1;
+        double charB = 0;
+        double charC = 0;
+        double charD = 1;
+        if (textObject.getCharDirection() == Angle_90) {
+            charA = 0;
+            charB = -1;
+            charC = 1;
+            charD = 0;
+        } else if (textObject.getCharDirection() == Angle_180) {
+            charA = -1;
+            charD = -1;
+        } else if (textObject.getCharDirection() == Angle_270) {
+            charA = 0;
+            charB = 1;
+            charC = -1;
+            charD = 0;
+        }
+
+        double hScale = textObject.getHScale();
+        double matrixA = (a * charA + c * charB) * hScale;
+        double matrixB = (b * charA + d * charB) * hScale;
+        double matrixC = a * charC + c * charD;
+        double matrixD = b * charC + d * charD;
+        return new Matrix((float) matrixA, (float) matrixB, (float) matrixC, (float) matrixD,
+                (float) textCodePoint.getX(), (float) textCodePoint.getY());
     }
 
     /**
