@@ -154,6 +154,27 @@ public class PointUtil {
         return new double[]{realX, realY};
     }
 
+    /**
+     * 将子图元的外接矩形转换到父图元坐标系。
+     *
+     * @param parentBoundary 父图元外接矩形
+     * @param childBoundary  子图元在父图元坐标系中的外接矩形
+     * @return 子图元在页面坐标系中的外接矩形
+     */
+    public static ST_Box combineBoundary(ST_Box parentBoundary, ST_Box childBoundary) {
+        if (parentBoundary == null) {
+            return childBoundary;
+        }
+        if (childBoundary == null) {
+            return parentBoundary;
+        }
+        return new ST_Box(
+                parentBoundary.getTopLeftX() + childBoundary.getTopLeftX(),
+                parentBoundary.getTopLeftY() + childBoundary.getTopLeftY(),
+                childBoundary.getWidth(),
+                childBoundary.getHeight());
+    }
+
     public static double[] ctmCalPoint(double x, double y, Double[] ctm) {
         double ctmX = x * ctm[0] + y * ctm[2] + 1 * ctm[4];
         double ctmY = x * ctm[1] + y * ctm[3] + 1 * ctm[5];
