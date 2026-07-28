@@ -484,23 +484,16 @@ public class PdfboxMaker {
             contentStream.setStrokingColor(defaultStrokeColor);
         }
 
+        boolean legacyAbsolutePath = sealBox == null && annotBox == null && compositeObjectBoundary == null
+                && PointUtil.isLegacyAbsolutePath(box.getWidth(), box.getHeight(), pathObject.getBoundary(),
+                PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()),
+                pathObject.getCTM() != null, pathObject.getCTM());
         float lineWidth = defaultLineWidth;
         if (pathObject.getLineWidth() != null && pathObject.getLineWidth() > 0) {
-            lineWidth = Double.valueOf(converterDpi(pathObject.getLineWidth()) * scale).floatValue();
+            lineWidth = (float) PointUtil.calPdfPathLineWidth(pathObject.getLineWidth(), scale,
+                    legacyAbsolutePath, pathObject.getCTM());
         }
         contentStream.setLineWidth(lineWidth);
-        if (pathObject.getCTM() != null && pathObject.getLineWidth() != null) {
-            Double[] ctm = pathObject.getCTM().toDouble();
-            double a = ctm[0];
-            double b = ctm[1];
-            double c = ctm[2];
-            double d = ctm[3];
-            double e = ctm[4];
-            double f = ctm[5];
-            double sx = Math.signum(a) * Math.sqrt(a * a + c * c);
-            double sy = Math.signum(d) * Math.sqrt(b * b + d * d);
-            lineWidth = (float) (lineWidth * sx);
-        }
         if (pathObject.getStroke()) {
             if (compositeObjectAlpha != null) {
                 PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
@@ -517,9 +510,6 @@ public class PdfboxMaker {
             contentStream.setLineCapStyle(pathObject.getCap().ordinal());
             contentStream.setMiterLimit(pathObject.getMiterLimit().floatValue());
             path(contentStream, box, sealBox, annotBox, pathObject, compositeObjectBoundary, compositeObjectCTM);
-            if (pathObject.getLineWidth() != null && pathObject.getLineWidth() > 0) {
-                contentStream.setLineWidth((float) converterDpi(pathObject.getLineWidth()));
-            }
             PDShading shading = parseShading(strokeColor, box, pathObject);
             if (shading != null) {
                 contentStream.clip();

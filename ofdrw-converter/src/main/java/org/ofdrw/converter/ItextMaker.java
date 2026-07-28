@@ -505,21 +505,14 @@ public class ItextMaker {
             pdfCanvas.setStrokeColor(defaultStrokeColor);
         }
 
+        boolean legacyAbsolutePath = sealBox == null && annotBox == null && compositeObjectBoundary == null
+                && PointUtil.isLegacyAbsolutePath(box.getWidth(), box.getHeight(), pathObject.getBoundary(),
+                PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData()),
+                pathObject.getCTM() != null, pathObject.getCTM());
         float lineWidth = defaultLineWidth;
         if (pathObject.getLineWidth() != null && pathObject.getLineWidth() > 0) {
-            lineWidth = Double.valueOf(converterDpi(pathObject.getLineWidth()) * scale).floatValue();
-        }
-        if (pathObject.getCTM() != null && pathObject.getLineWidth() != null) {
-            Double[] ctm = pathObject.getCTM().toDouble();
-            double a = ctm[0];
-            double b = ctm[1];
-            double c = ctm[2];
-            double d = ctm[3];
-            double e = ctm[4];
-            double f = ctm[5];
-            double sx = Math.signum(a) * Math.sqrt(a * a + c * c);
-            double sy = Math.signum(d) * Math.sqrt(b * b + d * d);
-            lineWidth = (float) (lineWidth * sx);
+            lineWidth = (float) PointUtil.calPdfPathLineWidth(pathObject.getLineWidth(), scale,
+                    legacyAbsolutePath, pathObject.getCTM());
         }
         pdfCanvas.setLineWidth(lineWidth);
         if (pathObject.getStroke()) {
