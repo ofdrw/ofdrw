@@ -85,6 +85,9 @@ import static org.ofdrw.core.text.text.Direction.*;
  */
 public class ItextMaker {
 
+    // 与 AWT 渲染保持一致，避免倾斜或描边字形超出紧边界时被裁切。
+    private static final double TEXT_CLIP_MARGIN = 1d;
+
     private Map<String, FontWrapper<PdfFont>> fontCache = new HashMap<>();
 
     private final OFDReader ofdReader;
@@ -910,11 +913,7 @@ public class ItextMaker {
 
         // 创建矩形对象, 指定文字绘制区域
         ST_Box boundary = textObject.getBoundary();
-        Rectangle rectangle = new Rectangle(
-                (float) converterDpi(boundary.getTopLeftX()),
-                (float) converterDpi(box.getHeight() - boundary.getTopLeftY() - boundary.getHeight()),
-                (float) converterDpi(boundary.getWidth()),
-                (float) converterDpi(boundary.getHeight()));
+        Rectangle rectangle = textClipRectangle(box, boundary);
 
         double rx = 0, ry = 0;
         for (int i = 0; i < textCodePointList.size(); i++) {
@@ -1032,6 +1031,15 @@ public class ItextMaker {
             pdfCanvas.endText();
             pdfCanvas.restoreState();
         }
+    }
+
+    static Rectangle textClipRectangle(ST_Box pageBox, ST_Box boundary) {
+        return new Rectangle(
+                (float) converterDpi(boundary.getTopLeftX() - TEXT_CLIP_MARGIN),
+                (float) converterDpi(pageBox.getHeight() - boundary.getTopLeftY()
+                        - boundary.getHeight() - TEXT_CLIP_MARGIN),
+                (float) converterDpi(boundary.getWidth() + TEXT_CLIP_MARGIN * 2),
+                (float) converterDpi(boundary.getHeight() + TEXT_CLIP_MARGIN * 2));
     }
 
     /**
