@@ -720,18 +720,15 @@ public class ItextMaker {
         }
         pdfCanvas.saveState();
 
-        // 设置图片混合模式为 Multiply（正片叠底），防止图片遮挡文字
-        // 参考 AWTMaker 使用 AlphaComposite.SRC_ATOP 的效果
-        PdfExtGState extGState = new PdfExtGState();
-        extGState.setBlendMode(PdfExtGState.BM_MULTIPLY);
-
-        // 处理图片透明度
+        // OFD image objects use normal source-over compositing. Applying Multiply
+        // changes opaque white pixels into transparent-looking pixels and exposes
+        // content that should have been covered by the image.
         Integer alpha = imageObject.getAlpha();
         if (alpha != null && alpha < 255) {
+            PdfExtGState extGState = new PdfExtGState();
             extGState.setFillOpacity(alpha * 1.0f / 255);
+            pdfCanvas.setExtGState(extGState);
         }
-
-        pdfCanvas.setExtGState(extGState);
 
         ImageData image = ImageDataFactory.create(imageByteArray);
         if (annotBox != null && !isSameBox(annotBox, imageObject.getBoundary())) {
