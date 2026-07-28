@@ -872,7 +872,7 @@ public class PdfboxMaker {
 
     }
 
-    private Matrix textMatrix(TextObject textObject, TextCodePoint textCodePoint) {
+    static Matrix textMatrix(TextObject textObject, TextCodePoint textCodePoint) {
         double a = 1;
         double b = 0;
         double c = 0;
