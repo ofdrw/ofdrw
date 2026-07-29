@@ -1,6 +1,7 @@
 package org.ofdrw.archive.convert;
 
 import org.ofdrw.archive.convert.handler.*;
+import org.ofdrw.crypto.decryptor.UserFEKDecryptor;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.ZipUtil;
@@ -44,10 +45,18 @@ public class OFDArchiveConverter {
     private final List<ArchiveHandler> handlers;
 
     /**
+     * 门禁解密处理器引用
+     * <p>
+     * 用于通过 {@link #addDecryptor(UserFEKDecryptor)} 便捷配置解密密钥
+     */
+    private final EncryptionHandler encryptionHandler;
+
+    /**
      * 创建转换器，加载默认处理器管道
      */
     public OFDArchiveConverter() {
-        this(loadDefaultHandlers());
+        this.encryptionHandler = new EncryptionHandler();
+        this.handlers = loadDefaultHandlers(this.encryptionHandler);
     }
 
     /**
@@ -57,6 +66,42 @@ public class OFDArchiveConverter {
      */
     public OFDArchiveConverter(List<ArchiveHandler> handlers) {
         this.handlers = new ArrayList<>(handlers);
+        // 从列表中查找 EncryptionHandler 引用（若有）
+        EncryptionHandler found = null;
+        for (ArchiveHandler h : handlers) {
+            if (h instanceof EncryptionHandler) {
+                found = (EncryptionHandler) h;
+                break;
+            }
+        }
+        this.encryptionHandler = found;
+    }
+
+    /**
+     * 添加解密器
+     * <p>
+     * 便捷方法，用于配置加密 OFD 文件的解密密钥。
+     * 仅当 OFD 文件已加密时需要调用；明文 OFD 无需设置。
+     * <p>
+     * 使用示例：
+     * <pre>{@code
+     *     OFDArchiveConverter converter = new OFDArchiveConverter();
+     *     converter.addDecryptor(new UserPasswordDecryptor("张三", "12345678"));
+     *     converter.convert(src, dst);
+     * }</pre>
+     *
+     * @param decryptor FEK 解密器
+     * @return this
+     * @throws IllegalStateException 使用自定义处理器列表且其中无 EncryptionHandler 时
+     */
+    public OFDArchiveConverter addDecryptor(UserFEKDecryptor decryptor) {
+        if (encryptionHandler == null) {
+            throw new IllegalStateException(
+                    "自定义处理器列表中无 EncryptionHandler，无法添加解密器。"
+                    + "请在列表中包含 EncryptionHandler 实例并使用其 addDecryptor 方法。");
+        }
+        encryptionHandler.addDecryptor(decryptor);
+        return this;
     }
 
     /**
@@ -232,11 +277,11 @@ public class OFDArchiveConverter {
      *
      * @return 默认处理器列表
      */
-    private static List<ArchiveHandler> loadDefaultHandlers() {
+    private static List<ArchiveHandler> loadDefaultHandlers(EncryptionHandler encHandler) {
         List<ArchiveHandler> handlers = new ArrayList<>();
 
         // 0. 门禁（最先执行，加密不解密则中断）
-        handlers.add(new EncryptionHandler());
+        handlers.add(encHandler);
 
         // 1. 结构变更
         handlers.add(new SingleDocHandler());

@@ -35,15 +35,7 @@ converter.convert(Paths.get("input.ofd"), Paths.get("output.ofd"));
 
 ```java
 OFDArchiveConverter converter = new OFDArchiveConverter();
-EncryptionHandler encHandler = new EncryptionHandler();
-encHandler.addDecryptor(new UserPasswordDecryptor("admin", "password123"));
-
-converter = new OFDArchiveConverter(Arrays.asList(
-    encHandler,
-    new SingleDocHandler(),
-    new DocTypeHandler(),
-    // ... 其他处理器
-));
+converter.addDecryptor(new UserPasswordDecryptor("admin", "password123"));
 converter.convert(Paths.get("encrypted.ofd"), Paths.get("output.ofd"));
 ```
 
