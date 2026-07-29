@@ -660,12 +660,15 @@ public class PdfboxMaker {
         List<CT_Clip> clips = pathObject.getClips().getClips();
         for (int k = 0; k < clips.size(); k++) {
             CT_Clip clip = clips.get(k);
-            contentStream.clip();
+            boolean hasPath = false;
             for (Area area : clip.getAreas()) {
                 Element elePath = area.getOFDElement("Path");
+                if (elePath == null) {
+                    continue;
+                }
                 CT_Path path = new CT_Path(elePath);
                 List<PathPoint> points = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(),
-                        pathObject.getBoundary(),
+                        PointUtil.combineBoundary(pathObject.getBoundary(), path.getBoundary()),
                         PointUtil.convertPathAbbreviatedDatatoPoint(path.getAbbreviatedData()), area.getCTM() != null,
                         area.getCTM(), null, null, true, 1.0);
                 for (int i = 0; i < points.size(); i++) {
@@ -682,9 +685,12 @@ public class PdfboxMaker {
                     } else if (pathPoint.type.equals("C")) {
                         contentStream.closePath();
                     }
-                }   
+                }
+                hasPath = true;
             }
-            contentStream.clip();
+            if (hasPath) {
+                contentStream.clip();
+            }
         }
     }
 
@@ -756,18 +762,15 @@ public class PdfboxMaker {
         }
         contentStream.saveGraphicsState();
 
-        // 设置图片混合模式为 Multiply（正片叠底），防止图片遮挡文字
-        // 参考 AWTMaker 使用 AlphaComposite.SRC_ATOP 的效果
-        PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-        graphicsState.setBlendMode(org.apache.pdfbox.pdmodel.graphics.blend.BlendMode.MULTIPLY);
-
-        // 处理图片透明度
+        // OFD image objects use normal source-over compositing. Applying Multiply
+        // changes opaque white pixels into transparent-looking pixels and exposes
+        // content that should have been covered by the image.
         Integer alpha = imageObject.getAlpha();
         if (alpha != null && alpha < 255) {
+            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
             graphicsState.setNonStrokingAlphaConstant(alpha * 1.0f / 255);
+            contentStream.setGraphicsStateParameters(graphicsState);
         }
-
-        contentStream.setGraphicsStateParameters(graphicsState);
 
         // 根据图片格式决定图片使用哪种创建方式
         PDImageXObject pdfImageObject;

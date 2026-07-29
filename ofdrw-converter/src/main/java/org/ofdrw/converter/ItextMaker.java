@@ -629,14 +629,17 @@ public class ItextMaker {
         List<CT_Clip> clips = pathObject.getClips().getClips();
         for (int k = 0; k < clips.size(); k++) {
             CT_Clip clip = clips.get(k);
+            boolean hasPath = false;
             for (Area area : clip.getAreas()) {
                 Element elePath = area.getOFDElement("Path");
+                if (elePath == null) {
+                    continue;
+                }
                 CT_Path path = new CT_Path(elePath);
                 List<PathPoint> points = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(),
-                        pathObject.getBoundary(),
+                        PointUtil.combineBoundary(pathObject.getBoundary(), path.getBoundary()),
                         PointUtil.convertPathAbbreviatedDatatoPoint(path.getAbbreviatedData()), area.getCTM() != null,
                         area.getCTM(), null, null, true, 1.0);
-                pdfCanvas.clip();
                 for (int i = 0; i < points.size(); i++) {
                     PathPoint pathPoint = points.get(i);
                     if (pathPoint.type.equals("M") || pathPoint.type.equals("S")) {
@@ -652,6 +655,10 @@ public class ItextMaker {
                         pdfCanvas.closePath();
                     }
                 }
+                hasPath = true;
+            }
+            if (hasPath) {
+                pdfCanvas.clip();
                 pdfCanvas.endPath();
             }
         }
@@ -720,18 +727,15 @@ public class ItextMaker {
         }
         pdfCanvas.saveState();
 
-        // 设置图片混合模式为 Multiply（正片叠底），防止图片遮挡文字
-        // 参考 AWTMaker 使用 AlphaComposite.SRC_ATOP 的效果
-        PdfExtGState extGState = new PdfExtGState();
-        extGState.setBlendMode(PdfExtGState.BM_MULTIPLY);
-
-        // 处理图片透明度
+        // OFD image objects use normal source-over compositing. Applying Multiply
+        // changes opaque white pixels into transparent-looking pixels and exposes
+        // content that should have been covered by the image.
         Integer alpha = imageObject.getAlpha();
         if (alpha != null && alpha < 255) {
+            PdfExtGState extGState = new PdfExtGState();
             extGState.setFillOpacity(alpha * 1.0f / 255);
+            pdfCanvas.setExtGState(extGState);
         }
-
-        pdfCanvas.setExtGState(extGState);
 
         ImageData image = ImageDataFactory.create(imageByteArray);
         if (annotBox != null && !isSameBox(annotBox, imageObject.getBoundary())) {
