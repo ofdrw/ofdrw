@@ -26,7 +26,13 @@
             <artifactId>ofdrw-crypto</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- 测试 -->
+        <!-- 测试用：生成测试 OFD 文件 -->
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-layout</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
