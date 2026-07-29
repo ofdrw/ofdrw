@@ -270,6 +270,12 @@ public class OFDArchiveConverter {
         // 8. 注释处理
         handlers.add(new AnnotationHandler());
 
+        // 9. 签名/签章去技术化
+        handlers.add(new SignatureHandler());
+
+        // 10. 附件处理
+        handlers.add(new AttachmentHandler());
+
         return handlers;
     }
 }

@@ -141,6 +141,12 @@ public class OFDArchiveChecker {
         // 注释规则 (6.10)
         rules.add(new AnnotationRule());          // 注释合规
 
+        // 签名/签章规则 (6.13)
+        rules.add(new SignatureRule());           // 签名去技术化
+
+        // 附件规则 (6.15)
+        rules.add(new AttachmentRule());          // 附件合规
+
         // 内容规则 (6.5-6.6)
         rules.add(new ImageInterpolateRule());    // 17: 图像插值
         rules.add(new TextSizeRule());            // 23: 文字Size
