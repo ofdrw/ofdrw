@@ -257,9 +257,13 @@ public class OFDArchiveConverter {
         // 5. 资源处理
         handlers.add(new AudioVideoHandler());
         handlers.add(new ImageExtensionHandler());
+        handlers.add(new ResourcePlacementHandler());
+        handlers.add(new ImageResourceRegHandler());
 
         // 6. 内容处理
         handlers.add(new PageBlockFlattenHandler());
+        handlers.add(new ClipAreaHandler());
+        handlers.add(new ImageConvertHandler());
         handlers.add(new LayerNameHandler());
         handlers.add(new ImageInterpolateHandler());
 
