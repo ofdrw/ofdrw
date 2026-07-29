@@ -254,7 +254,7 @@ converter.convert(Paths.get("encrypted.ofd"), Paths.get("output.ofd"));
 
 | 条款 | 约束内容 | 方式 | 检查 | 转换 | 实现类 |
 |------|---------|------|:--:|:--:|--------|
-| 6.16 | 不使用任何加密选项，归档前解密为明文 | 检查+转换(门禁) | ✅ | ✅ | `EncryptionRule` / `EncryptionHandler` |
+| 6.16 | 不使用任何加密选项，归档前解密为明文 | 文件解密 | ✅ | ✅ | `EncryptionRule` / `EncryptionHandler` |
 
 ### 7.1 生成软件
 
@@ -285,7 +285,7 @@ ofdrw-archive/
 ### 处理器编排顺序
 
 ```
- 0. EncryptionHandler          ← 门禁（最先，失败中断）
+ 0. EncryptionHandler          ← 文件解密（最先，失败中断）
  1. SingleDocHandler           ← 结构变更
  2. DocTypeHandler
  3. ExternalResourceHandler

@@ -45,7 +45,7 @@ public class OFDArchiveConverter {
     private final List<ArchiveHandler> handlers;
 
     /**
-     * 门禁解密处理器引用
+     * 文件解密处理器引用
      * <p>
      * 用于通过 {@link #addDecryptor(UserFEKDecryptor)} 便捷配置解密密钥
      */
@@ -267,7 +267,7 @@ public class OFDArchiveConverter {
      * <p>
      * 处理器按编排顺序执行：
      * <ol>
-     *   <li>门禁：加密解密在最前</li>
+     *   <li>文件解密：加密解密在最前</li>
      *   <li>结构变更：单文档处理</li>
      *   <li>元数据：DocType / 权限 / 视图首选项 / 扩展</li>
      *   <li>动作：文档动作 / 大纲动作</li>
@@ -280,7 +280,7 @@ public class OFDArchiveConverter {
     private static List<ArchiveHandler> loadDefaultHandlers(EncryptionHandler encHandler) {
         List<ArchiveHandler> handlers = new ArrayList<>();
 
-        // 0. 门禁（最先执行，加密不解密则中断）
+        // 0. 文件解密（最先执行，加密不解密则中断）
         handlers.add(encHandler);
 
         // 1. 结构变更
