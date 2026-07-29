@@ -629,14 +629,17 @@ public class ItextMaker {
         List<CT_Clip> clips = pathObject.getClips().getClips();
         for (int k = 0; k < clips.size(); k++) {
             CT_Clip clip = clips.get(k);
+            boolean hasPath = false;
             for (Area area : clip.getAreas()) {
                 Element elePath = area.getOFDElement("Path");
+                if (elePath == null) {
+                    continue;
+                }
                 CT_Path path = new CT_Path(elePath);
                 List<PathPoint> points = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(),
-                        pathObject.getBoundary(),
+                        PointUtil.combineBoundary(pathObject.getBoundary(), path.getBoundary()),
                         PointUtil.convertPathAbbreviatedDatatoPoint(path.getAbbreviatedData()), area.getCTM() != null,
                         area.getCTM(), null, null, true, 1.0);
-                pdfCanvas.clip();
                 for (int i = 0; i < points.size(); i++) {
                     PathPoint pathPoint = points.get(i);
                     if (pathPoint.type.equals("M") || pathPoint.type.equals("S")) {
@@ -652,6 +655,10 @@ public class ItextMaker {
                         pdfCanvas.closePath();
                     }
                 }
+                hasPath = true;
+            }
+            if (hasPath) {
+                pdfCanvas.clip();
                 pdfCanvas.endPath();
             }
         }

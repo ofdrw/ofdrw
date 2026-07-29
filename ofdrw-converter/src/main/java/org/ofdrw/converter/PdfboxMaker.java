@@ -661,12 +661,15 @@ public class PdfboxMaker {
         List<CT_Clip> clips = pathObject.getClips().getClips();
         for (int k = 0; k < clips.size(); k++) {
             CT_Clip clip = clips.get(k);
-            contentStream.clip();
+            boolean hasPath = false;
             for (Area area : clip.getAreas()) {
                 Element elePath = area.getOFDElement("Path");
+                if (elePath == null) {
+                    continue;
+                }
                 CT_Path path = new CT_Path(elePath);
                 List<PathPoint> points = PointUtil.calPdfPathPoint(box.getWidth(), box.getHeight(),
-                        pathObject.getBoundary(),
+                        PointUtil.combineBoundary(pathObject.getBoundary(), path.getBoundary()),
                         PointUtil.convertPathAbbreviatedDatatoPoint(path.getAbbreviatedData()), area.getCTM() != null,
                         area.getCTM(), null, null, true, 1.0);
                 for (int i = 0; i < points.size(); i++) {
@@ -683,9 +686,12 @@ public class PdfboxMaker {
                     } else if (pathPoint.type.equals("C")) {
                         contentStream.closePath();
                     }
-                }   
+                }
+                hasPath = true;
             }
-            contentStream.clip();
+            if (hasPath) {
+                contentStream.clip();
+            }
         }
     }
 
