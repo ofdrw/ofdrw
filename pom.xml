@@ -30,6 +30,7 @@
         <module>ofdrw-crypto</module>
         <module>ofdrw-tool</module>
         <module>ofdrw-graphics2d</module>
+        <module>ofdrw-archive</module>
     </modules>
 
     <developers>
