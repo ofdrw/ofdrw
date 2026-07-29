@@ -267,6 +267,9 @@ public class OFDArchiveConverter {
         handlers.add(new CleanStrokeAttrHandler());
         handlers.add(new CleanFillAttrHandler());
 
+        // 8. 注释处理
+        handlers.add(new AnnotationHandler());
+
         return handlers;
     }
 }

@@ -129,10 +129,17 @@ public class OFDArchiveChecker {
         rules.add(new FontSubsetRule());          // 11: 字体嵌入检查
         rules.add(new AudioVideoRule());          // 12: 禁止音视频
         rules.add(new ImageExtensionRule());      // 13: 禁止图像扩展
+        rules.add(new ResourcePlacementRule());   // 18: 资源位置检查
+        rules.add(new ImageResourceRegRule());    // 19: 图像注册检查
+        rules.add(new ColorProfileRule());        // 24: 颜色配置建议
+        rules.add(new TextHScaleRule());          // 25: HScale检查
 
         // 页面内容规则 (6.3)
         rules.add(new PageBlockDepthRule());      // 14: PageBlock嵌套
         rules.add(new ClipAreaRule());            // 15: 裁剪区检查
+
+        // 注释规则 (6.10)
+        rules.add(new AnnotationRule());          // 注释合规
 
         // 内容规则 (6.5-6.6)
         rules.add(new ImageInterpolateRule());    // 17: 图像插值
