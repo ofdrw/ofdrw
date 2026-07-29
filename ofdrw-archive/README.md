@@ -99,6 +99,7 @@ convert(srcPath, dstPath):
 13. ImageInterpolateHandler
 14. CleanStrokeAttrHandler
 15. CleanFillAttrHandler
+16. AnnotationHandler
 ```
 
 ## 规则清单
@@ -126,6 +127,11 @@ convert(srcPath, dstPath):
 | 19 | CLEAN_FILL_ATTR | 6.3.3d/e | ❌ | ✅ | 图像/复合对象清理 |
 | 20 | LAYER_NAME | 6.2.3d | 待完善 | ✅ | 图层名唯一化 |
 | 21 | TEXT_SIZE | 6.6c | ✅ WARN | ❌ | Size 属性检查 |
+| 22 | ANNOTATION | 6.10.1 | ✅ WARN | ✅ | ReadOnly/NoZoom/NoRotate, 去嵌套 |
+| 23 | RESOURCE_PLACEMENT | 6.2.6a | 框架 | 框架 | 资源位置验证 |
+| 24 | IMAGE_RESOURCE_REG | 6.5a | 框架 | 框架 | 多页图像注册优化 |
+| 25 | COLOR_PROFILE | 6.3.1c | ✅ INFO | ❌ | ICC Profile 建议 |
+| 26 | TEXT_HSCALE | 6.6d | ✅ WARN | ❌ | 横向缩放 HScale |
 
 ## 依赖模块
 
