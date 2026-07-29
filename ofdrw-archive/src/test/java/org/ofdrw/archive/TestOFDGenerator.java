@@ -27,6 +27,7 @@ import org.ofdrw.pkg.container.OFDDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * 测试 OFD 文件生成器
@@ -39,7 +40,7 @@ import java.nio.file.Path;
 public class TestOFDGenerator {
 
     /** 测试资源输出目录 */
-    public static final Path TEST_RESOURCES = Path.of("src/test/resources");
+    public static final Path TEST_RESOURCES = Paths.get("src/test/resources");
 
     /**
      * 生成标准合规的 OFD 文件（DocType="OFD"）
