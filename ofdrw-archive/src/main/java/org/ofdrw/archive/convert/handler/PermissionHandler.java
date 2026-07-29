@@ -12,7 +12,7 @@ import java.io.IOException;
 /**
  * 处理器 4：删除权限声明（GB/T 42133-2022 6.2.2a）
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class PermissionHandler implements ArchiveHandler {

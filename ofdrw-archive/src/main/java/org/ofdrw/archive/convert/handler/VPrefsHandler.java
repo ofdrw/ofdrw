@@ -12,7 +12,7 @@ import java.io.IOException;
 /**
  * 处理器 5：删除视图首选项（GB/T 42133-2022 6.2.2b）
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class VPrefsHandler implements ArchiveHandler {

@@ -19,7 +19,7 @@ import java.util.List;
  * <p>
  * CTM 矩阵格式: [a b c d e f]，纯横向缩放对应 b=0, c=0, d=1。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class TextHScaleRule implements ArchiveRule {

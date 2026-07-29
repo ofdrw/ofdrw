@@ -25,7 +25,7 @@ import java.nio.charset.StandardCharsets;
  * KDF 遵循 GB/T 32918.3-2016 5.4.3 密钥派生函数。
  * 对应加密器：{@link org.ofdrw.crypto.enryptor.UserPasswordEncryptor}
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class UserPasswordDecryptor implements UserFEKDecryptor {

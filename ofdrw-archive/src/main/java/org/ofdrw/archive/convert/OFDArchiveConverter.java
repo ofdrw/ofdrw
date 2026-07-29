@@ -31,7 +31,7 @@ import java.util.*;
  *     converter.convert(Paths.get("input.ofd"), Paths.get("output.ofd"));
  * }</pre>
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class OFDArchiveConverter {

@@ -21,7 +21,7 @@ import java.util.List;
  * 从 OFD.xml 中移除多余的 DocBody 节点，删除对应的 Doc_N 目录。
  * 不进行文档合并，只保留第一个文档体。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class SingleDocHandler implements ArchiveHandler {

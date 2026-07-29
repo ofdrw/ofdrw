@@ -22,7 +22,7 @@ import java.util.*;
  * 将不在允许列表中的图像格式转为 PNG，更新 MultiMedia 的 Format 和 MediaFile 引用。
  * 允许的格式：BMP/JPEG/PNG/JBIG2/JPEG2000/TIFF。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ImageConvertHandler implements ArchiveHandler {

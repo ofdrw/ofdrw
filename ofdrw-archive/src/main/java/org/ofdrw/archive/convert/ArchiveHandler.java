@@ -14,7 +14,7 @@ import java.io.IOException;
  * <p>
  * 实现类命名格式: XxxHandler，与对应的检查规则（XxxRule）对应。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 @FunctionalInterface

@@ -20,7 +20,7 @@ import java.util.*;
  * 遍历所有页面统计每个图像 ResourceID 的引用次数。
  * 若某图像被 ≥2 页面引用但注册在 PageRes → WARN。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ImageResourceRegRule implements ArchiveRule {

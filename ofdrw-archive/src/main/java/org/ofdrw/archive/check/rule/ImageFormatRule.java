@@ -20,7 +20,7 @@ import java.util.*;
  * <p>
  * 使用文件魔数检测实际格式，不信任 Format 属性。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ImageFormatRule implements ArchiveRule {

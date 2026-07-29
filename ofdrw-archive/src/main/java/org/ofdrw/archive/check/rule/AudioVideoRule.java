@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * 规则 12：禁止音频视频资源（GB/T 42133-2022 6.2.6g）
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class AudioVideoRule implements ArchiveRule {

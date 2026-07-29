@@ -16,7 +16,7 @@ import java.util.List;
  * <p>
  * 检查 TextObject 是否设置了 Size 属性。仅警告，不做转换。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class TextSizeRule implements ArchiveRule {

@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *   <li>异常场景：错误口令、无匹配解密器</li>
  * </ul>
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 class OFDDecryptorTest {

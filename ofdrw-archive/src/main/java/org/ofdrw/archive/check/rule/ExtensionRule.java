@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * 规则 8：去除扩展信息（GB/T 42133-2022 6.2.2e）
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ExtensionRule implements ArchiveRule {

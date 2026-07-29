@@ -15,7 +15,7 @@ import org.dom4j.DocumentException;
  * <p>
  * 将 OFD.xml 根节点的 DocType 属性修改为 "OFD-A"。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class DocTypeHandler implements ArchiveHandler {

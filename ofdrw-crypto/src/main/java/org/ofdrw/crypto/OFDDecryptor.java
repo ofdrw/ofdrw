@@ -50,7 +50,7 @@ import java.util.List;
  * 支持多重加密（Encryptions.xml 包含多个 CT_EncryptInfo），
  * 需为每个加密层提供对应的解密器。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class OFDDecryptor implements Closeable {

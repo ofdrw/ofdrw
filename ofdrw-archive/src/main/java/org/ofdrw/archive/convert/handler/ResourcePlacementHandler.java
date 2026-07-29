@@ -29,7 +29,7 @@ import java.util.List;
  * <p>
  * 注意：移动资源时需要同步更新所有引用该资源的位置。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ResourcePlacementHandler implements ArchiveHandler {

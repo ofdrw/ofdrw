@@ -13,7 +13,7 @@ import java.util.*;
  * <p>
  * 同一页面中重复的 Layer Name 后追加序列号。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class LayerNameHandler implements ArchiveHandler {

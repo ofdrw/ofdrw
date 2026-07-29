@@ -17,7 +17,7 @@ import java.util.List;
  * <p>
  * 仅 INFO 级别提示，不做转换。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ColorProfileRule implements ArchiveRule {

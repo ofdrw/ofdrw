@@ -19,7 +19,7 @@ import java.util.List;
  * 只检查，不做转换。OFDColorSpaceType 枚举本身只定义了 GRAY/RGB/CMYK，
  * 非法类型在解析时就会抛出异常。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ColorSpaceRule implements ArchiveRule {

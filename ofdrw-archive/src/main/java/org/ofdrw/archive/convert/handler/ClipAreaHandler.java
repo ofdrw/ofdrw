@@ -20,7 +20,7 @@ import java.util.List;
  *   <li>裁剪区面积为 0（宽或高 ≤ 0）→ 删除裁剪区 + 设置所在对象 Visible=false</li>
  * </ul>
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ClipAreaHandler implements ArchiveHandler {

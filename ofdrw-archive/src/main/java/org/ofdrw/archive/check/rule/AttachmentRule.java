@@ -17,7 +17,7 @@ import java.util.List;
  * OFD-A 中附件应仅保留文本格式（TXT/XML）或已归档的技术文档。
  * 其他类型附件应移出并保留摘要。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class AttachmentRule implements ArchiveRule {

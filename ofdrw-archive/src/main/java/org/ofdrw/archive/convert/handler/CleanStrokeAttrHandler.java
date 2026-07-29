@@ -16,7 +16,7 @@ import java.util.List;
  * TextObject/PathObject 的 Stroke=false 时删除配合的修饰属性；
  * CompositeObject 总是删除勾边/填充相关属性。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class CleanStrokeAttrHandler implements ArchiveHandler {

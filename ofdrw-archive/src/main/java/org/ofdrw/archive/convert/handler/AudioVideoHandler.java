@@ -21,7 +21,7 @@ import java.util.List;
  * 遍历所有 MultiMedia，删除 Audio/Video 类型条目及其物理文件，
  * 以 CT_Attachment 形式保留摘要信息（文件名、格式）。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class AudioVideoHandler implements ArchiveHandler {

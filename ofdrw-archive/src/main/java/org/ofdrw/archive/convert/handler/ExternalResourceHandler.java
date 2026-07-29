@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  *   <li>包外文件路径 → 删除引用</li>
  * </ul>
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ExternalResourceHandler implements ArchiveHandler {

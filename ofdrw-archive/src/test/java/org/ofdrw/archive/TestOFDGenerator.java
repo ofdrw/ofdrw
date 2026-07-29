@@ -33,7 +33,7 @@ import java.nio.file.Path;
  * <p>
  * 生成各种特征的 OFD 文件用于测试检查规则和转换处理器。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class TestOFDGenerator {

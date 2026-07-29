@@ -15,7 +15,7 @@ import org.ofdrw.core.crypto.encryt.UserInfo;
  * 通过 {@link #encryptCaseId()} 和 {@link #getUsername()} 匹配对应的解密器，
  * 调用 {@link #decrypt(UserInfo)} 恢复 FEK 和 IV。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public interface UserFEKDecryptor {

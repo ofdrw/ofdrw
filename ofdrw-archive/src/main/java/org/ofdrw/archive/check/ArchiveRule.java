@@ -14,7 +14,7 @@ import java.util.List;
  * <p>
  * 实现类命名格式: XxxRule，与对应的处理器（XxxHandler）对应。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 @FunctionalInterface

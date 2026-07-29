@@ -21,7 +21,7 @@ import java.util.List;
  *   <li>Page 级：遍历页面/图元对象 Actions，GotoA→Link注释，非Goto删除</li>
  * </ul>
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class NonGotoActionHandler implements ArchiveHandler {

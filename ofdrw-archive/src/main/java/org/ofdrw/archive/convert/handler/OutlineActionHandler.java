@@ -9,7 +9,7 @@ import java.io.IOException;
 /**
  * 处理器 7：清理大纲动作（GB/T 42133-2022 6.2.5a/b）
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class OutlineActionHandler implements ArchiveHandler {

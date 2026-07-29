@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * 规则 7：大纲节点动作检查（GB/T 42133-2022 6.2.5a/b）
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class OutlineActionRule implements ArchiveRule {

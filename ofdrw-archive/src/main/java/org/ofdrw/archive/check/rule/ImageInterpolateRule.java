@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * 规则 17：图像对象插值绘制必须为 false（GB/T 42133-2022 6.5b）
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ImageInterpolateRule implements ArchiveRule {

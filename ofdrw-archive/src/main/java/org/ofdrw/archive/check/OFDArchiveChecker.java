@@ -29,7 +29,7 @@ import java.util.List;
  *     }
  * }</pre>
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class OFDArchiveChecker {

@@ -21,7 +21,7 @@ import java.util.List;
  * <p>
  * 检查 Image 类型的 MultiMedia 中是否包含非标准 OFD 命名空间的子元素。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ImageExtensionRule implements ArchiveRule {

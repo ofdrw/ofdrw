@@ -23,7 +23,7 @@ import java.util.List;
  * ColorSpace/Font 应在 PublicRes 中（不能在 PageRes）
  * Image/VectorG/DrawParam 应在 DocumentRes 或 PageRes（不能在 PublicRes）
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ResourcePlacementRule implements ArchiveRule {

@@ -13,7 +13,7 @@ import java.io.IOException;
  * 将多个页面共同引用的栅格图像从 PageRes 移至 DocumentRes，
  * 减少重复嵌入，优化存储。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ImageResourceRegHandler implements ArchiveHandler {

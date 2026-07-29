@@ -24,7 +24,7 @@ import java.util.List;
  *   <li>Appearance 中存在 PageBlock 嵌套 → WARN</li>
  * </ul>
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class AnnotationRule implements ArchiveRule {

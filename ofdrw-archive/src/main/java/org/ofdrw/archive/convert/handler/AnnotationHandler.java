@@ -25,7 +25,7 @@ import java.util.List;
  * 关于 6.10.2 归档后注释：管理部门添加的注释（归档章/页码等）应与原有注释分文件存储。
  * 本处理器仅处理归档前已存在的注释，归档后的注释由生成软件负责写入独立文件。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class AnnotationHandler implements ArchiveHandler {

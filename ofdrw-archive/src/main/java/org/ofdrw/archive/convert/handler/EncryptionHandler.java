@@ -23,7 +23,7 @@ import java.util.List;
  * <p>
  * 解密过程：打包当前 workDir → OFDDecryptor 解密 → 解压回 workDir。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class EncryptionHandler implements ArchiveHandler {

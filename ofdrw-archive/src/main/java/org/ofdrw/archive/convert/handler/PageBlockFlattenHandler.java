@@ -14,7 +14,7 @@ import java.util.List;
  * <p>
  * 将嵌套深度超过 3 的 PageBlock 子元素提升到父级，保持 Z 序。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class PageBlockFlattenHandler implements ArchiveHandler {

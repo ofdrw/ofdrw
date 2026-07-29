@@ -5,7 +5,7 @@ package org.ofdrw.crypto.decryptor;
  * <p>
  * FEK 和 IV 均为 16 字节，用于 SM4-CBC 模式解密包内文件。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class DecryptResult {

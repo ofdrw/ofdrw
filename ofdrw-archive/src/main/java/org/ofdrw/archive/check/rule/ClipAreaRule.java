@@ -16,7 +16,7 @@ import java.util.List;
  * <p>
  * 检查裁剪区是否冗余（Boundary 包含被裁剪对象）或无效（面积为 0）。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ClipAreaRule implements ArchiveRule {

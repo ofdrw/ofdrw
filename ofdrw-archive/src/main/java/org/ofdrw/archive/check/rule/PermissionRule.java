@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * 规则 4：去除权限声明（GB/T 42133-2022 6.2.2a）
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class PermissionRule implements ArchiveRule {

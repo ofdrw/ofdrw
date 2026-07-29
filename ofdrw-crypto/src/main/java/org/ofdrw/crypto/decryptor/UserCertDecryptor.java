@@ -19,7 +19,7 @@ import java.io.IOException;
  * <p>
  * 加密时使用公钥加密 FEK，解密时使用对应的私钥解密。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class UserCertDecryptor implements UserFEKDecryptor {

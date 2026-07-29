@@ -32,7 +32,7 @@ import java.util.List;
  *   <li>从 Signatures.xml 移除签章记录→删除对应 Sign_N 目录</li>
  * </ul>
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class SignatureHandler implements ArchiveHandler {

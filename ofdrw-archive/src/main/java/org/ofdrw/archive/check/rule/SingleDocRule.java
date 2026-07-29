@@ -19,7 +19,7 @@ import org.dom4j.DocumentException;
  * <p>
  * 检查 OFD.xml 中是否存在多个 DocBody。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class SingleDocRule implements ArchiveRule {

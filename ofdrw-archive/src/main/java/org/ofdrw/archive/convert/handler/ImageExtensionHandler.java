@@ -19,7 +19,7 @@ import java.util.List;
  * <p>
  * 遍历所有 Image 类型的 MultiMedia，删除非标准 OFD 命名空间的子元素。
  *
- * @author xxx
+ * @author 权观宇
  * @since 2.3.9
  */
 public class ImageExtensionHandler implements ArchiveHandler {
