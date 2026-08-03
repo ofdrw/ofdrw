@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>ofdrw</artifactId>
+        <groupId>org.ofdrw</groupId>
+        <version>2.3.9</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>ofdrw-archive</artifactId>
+    <name>OFDRW Archive</name>
+    <description>OFD-A 档案长期保存模块，依据 GB/T 42133-2022 实现对 OFD 文件的合规检查和去技术化转换。</description>
+
+    <dependencies>
+        <!-- OFD 读取 -->
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-reader</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- 解密能力（Phase 0 新增） -->
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-crypto</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- 测试用：生成测试 OFD 文件 -->
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-layout</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+    </dependencies>
+</project>

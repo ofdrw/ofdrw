@@ -24,7 +24,7 @@ public class OFD extends OFDElement {
 
     /**
      * 【必选】
-     * 文件格式子集类型，取值为“OFD”，表明此文件符合本标准。
+     * 文件格式子集类型，取值为"OFD"，表明此文件符合本标准。
      */
     public static final String DOC_TYPE = "OFD";
 
@@ -86,12 +86,39 @@ public class OFD extends OFDElement {
     }
 
     /**
-     * 【必选 属性】文件格式子集类型，取值为“OFD”，表明此文件符合本标准。
+     * 【必选 属性】
+     * 获取 文件格式子集类型
+     * <p>
+     * 返回文档中 DocType 属性的实际值：
+     * <ul>
+     *   <li>标准 OFD 文件返回 "OFD"</li>
+     *   <li>符合 GB/T 42133-2022 的长期保存文件返回 "OFD-A"</li>
+     *   <li>属性缺失时返回 null</li>
+     * </ul>
      *
-     * @return OFD
+     * @return DocType 属性值，缺省时为 null
      */
     public String getDocType() {
-        return DOC_TYPE;
+        return this.attributeValue("DocType");
+    }
+
+    /**
+     * 【必选 属性】
+     * 设置 文件格式子集类型
+     * <p>
+     * 标准 OFD 文件取值为 "OFD"（默认），
+     * 符合 GB/T 42133-2022 的长期保存文件取值为 "OFD-A"。
+     *
+     * @param docType 文件格式子集类型，不能为空
+     * @return this
+     * @throws IllegalArgumentException docType 为 null 或空字符串
+     */
+    public OFD setDocType(String docType) {
+        if (docType == null || docType.isEmpty()) {
+            throw new IllegalArgumentException("DocType 不能为空");
+        }
+        this.addAttribute("DocType", docType);
+        return this;
     }
 
     /**

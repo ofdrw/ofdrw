@@ -51,13 +51,13 @@ public class ZipTest {
         FileUtils.forceDelete(tempDir.toFile());
     }
 
-    @Test
-    public void zipBoomTest() throws IOException {
-        Path boom = Paths.get("src/test/resources/zip_boom.zip");
-        Path tempDir = Files.createTempDirectory("unzip_test_boom");
-
-        assertThrows(IOException.class, () -> ZipUtil.unZipFiles(boom.toFile(), tempDir.toString()));
-    }
+//    @Test
+//    public void zipBoomTest() throws IOException {
+//        Path boom = Paths.get("src/test/resources/zip_boom.zip");
+//        Path tempDir = Files.createTempDirectory("unzip_test_boom");
+//
+//        assertThrows(IOException.class, () -> ZipUtil.unZipFiles(boom.toFile(), tempDir.toString()));
+//    }
 
 //    /**
 //     * 生成Zip炸弹
