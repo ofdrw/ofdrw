@@ -88,9 +88,6 @@ public class OptVal implements Cloneable {
         if (arr.length < num) {
             return Arrays.copyOf(arr, num);
         }
-        if (arr.length > num) {
-            return Arrays.copyOf(arr, num);
-        }
         return arr;
     }
 
