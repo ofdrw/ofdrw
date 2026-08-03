@@ -31,7 +31,8 @@ OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、
 - [**ofrw-crypto**](./ofdrw-crypto) 用于实现《GM/T 0099-2020 开放版式文档密码应用技术规范》对OFD的密码相关功能。
 - [**ofdrw-gv**](./ofdrw-gv) OFDRW 所有模块所共用的全局变量。
 - [**ofdrw-converter**](./ofdrw-converter) OFD文档转换。
-- [**ofdrw-tool**](./ofdrw-tool) OFD文档工具，文档合并、裁剪、重组、混合。***New***
+- [**ofdrw-tool**](./ofdrw-tool) OFD文档工具，文档合并、裁剪、重组、混合。
+- [**ofdrw-archive**](./ofdrw-archive) OFD-A 档案模块，依据 GB/T 42133-2022 实现 OFD 文件的合规检查和去技术化转换。***New***
 - [**ofdrw-graphics2d**](./ofdrw-graphics2d) 实现了AWT Graphics2D接口，生成OFD文档内容。
 - [**ofdrw-full**](./ofdrw-full) 上述所有模块整合包，用于简化依赖引入。
 
@@ -100,6 +101,7 @@ public class HelloWorld {
 - [OFD R&W 内容生成 事件处理](./ofdrw-layout/doc/onpage/README.md)
 - [OFD R&W 附件操作](./ofdrw-layout/doc/attachment/README.md)
 - [OFD R&W 添加水印](./ofdrw-layout/doc/watermark/README.md)
+- [OFD R&W OFD-A 档案模块](./ofdrw-archive/README.md)
 
 ### 相关解决方案
 
@@ -162,9 +164,8 @@ mvn install
 
 ## 社区交流
 
-
-> - 若您遇到与OFD相关的技术问题，欢迎进群交流!
-> - 若您对项目有建设性意见或方案欢迎提交**Issue**与**Pull Request**。
+- 若您遇到与OFD相关的技术问题，欢迎进群交流!
+- 若您对项目有建设性意见或方案欢迎提交**Issue**与**Pull Request**。
 
 ## 参与贡献
 
