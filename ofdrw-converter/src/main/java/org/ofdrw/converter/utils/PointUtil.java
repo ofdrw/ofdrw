@@ -28,6 +28,12 @@ public class PointUtil {
     private final static Logger logger = LoggerFactory.getLogger(PointUtil.class);
 
     /**
+     * Early Foxit OFD files store path coordinates in a 300 DPI device space.
+     */
+    private static final double LEGACY_PATH_DPI = 300d;
+    private static final double LEGACY_PATH_MM_SCALE = 25.4d / LEGACY_PATH_DPI;
+
+    /**
      * 解析压缩路径为点坐标
      *
      * @param abbreviatedData 压缩路径
@@ -187,24 +193,152 @@ public class PointUtil {
         return new double[]{ctmX, ctmY};
     }
 
+    /**
+     * Detects the absolute 300 DPI path coordinates used by pre-standard Foxit OFD files.
+     * Their declared CTM places the complete path outside its Boundary, while interpreting
+     * the raw coordinates as 300 DPI device coordinates places it inside the Boundary.
+     */
+    public static boolean isLegacyAbsolutePath(double width, double height, ST_Box boundary,
+                                               List<PathPoint> points, boolean hasCtm, ST_Array ctm) {
+        if (boundary == null || !hasCtm || ctm == null || points == null || points.isEmpty()) {
+            return false;
+        }
+
+        PathBounds raw = pathBounds(points, null, 1d);
+        if (raw == null || (raw.maxAbsX() <= width * 2 && raw.maxAbsY() <= height * 2)) {
+            return false;
+        }
+
+        PathBounds standard = pathBounds(points, ctm.toDouble(), 1d);
+        if (standard != null && standard.intersects(0, 0, boundary.getWidth(), boundary.getHeight())) {
+            return false;
+        }
+
+        PathBounds legacy = pathBounds(points, null, LEGACY_PATH_MM_SCALE);
+        double tolerance = Math.max(0.5d, Math.max(boundary.getWidth(), boundary.getHeight()) * 0.1d);
+        return legacy != null && legacy.inside(
+                boundary.getTopLeftX() - tolerance,
+                boundary.getTopLeftY() - tolerance,
+                boundary.getTopLeftX() + boundary.getWidth() + tolerance,
+                boundary.getTopLeftY() + boundary.getHeight() + tolerance);
+    }
+
+    /**
+     * Converts an OFD path line width to PDF points.
+     */
+    public static double calPdfPathLineWidth(double lineWidth, double scale,
+                                             boolean legacyAbsolutePath, ST_Array ctm) {
+        if (legacyAbsolutePath) {
+            // The legacy Foxit value is already expressed in PDF user units (points).
+            return lineWidth * scale;
+        }
+        double result = converterDpi(lineWidth) * scale;
+        if (ctm != null) {
+            Double[] values = ctm.toDouble();
+            double sx = Math.signum(values[0])
+                    * Math.sqrt(values[0] * values[0] + values[2] * values[2]);
+            result *= sx;
+        }
+        return result;
+    }
+
+    private static PathBounds pathBounds(List<PathPoint> points, Double[] ctm, double scale) {
+        PathBounds bounds = new PathBounds();
+        for (PathPoint point : points) {
+            switch (point.type) {
+                case "M":
+                case "L":
+                case "S":
+                    bounds.add(point.x1, point.y1, ctm, scale);
+                    break;
+                case "B":
+                    bounds.add(point.x1, point.y1, ctm, scale);
+                    bounds.add(point.x2, point.y2, ctm, scale);
+                    bounds.add(point.x3, point.y3, ctm, scale);
+                    break;
+                case "Q":
+                    bounds.add(point.x1, point.y1, ctm, scale);
+                    bounds.add(point.x2, point.y2, ctm, scale);
+                    break;
+                case "A":
+                    bounds.add(point.x, point.y, ctm, scale);
+                    break;
+                default:
+                    break;
+            }
+        }
+        return bounds.empty ? null : bounds;
+    }
+
+    private static class PathBounds {
+        private boolean empty = true;
+        private double minX;
+        private double minY;
+        private double maxX;
+        private double maxY;
+
+        private void add(double x, double y, Double[] ctm, double scale) {
+            if (ctm != null) {
+                double[] transformed = ctmCalPoint(x, y, ctm);
+                x = transformed[0];
+                y = transformed[1];
+            }
+            x *= scale;
+            y *= scale;
+            if (empty) {
+                minX = maxX = x;
+                minY = maxY = y;
+                empty = false;
+                return;
+            }
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        }
+
+        private double maxAbsX() {
+            return Math.max(Math.abs(minX), Math.abs(maxX));
+        }
+
+        private double maxAbsY() {
+            return Math.max(Math.abs(minY), Math.abs(maxY));
+        }
+
+        private boolean intersects(double left, double top, double right, double bottom) {
+            return maxX >= left && minX <= right && maxY >= top && minY <= bottom;
+        }
+
+        private boolean inside(double left, double top, double right, double bottom) {
+            return minX >= left && maxX <= right && minY >= top && maxY <= bottom;
+        }
+    }
+
     public static List<PathPoint> calPdfPathPoint(double width, double height, ST_Box boundary, List<PathPoint> abbreviatedPoint, boolean hasCtm, ST_Array ctm, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM, boolean fixOriginToPdf) {
     	return calPdfPathPoint(width, height, boundary, abbreviatedPoint, hasCtm, ctm, compositeObjectBoundary, compositeObjectCTM, fixOriginToPdf, 1.0);
     }
     
     public static List<PathPoint> calPdfPathPoint(double width, double height, ST_Box boundary, List<PathPoint> abbreviatedPoint, boolean hasCtm, ST_Array ctm, ST_Box compositeObjectBoundary, ST_Array compositeObjectCTM, boolean fixOriginToPdf, double scale) {
         List<PathPoint> pointList = new ArrayList<>();
+        boolean legacyAbsolutePath = scale == 1d && compositeObjectBoundary == null
+                && isLegacyAbsolutePath(width, height, boundary, abbreviatedPoint, hasCtm, ctm);
         for (PathPoint point : abbreviatedPoint) {
             if (point.type.equals("M") || point.type.equals("L") || point.type.equals("C") || point.type.equals("S")) {
                 double x = 0, y = 0;
                 x = point.x1;
                 y = point.y1;
 
-                if (hasCtm) {
+                if (legacyAbsolutePath) {
+                    x *= LEGACY_PATH_MM_SCALE;
+                    y *= LEGACY_PATH_MM_SCALE;
+                } else if (hasCtm) {
                     double[] newPoint = ctmCalPoint(x, y, ctm.toDouble());
                     x = newPoint[0];
                     y = newPoint[1];
                 }
-                double[] realPos = adjustPos(width, height, x * scale, y * scale, boundary);
+                double[] realPos = legacyAbsolutePath
+                        ? new double[]{x, y}
+                        : adjustPos(width, height, x * scale, y * scale, boundary);
                 point.x1 = (float) converterDpi(realPos[0]);
                 point.y1 = (float) converterDpi(fixOriginToPdf ? (height - realPos[1]) : realPos[1]);
                 if (compositeObjectBoundary != null) {
@@ -220,7 +354,14 @@ public class PointUtil {
                 double x1 = point.x1, y1 = point.y1;
                 double x2 = point.x2, y2 = point.y2;
                 double x3 = point.x3, y3 = point.y3;
-                if (hasCtm) {
+                if (legacyAbsolutePath) {
+                    x1 *= LEGACY_PATH_MM_SCALE;
+                    y1 *= LEGACY_PATH_MM_SCALE;
+                    x2 *= LEGACY_PATH_MM_SCALE;
+                    y2 *= LEGACY_PATH_MM_SCALE;
+                    x3 *= LEGACY_PATH_MM_SCALE;
+                    y3 *= LEGACY_PATH_MM_SCALE;
+                } else if (hasCtm) {
                     double[] newPoint = ctmCalPoint(x1, y1, ctm.toDouble());
                     x1 = newPoint[0];
                     y1 = newPoint[1];
@@ -231,13 +372,19 @@ public class PointUtil {
                     x3 = newPoint[0];
                     y3 = newPoint[1];
                 }
-                double[] realPos = adjustPos(width, height, x1 * scale, y1 * scale, boundary);
+                double[] realPos = legacyAbsolutePath
+                        ? new double[]{x1, y1}
+                        : adjustPos(width, height, x1 * scale, y1 * scale, boundary);
                 x1 = realPos[0];
                 y1 = realPos[1];
-                realPos = adjustPos(width, height, x2 * scale, y2 * scale, boundary);
+                realPos = legacyAbsolutePath
+                        ? new double[]{x2, y2}
+                        : adjustPos(width, height, x2 * scale, y2 * scale, boundary);
                 x2 = realPos[0];
                 y2 = realPos[1];
-                realPos = adjustPos(width, height, x3 * scale, y3 * scale, boundary);
+                realPos = legacyAbsolutePath
+                        ? new double[]{x3, y3}
+                        : adjustPos(width, height, x3 * scale, y3 * scale, boundary);
                 x3 = realPos[0];
                 y3 = realPos[1];
                 PathPoint realPoint = new PathPoint("B", (float) converterDpi(x1), (float) converterDpi(fixOriginToPdf ? (height - y1) : y1),
@@ -247,7 +394,12 @@ public class PointUtil {
             } else if (point.type.equals("Q")) {
                 double x1 = point.x1, y1 = point.y1;
                 double x2 = point.x2, y2 = point.y2;
-                if (hasCtm) {
+                if (legacyAbsolutePath) {
+                    x1 *= LEGACY_PATH_MM_SCALE;
+                    y1 *= LEGACY_PATH_MM_SCALE;
+                    x2 *= LEGACY_PATH_MM_SCALE;
+                    y2 *= LEGACY_PATH_MM_SCALE;
+                } else if (hasCtm) {
                     double[] newPoint = ctmCalPoint(x1, y1, ctm.toDouble());
                     x1 = newPoint[0];
                     y1 = newPoint[1];
@@ -255,10 +407,14 @@ public class PointUtil {
                     x2 = newPoint[0];
                     y2 = newPoint[1];
                 }
-                double[] realPos = adjustPos(width, height, x1 * scale, y1 * scale, boundary);
+                double[] realPos = legacyAbsolutePath
+                        ? new double[]{x1, y1}
+                        : adjustPos(width, height, x1 * scale, y1 * scale, boundary);
                 x1 = realPos[0];
                 y1 = realPos[1];
-                realPos = adjustPos(width, height, x2 * scale, y2 * scale, boundary);
+                realPos = legacyAbsolutePath
+                        ? new double[]{x2, y2}
+                        : adjustPos(width, height, x2 * scale, y2 * scale, boundary);
                 x2 = realPos[0];
                 y2 = realPos[1];
                 PathPoint realPoint = new PathPoint("Q", (float) converterDpi(x1), (float) converterDpi(fixOriginToPdf ? (height - y1) : y1),
@@ -269,12 +425,19 @@ public class PointUtil {
                 double rx = point.rx, ry = point.ry;
                 float rotation = point.rotation, arc = point.arc, sweep = point.sweep;
                 double x = point.x, y = point.y;
-                if (hasCtm) {
+                if (legacyAbsolutePath) {
+                    rx *= LEGACY_PATH_MM_SCALE;
+                    ry *= LEGACY_PATH_MM_SCALE;
+                    x *= LEGACY_PATH_MM_SCALE;
+                    y *= LEGACY_PATH_MM_SCALE;
+                } else if (hasCtm) {
                     double[] newPoint = ctmCalPoint(x, y, ctm.toDouble());
                     x = newPoint[0];
                     y = newPoint[1];
                 }
-                double[] realPos = adjustPos(width, height, x * scale, y * scale, boundary);
+                double[] realPos = legacyAbsolutePath
+                        ? new double[]{x, y}
+                        : adjustPos(width, height, x * scale, y * scale, boundary);
                 x = realPos[0];
                 y = realPos[1];
                 PathPoint realPoint = new PathPoint("A", (float) converterDpi(rx), (float) converterDpi(ry),
