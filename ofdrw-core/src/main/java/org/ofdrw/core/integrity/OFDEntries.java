@@ -1,8 +1,6 @@
 package org.ofdrw.core.integrity;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.ofdrw.core.Const;
 import org.ofdrw.core.OFDElement;
 import org.ofdrw.core.basicType.ST_Loc;
@@ -73,7 +71,6 @@ public class OFDEntries extends OFDElement {
      *
      * @return 创建者名称，为null表示删除
      */
-    @Nullable
     public String getCreatorName() {
         return this.attributeValue("CreatorName");
     }
@@ -100,7 +97,6 @@ public class OFDEntries extends OFDElement {
      *
      * @return 模块版本
      */
-    @Nullable
     public String getVersion() {
         return this.attributeValue("Version");
     }
@@ -127,7 +123,6 @@ public class OFDEntries extends OFDElement {
      *
      * @return creationDate 创建时间
      */
-    @Nullable
     public LocalDateTime getCreationDate() {
         String str = this.attributeValue("CreationDate");
         if (str == null || str.trim().length() == 0) {
@@ -146,7 +141,7 @@ public class OFDEntries extends OFDElement {
      * @param signedValueLoc 针对防夹带文件所在文件形成的签名值
      * @return this
      */
-    public OFDEntries setSignedValueLoc(@NotNull ST_Loc signedValueLoc) {
+    public OFDEntries setSignedValueLoc(ST_Loc signedValueLoc) {
         if (signedValueLoc == null) {
             throw new IllegalArgumentException("防夹带文件形成的签名值(signedValueLoc)为空");
         }
@@ -162,7 +157,6 @@ public class OFDEntries extends OFDElement {
      *
      * @return 针对防夹带文件所在文件形成的签名值
      */
-    @NotNull
     public ST_Loc getSignedValueLoc() {
         Element e = this.getOFDElement("SignedValueLoc");
         if (e == null) {
@@ -178,7 +172,7 @@ public class OFDEntries extends OFDElement {
      * @param fileList 防止夹带文件列表
      * @return this
      */
-    public OFDEntries setFileList(@NotNull FileList fileList) {
+    public OFDEntries setFileList(FileList fileList) {
         if (fileList == null) {
             throw new IllegalArgumentException("防止夹带文件列表(FileList)为空");
         }
@@ -192,7 +186,6 @@ public class OFDEntries extends OFDElement {
      *
      * @return 防止夹带文件列表
      */
-    @NotNull
     public FileList getFileList() {
         final Element e = this.getOFDElement("FileList");
         if (e == null) {

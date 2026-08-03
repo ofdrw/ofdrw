@@ -1,8 +1,6 @@
 package org.ofdrw.crypto.decryptor;
 
 import org.bouncycastle.crypto.CryptoException;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.ofdrw.core.crypto.encryt.UserInfo;
 
 /**
@@ -33,7 +31,7 @@ public interface UserFEKDecryptor {
      * @return 解密结果，包含 FEK 和 IV（均为16字节）
      * @throws CryptoException 解密过程异常（如密钥不匹配、口令错误）
      */
-    DecryptResult decrypt(@NotNull UserInfo userInfo) throws CryptoException;
+    DecryptResult decrypt(UserInfo userInfo) throws CryptoException;
 
     /**
      * 加密保护方案标识
@@ -48,7 +46,7 @@ public interface UserFEKDecryptor {
      *
      * @return 加密保护方案标识
      */
-    @NotNull String encryptCaseId();
+    String encryptCaseId();
 
     /**
      * 目标用户名
@@ -58,5 +56,5 @@ public interface UserFEKDecryptor {
      *
      * @return 目标用户名，可为 null
      */
-    @Nullable String getUsername();
+    String getUsername();
 }

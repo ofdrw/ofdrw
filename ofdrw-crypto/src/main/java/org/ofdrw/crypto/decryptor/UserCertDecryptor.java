@@ -3,8 +3,6 @@ package org.ofdrw.crypto.decryptor;
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.engines.SM2Engine;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.ofdrw.core.crypto.ProtectionCaseID;
 import org.ofdrw.core.crypto.encryt.UserInfo;
 import org.ofdrw.gm.sm2strut.SM2Cipher;
@@ -43,7 +41,7 @@ public class UserCertDecryptor implements UserFEKDecryptor {
      * @param privateKey SM2 私钥（用于解密 FEK）
      * @throws IllegalArgumentException 私钥为空
      */
-    public UserCertDecryptor(@Nullable String username, @NotNull ECPrivateKeyParameters privateKey) {
+    public UserCertDecryptor(String username, ECPrivateKeyParameters privateKey) {
         if (privateKey == null) {
             throw new IllegalArgumentException("SM2私钥(privateKey)不能为空");
         }
@@ -56,7 +54,7 @@ public class UserCertDecryptor implements UserFEKDecryptor {
      *
      * @param privateKey SM2 私钥
      */
-    public UserCertDecryptor(@NotNull ECPrivateKeyParameters privateKey) {
+    public UserCertDecryptor(ECPrivateKeyParameters privateKey) {
         this(null, privateKey);
     }
 
@@ -70,7 +68,7 @@ public class UserCertDecryptor implements UserFEKDecryptor {
      * @throws CryptoException 解密失败（密钥不匹配或数据损坏）
      */
     @Override
-    public DecryptResult decrypt(@NotNull UserInfo userInfo) throws CryptoException {
+    public DecryptResult decrypt(UserInfo userInfo) throws CryptoException {
         byte[] encryptedWK = userInfo.getEncryptedWK();
         byte[] iv = userInfo.getIVValue();
 
@@ -95,13 +93,11 @@ public class UserCertDecryptor implements UserFEKDecryptor {
     }
 
     @Override
-    @NotNull
     public String encryptCaseId() {
         return ProtectionCaseID.EncryptGMCert.getId();
     }
 
     @Override
-    @Nullable
     public String getUsername() {
         return username;
     }

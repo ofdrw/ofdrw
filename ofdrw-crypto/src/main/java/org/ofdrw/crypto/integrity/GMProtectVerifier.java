@@ -1,6 +1,5 @@
 package org.ofdrw.crypto.integrity;
 
-import org.jetbrains.annotations.NotNull;
 import org.ofdrw.gm.sm2strut.GBT35275Validate;
 import org.ofdrw.gm.sm2strut.VerifyInfo;
 

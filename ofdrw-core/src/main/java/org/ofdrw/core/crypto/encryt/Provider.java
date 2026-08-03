@@ -1,7 +1,6 @@
 package org.ofdrw.core.crypto.encryt;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * 加密组件的相关信息
@@ -28,7 +27,7 @@ public class Provider extends org.ofdrw.core.signatures.sig.Provider {
      * @return this
      */
     @Override
-    public org.ofdrw.core.signatures.sig.Provider setProviderName(@NotNull String name) {
+    public org.ofdrw.core.signatures.sig.Provider setProviderName(String name) {
         if (name == null) {
             throw new IllegalArgumentException("加密组件名称（name）为空");
         }
@@ -43,7 +42,6 @@ public class Provider extends org.ofdrw.core.signatures.sig.Provider {
      *
      * @return 加密组件名称
      */
-    @NotNull
     @Override
     public String getProviderName() {
         String str = this.attributeValue("Name");

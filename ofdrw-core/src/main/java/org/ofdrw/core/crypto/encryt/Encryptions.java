@@ -1,7 +1,6 @@
 package org.ofdrw.core.crypto.encryt;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
 import org.ofdrw.core.OFDElement;
 
 import java.util.List;
@@ -44,7 +43,7 @@ public class Encryptions extends OFDElement {
      * @param encryptInfo 加密描述信息
      * @return this
      */
-    public Encryptions addEncryptInfo(@NotNull CT_EncryptInfo encryptInfo) {
+    public Encryptions addEncryptInfo(CT_EncryptInfo encryptInfo) {
         if (encryptInfo == null) {
             return this;
         }
@@ -60,7 +59,6 @@ public class Encryptions extends OFDElement {
      *
      * @return 加密描述信息 列表
      */
-    @NotNull
     public List<CT_EncryptInfo> getEncryptInfos() {
         return this.getOFDElements("EncryptInfo", CT_EncryptInfo::new);
     }

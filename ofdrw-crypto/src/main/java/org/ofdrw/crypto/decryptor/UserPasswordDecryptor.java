@@ -8,8 +8,6 @@ import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.jcajce.provider.digest.SM3;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.ofdrw.core.crypto.ProtectionCaseID;
 import org.ofdrw.core.crypto.encryt.UserInfo;
 import org.ofdrw.gm.support.KDF;
@@ -51,7 +49,7 @@ public class UserPasswordDecryptor implements UserFEKDecryptor {
      * @param password 加密时使用的口令（与加密时一致）
      * @throws IllegalArgumentException 口令为空
      */
-    public UserPasswordDecryptor(@Nullable String username, @NotNull String password) {
+    public UserPasswordDecryptor(String username, String password) {
         if (password == null || password.isEmpty()) {
             throw new IllegalArgumentException("口令(password)不能为空");
         }
@@ -64,7 +62,7 @@ public class UserPasswordDecryptor implements UserFEKDecryptor {
      *
      * @param password 加密时使用的口令
      */
-    public UserPasswordDecryptor(@NotNull String password) {
+    public UserPasswordDecryptor(String password) {
         this(null, password);
     }
 
@@ -92,7 +90,7 @@ public class UserPasswordDecryptor implements UserFEKDecryptor {
      * @throws CryptoException 解密失败（口令错误或数据损坏）
      */
     @Override
-    public DecryptResult decrypt(@NotNull UserInfo userInfo) throws CryptoException {
+    public DecryptResult decrypt(UserInfo userInfo) throws CryptoException {
         // 获取加密的文件加密密钥（包装密钥）
         byte[] encryptedWK = userInfo.getEncryptedWK();
         // 获取 IV
@@ -118,13 +116,11 @@ public class UserPasswordDecryptor implements UserFEKDecryptor {
     }
 
     @Override
-    @NotNull
     public String encryptCaseId() {
         return ProtectionCaseID.EncryptGMPassword.getId();
     }
 
     @Override
-    @Nullable
     public String getUsername() {
         return username;
     }

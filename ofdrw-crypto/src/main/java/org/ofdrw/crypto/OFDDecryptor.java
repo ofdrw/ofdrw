@@ -8,10 +8,8 @@ import org.bouncycastle.crypto.paddings.PKCS7Padding;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.dom4j.DocumentException;
 import org.dom4j.io.SAXReader;
-import org.jetbrains.annotations.NotNull;
 import org.ofdrw.core.crypto.encryt.*;
 import org.ofdrw.crypto.decryptor.DecryptResult;
 import org.ofdrw.crypto.decryptor.UserFEKDecryptor;
@@ -106,7 +104,7 @@ public class OFDDecryptor implements Closeable {
      * @throws IOException              解压或文件操作异常
      * @throws IllegalArgumentException src 或 dest 为 null 或不存在
      */
-    public OFDDecryptor(@NotNull Path src, @NotNull Path dest) throws IOException {
+    public OFDDecryptor(Path src, Path dest) throws IOException {
         this(src, dest, Files.createTempDirectory("ofd-dec-tmp-"), true);
     }
 
@@ -124,7 +122,7 @@ public class OFDDecryptor implements Closeable {
      * @throws IOException              解压或文件操作异常
      * @throws IllegalArgumentException src 为 null 或不存在，dest 为 null
      */
-    public OFDDecryptor(@NotNull Path src, @NotNull Path dest, @NotNull Path workDir) throws IOException {
+    public OFDDecryptor(Path src, Path dest, Path workDir) throws IOException {
         this(src, dest, workDir, false);
     }
 
@@ -136,7 +134,7 @@ public class OFDDecryptor implements Closeable {
      * @param workDir     工作目录
      * @param ownWorkDir  是否由本类管理 workDir 生命周期
      */
-    private OFDDecryptor(@NotNull Path src, @NotNull Path dest, @NotNull Path workDir, boolean ownWorkDir)
+    private OFDDecryptor(Path src, Path dest, Path workDir, boolean ownWorkDir)
             throws IOException {
         if (src == null || Files.notExists(src)) {
             throw new IllegalArgumentException("加密文件(src)不存在: " + src);
@@ -168,7 +166,7 @@ public class OFDDecryptor implements Closeable {
      * @param decryptor 用户 FEK 解密器，不能为 null
      * @return this（Fluent API）
      */
-    public OFDDecryptor addUser(@NotNull UserFEKDecryptor decryptor) {
+    public OFDDecryptor addUser(UserFEKDecryptor decryptor) {
         if (decryptor != null) {
             this.decryptors.add(decryptor);
         }

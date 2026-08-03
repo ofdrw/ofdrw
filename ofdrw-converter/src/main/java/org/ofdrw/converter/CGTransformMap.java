@@ -1,6 +1,5 @@
 package org.ofdrw.converter;
 
-import org.jetbrains.annotations.Nullable;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.text.CT_CGTransform;
 
@@ -52,7 +51,6 @@ public class CGTransformMap {
      * @param globalOffset 全局字符偏移量
      * @return 字形变换，或null
      */
-    @Nullable
     public CT_CGTransform get(int globalOffset){
         if (globalOffset < 0){
             return null;

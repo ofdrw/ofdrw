@@ -1,8 +1,6 @@
 package org.ofdrw.core.signatures.sig;
 
 import org.dom4j.Element;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.ofdrw.core.OFDElement;
 
 /**
@@ -31,7 +29,7 @@ public class Parameter extends OFDElement {
      * @param type  属性的类型
      * @param value 属性的值
      */
-    public Parameter(@NotNull String name, @Nullable String type, @Nullable String value) {
+    public Parameter(String name, String type, String value) {
         this();
         setNameAttr(name);
         setType(type);
@@ -44,7 +42,7 @@ public class Parameter extends OFDElement {
      * @param name  属性的名称
      * @param value 属性的值
      */
-    public Parameter(@NotNull String name, @Nullable String value) {
+    public Parameter(String name, String value) {
         this();
         setNameAttr(name);
         setValue(value);
@@ -57,7 +55,7 @@ public class Parameter extends OFDElement {
      * @param name 扩展属性的名称
      * @return this
      */
-    public Parameter setNameAttr(@NotNull String name) {
+    public Parameter setNameAttr(String name) {
         if (name == null || name.trim().length() == 0) {
             throw new IllegalArgumentException("扩展属性的名称（Name）不能为空");
         }
@@ -71,7 +69,6 @@ public class Parameter extends OFDElement {
      *
      * @return 扩展属性的名称
      */
-    @NotNull
     public String getNameAttr() {
         return this.attributeValue("Name");
     }
@@ -83,7 +80,7 @@ public class Parameter extends OFDElement {
      * @param type 扩展属性的值类型,null表示删除属性
      * @return this
      */
-    public Parameter setType(@Nullable String type) {
+    public Parameter setType(String type) {
         if (type == null) {
             this.removeAttr(type);
             return this;
@@ -98,7 +95,6 @@ public class Parameter extends OFDElement {
      *
      * @return 扩展属性的值类型，可能为空
      */
-    @Nullable
     public String getType() {
         return this.attributeValue("Type");
     }
@@ -110,7 +106,7 @@ public class Parameter extends OFDElement {
      * @param value 签名扩展属性值
      * @return this
      */
-    public Parameter setValue(@Nullable String value) {
+    public Parameter setValue(String value) {
         if (value == null) {
             value = "";
         }
@@ -124,7 +120,6 @@ public class Parameter extends OFDElement {
      *
      * @return 签名扩展属性值，或空串
      */
-    @NotNull
     public String getValue() {
         return this.getTextTrim();
     }
