@@ -1,6 +1,6 @@
 package org.ofdrw.archive.check;
 
-import org.ofdrw.archive.model.ArchiveViolation;
+import org.ofdrw.archive.check.ArchiveViolation;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.reader.OFDReader;
 

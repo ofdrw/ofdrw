@@ -195,6 +195,17 @@ public class OFDArchiveConverter {
      * @param reachable   可达文件白名单
      * @throws IOException 文件读取异常
      */
+    /**
+     * DFS 收集可达文件（仅处理 XML 文件）
+     * <p>
+     * dfsCollect 只针对 XML 文件进行引用解析，避免读取超大二进制文件（图片、字体、视频等）。
+     * 非 XML 文件仅加入白名单，不递归、不读取内容。
+     *
+     * @param currentFile 当前文件
+     * @param rootDir     OFD 包根目录
+     * @param visited     已处理文件集合
+     * @param reachable   可达文件白名单
+     */
     private void dfsCollect(Path currentFile, Path rootDir,
                             Set<Path> visited, Set<Path> reachable) throws IOException {
         // 防循环引用：已处理过则跳过
@@ -204,13 +215,13 @@ public class OFDArchiveConverter {
         // 加入可达白名单
         reachable.add(currentFile);
 
-        // 只对 XML 文件进行引用解析
+        // 只对 XML 文件进行引用解析，跳过二进制大文件
         String fileName = currentFile.getFileName().toString().toLowerCase();
         if (!fileName.endsWith(".xml")) {
             return;
         }
 
-        // 读取文件内容，提取所有 ST_Loc 路径引用
+        // 读取 XML 文件内容，提取所有 ST_Loc 路径引用
         // ST_Loc 路径以 "/" 开头表示容器内绝对路径
         try {
             String content = new String(Files.readAllBytes(currentFile), java.nio.charset.StandardCharsets.UTF_8);
@@ -231,8 +242,14 @@ public class OFDArchiveConverter {
                 // 解析为文件系统路径
                 Path resolved = rootDir.resolve(refPath).normalize();
                 // 安全检查：必须在 rootDir 子树内
-                if (resolved.startsWith(rootDir) && Files.exists(resolved)) {
+                if (!resolved.startsWith(rootDir) || !Files.exists(resolved)) {
+                    continue;
+                }
+                // 仅对 XML 文件递归，二进制文件直接加入白名单避免读取
+                if (resolved.getFileName().toString().toLowerCase().endsWith(".xml")) {
                     dfsCollect(resolved, rootDir, visited, reachable);
+                } else {
+                    reachable.add(resolved);
                 }
             }
         } catch (Exception e) {

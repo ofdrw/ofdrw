@@ -1,7 +1,7 @@
 package org.ofdrw.archive.check.rule;
 
 import org.ofdrw.archive.check.ArchiveRule;
-import org.ofdrw.archive.model.ArchiveViolation;
+import org.ofdrw.archive.check.ArchiveViolation;
 import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.pageDescription.color.colorSpace.OFDColorSpaceType;

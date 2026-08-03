@@ -3,7 +3,7 @@ package org.ofdrw.archive;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.archive.check.OFDArchiveChecker;
-import org.ofdrw.archive.model.ArchiveViolation;
+import org.ofdrw.archive.check.ArchiveViolation;
 import org.ofdrw.reader.OFDReader;
 
 import java.io.IOException;

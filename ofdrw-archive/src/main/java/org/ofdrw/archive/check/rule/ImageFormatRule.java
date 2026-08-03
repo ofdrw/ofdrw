@@ -1,7 +1,7 @@
 package org.ofdrw.archive.check.rule;
 
 import org.ofdrw.archive.check.ArchiveRule;
-import org.ofdrw.archive.model.ArchiveViolation;
+import org.ofdrw.archive.check.ArchiveViolation;
 import org.ofdrw.core.basicStructure.res.CT_MultiMedia;
 import org.ofdrw.core.basicStructure.res.MediaType;
 import org.ofdrw.core.basicType.ST_Loc;

@@ -3,7 +3,7 @@ package org.ofdrw.archive.check.rule;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.ofdrw.archive.check.ArchiveRule;
-import org.ofdrw.archive.model.ArchiveViolation;
+import org.ofdrw.archive.check.ArchiveViolation;
 import org.ofdrw.core.basicStructure.doc.CT_CommonData;
 import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.res.Res;

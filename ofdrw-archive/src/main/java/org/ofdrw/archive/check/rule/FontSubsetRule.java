@@ -1,7 +1,7 @@
 package org.ofdrw.archive.check.rule;
 
 import org.ofdrw.archive.check.ArchiveRule;
-import org.ofdrw.archive.model.ArchiveViolation;
+import org.ofdrw.archive.check.ArchiveViolation;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.core.text.font.CT_Font;
 import org.ofdrw.pkg.container.OFDDir;
