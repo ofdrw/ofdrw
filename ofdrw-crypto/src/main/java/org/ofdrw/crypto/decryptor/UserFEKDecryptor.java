@@ -16,7 +16,7 @@ import org.ofdrw.core.crypto.encryt.UserInfo;
  * 调用 {@link #decrypt(UserInfo)} 恢复 FEK 和 IV。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public interface UserFEKDecryptor {
 

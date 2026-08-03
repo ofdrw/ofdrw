@@ -20,7 +20,7 @@ import java.util.List;
  * CTM 矩阵格式: [a b c d e f]，纯横向缩放对应 b=0, c=0, d=1。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class TextHScaleRule implements ArchiveRule {
     public static final String RULE_NAME = "TEXT_HSCALE";

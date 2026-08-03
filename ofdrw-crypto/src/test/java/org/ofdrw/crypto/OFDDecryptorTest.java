@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </ul>
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 class OFDDecryptorTest {
 

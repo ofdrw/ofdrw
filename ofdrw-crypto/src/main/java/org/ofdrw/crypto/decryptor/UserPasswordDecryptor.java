@@ -26,7 +26,7 @@ import java.nio.charset.StandardCharsets;
  * 对应加密器：{@link org.ofdrw.crypto.enryptor.UserPasswordEncryptor}
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class UserPasswordDecryptor implements UserFEKDecryptor {
 

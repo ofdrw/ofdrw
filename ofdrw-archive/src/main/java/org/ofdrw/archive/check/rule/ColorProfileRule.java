@@ -18,7 +18,7 @@ import java.util.List;
  * 仅 INFO 级别提示，不做转换。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ColorProfileRule implements ArchiveRule {
     public static final String RULE_NAME = "COLOR_PROFILE";

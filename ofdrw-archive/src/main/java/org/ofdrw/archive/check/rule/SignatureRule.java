@@ -18,7 +18,7 @@ import java.util.List;
  * 检查文档中是否存在数字签名或签章。存在则提示需要去技术化处理。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class SignatureRule implements ArchiveRule {
     public static final String RULE_NAME = "SIGNATURE";

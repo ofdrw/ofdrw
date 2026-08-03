@@ -17,7 +17,7 @@ import java.util.List;
  * 规则 6：Document + Page 中不得包含非 Goto 动作（GB/T 42133-2022 6.2.2c/6.2.3c）
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class NonGotoActionRule implements ArchiveRule {
     public static final String RULE_NAME = "NON_GOTO_ACTION";

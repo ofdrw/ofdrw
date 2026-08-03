@@ -17,7 +17,7 @@ import java.util.List;
  * CompositeObject 总是删除勾边/填充相关属性。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class CleanStrokeAttrHandler implements ArchiveHandler {
 

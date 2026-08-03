@@ -15,7 +15,7 @@ import java.io.IOException;
  * 实现类命名格式: XxxHandler，与对应的检查规则（XxxRule）对应。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 @FunctionalInterface
 public interface ArchiveHandler {

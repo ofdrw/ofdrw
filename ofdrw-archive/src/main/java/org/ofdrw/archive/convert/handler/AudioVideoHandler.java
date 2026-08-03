@@ -22,7 +22,7 @@ import java.util.List;
  * 以 CT_Attachment 形式保留摘要信息（文件名、格式）。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class AudioVideoHandler implements ArchiveHandler {
 

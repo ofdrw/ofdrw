@@ -24,7 +24,7 @@ import java.util.List;
  * Image/VectorG/DrawParam 应在 DocumentRes 或 PageRes（不能在 PublicRes）
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ResourcePlacementRule implements ArchiveRule {
     public static final String RULE_NAME = "RESOURCE_PLACEMENT";

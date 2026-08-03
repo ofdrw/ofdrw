@@ -18,7 +18,7 @@ import java.util.List;
  * 递归遍历每个页面 Content.xml 中的 CT_PageBlock 树，检查嵌套深度。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class PageBlockDepthRule implements ArchiveRule {
     public static final String RULE_NAME = "PAGEBLOCK_DEPTH";

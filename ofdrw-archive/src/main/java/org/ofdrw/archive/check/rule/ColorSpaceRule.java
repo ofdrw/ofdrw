@@ -20,7 +20,7 @@ import java.util.List;
  * 非法类型在解析时就会抛出异常。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ColorSpaceRule implements ArchiveRule {
     public static final String RULE_NAME = "COLOR_SPACE";

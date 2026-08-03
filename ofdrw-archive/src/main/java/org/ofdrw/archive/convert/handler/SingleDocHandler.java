@@ -22,7 +22,7 @@ import java.util.List;
  * 不进行文档合并，只保留第一个文档体。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class SingleDocHandler implements ArchiveHandler {
 

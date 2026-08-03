@@ -12,7 +12,7 @@ import java.util.List;
  * 处理器 16：设置图像 Interpolate=false（GB/T 42133-2022 6.5b）
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ImageInterpolateHandler implements ArchiveHandler {
 

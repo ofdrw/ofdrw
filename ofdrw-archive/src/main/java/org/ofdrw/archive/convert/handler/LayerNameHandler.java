@@ -14,7 +14,7 @@ import java.util.*;
  * 同一页面中重复的 Layer Name 后追加序列号。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class LayerNameHandler implements ArchiveHandler {
 

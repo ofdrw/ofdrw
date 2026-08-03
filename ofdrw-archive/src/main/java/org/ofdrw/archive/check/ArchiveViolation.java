@@ -10,7 +10,7 @@ import java.util.Objects;
  * 检查器对单条规则检查后产生的结果，描述文档中一处不符合 GB/T 42133-2022 的位置和原因。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ArchiveViolation {
 

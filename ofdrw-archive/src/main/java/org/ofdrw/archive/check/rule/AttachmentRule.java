@@ -18,7 +18,7 @@ import java.util.List;
  * 其他类型附件应移出并保留摘要。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class AttachmentRule implements ArchiveRule {
     public static final String RULE_NAME = "ATTACHMENT";

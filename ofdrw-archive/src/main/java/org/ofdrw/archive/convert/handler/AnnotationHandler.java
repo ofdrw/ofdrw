@@ -26,7 +26,7 @@ import java.util.List;
  * 本处理器仅处理归档前已存在的注释，归档后的注释由生成软件负责写入独立文件。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class AnnotationHandler implements ArchiveHandler {
 

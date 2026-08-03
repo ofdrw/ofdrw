@@ -51,7 +51,7 @@ import java.util.List;
  * 需为每个加密层提供对应的解密器。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class OFDDecryptor implements Closeable {
 

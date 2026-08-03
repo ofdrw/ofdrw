@@ -15,7 +15,7 @@ import java.util.List;
  * ImageObject 和 CompositeObject 上的 Fill/FillColor 属性对该类对象无意义，应予删除。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class CleanFillAttrHandler implements ArchiveHandler {
 

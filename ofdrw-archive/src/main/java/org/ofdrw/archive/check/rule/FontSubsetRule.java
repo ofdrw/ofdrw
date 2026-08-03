@@ -20,7 +20,7 @@ import java.util.List;
  * Phase 1 仅检查字体文件是否嵌入，子集化验证留到 Phase 2。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class FontSubsetRule implements ArchiveRule {
     public static final String RULE_NAME = "FONT_SUBSET";

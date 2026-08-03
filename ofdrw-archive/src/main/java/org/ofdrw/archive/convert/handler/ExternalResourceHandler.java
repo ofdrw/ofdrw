@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  * </ul>
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ExternalResourceHandler implements ArchiveHandler {
 

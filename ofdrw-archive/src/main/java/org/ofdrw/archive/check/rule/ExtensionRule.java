@@ -15,7 +15,7 @@ import java.util.List;
  * 规则 8：去除扩展信息（GB/T 42133-2022 6.2.2e）
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ExtensionRule implements ArchiveRule {
     public static final String RULE_NAME = "EXTENSION";

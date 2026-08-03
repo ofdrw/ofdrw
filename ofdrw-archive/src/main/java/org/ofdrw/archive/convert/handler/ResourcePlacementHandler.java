@@ -30,7 +30,7 @@ import java.util.List;
  * 注意：移动资源时需要同步更新所有引用该资源的位置。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ResourcePlacementHandler implements ArchiveHandler {
 

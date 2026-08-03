@@ -19,7 +19,7 @@ import org.dom4j.DocumentException;
  * 检查 OFD.xml 根节点的 DocType 属性是否为 "OFD-A"。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class DocTypeRule implements ArchiveRule {
 

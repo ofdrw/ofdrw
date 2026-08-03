@@ -21,7 +21,7 @@ import java.util.*;
  * 若某图像被 ≥2 页面引用但注册在 PageRes → WARN。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ImageResourceRegRule implements ArchiveRule {
     public static final String RULE_NAME = "IMAGE_RESOURCE_REG";

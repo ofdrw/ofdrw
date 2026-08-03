@@ -16,7 +16,7 @@ import java.util.List;
  * 仅保留文本格式附件（TXT/XML）；其余移出并保留摘要信息。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class AttachmentHandler implements ArchiveHandler {
 

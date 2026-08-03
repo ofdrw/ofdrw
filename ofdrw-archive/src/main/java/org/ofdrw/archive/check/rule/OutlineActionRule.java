@@ -14,7 +14,7 @@ import java.util.List;
  * 规则 7：大纲节点动作检查（GB/T 42133-2022 6.2.5a/b）
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class OutlineActionRule implements ArchiveRule {
     public static final String RULE_NAME = "OUTLINE_ACTION";

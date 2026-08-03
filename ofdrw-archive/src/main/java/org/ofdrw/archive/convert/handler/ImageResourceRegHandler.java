@@ -14,7 +14,7 @@ import java.io.IOException;
  * 减少重复嵌入，优化存储。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ImageResourceRegHandler implements ArchiveHandler {
 

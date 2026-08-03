@@ -21,7 +21,7 @@ import java.util.*;
  * 使用文件魔数检测实际格式，不信任 Format 属性。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ImageFormatRule implements ArchiveRule {
     public static final String RULE_NAME = "IMAGE_FORMAT";

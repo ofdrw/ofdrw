@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  * 检查所有 ST_Loc 路径引用是否指向包外（http/https 或文件系统路径不在包内）。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ExternalResourceRule implements ArchiveRule {
     public static final String RULE_NAME = "EXTERNAL_RESOURCE";

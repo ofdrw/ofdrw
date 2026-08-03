@@ -23,7 +23,7 @@ import java.util.*;
  * 允许的格式：BMP/JPEG/PNG/JBIG2/JPEG2000/TIFF。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ImageConvertHandler implements ArchiveHandler {
 

@@ -13,7 +13,7 @@ import java.io.IOException;
  * 直接删除，不固化到页面内容。
  *
  * @author 权观宇
- * @since 2.3.9
+ * @since 2.4.0
  */
 public class ExtensionHandler implements ArchiveHandler {
 

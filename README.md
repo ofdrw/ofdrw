@@ -48,7 +48,7 @@ Maven项目引入依赖
 <dependency>
   <groupId>org.ofdrw</groupId>
   <artifactId>ofdrw-full</artifactId>
-  <version>2.3.9</version>
+  <version>2.4.0</version>
 </dependency>
 ```
 
