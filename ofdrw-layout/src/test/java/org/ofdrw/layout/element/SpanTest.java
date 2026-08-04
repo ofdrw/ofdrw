@@ -3,12 +3,17 @@ package org.ofdrw.layout.element;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.ofdrw.font.Font;
 import org.ofdrw.layout.Rectangle;
 
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 
 public class SpanTest {
+
+    private static final Font DEFAULT_FONT = new Font("宋体", "宋体",
+            Paths.get("src/test/resources/simhei-cut1.ttf").toAbsolutePath());
 
     @Test
     public void split() {
@@ -22,9 +27,10 @@ public class SpanTest {
     @Test
     public void blockSize() {
         Span span = new Span("你好OFD R&W")
+                .setFont(DEFAULT_FONT)
                 .setFontSize(10d);
         Rectangle rectangle = span.blockSize();
-        Assertions.assertEquals(rectangle.getHeight(), 10);
+        Assertions.assertEquals(11.40625, rectangle.getHeight(), 0.01);
         Assertions.assertEquals(rectangle.getWidth(), 20 + 7 * 5);
         Assertions.assertEquals(span.blockSize().getWidth(), 20 + 7 * 5);
 
