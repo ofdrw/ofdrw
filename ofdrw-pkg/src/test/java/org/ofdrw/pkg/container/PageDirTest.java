@@ -1,19 +1,15 @@
 package org.ofdrw.pkg.container;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.AssertionsKt;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.core.annotation.pageannot.PageAnnot;
 import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.pkg.container.content.PageContent;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
-import java.util.stream.Stream;
 
 class PageDirTest {
     @Test
@@ -22,16 +18,21 @@ class PageDirTest {
         PageDir pageDir = new PageDir(p)
                 .setContent(PageContent.page());
         pageDir.flush();
+        // 清理
+        pageDir.clean();
+        Assertions.assertTrue(Files.notExists(p));
     }
 
     @Test
-    void err(){
+    void err() throws IOException {
         Path p = Paths.get("target/Page_AA");
-        Assertions.assertThrows( IllegalArgumentException.class, () -> {
-            PageDir pageDir = new PageDir(p)
-                    .setContent(PageContent.page());
-            pageDir.flush();
-        });
+        // PageDir 兼容非规范命名的页面目录结构，不再抛异常
+        PageDir pageDir = new PageDir(p)
+                .setContent(PageContent.page());
+        pageDir.flush();
+        Assertions.assertTrue(Files.exists(p));
+        // 清理
+        pageDir.clean();
         Assertions.assertTrue(Files.notExists(p));
     }
 

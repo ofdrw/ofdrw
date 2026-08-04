@@ -12,6 +12,7 @@ class NumberFormatAtomicSignIDTest {
     @Test
     void constructNumberFormatAtomicSignID() {
         NumberFormatAtomicSignID nfas = new NumberFormatAtomicSignID("s001");
+        nfas.setEnableZeroPrefix(true);
         String s = nfas.incrementAndGet();
         assertEquals("002", s);
     }
@@ -19,6 +20,7 @@ class NumberFormatAtomicSignIDTest {
     @Test
     void setCurrentMaxSignId() {
         NumberFormatAtomicSignID val = new NumberFormatAtomicSignID();
+        val.setEnableZeroPrefix(true);
         val.setCurrentMaxSignId("003");
         String actual = val.get();
         assertEquals("003", actual);
@@ -27,6 +29,7 @@ class NumberFormatAtomicSignIDTest {
     @Test
     void incrementAndGet() {
         NumberFormatAtomicSignID val = new NumberFormatAtomicSignID();
+        val.setEnableZeroPrefix(true);
         String actual = val.incrementAndGet();
         assertEquals("001", actual);
     }
@@ -34,6 +37,7 @@ class NumberFormatAtomicSignIDTest {
     @Test
     void get() {
         NumberFormatAtomicSignID val = new NumberFormatAtomicSignID();
+        val.setEnableZeroPrefix(true);
         String actual = val.get();
         assertEquals("000", actual);
     }

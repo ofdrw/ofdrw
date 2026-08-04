@@ -18,7 +18,10 @@ public class PathTest {
 
     @Test
     public void CreateNew() throws Exception {
-        Path c = Paths.get("foo", "bar", "text.txt");
+        Path c = Paths.get("target", "foo", "bar", "text.txt");
+        // 清理上次测试遗留
+        Files.deleteIfExists(c);
+        Files.createDirectories(c.getParent());
         Files.createFile(c);
     }
 }

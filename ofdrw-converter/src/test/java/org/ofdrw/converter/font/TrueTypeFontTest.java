@@ -18,31 +18,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 2021-09-29 20:44:24
  */
 class TrueTypeFontTest {
-    @Test
-    public void cffParse() throws Exception {
-        final Path path = Paths.get("C:\\Users\\pc\\Desktop\\ks\\Doc_0\\Res\\font_115.otf");
-        final byte[] fileData = Files.readAllBytes(path);
-
-        CFFParser cffParser = new CFFParser();
-        CFFFont cffFont = cffParser.parse(fileData).get(0);
-        System.out.println(cffFont);
-    }
-
-    @Test
-    void parse() throws IOException {
-        Path fontPath = Paths.get("C:\\Users\\pc\\Desktop\\ks\\Doc_0\\Res\\font_115.otf");
-//        Path fontPath = Paths.get("src/test/resources/font_10.ttf");
-        TTFDataStream dataStream = new MemoryTTFDataStream(Files.newInputStream(fontPath));
-        final TrueTypeFont trueTypeFont = new TrueTypeFont().parse(dataStream);
-    }
-
-    @Test
-    void parse2() throws IOException {
-        Path fontPath = Paths.get("C:\\Users\\pc\\Desktop\\Latha.ttf");
-        TTFDataStream dataStream = new MemoryTTFDataStream(Files.newInputStream(fontPath));
-        final TrueTypeFont trueTypeFont = new TrueTypeFont().parse(dataStream);
-        System.out.println(trueTypeFont.psName);
-    }
 
 
     @Test

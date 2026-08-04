@@ -39,7 +39,7 @@ class OFDMergerTest {
     void add() throws IOException {
         Path dst = Paths.get("target/n1.ofd");
         Path d1Path = Paths.get("../ofdrw-converter/src/test/resources/", "y.ofd");
-        Path d2Path = Paths.get("../ofdrw-converter/src/test/resources/", "发票示例.ofd");
+        Path d2Path = Paths.get("../ofdrw-converter/src/test/resources/", "20240531141733.ofd");
 
         try (OFDMerger ofdMerger = new OFDMerger(dst)) {
             ofdMerger.add(d1Path, 2);
@@ -52,7 +52,7 @@ class OFDMergerTest {
     void add2() throws IOException {
         Path dst = Paths.get("target/n2.ofd");
         Path d1Path = Paths.get("../ofdrw-converter/src/test/resources/", "y.ofd");
-        Path d2Path = Paths.get("../ofdrw-converter/src/test/resources/", "发票示例.ofd");
+        Path d2Path = Paths.get("../ofdrw-converter/src/test/resources/", "20240531141733.ofd");
 
         try (OFDMerger ofdMerger = new OFDMerger(dst)) {
             ofdMerger.add(d1Path, 1, 1);

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ofd:Signature xmlns:ofd="http://www.ofdspec.org/2016">
+  <ofd:SignedInfo>
+    <ofd:Provider ProviderName="OFD R&amp;W" Company="OFD R&amp;W" Version="2.4.0"/>
+    <ofd:SignatureDateTime>2024-01-01T00:00:00</ofd:SignatureDateTime>
+    <ofd:References>
+      <ofd:Reference FileRef="./Doc_0/Document.xml"/>
+    </ofd:References>
+    <ofd:StampAnnot ID="1" PageRef="1" Boundary="0 0 100 100"/>
+  </ofd:SignedInfo>
+</ofd:Signature>

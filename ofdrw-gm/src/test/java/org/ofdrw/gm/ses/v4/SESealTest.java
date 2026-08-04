@@ -4,7 +4,10 @@ import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
 import org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.ofdrw.gm.cert.PKCS12Tools;
 import org.ofdrw.gm.ses.v1.SES_ESPictrueInfo;
 import org.ofdrw.gm.ses.v1.SES_Header;
@@ -23,6 +26,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class SESealTest {
 
     @Test
@@ -34,17 +38,18 @@ class SESealTest {
         sg.initSign(sealerPrvKey);
         sg.update(new byte[32]);
         byte[] sigVal = sg.sign();
-        System.out.println(sigVal.length);
+        assertTrue(sigVal.length >= 64, "SM2签名长度应至少64字节");
 
         Certificate certificate = PKCS12Tools.ReadUserCert(sealerPath, "private", "777777");
 
         sg = Signature.getInstance("SM3WithSM2", new BouncyCastleProvider());
         sg.initVerify(certificate);
         sg.update(new byte[32]);
-        System.out.println(sg.verify(sigVal));
+        assertTrue(sg.verify(sigVal), "SM2签名验证失败");
     }
 
     @Test
+    @Order(1)
     public void build() throws GeneralSecurityException, IOException {
         Path sealerPath = Paths.get("src/test/resources", "SealBuilder.p12");
         Path userPath = Paths.get("src/test/resources", "USER.p12");
@@ -95,16 +100,16 @@ class SESealTest {
 
         Path out = Paths.get("target/UserV4.esl");
         Files.write(out, seal.getEncoded("DER"));
-        System.out.println(">> V4版本印章存储于: " + out.toAbsolutePath().toAbsolutePath());
+        assertTrue(Files.exists(out), "V4印章文件应生成成功");
 
     }
 
 
     @Test
+    @Order(2)
     public void verify() throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, SignatureException {
-//        Path path = Paths.get("src/test/resources", "UserV4.esl");
-//        Path path = Paths.get("target", "UserV4.esl");
-        Path path = Paths.get("target", "Seal.esl");
+        // 读取 build() 方法生成的 UserV4.esl
+        Path path = Paths.get("target", "UserV4.esl");
         SESeal seal = SESeal.getInstance(Files.readAllBytes(path));
 
         ASN1OctetString cert = seal.getCert();
@@ -119,7 +124,7 @@ class SESealTest {
         sg.update(ses_sealInfo.getEncoded());
         byte[] sigVal = seal.getSignedValue().getBytes();
 
-        System.out.println(sg.verify(sigVal));
+        assertTrue(sg.verify(sigVal), "V4印章签名验证失败");
     }
 
 }

@@ -38,12 +38,12 @@ public class OFD2SVGTest {
         FontLoader.getInstance().scanFontDir(new File("src/main/resources/fonts"));
         FontLoader.setSimilarFontReplace(true);
         long start = System.currentTimeMillis();
-//        toSVG("src/test/resources/999.ofd", "target/999.ofd");
+        toSVG("src/test/resources/999.ofd", "target/999.ofd");
 //        toSVG("src/test/resources/zsbk.ofd", "target/zsbk.ofd");
 //        toSVG("src/test/resources/ano.ofd", "target/ano.ofd");
 //        toSVG("src/test/resources/文字横向-数科.ofd", "target/文字横向-数科.ofd");
 //        toSVG("src/test/resources/z.ofd", "target/z.ofd");
-        toSVG("src/test/resources/发票示例.ofd", "target/发票示例.ofd");
+//        toSVG("src/test/resources/发票示例.ofd", "target/发票示例.ofd");
 //        toSVG("src/test/resources/signout.ofd", "target/signout.ofd");
 //        toSVG("src/test/resources/n.ofd", "target/n.ofd");
 

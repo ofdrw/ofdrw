@@ -10,8 +10,11 @@ import org.ofdrw.graphics2d.OFDPageGraphics2D;
 
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 
 public class OFD2PDFTest {
 
@@ -78,8 +81,16 @@ public class OFD2PDFTest {
      * 验证转换颜色值异常
      */
     @Test
-    void testExportCE() throws Exception{
+    void testExportCE() throws Exception, IOException {
         Path dst = Paths.get("target","HelloWorld.ofd");
+        // 清除上次运行残留（可能是文件或目录）
+        if (Files.exists(dst)) {
+            if (Files.isDirectory(dst)) {
+                Files.walk(dst).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+            } else {
+                Files.delete(dst);
+            }
+        }
         try (OFDGraphicsDocument doc = new OFDGraphicsDocument(dst)) {
             OFDPageGraphics2D g = doc.newPage(null);
             g.setColor(Color.BLACK);

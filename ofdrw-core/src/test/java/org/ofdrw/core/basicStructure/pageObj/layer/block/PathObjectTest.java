@@ -34,7 +34,7 @@ public class PathObjectTest {
                 .setBoundary(new ST_Box(10, 10, 140, 40))
                 .setFill(true)
                 .setFillColor(new CT_Color(CT_AxialShdTest.axialShdCase()))
-                .setAbbreviatedData(DATA);
+                .setAbbreviatedData(DATA.clone());
     }
 
     @Test

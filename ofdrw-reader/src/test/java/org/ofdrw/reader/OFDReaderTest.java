@@ -38,7 +38,7 @@ class OFDReaderTest {
 
     @Test
     void testChineseDirName() throws IOException {
-        Path src = Paths.get("src/test/resources/chineseDir_windows.ofd");
+        Path src = Paths.get("src/test/resources/chineseDir.ofd");
         try (OFDReader reader = new OFDReader(src);) {
             System.out.println(reader.getWorkDir().toAbsolutePath());
             OFDDir ofdDir = reader.getOFDDir();
@@ -178,10 +178,9 @@ class OFDReaderTest {
 
     @Test
     void getStampAnnots() throws IOException {
-        Path path = Paths.get("src/test/resources/发票示例.ofd");
+        Path path = Paths.get("src/test/resources/SESV4SignDoc.ofd");
         try (OFDReader ofdReader = new OFDReader(path)) {
             final List<StampAnnotEntity> stampAnnots = ofdReader.getStampAnnots();
-            System.out.println(stampAnnots.size());
             assertEquals(1, stampAnnots.size());
         }
     }
@@ -189,10 +188,10 @@ class OFDReaderTest {
 
     @Test
     void getPageSize() throws Exception {
-        Path path = Paths.get("src/test/resources/发票示例.ofd");
+        Path path = Paths.get("src/test/resources/SESV4SignDoc.ofd");
         try (OFDReader reader = new OFDReader(path)) {
             final ST_Box pageSize = reader.getPageSize(1);
-            System.out.println(pageSize);
+            assertEquals(new ST_Box(0,0,210,297).toString(), pageSize.toString());
         }
     }
 }

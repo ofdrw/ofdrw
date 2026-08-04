@@ -3,8 +3,6 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.gm.cert.PKCS12Tools;
-import org.ofdrw.pkg.container.SignDir;
-import org.ofdrw.pkg.container.SignsDir;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,21 +61,22 @@ public class Sm3DigestTest {
     @Test
     void testSign() throws GeneralSecurityException, IOException {
         Path ks = Paths.get("src/test/resources", "USER.p12");
-        Path in = Paths.get("target/DigitalSign/Doc_0/Signs/Sign_0/Signature.xml");
-        Path out = Paths.get("target/DigitalSign/Doc_0/Signs/Sign_0/", SignDir.SignedValueFileName);
+        // 使用 helloworld.ofd 作为签名测试数据，不再依赖外部生成的 OFD 提取目录
+        Path testFile = Paths.get("src/test/resources", "helloworld.ofd");
 
         Certificate cert = PKCS12Tools.ReadUserCert(ks, "private", "777777");
         PrivateKey prv = PKCS12Tools.ReadPrvKey(ks, "private", "777777");
 
+        byte[] data = Files.readAllBytes(testFile);
+
         Signature sg = Signature.getInstance("SM3WithSM2", new BouncyCastleProvider());
         sg.initSign(prv);
-        sg.update(Files.readAllBytes(in));
+        sg.update(data);
         byte[] sign = sg.sign();
-        Files.write(out, sign);
 
         sg = Signature.getInstance("SM3WithSM2", new BouncyCastleProvider());
         sg.initVerify(cert);
-        sg.update(Files.readAllBytes(in));
-        System.out.println(sg.verify(sign));
+        sg.update(data);
+        Assertions.assertTrue(sg.verify(sign), "SM2签名验证应通过");
     }
 }

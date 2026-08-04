@@ -40,7 +40,7 @@ class VersionParserTest {
     @Test
     void parseSES_SignatureVersion() throws IOException {
         Path sESValueV4 = Paths.get("src/test/resources", "SignedValueV4.dat");
-        SESVersionHolder holder = VersionParser.parseSES_SealVersion(Files.readAllBytes(sESValueV4));
+        SESVersionHolder holder = VersionParser.parseSES_SignatureVersion(Files.readAllBytes(sESValueV4));
         assertEquals(holder.getVersion(), SESVersion.v4);
         assertTrue(holder.SESObject() instanceof org.ofdrw.gm.ses.v4.SES_Signature);
         if (holder.getVersion() == SESVersion.v4) {

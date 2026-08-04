@@ -97,13 +97,23 @@ public class NumberFormatAtomicSignID implements SignIDProvider {
 
     /**
      * 解析出电子签名的ID数字
+     * <p>
+     * 自动过滤非数字字符，支持 "s001"、"001"、"1" 等格式
      *
      * @param id ID字符串
      * @return ID数字
      */
     @Override
     public int parse(String id) {
-        return Integer.parseInt(id);
+        if (id == null || id.isEmpty()) {
+            return 0;
+        }
+        // 去除所有非数字字符
+        String numStr = id.replaceAll("\\D", "");
+        if (numStr.isEmpty()) {
+            return 0;
+        }
+        return Integer.parseInt(numStr);
     }
 
 

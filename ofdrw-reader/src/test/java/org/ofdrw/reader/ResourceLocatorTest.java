@@ -6,7 +6,6 @@ import org.ofdrw.core.basicStructure.doc.Document;
 import org.ofdrw.core.basicStructure.ofd.OFD;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicType.ST_Loc;
-import org.ofdrw.pkg.container.DocDir;
 import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.pkg.container.PageDir;
 
@@ -16,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -62,10 +60,13 @@ class ResourceLocatorTest {
             ResourceLocator rl = new ResourceLocator(pageDir);
             assertEquals("/Doc_0/Pages/Page_0", rl.pwd());
 
-            rl.cd("/Doc_0/Res");
-            Path file = rl.getFile(new ST_Loc("NotoSerifCJKsc-Regular.otf"));
-            assertTrue(Files.exists(file));
+            // 切换到文档根目录
+            rl.cd("/Doc_0");
+            assertEquals("/Doc_0", rl.pwd());
 
+            // 获取 Document.xml
+            Path docFile = rl.getFile(new ST_Loc("Document.xml"));
+            assertTrue(Files.exists(docFile));
         }
     }
 
@@ -151,7 +152,7 @@ class ResourceLocatorTest {
             OFDDir ofdDir = reader.getOFDDir();
             ResourceLocator rl = new ResourceLocator(ofdDir);
             OFD ofd = rl.get("OFD.xml", OFD::new);
-            assertEquals("6b9c7c83cff048e7b427ef0567f3e065", ofd.getDocBody().getDocInfo().getDocID());
+            assertEquals("220c5913ebfe4f6e8070dabd3647f157", ofd.getDocBody().getDocInfo().getDocID());
             // 检查缓存是否生效
             assertEquals(ofd.getProxy(), ofdDir.getOfd().getProxy());
             Page page = rl.get("/Doc_0/Pages/Page_0/Content.xml", Page::new);

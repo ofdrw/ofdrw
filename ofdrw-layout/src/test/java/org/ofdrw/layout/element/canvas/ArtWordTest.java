@@ -6,6 +6,8 @@ import org.ofdrw.layout.VirtualPage;
 import org.ofdrw.layout.element.Position;
 import org.ofdrw.layout.element.TextAlign;
 
+import org.ofdrw.font.Font;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,6 +24,7 @@ public class ArtWordTest {
             VirtualPage virtualPage = new VirtualPage(ofdDoc.getPageLayout());
 
             ArtWord artWord = new ArtWord(200D, 50D);
+            artWord.setFont(new Font("宋体", "宋体"));
             artWord.setPosition(Position.Absolute);
             artWord.setXY(0D, 0D);
             artWord.setHorizontalInclination(0.5);
@@ -32,6 +35,7 @@ public class ArtWordTest {
 
 
             ArtWord artWord2 = new ArtWord(200D, 50D);
+            artWord2.setFont(new Font("宋体", "宋体"));
             artWord2.setPosition(Position.Absolute);
             artWord2.setXY(0D, 51D);
             artWord2.setText("这是一个测试抬头");

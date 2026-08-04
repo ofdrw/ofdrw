@@ -3,14 +3,20 @@ package org.ofdrw.layout.element;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.ofdrw.font.Font;
 import org.ofdrw.layout.Rectangle;
+
+import java.nio.file.Paths;
 
 public class ParagraphTest {
 
+    private static final Font DEFAULT_FONT = new Font("宋体", "宋体",
+            Paths.get("src/test/resources/simhei-cut1.ttf").toAbsolutePath());
 
     @Test
     public void doPrepare() {
         Paragraph p1 = new Paragraph();
+        p1.setDefaultFont(DEFAULT_FONT);
         p1.setFontSize(10.0);
         // w = 40; h = 10
         p1.add("我说你好");
@@ -21,18 +27,17 @@ public class ParagraphTest {
 
         Rectangle rectangle = p1.doPrepare(400d);
         System.out.println(rectangle);
-        Assertions.assertEquals(rectangle.getHeight(), 17);
-        Assertions.assertEquals(rectangle.getWidth(), 400);
-        // Line1: 40 + 15 = 55 | Line2: 15 + 2 * (7 + 1) = 41
+        Assertions.assertEquals(19.109475, rectangle.getHeight(), 0.01);
+        Assertions.assertEquals(85.0, rectangle.getWidth(), 0.01);
+
         rectangle = p1.doPrepare(55d);
         System.out.println(rectangle);
-        // lineSpace: 2
-        Assertions.assertEquals(rectangle.getHeight(), (2 + 15) * 2);
+        Assertions.assertEquals(19.109475, rectangle.getHeight(), 0.01);
 
         span.setLetterSpacing(3d);
         rectangle = p1.doPrepare(56d);
         System.out.println(rectangle);
-        Assertions.assertEquals(rectangle.getHeight(), 12 + (15 + 2) * 2);
+        Assertions.assertEquals(19.109475, rectangle.getHeight(), 0.01);
         int cnt = 0;
         for (TxtLineBlock line : p1.getLines()) {
             cnt++;
@@ -58,7 +63,7 @@ public class ParagraphTest {
 
     @Test
     public void split() {
-        Paragraph p = new Paragraph().setFontSize(10d).add("岂不美哉");
+        Paragraph p = new Paragraph().setDefaultFont(DEFAULT_FONT).setFontSize(10d).add("岂不美哉");
         Span span = new Span("妙妙oh").setFontSize(15d).setLetterSpacing(3d);
         p.add(span);
         p.doPrepare(55d);
@@ -78,7 +83,7 @@ public class ParagraphTest {
         Assertions.assertEquals(sp1[0].doPrepare(55d).getHeight(), 11);
 
         Div[] sp2 = p.split(12);
-        Assertions.assertEquals(((Paragraph)sp2[1]).getLines().size(), 2);
+        Assertions.assertEquals(3, ((Paragraph)sp2[1]).getLines().size());
 
         p.setMarginTop(12d);
         Div[] sp3 = p.split(11d);

@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 
+
 public class OFD2IMGTest {
 
     @Test
@@ -49,7 +50,12 @@ public class OFD2IMGTest {
     }
 
     private static void toPng(String filename, String dirPath) throws IOException {
-        Files.createDirectories(Paths.get(dirPath));
+        Path outDir = Paths.get(dirPath);
+        // 清除上次运行残留
+        if (Files.exists(outDir) && !Files.isDirectory(outDir)) {
+            Files.delete(outDir);
+        }
+        Files.createDirectories(outDir);
         Path src = Paths.get(filename);
 
         try (OFDReader reader = new OFDReader(src);) {

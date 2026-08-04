@@ -701,7 +701,7 @@ class OFDDocTest {
     @Test
     void testReplaceText() throws IOException {
         // 随便找一张电子发票，例如滴滴打车发票的ofd格式，即可测试
-        Path srcP = Paths.get("src/test/resources", "滴滴电子发票 (11).ofd");
+        Path srcP = Paths.get("src/test/resources", "1-1.ofd");
         Path outP = Paths.get("target", "test-reaplaced.ofd");
         Path fontFile = Paths.get("src/test/resources", "simhei-cut1.ttf");
 

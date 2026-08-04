@@ -6,9 +6,11 @@ import org.ofdrw.graphics2d.OFDGraphicsDocument;
 import org.ofdrw.graphics2d.OFDPageGraphics2D;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 
 public class PDF2OFDTest {
 
@@ -16,10 +18,19 @@ public class PDF2OFDTest {
     void pdfbox2ofdrw() throws Exception {
 
         Path path = Paths.get("src/test/resources/Test.pdf");
-        Path dir = Paths.get("target", path.getFileName().toString());
 
         Path dst = Paths.get("target/helloworld.ofd");
-        Files.createDirectories(dir);
+        // 清除上次运行残留（可能是文件或 OFD 解压目录）
+        if (Files.exists(dst)) {
+            if (Files.isDirectory(dst)) {
+                Files.walk(dst)
+                     .sorted(Comparator.reverseOrder())
+                     .map(Path::toFile)
+                     .forEach(File::delete);
+            } else {
+                Files.delete(dst);
+            }
+        }
         try (OFDGraphicsDocument ofdDoc = new OFDGraphicsDocument(dst);
              PDDocument pdfDoc = PDDocument.load(path.toFile())) {
             PDFRenderer pdfRender = new PDFRenderer(pdfDoc);
@@ -37,9 +48,7 @@ public class PDF2OFDTest {
     void pdfbox2ofdrwStream() throws Exception {
 
         Path path = Paths.get("src/test/resources/Test.pdf");
-        Path dir = Paths.get("target", path.getFileName().toString());
 
-        Files.createDirectories(dir);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try (OFDGraphicsDocument ofdDoc = new OFDGraphicsDocument(outputStream);
              PDDocument pdfDoc = PDDocument.load(path.toFile())) {

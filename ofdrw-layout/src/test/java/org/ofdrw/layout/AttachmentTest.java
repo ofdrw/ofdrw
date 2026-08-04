@@ -112,12 +112,12 @@ public class AttachmentTest {
         Path outP = Paths.get("target/AddAttachment_relativepathversion_out.ofd");
         Path inP = Paths.get("src/test/resources/AddAttachment_relativepathversion.ofd");
         Path file = Paths.get("src/test/resources", "testimg.png");
-        Path file2 = Paths.get("src/test/resources", "eg_tulip.jpg");
+        Path file2 = Paths.get("src/test/resources", "rhino.jpg");
         try (OFDReader reader = new OFDReader(inP);
              OFDDoc ofdDoc = new OFDDoc(reader, outP)) {
-            // 加入附件文件
+            // 加入附件文件（附件名不与 OFD 已有资源冲突）
             ofdDoc.addAttachment(new Attachment("testimg", file));
-            ofdDoc.addAttachment(new Attachment("eg_tulip", file2));
+            ofdDoc.addAttachment(new Attachment("eg_tulip_new", file2));
         }
         System.out.println("生成文档位置：" + outP.toAbsolutePath().toString());
     }

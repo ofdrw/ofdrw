@@ -31,7 +31,7 @@ class OFDReaderStreamTest {
 
     @Test
     void testChineseDirName() throws IOException {
-        Path src = Paths.get("src/test/resources/chineseDir_windows.ofd");
+        Path src = Paths.get("src/test/resources/chineseDir.ofd");
         try (OFDReader reader = new OFDReader(new ByteArrayInputStream(Files.readAllBytes(src)))) {
             System.out.println(reader.getWorkDir().toAbsolutePath());
             OFDDir ofdDir = reader.getOFDDir();
