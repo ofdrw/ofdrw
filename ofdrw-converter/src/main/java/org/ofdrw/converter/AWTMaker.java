@@ -6,9 +6,11 @@ import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
 import org.ofdrw.converter.font.FontWrapper;
 import org.ofdrw.converter.font.GlyphData;
 import org.ofdrw.converter.font.TrueTypeFont;
+import org.ofdrw.converter.point.PathPoint;
 import org.ofdrw.converter.point.Tuple2;
 import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.converter.utils.MatrixUtils;
+import org.ofdrw.converter.utils.PointUtil;
 import org.ofdrw.converter.utils.StringUtils;
 import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.annotation.pageannot.Appearance;
@@ -212,7 +214,7 @@ public abstract class AWTMaker {
         // 获取页面内容出现的所有图层，包含模板页（所有页面均按照定义ZOrder排列）
         final List<CT_Layer> layerList = pageInfo.getAllLayer();
         for (CT_Layer layer : layerList) {
-            writeContent(graphics, layer, null, matrix);
+            writeContent(graphics, layer, null, matrix, pageInfo.getSize());
         }
 
         final String pageId = pageInfo.getId().toString();
@@ -231,7 +233,7 @@ public abstract class AWTMaker {
             if (pageId.equals(annotionEntity.getPageId()) && null != annotionEntity.getAnnots()) {
                 for (Annot annot : annotionEntity.getAnnots()) {
                     Appearance appearance = annot.getAppearance();
-                    writeContent(graphics, appearance, null, null);
+                    writeContent(graphics, appearance, null, null, pageInfo.getSize());
                 }
             }
         }
@@ -239,7 +241,8 @@ public abstract class AWTMaker {
     }
 
 
-    private void writeContent(Graphics2D graphics, CT_PageBlock pageBlock, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
+    private void writeContent(Graphics2D graphics, CT_PageBlock pageBlock, List<CT_DrawParam> drawParams,
+                              Matrix parentMatrix, ST_Box pageBox) {
         if (pageBlock == null) {
             return;
         }
@@ -274,13 +277,13 @@ public abstract class AWTMaker {
                         writeImage(graphics, imageObject, subDrawParams, parentMatrix);
                     } else if (object instanceof PathObject) {
                         PathObject pathObject = (PathObject) object;
-                        writePath(graphics, pathObject, subDrawParams, parentMatrix);
+                        writePath(graphics, pathObject, subDrawParams, parentMatrix, pageBox);
                     } else if (object instanceof CompositeObject) {
                         CompositeObject compositeObject = (CompositeObject) object;
-                        writeComposite(graphics, compositeObject, subDrawParams, parentMatrix);
+                        writeComposite(graphics, compositeObject, subDrawParams, parentMatrix, pageBox);
                     } else if (object instanceof CT_PageBlock) {
                         CT_PageBlock block = (CT_PageBlock) object;
-                        writeContent(graphics, block, subDrawParams, parentMatrix);
+                        writeContent(graphics, block, subDrawParams, parentMatrix, pageBox);
                     } else if (object instanceof CT_Layer) {
                         CT_Layer layer = (CT_Layer) object;
                         ST_RefID drawParamRef = layer.getDrawParam();
@@ -288,7 +291,7 @@ public abstract class AWTMaker {
                             CT_DrawParam ctDrawParam = resourceManage.getDrawParam(drawParamRef.getRefId().toString());
                             subDrawParams.add(ctDrawParam);
                         }
-                        writeContent(graphics, layer, subDrawParams, parentMatrix);
+                        writeContent(graphics, layer, subDrawParams, parentMatrix, pageBox);
                     }
                 } catch (Exception e) {
                     logger.warn("PageBlock无法渲染:", e);
@@ -299,7 +302,8 @@ public abstract class AWTMaker {
         }
     }
 
-    private void writeComposite(Graphics2D graphics, CompositeObject compositeObject, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
+    private void writeComposite(Graphics2D graphics, CompositeObject compositeObject,
+                                List<CT_DrawParam> drawParams, Matrix parentMatrix, ST_Box pageBox) {
         ST_RefID refID = compositeObject.getResourceID();
         if (refID == null) return;
 
@@ -317,7 +321,7 @@ public abstract class AWTMaker {
         }
         m = m.mtimes(parentMatrix);
 
-        writeContent(graphics, vectorG.getContent(), drawParams, m);
+        writeContent(graphics, vectorG.getContent(), drawParams, m, pageBox);
     }
 
     /*
@@ -341,21 +345,35 @@ public abstract class AWTMaker {
     }
 
 
-    private void writePath(Graphics2D graphics, PathObject pathObject, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
+    private void writePath(Graphics2D graphics, PathObject pathObject, List<CT_DrawParam> drawParams,
+                           Matrix parentMatrix, ST_Box pageBox) {
         ST_Box boundary = pathObject.getBoundary();
         Matrix baseMatrix = renderBoundaryAndSetClip(graphics, boundary, parentMatrix);
+        List<PathPoint> pathPoints = PointUtil.convertPathAbbreviatedDatatoPoint(pathObject.getAbbreviatedData());
+        boolean hasCtm = pathObject.getCTM() != null;
+        boolean legacyAbsolutePath = pageBox != null && isIdentityTransform(parentMatrix)
+                && PointUtil.isLegacyAbsolutePath(pageBox.getWidth(), pageBox.getHeight(), boundary,
+                pathPoints, hasCtm, pathObject.getCTM());
+
         Matrix matrix = MatrixUtils.base();
-        if (pathObject.getCTM() != null) {
+        if (legacyAbsolutePath) {
+            pathPoints = PointUtil.calPdfPathPoint(pageBox.getWidth(), pageBox.getHeight(), boundary,
+                    pathPoints, true, pathObject.getCTM(), null, null, false);
+            double pdfPointToMillimetre = CommonUtil.pixelToMillimeters(1d, 72d);
+            matrix = MatrixUtils.scale(matrix, pdfPointToMillimetre, pdfPointToMillimetre);
+        } else if (hasCtm) {
             matrix = matrix.mtimes(MatrixUtils.ctm(pathObject.getCTM().toDouble()));
         }
 
-        if (boundary != null) {
+        if (!legacyAbsolutePath && boundary != null) {
             matrix = MatrixUtils.move(matrix, boundary.getTopLeftX(), boundary.getTopLeftY());
         }
         matrix = matrix.mtimes(baseMatrix);
         graphics.transform(MatrixUtils.createAffineTransform(matrix));
 
-        Path2D path2D = buildPath(pathObject.getAbbreviatedData());
+        Path2D path2D = legacyAbsolutePath
+                ? buildPath(pathPoints)
+                : buildPath(pathObject.getAbbreviatedData());
 
 
         if (pathObject.getStroke() == null || pathObject.getStroke()) {
@@ -722,8 +740,53 @@ public abstract class AWTMaker {
         return m;
     }
 
+    private boolean isIdentityTransform(Matrix matrix) {
+        if (matrix == null) {
+            return true;
+        }
+        final double epsilon = 0.000001d;
+        for (int row = 0; row < 3; row++) {
+            for (int column = 0; column < 3; column++) {
+                double expected = row == column ? 1d : 0d;
+                if (Math.abs(matrix.getAsDouble(row, column) - expected) > epsilon) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private Path2D buildPath(List<PathPoint> pathPoints) {
+        Path2D path = new Path2D.Double();
+        path.moveTo(0, 0);
+        for (PathPoint point : pathPoints) {
+            switch (point.type) {
+                case "S":
+                case "M":
+                    path.moveTo(point.x1, point.y1);
+                    break;
+                case "L":
+                    path.lineTo(point.x1, point.y1);
+                    break;
+                case "Q":
+                    path.quadTo(point.x1, point.y1, point.x2, point.y2);
+                    break;
+                case "B":
+                    path.curveTo(point.x1, point.y1, point.x2, point.y2, point.x3, point.y3);
+                    break;
+                case "A":
+                    // path.append(new
+                    // Arc2D.Double(Double.valueOf(s[i+1]),Double.valueOf(s[i+2]),Double.valueOf(s[i+3]),Double.valueOf(s[i+4]),Double.valueOf(s[i+5]),Double.valueOf(s[i+3]),-1),true);
+                    break;
+                case "C":
+                    path.closePath();
+                    break;
+            }
+        }
+        return path;
+    }
+
     private Path2D buildPath(String abbreviatedData) {
-        // Path 压缩格式解析
         LinkedList<OptVal> optValArr = AbbreviatedData.parse(abbreviatedData);
         Path2D path = new Path2D.Double();
         path.moveTo(0, 0);
@@ -744,8 +807,7 @@ public abstract class AWTMaker {
                     path.curveTo(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]);
                     break;
                 case "A":
-                    // path.append(new
-                    // Arc2D.Double(Double.valueOf(s[i+1]),Double.valueOf(s[i+2]),Double.valueOf(s[i+3]),Double.valueOf(s[i+4]),Double.valueOf(s[i+5]),Double.valueOf(s[i+3]),-1),true);
+                    // Arc rendering is not implemented in the existing AWT path renderer.
                     break;
                 case "C":
                     path.closePath();
