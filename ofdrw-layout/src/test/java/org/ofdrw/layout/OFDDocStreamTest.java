@@ -172,9 +172,9 @@ class OFDDocStreamTest {
     @Test
     void testSplitParagraph() throws Exception {
 
-        Path srcP = Paths.get("src/test/resources", "SplitParagraph.ofd");
+        Path outP = Paths.get("target", "SplitParagraph.ofd");
         //段落内容数组
-        try (OFDDoc ofdDoc = new OFDDoc(srcP)) {
+        try (OFDDoc ofdDoc = new OFDDoc(outP)) {
             PageLayout pageLayOut = PageLayout.A4();
             pageLayOut.setMarginLeft(0.0);
             pageLayOut.setMarginRight(0.0);
@@ -215,6 +215,6 @@ class OFDDocStreamTest {
             Paragraph p4 = new Paragraph().add(content4).setFirstLineIndent(2).setMargin(2.0).setMarginLeft(15.0).setMarginRight(15.0);
             ofdDoc.add(p4);
         }
-        System.out.println("生成文档位置: " + srcP.toAbsolutePath());
+        System.out.println("生成文档位置: " + outP.toAbsolutePath());
     }
 }

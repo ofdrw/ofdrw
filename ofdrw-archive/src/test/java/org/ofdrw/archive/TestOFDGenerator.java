@@ -39,14 +39,14 @@ import java.nio.file.Paths;
  */
 public class TestOFDGenerator {
 
-    /** 测试资源输出目录 */
-    public static final Path TEST_RESOURCES = Paths.get("src/test/resources");
+    /** 测试文件输出目录 */
+    public static final Path TEST_OUTPUT = Paths.get("target");
 
     /**
      * 生成标准合规的 OFD 文件（DocType="OFD"）
      */
     public static Path createNormalOfd() throws IOException {
-        Path path = TEST_RESOURCES.resolve("test-normal.ofd");
+        Path path = TEST_OUTPUT.resolve("test-normal.ofd");
         try (OFDDoc doc = new OFDDoc(path)) {
             doc.add(new Paragraph("Hello OFD"));
         }
@@ -57,7 +57,7 @@ public class TestOFDGenerator {
      * 生成 DocType="OFD-A" 的合规文件
      */
     public static Path createOFDAOfd() throws IOException {
-        Path path = TEST_RESOURCES.resolve("test-ofda.ofd");
+        Path path = Paths.get("target", "test-ofda.ofd");
         try (OFDDoc doc = new OFDDoc(path)) {
             doc.add(new Paragraph("Hello OFD-A"));
         }
@@ -70,7 +70,7 @@ public class TestOFDGenerator {
      * 生成多 DocBody 的 OFD 文件
      */
     public static Path createMultiDocOfd() throws IOException {
-        Path path = TEST_RESOURCES.resolve("test-multidoc.ofd");
+        Path path = TEST_OUTPUT.resolve("test-multidoc.ofd");
         // 先创建普通 OFD，然后修改 OFD.xml 添加第二个 DocBody
         try (OFDDoc doc = new OFDDoc(path)) {
             doc.add(new Paragraph("Doc 0 Page"));
@@ -83,7 +83,7 @@ public class TestOFDGenerator {
      * 生成含 Permissions 的 OFD 文件
      */
     public static Path createWithPermissionsOfd() throws IOException {
-        Path path = TEST_RESOURCES.resolve("test-permissions.ofd");
+        Path path = TEST_OUTPUT.resolve("test-permissions.ofd");
         try (OFDDoc doc = new OFDDoc(path)) {
             doc.add(new Paragraph("With Permissions"));
         }
@@ -95,7 +95,7 @@ public class TestOFDGenerator {
      * 生成含 VPreferences 的 OFD 文件
      */
     public static Path createWithVPrefsOfd() throws IOException {
-        Path path = TEST_RESOURCES.resolve("test-vprefs.ofd");
+        Path path = TEST_OUTPUT.resolve("test-vprefs.ofd");
         try (OFDDoc doc = new OFDDoc(path)) {
             doc.add(new Paragraph("With VPrefs"));
         }
@@ -107,7 +107,7 @@ public class TestOFDGenerator {
      * 生成含非 Goto 动作的 OFD 文件
      */
     public static Path createWithActionsOfd() throws IOException {
-        Path path = TEST_RESOURCES.resolve("test-actions.ofd");
+        Path path = TEST_OUTPUT.resolve("test-actions.ofd");
         try (OFDDoc doc = new OFDDoc(path)) {
             doc.add(new Paragraph("With Actions"));
         }
@@ -118,7 +118,7 @@ public class TestOFDGenerator {
      * 生成含 Extensions 的 OFD 文件
      */
     public static Path createWithExtensionsOfd() throws IOException {
-        Path path = TEST_RESOURCES.resolve("test-extensions.ofd");
+        Path path = TEST_OUTPUT.resolve("test-extensions.ofd");
         try (OFDDoc doc = new OFDDoc(path)) {
             doc.add(new Paragraph("With Extensions"));
         }
@@ -130,7 +130,7 @@ public class TestOFDGenerator {
      * 生成 PageBlock 深层嵌套的 OFD 文件（深度 > 3）
      */
     public static Path createDeepPageBlockOfd() throws IOException {
-        Path path = TEST_RESOURCES.resolve("test-deep-pageblock.ofd");
+        Path path = TEST_OUTPUT.resolve("test-deep-pageblock.ofd");
         try (OFDDoc doc = new OFDDoc(path)) {
             doc.add(new Paragraph("Deep PageBlock"));
         }
@@ -141,7 +141,7 @@ public class TestOFDGenerator {
      * 生成含 Image（可设置 Interpolate=true）的 OFD
      */
     public static Path createWithImageOfd() throws IOException {
-        Path path = TEST_RESOURCES.resolve("test-image.ofd");
+        Path path = TEST_OUTPUT.resolve("test-image.ofd");
         try (OFDDoc doc = new OFDDoc(path)) {
             doc.add(new Paragraph("With Image"));
         }
