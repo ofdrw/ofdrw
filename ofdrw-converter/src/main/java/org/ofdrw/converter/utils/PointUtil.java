@@ -577,13 +577,16 @@ public class PointUtil {
                             double angel = Math.atan2(-b, d);
 
                             double[] newPoint = ctmCalPoint(dx, 0, ctm.toDouble());
+                            // 偏移量是位移向量，只应经 CTM 线性部分 (a,b,c,d) 变换；
+                            // 平移分量 (e,f) 只作用于文字原点，混入步距会逐字累积漂移
+                            // （同 calPdfTextCoordinate 9 参重载中 ctmCalTextVector 的语义）
                             // 无旋转时直接应用CTM
                             if (angel == 0) {
-                                dx = newPoint[0];
+                                dx = newPoint[0] - e;
                             } else {
                                 // 如果竖排文字，水平偏移转化为变换后坐标的垂直分量
                                 if (a == 0 && d == 0) {
-                                    dx = Math.abs(newPoint[1]); // 取绝对值防止负数
+                                    dx = Math.abs(newPoint[1] - f); // 取绝对值防止负数
                                 }
                             }
                         } else {
@@ -615,7 +618,7 @@ public class PointUtil {
                             double angel = Math.atan2(-b, d);
                             if (angel == 0) {
                                 double[] newPoint = ctmCalPoint(0, dy, ctm.toDouble());
-                                dy = newPoint[1];
+                                dy = newPoint[1] - f;
                             } else {
                                 if (a == 0 && d == 0) {
                                     dy = dy * fontSize;
