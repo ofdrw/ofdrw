@@ -457,7 +457,9 @@ public abstract class AWTMaker {
         logger.debug("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━TextObject━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓");
         Double fontSize = getTextObjectSize(textObject);
         AlphaComposite alpha = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, getTextObjectAlpha(textObject));
-        Color strokeColor = getStrokeColor(textObject.getStrokeColor(), null, drawParams);
+        Color strokeColor = textObject.getStroke()
+                ? getStrokeColor(textObject.getStrokeColor(), null, drawParams)
+                : null;
         Color fillColor = getFillColor(textObject.getFillColor(), null, drawParams);
         if (fillColor == null) fillColor = Color.black;
 
