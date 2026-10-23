@@ -2,6 +2,8 @@
 
 OFD Reader & Writer Convert to OFD (OFDRW C2O)
 
+> **提示**：本文档为“其它格式 → OFD”的归档迁移转换，查看 OFD 请勿转换，直接使用 [ofdrw-viewer](https://github.com/ofdrw/ofdrw-viewer) 预览。
+
 OFDRW提供了将其它类型媒体文件或文档转换成OFD文档内容功能，例如：
 
 - PDF转换OFD

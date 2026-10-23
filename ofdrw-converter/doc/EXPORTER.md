@@ -2,6 +2,8 @@
 
 OFD Reader & Writer Document Exporter (OFDRW DE)
 
+> **提示**：导出为 PDF/图片/文本属有损转换，不作为查看手段。预览请用 [ofdrw-viewer](https://github.com/ofdrw/ofdrw-viewer)；仅需图片优先用其 CLI。详见本模块 [README](./README.md)。
+
 OFDRW提供了将OFD文档导出为其他格式文档的能力，如导出为图片、SVG、文本等。
 
 > 致谢：该模块的发展离不开社区的支持，非常感谢 [DLTech21](https://github.com/DLTech21)、 [QAQtutu](https://github.com/QAQtutu)、[yuanfangme](https://github.com/yuanfangme)
