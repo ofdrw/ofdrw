@@ -32,7 +32,7 @@ OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、
 - [**ofdrw-gv**](./ofdrw-gv) OFDRW 所有模块所共用的全局变量。
 - [**ofdrw-converter**](./ofdrw-converter) OFD文档转换（格式迁移用，**不建议用于预览**，预览见下方 OFDRW 系列）。
 - [**ofdrw-tool**](./ofdrw-tool) OFD文档工具，文档合并、裁剪、重组、混合。
-- [**ofdrw-archive**](./ofdrw-archive) OFD-A 档案模块，依据 GB/T 42133-2022 实现 OFD 文件的合规检查和去技术化转换。***New***
+- [**ofdrw-archive**](./ofdrw-archive) OFD-A 档案模块，依据 GB/T 42133-2022 实现 OFD 文件的合规检查和去技术化转换。
 - [**ofdrw-graphics2d**](./ofdrw-graphics2d) 实现了AWT Graphics2D接口，生成OFD文档内容。
 - [**ofdrw-full**](./ofdrw-full) 上述所有模块整合包，用于简化依赖引入。
 
@@ -41,7 +41,7 @@ OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、
 - 您可以根据需求裁剪模块优化程序体积。
 - 您可以仅引用`ofdrw-core`中定义的数据结来构建属于您自己的OFD库，就像[ofdrw-graphics2d](./ofdrw-graphics2d)那样。
 
-## OFDRW 系列 🆕
+## OFDRW Viewer开发工具链 ***New***
 
 [**ofdrw-viewer**](https://github.com/ofdrw/ofdrw-viewer) 是 OFDRW 系列项目之一，由一组可独立使用的 OFD 预览与渲染库、组件构成，为开发者补齐 OFD 处理链路的最后一环：
 
