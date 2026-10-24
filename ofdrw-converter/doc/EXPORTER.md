@@ -2,7 +2,7 @@
 
 OFD Reader & Writer Document Exporter (OFDRW DE)
 
-> **提示**：导出为 PDF/图片/文本属有损转换，不作为查看手段。预览请用 [ofdrw-viewer](https://github.com/ofdrw/ofdrw-viewer)；仅需图片优先用其 CLI。详见本模块 [README](./README.md)。
+> **提示**：导出为 PDF/图片/文本属有损转换，不作为查看手段。预览请用 [ofdrw-viewer](https://github.com/ofdrw/ofdrw-viewer)；仅需图片优先用其 CLI。详见本模块 [README](../README.md)。
 
 OFDRW提供了将OFD文档导出为其他格式文档的能力，如导出为图片、SVG、文本等。
 
@@ -45,7 +45,7 @@ void export(int...indexes)throws GeneralConvertException
 API调用形式如下：
 
 ```
-OFDExporter exporter = new ImageExporter(ofdPath, targetPath)
+OFDExporter exporter = new CanvasImageExporter(ofdPath, targetPath);
 exporter.export();
 exporter.close();
 ```
@@ -117,11 +117,11 @@ exporter.close();
 
 接口实现类命名格式为： ***目标格式+Exporter***
 
-例如：`ImageExporter`表示OFD的导出目标格式为图片，`PDFExporter`表示导出格式为PDF。
+例如：`CanvasImageExporter`表示OFD的导出目标格式为图片，`PDFExporter`表示导出格式为PDF。
 
 目前OFDExporter支持导出为以下类型：
 
-- 图片：`ImageExporter`
+- 图片：`CanvasImageExporter`（`ImageExporter` 已废弃，见下节“从 ImageExporter 迁移”）
 - SVG矢量图形：`SVGExporter`
 - PDF文档：`PDFExporterIText`、`PDFExporterPDFBox`
 - HTML网页：`HTMLExporter`
@@ -131,23 +131,96 @@ exporter.close();
 
 ### 导出为图片
 
-导出OFD文档页面为图片，图片格式支持PNG、BPM、JPG。
+导出OFD文档页面为图片，图片格式支持PNG、JPG、BMP。
 
-实现类：`org.ofdrw.converter.export.ImageExporter`
+实现类：`org.ofdrw.converter.export.CanvasImageExporter`
 
-注意事项：
+> `org.ofdrw.converter.export.ImageExporter` 已标记 `@Deprecated`，仅为兼容 2.4.x 调用方保留，新代码请使用 `CanvasImageExporter`。
 
-- 可以通过构造器指定导出的图片类型，目前支持`PNG`、`JPG`、`BPM`，默认为`PNG`格式。
-- 可以通过构造器或方法设置导出图片的质量，也就是`ppm`参数，默认`ppm`为**15**。
-- 导出图片将存放于同一个目录，在该目录中图片以的页面索引作为文件名，如第1页的文件名为`0.png`。
+#### 构造器
 
-示例：
+`CanvasImageExporter` 提供 5 个构造器：
 
-```
+| 构造器 | 说明 |
+|:---|:---|
+| `CanvasImageExporter(Path ofdFile, Path outDir)` | 默认 `PNG` 格式、默认 `ppm`（15） |
+| `CanvasImageExporter(InputStream ofdInput, Path outDir)` | 来源为输入流，默认 `PNG` 格式、默认 `ppm`；该流由调用者负责关闭 |
+| `CanvasImageExporter(Path ofdFile, Path outDir, String imageFormat, double ppm)` | 指定格式与 `ppm` |
+| `CanvasImageExporter(InputStream ofdInput, Path outDir, String imageFormat, double ppm)` | 来源为输入流，指定格式与 `ppm`；该流由调用者负责关闭 |
+| `CanvasImageExporter(OFDReader reader, Path outDir, String imageFormat, double ppm)` | 复用外部 `OFDReader`；**外部传入的 `OFDReader` 由调用方负责关闭，`close()` 不会关闭它** |
+
+构造器参数：
+
+| 参数 | 说明 |
+|:---|:---|
+| `ofdFile` / `ofdInput` | 待导出的 OFD 文档 |
+| `reader` | 外部 OFD 解析器，用于多页批量导出时复用页面缓存 |
+| `outDir` | 图片输出目录，不存在时自动创建；若已存在同名普通文件则抛 `IllegalArgumentException` |
+| `imageFormat` | 输出格式，支持 `PNG`、`JPG`（别名 `JPEG`）、`BMP`，大小写不敏感 |
+| `ppm` | 每毫米像素数量，不大于 0 时使用默认值 15 |
+
+#### 参数设置
+
+所有参数设置方法都应在调用 `export` **之前**完成。
+
+| 方法 | 用途 | 默认值 / 规则 |
+|:---|:---|:---|
+| `void setPPM(double ppm)` | 设置每毫米像素数量 | 默认 `15`；不大于 0 时忽略该设置并告警 |
+| `void setImageFormat(String imageFormat)` | 设置输出格式 | 默认 `PNG`；支持 `PNG` / `JPG`（`JPEG`）/ `BMP`；其他值抛 `IllegalArgumentException` |
+| `void setJpegQuality(float quality)` | 设置 JPG 压缩质量 | 默认 `0.92`；取值 `0.0`–`1.0`，越界自动修正并告警；**仅 JPG 生效**，PNG/BMP 忽略 |
+| `void setBackground(Color background)` | 设置背景色 | 默认白色（`Color.WHITE`）；传 `null` 表示透明背景，**仅 PNG 有效**，JPG/BMP 下 `null` 按白色处理 |
+| `void setRotation(int degree)` | 设置顺时针旋转角度 | 默认 `0`；仅接受 `0`、`90`、`180`、`270`（`-90` 归一化为 `270`），其余值忽略并告警 |
+| `void setMaxPixels(long maxPixels)` | 设置单页像素上限 | 默认 `64000000`（6400 万像素）；小于等于 0 表示不限制 |
+| `void setFilenamePattern(String pattern)` | 设置文件名模式，`String.format` 语义 | 默认 `page-%d`；必须恰好包含一个整型占位符（如 `%d`、`%03d`），不能含路径分隔符，否则抛 `IllegalArgumentException` |
+| `void setFilenameIndexBase(IndexBase base)` | 设置占位符取值基准 | 默认 `IndexBase.PAGE`（代入页码）；`IndexBase.SEQUENCE` 表示代入本次导出的序号 |
+
+图片文件扩展名由格式决定：`PNG` → `.png`，`JPG` → `.jpg`，`BMP` → `.bmp`。
+
+#### 结果获取
+
+| 方法 | 用途 |
+|:---|:---|
+| `List<Path> getImgFilePaths()` | 获取已导出图片的文件路径，次序与导出时的页码次序一致 |
+| `List<ImageInfo> getImageInfos()` | 获取最近一次导出的图片尺寸与导出参数快照（页码、宽、高、旋转角度、`ppm`、路径） |
+
+#### 示例
+
+导出全部页面为 PNG，默认按页码命名（`page-0.png`、`page-1.png`…）：
+
+```java
 Path ofdPath = Paths.get("src/test/resources/999.ofd");
 Path imgDirPath = Paths.get("target/999.ofd/");
-try (ImageExporter exporter = new ImageExporter(ofdPath, imgDirPath, "PNG", 20d)) {
+try (CanvasImageExporter exporter = new CanvasImageExporter(ofdPath, imgDirPath)) {
     exporter.export();
+    for (Path img : exporter.getImgFilePaths()) {
+        System.out.println(img);
+    }
+}
+```
+
+导出指定页面为 JPG，设置质量与顺时针旋转 90 度：
+
+```java
+Path ofdPath = Paths.get("src/test/resources/999.ofd");
+Path imgDirPath = Paths.get("target/999.jpg/");
+try (CanvasImageExporter exporter = new CanvasImageExporter(ofdPath, imgDirPath, "JPG", 15d)) {
+    exporter.setJpegQuality(0.92f);
+    exporter.setRotation(90);
+    // 仅导出第 1、3 页（页码从 0 起）
+    exporter.export(0, 2);
+}
+```
+
+复用外部 `OFDReader`（Reader 由调用方关闭），导出透明背景 PNG：
+
+```java
+Path ofdPath = Paths.get("src/test/resources/999.ofd");
+Path imgDirPath = Paths.get("target/999.alpha/");
+try (OFDReader reader = new OFDReader(ofdPath);
+     CanvasImageExporter exporter = new CanvasImageExporter(reader, imgDirPath, "PNG", 15d)) {
+    // 透明背景仅对 PNG 生效
+    exporter.setBackground(null);
+    exporter.export(0);
 }
 ```
 
@@ -155,12 +228,35 @@ try (ImageExporter exporter = new ImageExporter(ofdPath, imgDirPath, "PNG", 20d)
 
 ![转图片效果](../src/test/resources/转图片效果.png)
 
-| 特有方法                           | 用途                               |
-|:-------------------------------|:---------------------------------|
-| `List<Path> getImgFilePaths()` | 获取导出页面对应图片文件路径，列表中次序与导出时的页码次序一致。 |
-| `void setPPM(double ppm)`      | 设置导出图片质量，单位为：每毫米像素数量。            |
+#### 行为说明
 
-> 详见 [测试用例](../src/test/java/org/ofdrw/converter/export/ImageExporterTest.java)
+- **页码从 0 起**：`export(int... indexes)` 的页码与文档页码对应，越界页码会被跳过并告警；不传参数表示导出全部页面；页码可以乱序或重复。
+- **像素尺寸向上取整**：页面像素宽高按 `Math.ceil(ppm × 毫米尺寸)` 计算，避免高分辨率下右侧、底部被裁掉 1 像素。旋转 90/270 时输出宽高互换，像素上限按旋转后的输出尺寸校验。
+- **像素上限**：单页输出像素数超过 `maxPixels` 时抛 `GeneralConvertException`，异常信息包含请求尺寸、像素数与上限值。可用 `setPPM` 降低分辨率或 `setMaxPixels` 调整上限。
+- **旋转实现**：先把整页按未旋转方向渲染到离屏画布，再对整幅位图做像素级顺时针旋转。之所以不在画布上预先施加旋转，是因为 `AWTMaker` 在绘制各类元素时会无条件调用 `Graphics2D.setTransform` 重置画布变换，若预先旋转，只有位图类元素会跟随旋转，矢量文字与图形不会旋转，产生“部分旋转”的错误图像。
+- **背景与透明**：`setBackground(null)` 时画布保持全透明（仅 PNG 能保留 alpha 通道）；JPG、BMP 不支持透明，编码前会合成到白色（或指定背景色）上，避免透明像素变成黑块。
+- **物理分辨率元数据**：编码通过 `ImageWriter` 完成，以便同时设置 JPG 压缩质量与物理分辨率。JPEG 写入 JFIF 像素密度（`dpi = ppm × 25.4`，取整），PNG 写入 `pHYs` 物理像素尺寸（每米像素数 = `round(1 / (ppm × 0.001))`，等价于 `round(1000 / ppm)`）。元数据写入失败时降级为无元数据输出并告警，不中断导出；BMP 不写入分辨率元数据。
+- **资源释放**：每页画布与编码用位图在导出后立即 `flush()`，连续导出大量页面时像素内存不会无限堆积。
+- **异常**：调用 `close()` 后再调用 `export` 抛 `GeneralConvertException("导出器已关闭")`；编码或写文件失败抛 `GeneralConvertException` 并保留 cause。
+
+#### 从 ImageExporter 迁移
+
+`ImageExporter` 已废弃，内部完全委托给 `CanvasImageExporter`。迁移时请留意以下行为差异：
+
+| 项目 | `ImageExporter`（已废弃） | `CanvasImageExporter` |
+|:---|:---|:---|
+| 页面像素尺寸 | `Math.round` | `Math.ceil`（高分辨率下右侧、底部不再被裁 1 像素） |
+| 文件名 | 按导出序号命名，固定 `0.png`、`1.png`… | 默认按页码命名 `page-0.png`（`setFilenameIndexBase(SEQUENCE)` 可切回序号） |
+| 单页像素上限 | 不限制 | 默认 6400 万像素，超限抛 `GeneralConvertException`（`setMaxPixels(0)` 可关闭） |
+| JPG 质量 | `ImageIO.write` 默认（约 0.75） | 默认 `0.92`，可通过 `setJpegQuality` 调整 |
+| DPI 元数据 | 不写入 | JPEG 写 JFIF、PNG 写 `pHYs` |
+| 默认背景 | 透明（PNG） | 白色；需透明请调用 `setBackground(null)` |
+| 背景色 / 旋转 | 不支持 | 支持 `setBackground`、`setRotation` |
+
+> 需要与旧版产物完全一致的文件名时，迁移后额外调用 `setFilenamePattern("%d")` 与 `setFilenameIndexBase(IndexBase.SEQUENCE)`；需要旧版“不限制尺寸”的行为时调用 `setMaxPixels(0)`。
+
+> 详见 [测试用例](../src/test/java/org/ofdrw/converter/export/CanvasImageExporterTest.java)
+
 
 ### 导出为SVG图形
 

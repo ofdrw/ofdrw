@@ -8,10 +8,8 @@ import org.ofdrw.core.text.TextCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.awt.Graphics2D;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -31,6 +29,9 @@ class RendererApiCompatibilityTest {
 
     /**
      * 锁定 AWTMaker#writeText 的方法签名与 parseDelta 的偏移量解析行为
+     * <p>
+     * 阶段 3 起绘制下沉到 {@link org.ofdrw.converter.renderer.Renderer}，
+     * 文字绘制入口的第一个参数由 Graphics2D 改为 Renderer，其余参数与返回类型保持不变。
      *
      * @throws Exception 方法查找失败
      */
@@ -39,7 +40,9 @@ class RendererApiCompatibilityTest {
     void awtMakerShouldKeepWriteTextSignature() throws Exception {
         // 文字绘制入口签名：参数列表变化会导致这里抛 NoSuchMethodException
         Method writeText = AWTMaker.class.getDeclaredMethod("writeText",
-                Graphics2D.class, TextObject.class, List.class, org.ujmp.core.Matrix.class);
+                org.ofdrw.converter.renderer.Renderer.class, TextObject.class,
+                org.ofdrw.converter.style.StyleScope.class, org.ujmp.core.Matrix.class,
+                org.ofdrw.converter.style.StyleResolver.class);
         assertFalse(writeText.isSynthetic());
         assertEquals(void.class, writeText.getReturnType());
 

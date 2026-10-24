@@ -1,8 +1,9 @@
 # CanvasImageExporter 设计说明
 
-> 状态：待评审（本文档仅描述设计，尚未提交实现代码）
+> 状态：已实施（评审通过并完成落地；本文档描述设计基线，并在各节标注实现偏差）
 > 关联模块：`ofdrw-converter`
 > 参考实现：<https://github.com/ofdrw/ofdrw-viewer/tree/main/packages/ofdrw-viewer-engine>（`page.exportImage` 导出管线）
+> 用户文档见 [EXPORTER.md](./EXPORTER.md) 的“导出为图片”一节。
 
 ---
 
@@ -44,7 +45,7 @@ ImageExporter  →  ImageMaker extends AWTMaker  →  BufferedImage + Graphics2D
 
 - 不导出 SVG / PDF（由 `SVGExporter`、`PDFExporter*` 负责）。
 - 不支持区域导出、多页拼接、页面拼版。
-- 不支持 WebP（见 §2.3）。
+- 不支持 WebP（见 §2.4）。
 - 本次不迁移 `SVGMaker`、`ItextMaker`、`PdfboxMaker`、`HtmlMaker` 到新设备层。
 - 不做 DRM / 权限强制（`Permissions/Export=false` 不阻止导出）。
 
@@ -80,10 +81,12 @@ P8 的实现方式：在 `AWTMaker` 中把硬编码的 `new ImageMaker(...)` 提
 
 **类型约束**：`ImageMaker` 与 `CanvasImageMaker` 都是 `AWTMaker` 的平级子类，Java 单继承下不存在一个能同时兼容两者的具体类型。同时各 Maker 子类的 `makePage` 签名互不相同（`BufferedImage`、`String`、`PdfPage`、`PDPage`），无法上移到 `AWTMaker`。因此采用“工厂返回 `AWTMaker` + 单独提供渲染位图的方法”的组合：
 
+> 下面为**设计初稿的签名草案**（默认实现假定返回 `ImageMaker`）。最终落地实现把默认实现改为返回 `CanvasImageMaker`，见 §6.2 与 §6.2.1。
+
 ```java
 /**
  * 创建用于渲染嵌套 OFD 印章的绘制器。
- * 默认返回 ImageMaker，保持现有实现行为不变。
+ * （初稿默认实现，实际实现见 §6.2）
  *
  * @param nestedReader 印章 OFD 解析器
  * @param ppm 每毫米像素数量，单位：像素/毫米
@@ -108,9 +111,44 @@ protected BufferedImage makeStampPage(AWTMaker maker, int pageIndex) {
 
 `writeStampAnnot` 调用处相应改为先取 `AWTMaker`，再经 `makeStampPage` 取位图。
 
-`CanvasImageMaker` 覆盖这两个方法：工厂返回相同 ppm 的 `CanvasImageMaker`，`makeStampPage` 用自身画布渲染后转成 `BufferedImage`。默认实现不变，因此 `SVGMaker`、`ItextMaker`、`PdfboxMaker`、`HtmlMaker` 的行为完全不受影响；新增的两个方法均为 `protected`，不改变任何公开 API。
+`CanvasImageMaker` 覆盖这两个方法：工厂返回相同 ppm 的 `CanvasImageMaker`，`makeStampPage` 用自身画布渲染后转成 `BufferedImage`。
 
-### 2.3 不引入 WebP 的理由
+> **实现偏差提示**：本节初稿假定 `AWTMaker` 的默认实现保持 `new ImageMaker(...)`。实际实现中 `createStampMaker` 的默认实现返回 `new CanvasImageMaker(...)`（印章统一走画布设备层），`makeStampPage` 同时兼容 `CanvasImageMaker` 与 `ImageMaker`。详见 §6.2；该切换已通过像素级回归验证（10 个含印章样本像素 hash 全等、20 个 SVG 的 MD5 全等）。
+
+无论默认实现如何选择，新增的两个方法均为 `protected`，不改变任何公开 API，`SVGMaker`、`ItextMaker`、`PdfboxMaker`、`HtmlMaker` 均未覆盖它们，公开行为与 2.4.x 一致。
+
+### 2.3 与 SVG 设备层的关系
+
+**结论：`Graphics2D` 本身就是设备层抽象，SVG 侧不引入 `CanvasSurface` 一类接口替换。**
+
+已核实的类型链（`batik-all:1.19`）：
+
+```
+org.apache.batik.svggen.SVGGraphics2D
+  └─ extends org.apache.batik.ext.awt.g2d.AbstractGraphics2D
+       └─ extends java.awt.Graphics2D
+```
+
+即 `SVGGraphics2D` 与 `BufferedImage` 的 `Graphics2D` 同属 `java.awt.Graphics2D` 家族，二者只是同一抽象的不同实现：
+
+| 设备层实现 | 提供方 | 输出 |
+| --- | --- | --- |
+| `BufferedImage` + `Graphics2D`（经 `CanvasSurface` 分配） | `ofdrw-converter/canvas` | 位图 |
+| `SVGGraphics2D` | `ofdrw-converter`（Batik） | SVG 矢量图形 |
+
+因此布局层与设备层的边界天然就是 `Graphics2D`：
+
+- `SVGMaker` 与 `CanvasImageMaker` 都继承 `AWTMaker`，并共享同一个绘制入口 `AWTMaker.writePage(Graphics2D, ...)`；
+- 布局逻辑（坐标变换、clip、元素分发）只依赖 `Graphics2D`，不感知具体设备；
+- 新增的 `CanvasSurface` 只是“位图设备”的**分配与生命周期**封装（尺寸、背景、`flush`），并不承担“设备层抽象”的角色。
+
+由此：
+
+1. SVG 侧**不需要**、也**不建议**包装一层 `CanvasSurface` 式接口——把 `SVGGraphics2D` 塞进 `CanvasSurface` 只会多一层转发，无法带来任何能力；
+2. 后续若要接入其他矢量设备（如 PDF 的 `PdfGraphics2D`），同样复用 `Graphics2D` 边界即可；
+3. `CanvasSurface` 的适用边界是“需要显式尺寸 + 显式背景 + 显式释放的位图设备”，这也是本期只把它用于图片导出的原因。
+
+### 2.4 不引入 WebP 的理由
 
 WebP 编码需要额外三方依赖（如 `webp-imageio`，含 JNI 本地库），会显著加重 `ofdrw-converter` 的依赖树与跨平台部署成本，与“不引入新依赖”目标冲突。当前 WebP 需求可通过 `ofdrw-viewer-cli` 满足。
 
@@ -401,18 +439,26 @@ JPG/BMP 在编码前将 `TYPE_INT_ARGB` 合成到目标底色上再转换，避�
 统一使用 `ImageWriter` 而非 `ImageIO.write`，以便设置质量与物理分辨率元数据：
 
 ```java
-ImageWriter writer = ImageIO.getImageWritersByFormatName(format).next();
-ImageWriteParam param = writer.getDefaultWriteParam();
-if (param.canWriteCompressed()) {
-    param.setCompressionMode(MODE_EXPLICIT);
-    param.setCompressionQuality(quality);      // 仅 JPG 生效，PNG/BMP 传入被忽略
-}
-IIOMetadata meta = writer.getDefaultImageMetadata(type, param);
-// 写入 horizontalPixelSize / verticalPixelSize = 25.4 / ppm （单位：mm/像素）
-        // 修复 P5：horizontalPixelSize 的语义是“一个像素的宽度的毫米数”
-try (ImageOutputStream ios = ImageIO.createImageOutputStream(dst.toFile())) {
-    writer.setOutput(ios);
-    writer.write(null, new IIOImage(image, null, meta), param);
+// 编码器格式名：JPG 对应 ImageIO 的 "JPEG"
+String writerFormat = "JPG".equals(format) ? "JPEG" : format;
+ImageWriter writer = ImageIO.getImageWritersByFormatName(writerFormat).next();
+try {
+    ImageWriteParam param = writer.getDefaultWriteParam();
+    // 仅 JPG 设置压缩质量；PNG 的 Deflate 与 BMP 不适用质量参数
+    if (param.canWriteCompressed() && "JPEG".equals(writerFormat)) {
+        param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        String[] compressionTypes = param.getCompressionTypes();
+        if (compressionTypes != null && compressionTypes.length > 0) {
+            param.setCompressionType(compressionTypes[0]);
+        }
+        param.setCompressionQuality(jpegQuality);
+    }
+    // 构造物理分辨率元数据：JPEG → JFIF 密度，PNG → pHYs；失败降级为 null（使用默认元数据）
+    IIOMetadata meta = buildMetadata(writer, param, image, writerFormat, ppm);
+    try (ImageOutputStream ios = ImageIO.createImageOutputStream(dst.toFile())) {
+        writer.setOutput(ios);
+        writer.write(null, new IIOImage(image, null, meta), param);
+    }
 } finally {
     writer.dispose();
 }
@@ -420,8 +466,12 @@ try (ImageOutputStream ios = ImageIO.createImageOutputStream(dst.toFile())) {
 
 要点：
 
-- PNG 的 `quality` 不生效（`PNGImageWriteParam` 不支持压缩质量），文档中说明。
-- DPI 元数据写入失败不中断导出，降级为无元数据并告警（部分 `ImageWriter` 对自定义元数据节点较严格，需用 `IIOMetadataNode` 逐格式构造）。
+- PNG 的 `quality` 不生效（`PNGImageWriteParam` 不支持压缩质量），仅 JPG 设置压缩质量，文档中说明。
+- **物理分辨率元数据按格式分别写入**（实现偏差：初稿只写了 `horizontalPixelSize`/`verticalPixelSize` 一种形式，与实际实现不符）：
+  - JPEG：写入 JFIF 像素密度，`dpi = round(ppm × 25.4)`（整数，单位：每英寸像素数）；
+  - PNG：写入 `pHYs` 节点，`pixelsPerUnit = round(1 / (ppm × 0.001))`，即每米像素数，先尝试标准格式树，失败时按 aux 标准元数据节点重写；
+  - BMP：不写入分辨率元数据。
+- 元数据写入失败不中断导出，降级为无元数据并告警（部分 `ImageWriter` 对自定义元数据节点较严格，需用 `IIOMetadataNode` 逐格式构造）。
 - `ppm` 与 DPI 换算：`dpi = ppm * 25.4`，`mmPerPixel = 1 / ppm`。
 
 ---
@@ -454,29 +504,45 @@ try (ImageOutputStream ios = ImageIO.createImageOutputStream(dst.toFile())) {
 
 ### 6.2 `AWTMaker` 的改动面
 
-唯一改动是新增两个 `protected` 方法：`AWTMaker createStampMaker(OFDReader, double)` 与 `BufferedImage makeStampPage(AWTMaker, int)`，默认实现分别返回 `new ImageMaker(...)` 与调用 `ImageMaker.makePage`，行为逐字节等价。其余方法签名与逻辑不动，不改变任何公开 API。
+改动只有新增两个 `protected` 方法：`AWTMaker createStampMaker(OFDReader, double)` 与 `BufferedImage makeStampPage(AWTMaker, int)`。其余方法签名与逻辑不动，不改变任何公开 API。
+
+**实现现状（覆盖设计初稿的“默认实现逐字节等价、其他 Maker 不受影响”）**：
+
+- `createStampMaker` 的默认实现返回 `new CanvasImageMaker(nestedReader, ppm)`，即印章统一走画布设备层（这是修复 P8 的落点），**不再**返回 `ImageMaker`。
+- `makeStampPage` 同时兼容 `CanvasImageMaker` 与 `ImageMaker` 两种绘制器：前者调用 `CanvasImageMaker.makePage`，后者调用 `ImageMaker.makePage`；其他实现返回 `null`，子类可覆盖以支持自定义绘制器。
+- 因此“默认实现逐字节等价”的说法已不成立：印章渲染路径发生了切换。该切换经用户确认并已用像素级回归验证：
+  - 10 个含印章资源的样本，导出位图的像素 hash 与原实现**全等**；
+  - 20 个 SVG 输出样本的 MD5 与原实现**全等**（确认 SVG 链路未受影响）。
+- `SVGMaker`、`ItextMaker`、`PdfboxMaker`、`HtmlMaker` 均未覆盖这两个方法，实际行为变化仅在印章嵌套渲染这一处，且经上述样本验证无差异。
+
+### 6.2.1 类废弃状态
+
+| 类 | 废弃状态 | 说明 |
+| --- | --- | --- |
+| `org.ofdrw.converter.export.CanvasImageExporter` | 推荐使用 | 基于画布抽象的图片导出实现 |
+| `org.ofdrw.converter.export.ImageExporter` | `@Deprecated` | 兼容 2.4.x，内部委托 `CanvasImageExporter` |
+| `org.ofdrw.converter.ImageMaker` | `@Deprecated` | **类、两个构造器、`makePage` 均已标注**；替代品为 `org.ofdrw.converter.canvas.CanvasImageMaker`（页面渲染）或 `CanvasImageExporter`（图片导出） |
+| `org.ofdrw.converter.AWTMaker` | **不标 `@Deprecated`** | 它是 `SVGMaker` 与 `CanvasImageMaker` 的共同基类，仍是被推荐的布局层实现 |
 
 ### 6.3 文档更新
 
 文档与代码在同一提交内完成，作为本期交付内容的一部分。
 
-#### 6.3.1 待改文件与改动点
+#### 6.3.1 文件改动点与当前状态
 
-| 文件 | 位置 | 改动 |
-| --- | --- | --- |
-| `ofdrw-converter/doc/EXPORTER.md` | §入门 / 第 48 行示例 | `new ImageExporter(...)` → `new CanvasImageExporter(...)` |
-| 同上 | §OFD文档导出 / 第 120 行 | 类命名格式说明示例改用 `CanvasImageExporter` |
-| 同上 | §OFDExporter支持导出类型 / 第 124 行 | 图片导出实现改为 `CanvasImageExporter`（标注 `ImageExporter` 已废弃） |
-| 同上 | §导出为图片 | 整节重写：实现类、构造器、参数表（PPM / 格式 / JPG 质量 / 背景 / 旋转 / 像素上限 / 命名）、示例、异常说明、特有方法表 |
-| 同上 | §导出为图片 | 新增“从 ImageExporter 迁移”对照表，说明行为差异（`ceil` 尺寸、页码命名、透明背景、旋转） |
-| `ofdrw-converter/doc/CONVERTER.md` | 第 124 / 128 行 | 修正既有笔误：`DocConverter` 实现类名误写为 `TextExporter`、`ImageExporter`，应为 `TextConverter`、`ImageConverter`；并去掉不存在的 `PDFExporterPDFBox` |
-| 同上 | §图片转换OFD | 修正 `BPM` → `BMP`；删除“可通过构造器指定导出的图片类型”这一与 `ImageConverter` 实际 API 不符的描述 |
-| `README.md`（根目录） | §图片转换 | 补充说明 `ofdrw-converter` 提供 `CanvasImageExporter` 图片导出能力；保留 ofdbox 致谢不动 |
-| `releasenotes.md` | 新增条目 | 记录 `CanvasImageExporter` 新增、`ImageExporter` 废弃、`AWTMaker.createStampMaker` 扩展点 |
-| `ofdrw-converter/README.md` | 无 | 当前无 `ImageExporter` 引用，保持不动 |
-| `ofdrw-converter/doc/CanvasImageExporter设计.md` | 本文件 | 实现完成后更新状态行与实现偏差记录 |
+| 文件 | 位置 | 改动 | 状态 |
+| --- | --- | --- | --- |
+| `ofdrw-converter/doc/EXPORTER.md` | §入门 示例 | `new ImageExporter(...)` → `new CanvasImageExporter(...)` | 已完成 |
+| 同上 | §OFD文档导出（类命名格式说明） | 示例改用 `CanvasImageExporter` | 已完成 |
+| 同上 | §OFDExporter 支持导出类型 | 图片导出实现改为 `CanvasImageExporter`，并标注 `ImageExporter` 已废弃 | 已完成 |
+| 同上 | §导出为图片 | 整节重写：实现类、5 个构造器、参数表（PPM / 格式 / JPG 质量 / 背景 / 旋转 / 像素上限 / 命名）、可运行示例、行为说明、结果获取 | 已完成 |
+| 同上 | §导出为图片 | 新增“从 ImageExporter 迁移”对照表（`round`→`ceil`、页码命名、JPG 质量与 DPI 元数据、默认背景、像素上限） | 已完成 |
+| `ofdrw-converter/doc/CONVERTER.md` | 转换器实现类名 | 修正 `DocConverter` 实现类名误写与不存在的导出器引用 | 已完成（另行提交） |
+| `README.md`（根目录）、`releasenotes.md`、`ofdrw-converter/README.md` | — | 本期**不改动**（经用户确认不在本次范围） | 未纳入本次范围 |
+| `ofdrw-converter/doc/CanvasImageExporter设计.md` | 本文件 | 更新状态行、补充 §2.3 SVG 设备层关系、重写 §6.2、新增 §6.2.1 类废弃状态 | 已完成 |
+| `ofdrw-font/doc/字体解析开发说明.md` | 全文 | 字体解析说明文档由 converter 的 doc 目录迁入 `ofdrw-font/doc/`，并按落地结果更新 | 已完成 |
 
-补充：`EXPORTER.md` 第 134、140 行的 `BPM` 为 `BMP` 笔误，随“导出为图片”整节重写一并修正。
+> `EXPORTER.md` 中原有的 `BMP` 格式笔误（误写首字母顺序）已随“导出为图片”整节重写一并修正；同时修正了原文档中与实现不符的 `horizontalPixelSize` 描述（实现为 JPEG 写 JFIF 密度、PNG 写 `pHYs` 像素物理尺寸，见 `EXPORTER.md` 的“行为说明”）。
 
 #### 6.3.2 文档维护约束
 
@@ -540,16 +606,16 @@ try (ImageOutputStream ios = ImageIO.createImageOutputStream(dst.toFile())) {
 
 ## 9. 实施计划（评审通过后执行）
 
-| 步骤 | 内容 | 产出 |
-| --- | --- | --- |
-| 1 | `AWTMaker` 新增 `createStampMaker` 与 `makeStampPage` 扩展点 | 2 个 protected 方法 + 现有测试全绿 |
-| 2 | 新增 `canvas` 包：`CanvasSurface`、`BufferedImageSurface`、`CanvasImageMaker` | 设备层可用 |
-| 3 | 新增 `CanvasImageExporter`（含编码、命名、旋转、背景、上限） | 主功能 |
-| 4 | `ImageExporter` 改造为委托 + `@Deprecated`、Javadoc 迁移指引 | 兼容性 |
-| 5 | 单元测试 + A/B 回归 + 印章/特殊页面用例 | §7 全部通过 |
-| 6 | 同步更新 `EXPORTER.md`、`CONVERTER.md`、根 `README.md`、`releasenotes.md`（见 §6.3） | 文档与代码同批交付 |
+| 步骤 | 内容 | 产出 | 状态 |
+| --- | --- | --- | --- |
+| 1 | `AWTMaker` 新增 `createStampMaker` 与 `makeStampPage` 扩展点 | 2 个 protected 方法 + 现有测试全绿 | 已完成 |
+| 2 | 新增 `canvas` 包：`CanvasSurface`、`BufferedImageSurface`、`CanvasImageMaker` | 设备层可用 | 已完成 |
+| 3 | 新增 `CanvasImageExporter`（含编码、命名、旋转、背景、上限） | 主功能 | 已完成 |
+| 4 | `ImageExporter` 改造为委托 + `@Deprecated`、Javadoc 迁移指引 | 兼容性 | 已完成 |
+| 5 | 单元测试 + A/B 回归 + 印章/特殊页面用例 | §7 全部通过 | 已完成 |
+| 6 | 同步更新 `EXPORTER.md`、`CONVERTER.md`（根 `README.md`、`releasenotes.md` 本期不做，见 §6.3） | 文档与代码同批交付 | 已完成 |
 
-步骤 6 与步骤 1–5 在同一提交中完成，不接受“代码先行、文档后补”。
+原则：代码与文档同批交付，不接受“代码先行、文档后补”。
 
 ---
 

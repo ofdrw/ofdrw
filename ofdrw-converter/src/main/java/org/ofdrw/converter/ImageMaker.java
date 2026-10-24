@@ -10,11 +10,17 @@ import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.tools.ImageUtils;
 
 /**
- * 图片转换类
+ * 图片转换类。
+ * <p>
+ * <b>已废弃</b>：页面渲染请改用 {@link org.ofdrw.converter.canvas.CanvasImageMaker}
+ * 或图片导出使用 {@link org.ofdrw.converter.export.CanvasImageExporter}。
+ * 本类仅为兼容既有调用方保留，行为不变。
  *
  * @author qaqtutu
  * @since 2021-03-13 10:00:01
+ * @deprecated 请使用 {@link org.ofdrw.converter.canvas.CanvasImageMaker}，其基于画布抽象渲染并支持透明背景
  */
+@Deprecated
 public class ImageMaker extends AWTMaker {
 
 
@@ -27,7 +33,9 @@ public class ImageMaker extends AWTMaker {
      *
      * @param reader OFD解析器
      * @param ppm    每毫米像素数量(Pixels per millimeter)
+     * @deprecated 请使用 {@link org.ofdrw.converter.canvas.CanvasImageMaker}
      */
+    @Deprecated
     public ImageMaker(OFDReader reader, int ppm) {
         super(reader, ppm);
     }
@@ -40,7 +48,9 @@ public class ImageMaker extends AWTMaker {
      * @param reader OFD解析器
      * @param ppm    每毫米像素数量(Pixels per millimeter)，DPI与PPM转换可以使用{@link CommonUtil#dpiToPpm(int)}。
      * @author iandjava
+     * @deprecated 请使用 {@link org.ofdrw.converter.canvas.CanvasImageMaker}
      */
+    @Deprecated
     public ImageMaker(OFDReader reader, double ppm) {
         super(reader, ppm);
     }
@@ -50,7 +60,9 @@ public class ImageMaker extends AWTMaker {
      *
      * @param pageIndex 页码，从0起
      * @return 渲染完成的图片
+     * @deprecated 请使用 {@link org.ofdrw.converter.canvas.CanvasImageMaker#makePage(int)}
      */
+    @Deprecated
     public BufferedImage makePage(int pageIndex) {
         if (pageIndex < 0 || pageIndex >= pages.size()) {
             throw new GeneralConvertException(String.format("%s 不是有效索引", pageIndex));

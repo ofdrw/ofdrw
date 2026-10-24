@@ -9,6 +9,7 @@ import org.ofdrw.core.basicType.ST_Loc;
 import org.ofdrw.pkg.tool.ElemCup;
 
 import java.io.*;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,7 +19,9 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -71,6 +74,37 @@ public class VirtualContainer implements Closeable {
      */
     public String getContainerName() {
         return name;
+    }
+
+    /**
+     * 使目录与文件缓存与当前文件系统保持一致（仅用于读取方向）
+     * <p>
+     * 用于兼容文档中路径大小写与压缩包内实际路径不一致的情况：
+     * 当按文档路径精确定位容器失败、而按大小写不敏感方式命中实际目录时，
+     * 需要把缓存中不存在的名称键清理掉，否则后续按实际目录名查找会被
+     * 先前写入的旧键阻断（缓存按名称命中前会先检查目录是否存在）。
+     * <p>
+     * 该方法只清理键名与文件系统不一致的缓存项，不会创建任何目录或文件。
+     *
+     * @return this
+     */
+    public VirtualContainer syncCacheWithFileSystem() {
+        final Path fullDir = Paths.get(fullPath);
+        if (Files.notExists(fullDir) || !Files.isDirectory(fullDir)) {
+            return this;
+        }
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(fullDir)) {
+            final Set<String> names = new HashSet<>();
+            for (Path item : stream) {
+                names.add(item.getFileName().toString());
+            }
+            dirCache.keySet().retainAll(names);
+            fileCache.keySet().retainAll(names);
+            fileSrcHash.keySet().retainAll(names);
+        } catch (IOException e) {
+            return this;
+        }
+        return this;
     }
 
     private VirtualContainer() {
@@ -140,6 +174,32 @@ public class VirtualContainer implements Closeable {
      */
     public String getSysAbsPath() {
         return fullPath;
+    }
+
+    /**
+     * 修正容器的文件系统路径与名称
+     * <p>
+     * 用于兼容文档中路径大小写与压缩包内实际路径不一致的情况：
+     * 虚拟容器按文档中的名称创建时，其系统路径使用的是文档中的大小写，
+     * 在大小写敏感的文件系统上无法访问到实际目录，这里按实际存在的路径修正。
+     * <p>
+     * 该方法不创建目录、不改变容器缓存，仅修正路径与名称。
+     *
+     * @param actualFullPath 实际存在的目录路径（绝对路径）
+     * @return this
+     * @throws IllegalArgumentException 参数为空或目录不存在
+     */
+    public VirtualContainer setContainerPath(String actualFullPath) {
+        if (actualFullPath == null || actualFullPath.trim().isEmpty()) {
+            throw new IllegalArgumentException("容器路径(actualFullPath)为空");
+        }
+        final Path actualDir = Paths.get(actualFullPath);
+        if (Files.notExists(actualDir) || !Files.isDirectory(actualDir)) {
+            throw new IllegalArgumentException("容器路径(actualFullPath)不存在或不是目录：" + actualFullPath);
+        }
+        this.fullPath = actualDir.toAbsolutePath().toString();
+        this.name = actualDir.getFileName().toString();
+        return this;
     }
 
     /**

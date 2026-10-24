@@ -1,17 +1,33 @@
 package org.ofdrw.converter;
 
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.pdfbox.pdmodel.graphics.blend.BlendComposite;
-import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
+import org.ofdrw.converter.canvas.CanvasImageMaker;
 import org.ofdrw.converter.font.FontWrapper;
 import org.ofdrw.converter.font.GlyphData;
 import org.ofdrw.converter.font.TrueTypeFont;
 import org.ofdrw.converter.point.Tuple2;
+import org.ofdrw.converter.renderer.BlendMode;
+import org.ofdrw.converter.renderer.CanvasPaint;
+import org.ofdrw.converter.renderer.DrawStyle;
+import org.ofdrw.converter.renderer.FillRule;
+import org.ofdrw.converter.renderer.Graphics2DRenderer;
+import org.ofdrw.converter.renderer.ImageHandle;
+import org.ofdrw.converter.renderer.Renderer;
+import org.ofdrw.converter.renderer.ResolvedPaint;
+import org.ofdrw.converter.style.DrawParamResolver;
+import org.ofdrw.converter.style.GraphicUnitType;
+import org.ofdrw.converter.style.LineCapStyle;
+import org.ofdrw.converter.style.LineJoinStyle;
+import org.ofdrw.converter.style.ResolvedStyle;
+import org.ofdrw.converter.style.StyleResolver;
+import org.ofdrw.converter.style.StyleScope;
+import org.ofdrw.converter.style.StyleScopeKind;
 import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.converter.utils.MatrixUtils;
 import org.ofdrw.converter.utils.StringUtils;
 import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.annotation.pageannot.Appearance;
+import org.ofdrw.core.basicStructure.pageObj.Content;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
@@ -94,6 +110,11 @@ public abstract class AWTMaker {
     private final Map<String, FontWrapper<TrueTypeFont>> fontCache = new HashMap<>();
 
     /**
+     * 样式结算器：把作用域链与图元内联属性结算为最终绘制样式
+     */
+    private final StyleResolver styleResolver;
+
+    /**
      * 创建图片转换对象实例
      * <p>
      * OFD内部使用毫米作为基本单位
@@ -107,6 +128,7 @@ public abstract class AWTMaker {
         this.reader = reader;
         this.resourceManage = reader.getResMgt();
         this.pages = reader.getPageList();
+        this.styleResolver = createStyleResolver();
         if (this.ppm > 0) {
             this.ppm = ppm;
         }
@@ -125,18 +147,52 @@ public abstract class AWTMaker {
         this.reader = reader;
         this.resourceManage = reader.getResMgt();
         this.pages = reader.getPageList();
+        this.styleResolver = createStyleResolver();
         if (this.ppm > 0) {
             this.ppm = ppm;
         }
+    }
+
+    /**
+     * 创建样式结算器。
+     * <p>
+     * 绘制参数从当前文档的资源管理器查找，颜色解析复用 {@link #getColor(CT_Color)}。
+     *
+     * @return 样式结算器
+     */
+    private StyleResolver createStyleResolver() {
+        DrawParamResolver.DrawParamLookup lookup = new DrawParamResolver.DrawParamLookup() {
+            @Override
+            public CT_DrawParam getDrawParam(String id) {
+                return resourceManage.getDrawParam(id);
+            }
+
+            @Override
+            public Color toColor(CT_Color color) {
+                return getColor(color);
+            }
+        };
+        return new StyleResolver(new DrawParamResolver(lookup), lookup);
     }
 
     public int pageSize() {
         return pages.size();
     }
 
-    private void writeStampAnnot(Graphics2D graphics, StampAnnotEntity stampAnnotVo, StampAnnot stampAnnot) {
+    /**
+     * 绘制印章注释。
+     * <p>
+     * 印章图片按正片叠底（{@link BlendMode#MULTIPLY}）合成：离屏后端（{@link Graphics2DRenderer} 绑定位图）下逐像素混合，
+     * 外部 Graphics2D 后端（SVG/PDF）退化为普通覆盖并告警，与历史行为差异仅限混合算法本身。
+     * 印章边界裁剪使用求交语义，与前序已生效的裁剪区域叠加。
+     *
+     * @param renderer      目标渲染器
+     * @param stampAnnotVo  印章注释实体
+     * @param stampAnnot    印章注释
+     */
+    private void writeStampAnnot(Renderer renderer, StampAnnotEntity stampAnnotVo, StampAnnot stampAnnot) {
         BufferedImage stampImage = null;
-        graphics = (Graphics2D) graphics.create();
+        renderer.save();
         try (ByteArrayInputStream inputStream = stampAnnotVo.getImageStream()) {
             if (stampAnnotVo.getImgType().equals("ofd")) {
                 AWTMaker imageMaker = createStampMaker(new OFDReader(inputStream), ppm);
@@ -157,7 +213,7 @@ public abstract class AWTMaker {
                 ST_Box stBox = stampAnnot.getBoundary();
                 ST_Box clip = stampAnnot.getClip();
                 Matrix m = MatrixUtils.base();
-                graphics.setTransform(MatrixUtils.createAffineTransform(m));
+                renderer.setTransform(MatrixUtils.createAffineTransform(m));
 
                 // 调整比例
                 final double fx = stBox.getWidth() / stampImage.getWidth();
@@ -173,47 +229,55 @@ public abstract class AWTMaker {
                     m1 = MatrixUtils.scale(m1, fx, fy);
                     m1 = MatrixUtils.move(m1, stBox.getTopLeftX() + clip.getTopLeftX(), stBox.getTopLeftY() + clip.getTopLeftY());
                     m1 = MatrixUtils.scale(m1, ppm, ppm);
-                    graphics.setClip((int) m1.getAsDouble(2, 0), (int) m1.getAsDouble(2, 1),
-                            (int) (stampImage.getWidth() * m1.getAsDouble(0, 0) * (clip.getWidth() / stBox.getWidth())),
-                            (int) (stampImage.getHeight() * m1.getAsDouble(1, 1) * (clip.getHeight() / stBox.getHeight())));
+                    // 印章裁剪区域同样以像素为单位，与既有裁剪区域求交
+                    renderer.clip(new java.awt.geom.Rectangle2D.Double(
+                            m1.getAsDouble(2, 0), m1.getAsDouble(2, 1),
+                            stampImage.getWidth() * m1.getAsDouble(0, 0) * (clip.getWidth() / stBox.getWidth()),
+                            stampImage.getHeight() * m1.getAsDouble(1, 1) * (clip.getHeight() / stBox.getHeight())),
+                            FillRule.NON_ZERO);
                 }
-                graphics.setComposite(BlendComposite.getInstance(BlendMode.MULTIPLY, 1));
-                graphics.drawImage(stampImage, MatrixUtils.createAffineTransform(m), null);
+                renderer.setTransform(MatrixUtils.createAffineTransform(MatrixUtils.base()));
+                ImageHandle handle = renderer.createImage(stampImage);
+                renderer.drawImage(handle, MatrixUtils.createAffineTransform(m), 1f, true, null, BlendMode.MULTIPLY);
             }
         } catch (Exception e) {
             logger.error("印章绘制异常", e);
         } finally {
-            graphics.dispose();
+            renderer.restore();
         }
     }
 
     /**
      * 创建用于渲染嵌套 OFD 印章的绘制器。
      * <p>
-     * 默认返回 {@link ImageMaker}，保持现有实现行为不变；子类可以覆盖该方法以替换印章渲染的设备层。
+     * 默认返回 {@link CanvasImageMaker}，印章统一由画布设备层渲染；子类可以覆盖该方法以替换印章渲染的设备层。
      *
      * @param nestedReader 印章 OFD 解析器
      * @param ppm          每毫米像素数量，单位：像素/毫米
      * @return 印章绘制器
      */
     protected AWTMaker createStampMaker(OFDReader nestedReader, double ppm) {
-        return new ImageMaker(nestedReader, ppm);
+        return new CanvasImageMaker(nestedReader, ppm);
     }
 
     /**
      * 将印章绘制器的指定页面渲染为位图，供正片叠底合成使用。
      * <p>
-     * 默认调用 {@link ImageMaker#makePage(int)}；无法渲染时返回 null。
+     * 支持 {@link CanvasImageMaker}（默认印章绘制器）与 {@link ImageMaker} 两种绘制器；
+     * 其它实现返回 null，子类可以覆盖该方法以支持自定义绘制器。
      *
      * @param maker     印章绘制器
      * @param pageIndex 页码，从 0 起
-     * @return 位图，或 null 表示无可用页面
+     * @return 位图，或 null 表示无法渲染
      */
     protected BufferedImage makeStampPage(AWTMaker maker, int pageIndex) {
-        if (!(maker instanceof ImageMaker)) {
-            return null;
+        if (maker instanceof CanvasImageMaker) {
+            return ((CanvasImageMaker) maker).makePage(pageIndex);
         }
-        return ((ImageMaker) maker).makePage(pageIndex);
+        if (maker instanceof ImageMaker) {
+            return ((ImageMaker) maker).makePage(pageIndex);
+        }
+        return null;
     }
 
 //    /**
@@ -227,21 +291,80 @@ public abstract class AWTMaker {
 //    }
 
     /**
-     * 绘制页面
+     * 创建绘制指定页面块的渲染器入口。
+     * <p>
+     * 供需要在文档资源之外提供样式结算器的场景复用同一套绘制逻辑（例如测试或外部样式注入）。
+     * 调用方需先对渲染器执行 {@link Renderer#beginPage(int, int)}；本方法不负责页面生命周期。
+     *
+     * @param renderer      目标渲染器
+     * @param pageBlock     页面块（页面内容、图层或注释外观）
+     * @param styleResolver 样式结算器
+     */
+    protected void writePageBlock(Renderer renderer, CT_PageBlock pageBlock, StyleResolver styleResolver) {
+        writeContent(renderer, pageBlock, null, null, styleResolver);
+    }
+
+    /**
+     * 创建不绑定文档的样式结算器。
+     * <p>
+     * 用于在文档资源之外提供绘制参数与颜色解析（例如测试或外部样式注入），
+     * 不依赖 {@link OFDReader}，也不影响当前转换器自身使用的结算器。
+     *
+     * @param lookup 绘制参数与颜色查找器
+     * @return 样式结算器
+     */
+    public static StyleResolver newStyleResolver(DrawParamResolver.DrawParamLookup lookup) {
+        return new StyleResolver(new DrawParamResolver(lookup), lookup);
+    }
+
+    /**
+     * 使用指定样式结算器绘制页面内容（按 ZOrder 逐层）。
+     * <p>
+     * 与 {@link #writePage} 的图层遍历顺序一致，作用域起点均为文档根。
+     *
+     * @param renderer      目标渲染器
+     * @param content       页面内容
+     * @param styleResolver 样式结算器
+     */
+    protected void writeContent(Renderer renderer, Content content, StyleResolver styleResolver) {
+        for (CT_Layer layer : content.getLayers()) {
+            writeContent(renderer, layer, null, null, styleResolver);
+        }
+    }
+
+    /**
+     * 使用历史签名绘制页面：内部包装为 {@link Graphics2DRenderer}，行为与 {@link #writePage(Renderer, PageInfo, Matrix)} 一致。
+     * <p>
+     * 保留该重载是为了兼容既有子类（如 {@code SVGMaker}、{@code CanvasImageMaker}）与外部扩展，
+     * 新代码建议直接传入 {@link Renderer}。
      *
      * @param graphics 图形操作上下文
      * @param pageInfo 页面信息
-     * @param matrix   变换矩阵
+     * @param matrix   变换矩阵，可为 null
      */
     protected void writePage(Graphics2D graphics, PageInfo pageInfo, Matrix matrix) {
-        graphics.setRenderingHint(
-                RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
+        if (graphics == null) {
+            throw new IllegalArgumentException("绘制上下文不能为空");
+        }
+        Graphics2DRenderer renderer = new Graphics2DRenderer(graphics);
+        writePage(renderer, pageInfo, matrix);
+    }
 
+    /**
+     * 绘制页面
+     * <p>
+     * 渲染器生命周期由调用方管理（{@link Renderer#beginPage(int, int)} 需在调用前完成）；
+     * 页面坐标单位为像素，内部完成毫米到像素的换算。
+     *
+     * @param renderer 目标渲染器
+     * @param pageInfo 页面信息
+     * @param matrix   变换矩阵，可为 null
+     */
+    protected void writePage(Renderer renderer, PageInfo pageInfo, Matrix matrix) {
         // 获取页面内容出现的所有图层，包含模板页（所有页面均按照定义ZOrder排列）
         final List<CT_Layer> layerList = pageInfo.getAllLayer();
         for (CT_Layer layer : layerList) {
-            writeContent(graphics, layer, null, matrix);
+            writeContent(renderer, layer, null, matrix, styleResolver);
         }
 
         final String pageId = pageInfo.getId().toString();
@@ -250,7 +373,7 @@ public abstract class AWTMaker {
             List<StampAnnot> stampAnnots = stampAnnotEntity.getStampAnnots();
             for (StampAnnot stampAnnot : stampAnnots) {
                 if (stampAnnot.getPageRef().toString().equals(pageId)) {
-                    writeStampAnnot(graphics, stampAnnotEntity, stampAnnot);
+                    writeStampAnnot(renderer, stampAnnotEntity, stampAnnot);
                 }
             }
         }
@@ -260,26 +383,38 @@ public abstract class AWTMaker {
             if (pageId.equals(annotionEntity.getPageId()) && null != annotionEntity.getAnnots()) {
                 for (Annot annot : annotionEntity.getAnnots()) {
                     Appearance appearance = annot.getAppearance();
-                    writeContent(graphics, appearance, null, null);
+                    // 注释外观是独立绘制空间，以注释作用域为继承起点
+                    writeContent(renderer, appearance,
+                            StyleScope.document().child(StyleScopeKind.ANNOTATION, null, null), null, styleResolver);
                 }
             }
         }
-
     }
 
-
-    private void writeContent(Graphics2D graphics, CT_PageBlock pageBlock, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
+    /**
+     * 绘制页面块内容。
+     *
+     * @param renderer     目标渲染器
+     * @param pageBlock    页面块
+     * @param scope        父样式作用域，null 表示文档根
+     * @param parentMatrix 父级变换矩阵，null 表示单位矩阵
+     * @param resolver     样式结算器
+     */
+    private void writeContent(Renderer renderer, CT_PageBlock pageBlock, StyleScope scope, Matrix parentMatrix,
+                              StyleResolver resolver) {
         if (pageBlock == null) {
             return;
         }
-        graphics = (Graphics2D) graphics.create();
+        renderer.save();
         try {
-            if (drawParams == null) drawParams = new ArrayList<>();
+            // 作用域为文档根，每个块内部再按自身类型追加作用域
+            if (scope == null) scope = StyleScope.document();
             if (parentMatrix == null) parentMatrix = MatrixUtils.base();
 
+            // 块自身的绘制参数作为本块作用域，块内图元与子块共用该作用域，不会修改父级
             if (pageBlock instanceof CT_Layer) {
                 ST_RefID drawParamRef = ((CT_Layer) pageBlock).getDrawParam();
-                drawParams = addDrawParams(drawParams, drawParamRef);
+                scope = scope.child(StyleScopeKind.LAYER, drawParamRef, null);
             }
 
             if (pageBlock.attribute("Boundary") != null) {
@@ -290,45 +425,150 @@ public abstract class AWTMaker {
 
             for (PageBlockType object : pageBlock.getPageBlocks()) {
                 try {
-                    List<CT_DrawParam> subDrawParams = drawParams;
-                    if (object instanceof CT_GraphicUnit) {
-                        subDrawParams = addDrawParams(subDrawParams, (CT_GraphicUnit) object);
-                    }
-
                     if (object instanceof TextObject) {
                         TextObject textObject = (TextObject) object;
-                        writeText(graphics, textObject, subDrawParams, parentMatrix);
+                        writeText(renderer, textObject, objectScope(scope, textObject, resolver), parentMatrix, resolver);
                     } else if (object instanceof ImageObject) {
                         ImageObject imageObject = (ImageObject) object;
-                        writeImage(graphics, imageObject, subDrawParams, parentMatrix);
+                        writeImage(renderer, imageObject, objectScope(scope, imageObject, resolver), parentMatrix, resolver);
                     } else if (object instanceof PathObject) {
                         PathObject pathObject = (PathObject) object;
-                        writePath(graphics, pathObject, subDrawParams, parentMatrix);
+                        writePath(renderer, pathObject, objectScope(scope, pathObject, resolver), parentMatrix, resolver);
                     } else if (object instanceof CompositeObject) {
                         CompositeObject compositeObject = (CompositeObject) object;
-                        writeComposite(graphics, compositeObject, subDrawParams, parentMatrix);
+                        writeComposite(renderer, compositeObject, objectScope(scope, compositeObject, resolver), parentMatrix, resolver);
                     } else if (object instanceof CT_PageBlock) {
+                        // 子块（非图层）：以页块作用域递归，不再追加绘制参数
                         CT_PageBlock block = (CT_PageBlock) object;
-                        writeContent(graphics, block, subDrawParams, parentMatrix);
+                        writeContent(renderer, block, scope.child(StyleScopeKind.PAGEBLOCK, null, null), parentMatrix, resolver);
                     } else if (object instanceof CT_Layer) {
                         CT_Layer layer = (CT_Layer) object;
-                        ST_RefID drawParamRef = layer.getDrawParam();
-                        if (drawParamRef != null) {
-                            CT_DrawParam ctDrawParam = resourceManage.getDrawParam(drawParamRef.getRefId().toString());
-                            subDrawParams.add(ctDrawParam);
-                        }
-                        writeContent(graphics, layer, subDrawParams, parentMatrix);
+                        writeContent(renderer, layer, scope, parentMatrix, resolver);
                     }
                 } catch (Exception e) {
                     logger.warn("PageBlock无法渲染:", e);
                 }
             }
         } finally {
-            graphics.dispose();
+            renderer.restore();
         }
     }
 
-    private void writeComposite(Graphics2D graphics, CompositeObject compositeObject, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
+    /**
+     * 对象作用域内联线型的中性起点：不含颜色、开关与透明度，只有线型才会被内联覆盖。
+     */
+    private static final ResolvedStyle INLINE_STYLE_BASE = new ResolvedStyle(
+            StyleResolver.DEFAULT_LINE_WIDTH, LineCapStyle.BUTT, LineJoinStyle.MITER,
+            StyleResolver.DEFAULT_MITER_LIMIT, 0, new double[0], null, null, false, false, 1);
+
+    /**
+     * 为图元追加对象作用域。
+     * <p>
+     * 作用域同时携带图元自身的绘制参数引用与内联线型（线宽、线帽、线接、尖角截断、虚线），
+     * 内联属性在结算时优先级高于绘制参数与继承值。
+     *
+     * @param scope 父作用域
+     * @param unit  图元
+     * @return 图元对象作用域（新实例）
+     */
+    private StyleScope objectScope(StyleScope scope, CT_GraphicUnit<?> unit, StyleResolver resolver) {
+        ResolvedStyle inline = null;
+        if (hasInlineStroke(unit)) {
+            inline = INLINE_STYLE_BASE.derive(
+                    unit.attributeValue("LineWidth") == null ? null : unit.getLineWidth(),
+                    capOf(unit.attributeValue("Cap") == null ? null : unit.getCap()),
+                    joinOf(unit.attributeValue("Join") == null ? null : unit.getJoin()),
+                    unit.attributeValue("MiterLimit") == null ? null : unit.getMiterLimit(),
+                    unit.attributeValue("DashOffset") == null ? null : unit.getDashOffset(),
+                    parseDashPattern(unit.getDashPattern()),
+                    null, null, null, null, null);
+        }
+        // 图元自身的绘制参数作为对象作用域的引用，参与就近结算
+        return scope.child(StyleScopeKind.OBJECT, unit.getDrawParam(), inline);
+    }
+
+    /**
+     * 判断图元是否设置了内联线型属性。
+     *
+     * @param unit 图元
+     * @return true 表示至少设置了一项线型属性
+     */
+    private boolean hasInlineStroke(CT_GraphicUnit<?> unit) {
+        return unit.attributeValue("LineWidth") != null
+                || unit.attributeValue("Cap") != null
+                || unit.attributeValue("Join") != null
+                || unit.attributeValue("MiterLimit") != null
+                || unit.attributeValue("DashOffset") != null
+                || unit.getDashPattern() != null;
+    }
+
+    /**
+     * 解析 OFD 虚线数组。
+     *
+     * @param array 虚线数组属性
+     * @return 虚线数组，单位：毫米（mm）；null 表示未设置或无法解析
+     */
+    private double[] parseDashPattern(ST_Array array) {
+        if (array == null) {
+            return null;
+        }
+        try {
+            List<String> items = array.getArray();
+            double[] pattern = new double[items.size()];
+            for (int i = 0; i < items.size(); i++) {
+                pattern[i] = Double.parseDouble(items.get(i).trim());
+            }
+            return pattern;
+        } catch (Exception e) {
+            logger.warn("虚线样式非法：{}", array);
+            return null;
+        }
+    }
+
+    /**
+     * 把 OFD 线端点样式换算为内部枚举。
+     *
+     * @param cap OFD 线端点样式
+     * @return 内部线端点枚举，null 表示未设置
+     */
+    private LineCapStyle capOf(org.ofdrw.core.pageDescription.drawParam.LineCapType cap) {
+        if (cap == null) {
+            return null;
+        }
+        switch (cap) {
+            case Round:
+                return LineCapStyle.ROUND;
+            case Square:
+                return LineCapStyle.SQUARE;
+            case Butt:
+            default:
+                return LineCapStyle.BUTT;
+        }
+    }
+
+    /**
+     * 把 OFD 线条连接样式换算为内部枚举。
+     *
+     * @param join OFD 线条连接样式
+     * @return 内部线条连接枚举，null 表示未设置
+     */
+    private LineJoinStyle joinOf(org.ofdrw.core.pageDescription.drawParam.LineJoinType join) {
+        if (join == null) {
+            return null;
+        }
+        switch (join) {
+            case Round:
+                return LineJoinStyle.ROUND;
+            case Bevel:
+                return LineJoinStyle.BEVEL;
+            case Miter:
+            default:
+                return LineJoinStyle.MITER;
+        }
+    }
+
+    private void writeComposite(Renderer renderer, CompositeObject compositeObject, StyleScope scope, Matrix parentMatrix,
+                                StyleResolver resolver) {
         ST_RefID refID = compositeObject.getResourceID();
         if (refID == null) return;
 
@@ -346,33 +586,14 @@ public abstract class AWTMaker {
         }
         m = m.mtimes(parentMatrix);
 
-        writeContent(graphics, vectorG.getContent(), drawParams, m);
-    }
-
-    /*
-     * 将一个绘制参数添加到列表
-     *
-     * DrawParam只在当前层级一下时有效，所以返回一个新列表
-     * */
-    private List<CT_DrawParam> addDrawParams(List<CT_DrawParam> drawParams, ST_RefID refID) {
-        drawParams = new ArrayList<>(drawParams);
-        if (refID != null) {
-            CT_DrawParam ctDrawParam = resourceManage.getDrawParam(refID.getRefId().toString());
-            if (ctDrawParam != null) {
-                drawParams.add(ctDrawParam);
-            }
-        }
-        return drawParams;
-    }
-
-    private List<CT_DrawParam> addDrawParams(List<CT_DrawParam> drawParams, CT_GraphicUnit graphicUnit) {
-        return addDrawParams(drawParams, graphicUnit.getDrawParam());
+        writeContent(renderer, vectorG.getContent(), scope.child(StyleScopeKind.COMPOSITE, null, null), m, resolver);
     }
 
 
-    private void writePath(Graphics2D graphics, PathObject pathObject, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
+    private void writePath(Renderer renderer, PathObject pathObject, StyleScope scope, Matrix parentMatrix,
+                           StyleResolver resolver) {
         ST_Box boundary = pathObject.getBoundary();
-        Matrix baseMatrix = renderBoundaryAndSetClip(graphics, boundary, parentMatrix);
+        Matrix baseMatrix = renderBoundaryAndSetClip(renderer, boundary, parentMatrix);
         Matrix matrix = MatrixUtils.base();
         if (pathObject.getCTM() != null) {
             matrix = matrix.mtimes(MatrixUtils.ctm(pathObject.getCTM().toDouble()));
@@ -382,31 +603,32 @@ public abstract class AWTMaker {
             matrix = MatrixUtils.move(matrix, boundary.getTopLeftX(), boundary.getTopLeftY());
         }
         matrix = matrix.mtimes(baseMatrix);
-        graphics.transform(MatrixUtils.createAffineTransform(matrix));
+        renderer.transform(MatrixUtils.createAffineTransform(matrix));
 
+        // 路径点位于图元自身坐标系，变换由渲染器的当前变换在绘制时应用
         Path2D path2D = buildPath(pathObject.getAbbreviatedData());
 
+        ResolvedStyle style = resolver.resolve(scope, GraphicUnitType.PATH, pathObject.getFill(), pathObject.getStroke(),
+                pathObject.getFillColor(), pathObject.getStrokeColor(), null);
 
-        if (pathObject.getStroke() == null || pathObject.getStroke()) {
-            graphics.setStroke(new BasicStroke(getLineWidth(pathObject, drawParams).floatValue()));
-            Color strokeColor = getStrokeColor(pathObject.getStrokeColor(), CT_Color.rgb(0, 0, 0), drawParams);
+        if (style.isStroke()) {
+            Color strokeColor = toAwtColor(style.getStrokeColor());
             if (strokeColor != null) {
-                graphics.setColor(strokeColor);
-                graphics.draw(path2D);
+                renderer.stroke(path2D, createStroke(style), resolvePaint(strokeColor, 1f));
             }
         }
-        if (pathObject.getFill() != null && pathObject.getFill()) {
-            Color fillColor = getFillColor(pathObject.getFillColor(), null, drawParams);
+        if (style.isFill()) {
+            Color fillColor = toAwtColor(style.getFillColor());
             if (fillColor != null) {
-                graphics.setColor(fillColor);
-                graphics.fill(path2D);
+                renderer.fill(path2D, createStroke(style), resolvePaint(fillColor, 1f), resolveFillRule(pathObject));
             }
         }
     }
 
-    private void writeImage(Graphics2D graphics, ImageObject imageObject, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
+    private void writeImage(Renderer renderer, ImageObject imageObject, StyleScope scope, Matrix parentMatrix,
+                            StyleResolver resolver) {
         ST_Box boundary = imageObject.getBoundary();
-        Matrix baseMatrix = renderBoundaryAndSetClip(graphics, boundary, parentMatrix);
+        Matrix baseMatrix = renderBoundaryAndSetClip(renderer, boundary, parentMatrix);
 
         BufferedImage image;
         try {
@@ -430,18 +652,18 @@ public abstract class AWTMaker {
         }
         m = m.mtimes(baseMatrix);
 
-        graphics.setTransform(MatrixUtils.createAffineTransform(MatrixUtils.base()));
-
         float alpha = 1;
         if (imageObject.attributeValue("Alpha") != null) {
             alpha = imageObject.getAlpha() / 255.0f;
         }
-        Composite oldComposite = graphics.getComposite();
-        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
-        graphics.setTransform(MatrixUtils.createAffineTransform(MatrixUtils.base()));
-        graphics.drawImage(image, MatrixUtils.createAffineTransform(m), null);
-        graphics.setComposite(oldComposite);
+        // 图像透明度同样参与样式结算（绘制参数 Alpha × 图元 Alpha），保证与其它图元一致
+        ResolvedStyle style = resolver.resolve(scope, GraphicUnitType.IMAGE, null, null, null, null,
+                imageObject.attributeValue("Alpha") == null ? null : Double.valueOf(alpha));
+        alpha = (float) style.getAlpha();
 
+        renderer.setTransform(MatrixUtils.createAffineTransform(MatrixUtils.base()));
+        ImageHandle handle = renderer.createImage(image);
+        renderer.drawImage(handle, MatrixUtils.createAffineTransform(m), alpha, true, null, BlendMode.NORMAL);
     }
 
     /**
@@ -482,24 +704,29 @@ public abstract class AWTMaker {
         return alpha;
     };
 
-    private void writeText(Graphics2D graphics, TextObject textObject, List<CT_DrawParam> drawParams, Matrix parentMatrix) {
+    private void writeText(Renderer renderer, TextObject textObject, StyleScope scope, Matrix parentMatrix,
+                           StyleResolver resolver) {
         logger.debug("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━TextObject━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓");
         Double fontSize = getTextObjectSize(textObject);
-        AlphaComposite alpha = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, getTextObjectAlpha(textObject));
-        Color strokeColor = textObject.getStroke()
-                ? getStrokeColor(textObject.getStrokeColor(), null, drawParams)
-                : null;
-        Color fillColor = getFillColor(textObject.getFillColor(), null, drawParams);
-        if (fillColor == null) fillColor = Color.black;
+        ResolvedStyle style = resolver.resolve(scope, GraphicUnitType.TEXT, textObject.getFill(), textObject.getStroke(),
+                textObject.getFillColor(), textObject.getStrokeColor(), Double.valueOf(getTextObjectAlpha(textObject)));
+        Color strokeColor = style.isStroke() ? toAwtColor(style.getStrokeColor()) : null;
+        Color fillColor = style.isFill() ? toAwtColor(style.getFillColor()) : null;
+        if (fillColor == null && style.isFill()) fillColor = Color.black;
 
         ST_Box boundary = textObject.getBoundary();
-        Matrix baseMatrix = renderBoundaryAndSetClip(graphics, boundary, parentMatrix);
+        Matrix baseMatrix = renderBoundaryAndSetClip(renderer, boundary, parentMatrix);
 
-        BasicStroke basicStroke = new BasicStroke(getLineWidth(textObject, drawParams).floatValue() * 15, 0, 0);
-        graphics.setStroke(basicStroke);
 
         // 读取字体
         FontWrapper<TrueTypeFont> fontWrapper = getFont(textObject);
+        if (fontWrapper == null) {
+            // 图元未声明 Font 或资源中找不到字体：跳过该文字对象并留下可定位告警，避免 NPE 被静默吞掉
+            String fontRef = textObject.getFont() == null ? "无" : textObject.getFont().toString();
+            logger.warn("文字对象缺少可用字体，已跳过渲染：TextObjectID={}，Font引用={}",
+                    textObject.getID(), fontRef);
+            return;
+        }
         TrueTypeFont typeFont = fontWrapper.getFont();
         List<Number> fontMatrix = null;
 
@@ -659,7 +886,7 @@ public abstract class AWTMaker {
                 }
                 // 结合变换矩阵绘制字形
                 Matrix matrix = chatMatrix(textObject, x, y, fontSize, fontMatrix, baseMatrix);
-                renderChar(graphics, shape, matrix, strokeColor, fillColor, alpha);
+                renderChar(renderer, shape, matrix, strokeColor, fillColor, (float) style.getAlpha());
             }
             // 更新上一个TextCode的X和Y，用于缺失 X或Y时准备
             if (textCode.getX() != null) {
@@ -716,24 +943,31 @@ public abstract class AWTMaker {
         return m;
     }
 
-    private void renderChar(Graphics2D graphics, Shape shape, Matrix m, Color stroke, Color fill, AlphaComposite alpha) {
+    /**
+     * 绘制单个字形。
+     * <p>
+     * 字形轮廓位于字体自身坐标系，渲染器按传入矩阵变换到页面像素坐标；
+     * 透明度直接设定（不累积），与历史 {@code AlphaComposite(SRC_OVER, alpha)} 语义一致。
+     *
+     * @param renderer 目标渲染器
+     * @param shape    字形轮廓，null 表示无字形
+     * @param m        字形到页面像素的变换矩阵
+     * @param stroke   描边颜色，null 表示不描边
+     * @param fill     填充颜色，null 表示不填充
+     * @param alpha    不透明度，取值 0..1
+     */
+    private void renderChar(Renderer renderer, Shape shape, Matrix m, Color stroke, Color fill, float alpha) {
         if (shape == null) return;
-        graphics.setClip(null);
-        graphics.setTransform(MatrixUtils.createAffineTransform(m));
-//        graphics.setStroke(new BasicStroke(0.1f));
-        graphics.setComposite(alpha);
-        graphics.setColor(Color.BLACK);
-        graphics.setBackground(Color.white);
+        renderer.setTransform(MatrixUtils.createAffineTransform(m));
+        renderer.setAlpha(alpha);
+        DrawStyle style = DrawStyle.defaultStyle();
         if (stroke != null) {
-            graphics.setColor(stroke);
-            graphics.draw(shape);
+            renderer.stroke(shape, style, resolvePaint(stroke, 1f));
         }
         if (fill != null) {
-            graphics.setColor(fill);
-            graphics.fill(shape);
+            renderer.fill(shape, style, resolvePaint(fill, 1f), FillRule.NON_ZERO);
         }
     }
-
 
     /**
      * 解析字体对象获取字体
@@ -762,15 +996,23 @@ public abstract class AWTMaker {
         return trueTypeFont;
     }
 
-    private Matrix renderBoundaryAndSetClip(Graphics2D graphics, ST_Box boundary, Matrix parentMatrix) {
-        graphics.setColor(Color.RED);
-        graphics.setStroke(new BasicStroke(0.1f * (float) ppm));
+    /**
+     * 计算图元的世界变换，并按包围框设置裁剪。
+     * <p>
+     * 裁剪采用求交语义：新包围框与已有裁剪区域取交集，父级裁剪继续生效（修正历史实现中“覆盖父级裁剪”的缺陷）。
+     * 调试开关 {@code config.drawBoundary} 为真时，用细红线描出包围框。
+     *
+     * @param renderer     目标渲染器
+     * @param boundary     包围框，单位：毫米；null 表示无包围框
+     * @param parentMatrix 父级变换矩阵，null 表示单位矩阵
+     * @return 图元的世界变换（已换算为像素）
+     */
+    private Matrix renderBoundaryAndSetClip(Renderer renderer, ST_Box boundary, Matrix parentMatrix) {
         Matrix m = MatrixUtils.base().mtimes(parentMatrix);
         if (boundary != null) {
             /*
              * 计算包围框在世界坐标系的位置
              * */
-            graphics.setTransform(new AffineTransform());
             Polygon shape = new Polygon();
             Tuple2<Double, Double> p00 = MatrixUtils.pointTransform(m, boundary.getTopLeftX(), boundary.getTopLeftY() - 1);
             Tuple2<Double, Double> p01 = MatrixUtils.pointTransform(m, boundary.getTopLeftX() + boundary.getWidth() + 2, boundary.getTopLeftY() - 1);
@@ -782,12 +1024,17 @@ public abstract class AWTMaker {
             shape.addPoint(Double.valueOf(p11.getFirst() * ppm).intValue(), Double.valueOf(p11.getSecond() * ppm).intValue());
             shape.addPoint(Double.valueOf(p10.getFirst() * ppm).intValue(), Double.valueOf(p10.getSecond() * ppm).intValue());
 
-            graphics.setClip(null);
             if (config.drawBoundary) {
-                graphics.draw(shape);
+                // 包围框以像素为单位直接落在画布上，绘制时不受当前变换影响
+                renderer.save();
+                renderer.setTransform(new AffineTransform());
+                renderer.stroke(shape, new DrawStyle(0.1f * (float) ppm, null, 0f,
+                        java.awt.BasicStroke.CAP_BUTT, java.awt.BasicStroke.JOIN_MITER, 10f),
+                        resolvePaint(Color.RED, 1f));
+                renderer.restore();
             }
             if (config.clip) {
-                graphics.setClip(shape);
+                renderer.clip(shape, FillRule.NON_ZERO);
             }
         }
 
@@ -828,63 +1075,63 @@ public abstract class AWTMaker {
         return path;
     }
 
-    private Double getLineWidth(CT_GraphicUnit graphicUnit, List<CT_DrawParam> drawParams) {
-        Double lineWidth = graphicUnit.getLineWidth();
-        if (lineWidth != null) return lineWidth;
-        logger.debug("LineWidth 为空，使用默认值0.4毫米");
-        return 0.4;
-    }
-
-    private CT_Color getStrokeColorRelative(CT_DrawParam drawParam) {
-        CT_Color c = drawParam.getStrokeColor();
-        if (c != null) {
-            return c;
-        }
-        if (drawParam.getRelative() != null && resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()) != null) {
-            return getStrokeColorRelative(resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()));
-        }
-        return null;
-    }
-
-    private CT_Color getFillColorRelative(CT_DrawParam drawParam) {
-        CT_Color c = drawParam.getFillColor();
-        if (c != null) {
-            return c;
-        }
-        if (drawParam.getRelative() != null && resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()) != null) {
-            return getFillColorRelative(resourceManage.getDrawParam(drawParam.getRelative().getRefId().toString()));
-        }
-        return null;
-    }
-
-    private Color getStrokeColor(CT_Color color, CT_Color defaultColor, List<CT_DrawParam> drawParams) {
-        CT_Color c = color;
-        if (c == null) {
-            for (CT_DrawParam drawParam : drawParams) {
-                c = getStrokeColorRelative(drawParam);
-                if (c != null)
-                    break;
+    /**
+     * 按结算样式创建绘制样式（线宽、端点、连接、虚线）。
+     *
+     * @param style 结算后的样式；线宽与虚线长度单位：毫米（mm）
+     * @return 渲染器绘制样式；线宽与虚线长度已换算为像素
+     */
+    private DrawStyle createStroke(ResolvedStyle style) {
+        float width = Math.max(0.01f, (float) (style.getLineWidth() * ppm));
+        double[] pattern = style.getDashPattern();
+        float[] dash = null;
+        if (pattern.length > 0) {
+            dash = new float[pattern.length];
+            for (int i = 0; i < pattern.length; i++) {
+                dash[i] = (float) (pattern[i] * ppm);
             }
         }
-        if (c == null) {
-            c = defaultColor;
-        }
-        return getColor(c);
+        return new DrawStyle(width, dash, (float) (style.getDashOffset() * ppm),
+                style.getLineCap().toAwtValue(), style.getLineJoin().toAwtValue(), (float) style.getMiterLimit());
     }
 
-    private Color getFillColor(CT_Color color, CT_Color defaultColor, List<CT_DrawParam> drawParams) {
-        CT_Color c = color;
-        if (c == null) {
-            for (CT_DrawParam drawParam : drawParams) {
-                c = getFillColorRelative(drawParam);
-                if (c != null)
-                    break;
+    /**
+     * 把单色颜色包装为渲染器着色源。
+     *
+     * @param color   颜色，不能为空
+     * @param opacity 不透明度，取值 0..1，无量纲
+     * @return 已解析着色源
+     */
+    private ResolvedPaint resolvePaint(Color color, float opacity) {
+        return new ResolvedPaint(CanvasPaint.of(color), opacity);
+    }
+
+    /**
+     * 读取路径的填充规则。
+     *
+     * @param pathObject 路径对象
+     * @return 填充规则，未设置时按非零环绕数规则
+     */
+    private FillRule resolveFillRule(PathObject pathObject) {
+        try {
+            org.ofdrw.core.graph.pathObj.Rule rule = pathObject.getRule();
+            if (rule == org.ofdrw.core.graph.pathObj.Rule.Even_Odd) {
+                return FillRule.EVEN_ODD;
             }
+        } catch (Exception ignore) {
+            // 规则非法时按默认非零环绕数处理
         }
-        if (c == null) {
-            c = defaultColor;
-        }
-        return getColor(c);
+        return FillRule.NON_ZERO;
+    }
+
+    /**
+     * 把 sRGB 整数换算为 AWT 颜色。
+     *
+     * @param rgb sRGB 0xRRGGBB，null 表示无颜色
+     * @return AWT 颜色，null 表示无颜色
+     */
+    private Color toAwtColor(Integer rgb) {
+        return rgb == null ? null : new Color(rgb.intValue());
     }
 
     public Color getColor(CT_Color ctColor) {

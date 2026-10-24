@@ -385,8 +385,9 @@ public class OFDReader implements Closeable {
                     if (loc == null) {
                         break;
                     }
-                    // 加载模板内容
-                    Page page = rl.get(loc, Page::new);
+                    // 加载模板内容：以文档目录为基准定位，避免受资源定位器当前工作目录影响
+                    ST_Loc docRoot = ofdDir.getOfd().getDocBody(0).getDocRoot();
+                    Page page = TemplatePageLocator.load(this, docRoot, loc, Page::new);
                     res = new TemplatePageEntity(item, page);
                     break;
                 }
