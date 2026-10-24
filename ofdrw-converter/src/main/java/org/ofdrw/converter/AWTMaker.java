@@ -91,6 +91,11 @@ public abstract class AWTMaker {
     private OFDReader reader;
 
     /**
+     * 判定「CTM 平移与 Boundary 原点互为相反数」时使用的容差，单位：毫米
+     */
+    private static final double ABSOLUTE_CTM_TOLERANCE = 0.01;
+
+    /**
      * 每毫米像素数量(Pixels per millimeter)
      * <p>
      * 默认为： 7.874015748031496 ppm (约200 dpi）
@@ -673,7 +678,17 @@ public abstract class AWTMaker {
         applyUnitClip(renderer, boundary, parentMatrix);
         Matrix matrix = MatrixUtils.base();
         if (pathObject.getCTM() != null) {
-            matrix = matrix.mtimes(MatrixUtils.ctm(pathObject.getCTM().toDouble()));
+            Double[] ctmArr = pathObject.getCTM().toDouble();
+            if (isAbsoluteCoordinateCtm(ctmArr, boundary)) {
+                /*
+                 * 兼容福昕等工具生成的写法：CTM 平移为 -Boundary 原点，而 AbbreviatedData 已使用页面绝对坐标。
+                 * 若再叠加 CTM 平移，路径会被平移两次而落到页面外，整块底色丢失；
+                 * 此处只保留 CTM 的线性部分，平移由路径自身的绝对坐标承担。
+                 */
+                matrix = matrix.mtimes(MatrixUtils.create(ctmArr[0], ctmArr[1], ctmArr[2], ctmArr[3], 0D, 0D));
+            } else {
+                matrix = matrix.mtimes(MatrixUtils.ctm(ctmArr));
+            }
         } else if (boundary != null) {
             matrix = MatrixUtils.move(matrix, boundary.getTopLeftX(), boundary.getTopLeftY());
         }
@@ -1416,6 +1431,33 @@ public abstract class AWTMaker {
             logger.debug("暂不支持以文字对象作为裁剪区域，已跳过该裁剪");
         }
         return null;
+    }
+
+    /**
+     * 判断 PathObject 的 CTM 是否属于「求平移后路径已含绝对坐标」的写法。
+     * <p>
+     * 福昕等工具生成的 OFD 中，CTM 的平移分量等于 -Boundary 原点，而 AbbreviatedData 的首个
+     * 移动指令坐标等于 Boundary 原点，两者精确抵消。按 OFD 规范，路径坐标应位于图元坐标系
+     * （相对 Boundary 左上角），此时若再叠加 CTM 平移会导致重复平移、图元落到页面外。
+     * 判定条件（同时满足才视为绝对坐标写法）：
+     * <ol>
+     *     <li>CTM 平移分量与 -Boundary 原点误差不超过 {@link #ABSOLUTE_CTM_TOLERANCE} 毫米；</li>
+     *     <li>AbbreviatedData 的首个移动坐标与 Boundary 原点误差不超过同一容差。</li>
+     * </ol>
+     *
+     * @param ctm      图元的 CTM 变换矩阵 {a, b, c, d, e, f}，平移分量单位为毫米
+     * @param boundary 图元包围框，单位：毫米；null 表示无包围框
+     * @return true 表示路径坐标已是页面绝对坐标，CTM 平移不应再叠加
+     */
+    private static boolean isAbsoluteCoordinateCtm(Double[] ctm, ST_Box boundary) {
+        if (ctm == null || ctm.length != 6 || boundary == null) {
+            return false;
+        }
+        if (Math.abs(ctm[4] + boundary.getTopLeftX()) > ABSOLUTE_CTM_TOLERANCE
+                || Math.abs(ctm[5] + boundary.getTopLeftY()) > ABSOLUTE_CTM_TOLERANCE) {
+            return false;
+        }
+        return true;
     }
 
     /**
