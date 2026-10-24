@@ -198,6 +198,6 @@ mvn install
 
 ### 进展
 
-[>> 项目进展](releasenotes.md)
+[>> 项目进展](https://github.com/ofdrw/ofdrw/releases)
 
 > 在OFDRW 2.0.0之后，项目进展以发布说明的方式在项目托管仓库中描述。
