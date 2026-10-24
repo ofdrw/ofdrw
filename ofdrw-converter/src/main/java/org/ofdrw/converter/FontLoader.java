@@ -512,13 +512,17 @@ public final class FontLoader {
      */
     public TrueTypeFont loadExternalFont(String absPath, String familyName, String fontName) {
         try {
-            // 内存中不用主动关闭
+            // 内存中不用主动关闭：MemoryTTFDataStream(InputStream) 会读取全部字节并关闭底层文件流
             TTFDataStream raf = new MemoryTTFDataStream(new FileInputStream(absPath));
             int offset = absPath.toLowerCase().lastIndexOf('.');
-            String suffix = offset == -1 ? ".ttf" : absPath.toLowerCase().substring(offset);
+            String suffix = offset == -1 ? "" : absPath.toLowerCase().substring(offset);
             switch (suffix) {
                 case ".ttf":
                 case ".otf":
+                case ".cff":
+                case ".otc":
+                    // 扩展名仅作提示，字体格式以文件内容（魔法值）为准：
+                    // TrueTypeFont.parse 内部能够识别 sfnt（0x00010000 / 'true' / 'OTTO'）、裸 CFF（0x01000402 / 0x01000403）与 Type1
                     return new TrueTypeFont().parse(raf);
                 case ".ttc":
                     TrueTypeCollection ttc = new TrueTypeCollection().parse(raf);
@@ -579,6 +583,9 @@ public final class FontLoader {
                                 selectedFont != null ? selectedFont.fontFamily : "null");
                     }
                     return selectedFont;
+                default:
+                    // OFD 内嵌字体文件的扩展名并不总是可靠，未知扩展名时按字体内容（魔法值）尝试解析
+                    return new TrueTypeFont().parse(raf);
             }
         } catch (Exception e) {
             // 字体缺少必需表等 RuntimeException 同样视为加载失败，交由上层使用相似字体替换

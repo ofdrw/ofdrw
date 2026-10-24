@@ -136,6 +136,30 @@ public class StyleResolver {
      */
     public ResolvedStyle resolve(StyleScope scope, GraphicUnitType type, Boolean fill, Boolean stroke,
                                  CT_Color fillColor, CT_Color strokeColor, Double alpha) {
+        return resolve(scope, type, fill, stroke, fillColor, strokeColor, alpha, false);
+    }
+
+    /**
+     * 结算单个图元的最终样式（可声明填充色为不可表达的填充）。
+     * <p>
+     * 部分填充类型（如底纹 Pattern、渐变）无法用单一 sRGB 颜色表示。此类填充不能退化为
+     * “无填充色”，否则会回落到类型默认色（路径/文字均为纯黑）造成整块纯黑；调用方应传入
+     * {@code fillUnsupported = true} 并自行负责该填充的绘制（如直接跳过填充），
+     * 此时结算结果中的填充色为 null。
+     *
+     * @param scope           图元所在作用域
+     * @param type            图元类型，用于取类型默认值
+     * @param fill            图元的 Fill 属性，null 表示未设置（沿用类型默认值）
+     * @param stroke          图元的 Stroke 属性，null 表示未设置（沿用类型默认值）
+     * @param fillColor       图元自身的填充颜色，可为 null
+     * @param strokeColor     图元自身的描边颜色，可为 null
+     * @param alpha           图元自身的透明度，取值 0..1；null 表示未设置
+     * @param fillUnsupported true 表示填充色为无法用 sRGB 表达的类型，结算后填充色为 null
+     * @return 结算后的不可变样式
+     */
+    public ResolvedStyle resolve(StyleScope scope, GraphicUnitType type, Boolean fill, Boolean stroke,
+                                 CT_Color fillColor, CT_Color strokeColor, Double alpha,
+                                 boolean fillUnsupported) {
         ResolvedStyle kindDefault = kindDefault(type);
         ResolvedStyle inherited = resolveScope(scope);
 
@@ -151,6 +175,10 @@ public class StyleResolver {
         // 路径的填充色默认为透明：既无绘制参数也无图元颜色时不产生填充色
         if (resolvedFillColor == null && type == GraphicUnitType.TEXT) {
             resolvedFillColor = Integer.valueOf(DEFAULT_STROKE_COLOR);
+        }
+        if (fillUnsupported) {
+            // 无法用 sRGB 表达的填充（底纹、渐变等）：不回落默认色，交由调用方处理
+            resolvedFillColor = null;
         }
         Integer resolvedStrokeColor = ownStroke != null ? ownStroke : inherited.getStrokeColor();
         if (resolvedStrokeColor == null) {

@@ -305,11 +305,16 @@ public class ResourceLocator {
      * <p>
      * 仅在按文档路径精确切换目录失败时调用。路径中任意一级目录名的大小写与实际
      * 文件系统不一致，都会导致整条路径无法精确定位，因此这里逐级解析：
-     * 先按原名称精确定位，失败时再在该层父目录中做一次大小写不敏感的匹配。
+     * 每一级都在父目录中按忽略大小写的方式匹配候选目录，代入后继续解析剩余各级，
+     * 只有能走到末级且末级为目录的候选才算命中。
+     * <p>
+     * 之所以不能“能精确匹配就精确匹配”，是因为压缩包中可能同时存在仅大小写不同的
+     * 两个目录（例如同时有 {@code Doc_0} 与 {@code DOC_0}），先按精确匹配命中前者
+     * 会导致剩余各级解析失败，因此必须在精确匹配失败时才能沿候选逐级回溯试探。
      *
-     * @param ofwTmp        OFD 解压临时目录
-     * @param startWorkDir  切换前的工作目录
-     * @param path          文档中的目录路径（绝对路径或以 startWorkDir 为基准的相对路径）
+     * @param ofwTmp       OFD 解压临时目录
+     * @param startWorkDir 切换前的工作目录
+     * @param path         文档中的目录路径（绝对路径或以 startWorkDir 为基准的相对路径）
      * @return 实际存在的目录系统绝对路径；无法解析时返回 null
      */
     private static String resolveDirCaseInsensitive(String ofwTmp, List<String> startWorkDir, String path) {
@@ -352,23 +357,85 @@ public class ResourceLocator {
         if (parts.isEmpty()) {
             return null;
         }
-        String current = ofwTmp;
-        for (int i = 0; i < parts.size(); i++) {
-            final String item = parts.get(i);
-            final Path exact = Paths.get(current, item);
-            if (Files.isDirectory(exact)) {
-                current = exact.toAbsolutePath().toString();
-                continue;
-            }
-            final String actual = resolveCaseInsensitive(current, item, true);
-            if (actual == null) {
-                return null;
-            }
-            logger.warn("文档资源路径大小写与压缩包内实际路径不一致，已按实际路径加载：原始路径 [{}]，实际路径 [{}]",
-                    ofdTmpRelative(ofwTmp, current) + "/" + item, ofdTmpRelative(ofwTmp, actual));
-            current = actual;
+        return resolveDirFrom(ofwTmp, parts, 0);
+    }
+
+    /**
+     * 从指定层级开始逐级递归解析目录路径
+     *
+     * @param currentSysPath 当前已解析到的系统绝对路径
+     * @param parts          路径分段，每段为文档中的目录名
+     * @param index          当前需要解析的分段下标
+     * @return 实际存在的目录系统绝对路径；无法解析时返回 null
+     */
+    private static String resolveDirFrom(String currentSysPath, List<String> parts, int index) {
+        if (index >= parts.size()) {
+            return currentSysPath;
         }
-        return current;
+        final String item = parts.get(index);
+        // 候选一：沿用文档中的大小写
+        final Path exact = Paths.get(currentSysPath, item);
+        if (Files.isDirectory(exact)) {
+            final String suffix = resolveDirFrom(exact.toAbsolutePath().toString(), parts, index + 1);
+            if (suffix != null) {
+                return suffix;
+            }
+        }
+        // 候选二：父目录中同名但大小写不一致的目录
+        for (String candidate : listCaseInsensitiveDirs(currentSysPath, item)) {
+            final String suffix = resolveDirFrom(candidate, parts, index + 1);
+            if (suffix != null) {
+                logger.warn("文档资源路径大小写与压缩包内实际路径不一致，已按实际路径加载：原始路径 [{}]，实际路径 [{}]",
+                        ofdTmpLabel(currentSysPath + "/" + item), ofdTmpLabel(candidate));
+                return suffix;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 列出父目录中名称与指定名称忽略大小写相同、且大小写不完全一致的子目录
+     *
+     * @param parentSysPath 父目录系统绝对路径
+     * @param name          文档中的目录名称
+     * @return 候选目录的系统绝对路径列表，可能为空
+     */
+    private static List<String> listCaseInsensitiveDirs(String parentSysPath, String name) {
+        final List<String> result = new ArrayList<>();
+        if (name == null || name.trim().isEmpty()) {
+            return result;
+        }
+        final Path parent = Paths.get(parentSysPath);
+        if (Files.notExists(parent) || !Files.isDirectory(parent)) {
+            return result;
+        }
+        try (Stream<Path> children = Files.list(parent)) {
+            children.filter(p -> name.equalsIgnoreCase(p.getFileName().toString()))
+                    .filter(p -> !name.equals(p.getFileName().toString()))
+                    .filter(Files::isDirectory)
+                    .map(p -> p.toAbsolutePath().toString())
+                    .forEach(result::add);
+        } catch (IOException e) {
+            logger.debug("按大小写不敏感方式查找 [{}] 失败：{}", parentSysPath, e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * 将系统绝对路径截取为容器内路径，仅用于日志展示
+     *
+     * @param sysPath 系统绝对路径
+     * @return 以 "/" 开头的容器内路径
+     */
+    private static String ofdTmpLabel(String sysPath) {
+        if (sysPath == null) {
+            return null;
+        }
+        final int index = sysPath.indexOf("Doc_");
+        if (index > 0 && sysPath.charAt(index - 1) == '/') {
+            return sysPath.substring(index - 1);
+        }
+        return sysPath;
     }
 
     /**
@@ -661,7 +728,19 @@ public class ResourceLocator {
         if (needDirectory) {
             return getContainerByActualLoc(parentSysPath);
         }
-        return resolveCaseInsensitive(parentSysPath, name, false) == null ? null : getContainerByActualLoc(parentSysPath);
+        final VirtualContainer vc = getContainerByActualLoc(parentSysPath);
+        if (vc == null) {
+            return null;
+        }
+        // 末端名称同样可能大小写不一致：分别按容器缓存（精确）与文件系统（忽略大小写）各查一次
+        try {
+            if (vc.getFile(name) != null) {
+                return vc;
+            }
+        } catch (FileNotFoundException e) {
+            // 精确匹配失败，继续走忽略大小写兜底
+        }
+        return resolveCaseInsensitive(parentSysPath, name, false) == null ? null : vc;
     }
 
     /**

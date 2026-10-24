@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.LinearGradientPaint;
 import java.awt.Paint;
 import java.awt.RadialGradientPaint;
+import java.awt.TexturePaint;
 
 /**
  * 画布着色源：纯色或渐变。
@@ -29,6 +30,11 @@ public final class CanvasPaint {
     private final RadialGradientPaint radialGradient;
 
     /**
+     * 底纹（平铺纹理）
+     */
+    private final TexturePaint texture;
+
+    /**
      * 构造纯色着色源。
      *
      * @param color 颜色，不能为空
@@ -40,6 +46,7 @@ public final class CanvasPaint {
         this.color = color;
         this.linearGradient = null;
         this.radialGradient = null;
+        this.texture = null;
     }
 
     /**
@@ -54,6 +61,7 @@ public final class CanvasPaint {
         this.color = null;
         this.linearGradient = gradient;
         this.radialGradient = null;
+        this.texture = null;
     }
 
     /**
@@ -68,6 +76,31 @@ public final class CanvasPaint {
         this.color = null;
         this.linearGradient = null;
         this.radialGradient = gradient;
+        this.texture = null;
+    }
+
+    /**
+     * 构造底纹（平铺纹理）着色源。
+     *
+     * @param texture 平铺纹理，不能为空
+     */
+    public CanvasPaint(TexturePaint texture) {
+        if (texture == null) {
+            throw new IllegalArgumentException("平铺纹理不能为空");
+        }
+        this.color = null;
+        this.linearGradient = null;
+        this.radialGradient = null;
+        this.texture = texture;
+    }
+
+    /**
+     * 获取底纹（平铺纹理）。
+     *
+     * @return 平铺纹理，非底纹时为 null
+     */
+    public TexturePaint getTexture() {
+        return texture;
     }
 
     /**
@@ -115,7 +148,10 @@ public final class CanvasPaint {
         if (color != null) {
             return color;
         }
-        return linearGradient != null ? linearGradient : radialGradient;
+        if (linearGradient != null) {
+            return linearGradient;
+        }
+        return radialGradient != null ? radialGradient : texture;
     }
 
     /**

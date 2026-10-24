@@ -32,6 +32,7 @@ import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
 import org.ofdrw.core.basicType.ST_Array;
+import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.compositeObj.CT_VectorG;
@@ -39,6 +40,8 @@ import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.graph.pathObj.OptVal;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.pageDescription.color.color.ColorClusterType;
+import org.ofdrw.core.pageDescription.color.pattern.CT_Pattern;
 import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.pageDescription.color.colorSpace.OFDColorSpaceType;
 import org.ofdrw.core.pageDescription.drawParam.CT_DrawParam;
@@ -66,7 +69,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.*;
 
 /**
@@ -567,6 +572,27 @@ public abstract class AWTMaker {
         }
     }
 
+    /**
+     * 绘制组合对象（引用 {@link CT_VectorG} 矢量图像）。
+     * <p>
+     * 组合图形单元内部的图元坐标位于单元的“单位空间”（由 CompositeGraphicUnit 的 Width/Height 界定，
+     * GB/T 33190-2016 第 7.12 节“矢量图像”），需要按 {@code Boundary.width / Width}、
+     * {@code Boundary.height / Height} 的比例映射到组合对象自身的边界框后再落到页面，
+     * 否则内部坐标会被当成页面毫米数原样绘制（表现为整页被黑色矩形遮盖）。
+     * <p>
+     * 变换按“先缩放、后平移”组合：
+     * {@code m = [缩放 Width→Boundary 宽、Height→Boundary 高] × [平移到 Boundary 左上角] × CTM × parentMatrix}；
+     * 矩阵按行向量约定左乘，因此缩放写在最左侧即最先作用在图元坐标上。
+     * <p>
+     * 退化行为：Boundary 缺失或尺寸非法时，直接以 Width/Height 作为目标尺寸（缩放为 1），
+     * 即以单元自身单位进入页面坐标系；CTM 缺失时按单位矩阵处理。
+     *
+     * @param renderer        目标渲染器
+     * @param compositeObject 组合对象
+     * @param scope           父样式作用域
+     * @param parentMatrix    父级变换矩阵，null 表示单位矩阵
+     * @param resolver        样式结算器
+     */
     private void writeComposite(Renderer renderer, CompositeObject compositeObject, StyleScope scope, Matrix parentMatrix,
                                 StyleResolver resolver) {
         ST_RefID refID = compositeObject.getResourceID();
@@ -576,17 +602,57 @@ public abstract class AWTMaker {
         if (vectorG == null) return;
         ST_Box boundary = compositeObject.getBoundary();
 
-        Matrix m = MatrixUtils.base();
+        // 矢量图像的单位空间尺寸（Width/Height），取不到时无法换算，退回旧行为保证兼容
+        Double unitWidth = compositeUnitSize(vectorG.getWidth(), "Width", vectorG.getID());
+        Double unitHeight = compositeUnitSize(vectorG.getHeight(), "Height", vectorG.getID());
 
+        // 目标边界框尺寸，单位：毫米
+        double targetWidth = boundary == null ? (unitWidth == null ? 0 : unitWidth) : boundary.getWidth();
+        double targetHeight = boundary == null ? (unitHeight == null ? 0 : unitHeight) : boundary.getHeight();
+
+        double scaleX = 1;
+        double scaleY = 1;
+        if (unitWidth != null && unitWidth != 0 && targetWidth > 0) {
+            scaleX = targetWidth / unitWidth;
+        }
+        if (unitHeight != null && unitHeight != 0 && targetHeight > 0) {
+            scaleY = targetHeight / unitHeight;
+        }
+
+        Matrix m = MatrixUtils.base();
+        // 单位空间 → 目标边界框（先缩放）
+        m = MatrixUtils.scale(m, scaleX, scaleY);
         if (compositeObject.getCTM() != null) {
             m = m.mtimes(MatrixUtils.ctm(compositeObject.getCTM().toDouble()));
         }
         if (boundary != null) {
+            // 再平移到边界框位置
             m = MatrixUtils.move(m, boundary.getTopLeftX(), boundary.getTopLeftY());
         }
         m = m.mtimes(parentMatrix);
 
+        if (scaleX != 1 || scaleY != 1) {
+            logger.debug("组合对象单位空间换算：Width={} Height={} → Boundary={}x{}，缩放 {}x{}",
+                    unitWidth, unitHeight, targetWidth, targetHeight, scaleX, scaleY);
+        }
+
         writeContent(renderer, vectorG.getContent(), scope.child(StyleScopeKind.COMPOSITE, null, null), m, resolver);
+    }
+
+    /**
+     * 读取矢量图像的单位空间尺寸。
+     *
+     * @param value 属性值，单位：单位空间长度，无量纲
+     * @param name  属性名，用于告警
+     * @param id    矢量图像 ID，用于告警
+     * @return 尺寸，null 表示缺失或非法（调用方按不换算处理）
+     */
+    private Double compositeUnitSize(Double value, String name, ST_ID id) {
+        if (value == null || value.isNaN() || value <= 0) {
+            logger.debug("矢量图像 {} 的 {} 缺失或非法，跳过单位空间换算：{}", id, name, value);
+            return null;
+        }
+        return value;
     }
 
 
@@ -604,12 +670,13 @@ public abstract class AWTMaker {
         }
         matrix = matrix.mtimes(baseMatrix);
         renderer.transform(MatrixUtils.createAffineTransform(matrix));
-
         // 路径点位于图元自身坐标系，变换由渲染器的当前变换在绘制时应用
         Path2D path2D = buildPath(pathObject.getAbbreviatedData());
 
+        final CT_Color fillColorSpec = pathObject.getFillColor();
+        final CT_Pattern fillPattern = fillPatternOf(fillColorSpec);
         ResolvedStyle style = resolver.resolve(scope, GraphicUnitType.PATH, pathObject.getFill(), pathObject.getStroke(),
-                pathObject.getFillColor(), pathObject.getStrokeColor(), null);
+                fillColorSpec, pathObject.getStrokeColor(), null, fillPattern != null);
 
         if (style.isStroke()) {
             Color strokeColor = toAwtColor(style.getStrokeColor());
@@ -618,9 +685,21 @@ public abstract class AWTMaker {
             }
         }
         if (style.isFill()) {
-            Color fillColor = toAwtColor(style.getFillColor());
-            if (fillColor != null) {
-                renderer.fill(path2D, createStroke(style), resolvePaint(fillColor, 1f), resolveFillRule(pathObject));
+            ResolvedPaint fillPaint = null;
+            if (fillPattern != null) {
+                // 底纹填充：把 CellContent 渲染为平铺单元，再沿 CTM 平铺到被填充的路径内
+                fillPaint = resolvePatternPaint(fillPattern);
+                if (fillPaint == null) {
+                    warnUnsupportedFill("PathObject", pathObject.getID(), fillColorSpec, fillPattern);
+                }
+            } else {
+                final Color fillColor = toAwtColor(style.getFillColor());
+                if (fillColor != null) {
+                    fillPaint = resolvePaint(fillColor, 1f);
+                }
+            }
+            if (fillPaint != null) {
+                renderer.fill(path2D, createStroke(style), fillPaint, resolveFillRule(pathObject));
             }
         }
     }
@@ -634,15 +713,24 @@ public abstract class AWTMaker {
         try {
             // 解析图片对象获取图片
             image = resourceManage.getImage(imageObject);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException | RuntimeException e) {
+            /*
+             * 图片资源缺失（含资源路径大小写不规范导致定位失败）时不再向上抛出，
+             * 否则异常会被上层捕获后静默吞掉，图片整块消失且无任何线索。
+             */
+            logger.warn("图片对象无法渲染，已跳过：图元ID [{}]，资源ID [{}]，原因：{}",
+                    imageObject.getID(), imageObject.getResourceID(), e.getMessage());
+            logger.debug("图片对象渲染异常明细", e);
+            return;
         }
         if (image == null) {
+            logger.warn("图片对象无法渲染，已跳过：图元ID [{}]，资源ID [{}]，图片资源不存在或不是图片类型",
+                    imageObject.getID(), imageObject.getResourceID());
             return;
         }
         Matrix m = MatrixUtils.base();
-        // 把图片还原成1*1
-        m = MatrixUtils.scale(m, Double.valueOf(1.0 / image.getWidth()).floatValue(), Double.valueOf(1.0 / image.getHeight()).floatValue());
+        // 图片像素 → 1x1 单位空间，再由 CTM 与边界框决定最终位置与尺寸
+        m = MatrixUtils.scale(m, 1.0 / image.getWidth(), 1.0 / image.getHeight());
 
         if (imageObject.getCTM() != null) {
             m = m.mtimes(MatrixUtils.ctm(imageObject.getCTM().toDouble()));
@@ -708,8 +796,14 @@ public abstract class AWTMaker {
                            StyleResolver resolver) {
         logger.debug("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━TextObject━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓");
         Double fontSize = getTextObjectSize(textObject);
+        final CT_Color textFillColor = textObject.getFillColor();
+        final CT_Pattern textFillPattern = fillPatternOf(textFillColor);
         ResolvedStyle style = resolver.resolve(scope, GraphicUnitType.TEXT, textObject.getFill(), textObject.getStroke(),
-                textObject.getFillColor(), textObject.getStrokeColor(), Double.valueOf(getTextObjectAlpha(textObject)));
+                textFillColor, textObject.getStrokeColor(), Double.valueOf(getTextObjectAlpha(textObject)),
+                textFillPattern != null);
+        if (textFillPattern != null) {
+            warnUnsupportedFill("TextObject", textObject.getID(), textFillColor, textFillPattern);
+        }
         Color strokeColor = style.isStroke() ? toAwtColor(style.getStrokeColor()) : null;
         Color fillColor = style.isFill() ? toAwtColor(style.getFillColor()) : null;
         if (fillColor == null && style.isFill()) fillColor = Color.black;
@@ -1096,6 +1190,64 @@ public abstract class AWTMaker {
     }
 
     /**
+     * 把底纹（Pattern）填充解析为可平铺的着色源。
+     * <p>
+     * 处理流程：把 CellContent 中的图元渲染到一张宽高为 Pattern 单元尺寸的离屏位图（平铺单元），
+     * 再用 {@link java.awt.TexturePaint} 按 Pattern 的 CTM 与该单元的宽高建立平铺锚点，
+     * 由渲染器在当前变换（图元坐标系，单位与 Pattern 的 Width/Height 一致）下平铺填充。
+     * <p>
+     * 平铺单元的像素密度取 ppm 与「单元毫米尺寸」的乘积，保证平铺后的清晰度与页面一致。
+     *
+     * @param pattern 底纹对象
+     * @return 已解析着色源；单元为空、尺寸非法或渲染失败时返回 null（调用方应跳过填充并告警）
+     */
+    private ResolvedPaint resolvePatternPaint(CT_Pattern pattern) {
+        if (pattern == null || pattern.getCellContent() == null) {
+            return null;
+        }
+        final Double widthObj = pattern.getWidth();
+        final Double heightObj = pattern.getHeight();
+        if (widthObj == null || heightObj == null || widthObj <= 0 || heightObj <= 0) {
+            return null;
+        }
+        final double width = widthObj;
+        final double height = heightObj;
+        final int tileWidth = Math.max(1, (int) Math.ceil(ppm * width));
+        final int tileHeight = Math.max(1, (int) Math.ceil(ppm * height));
+        final BufferedImage cellImage = new BufferedImage(tileWidth, tileHeight, BufferedImage.TYPE_INT_ARGB);
+        final Graphics2D graphics = cellImage.createGraphics();
+        try {
+            graphics.setComposite(AlphaComposite.SrcOver);
+            graphics.scale(tileWidth / width, tileHeight / height);
+            // 单元内容以 Pattern 自身的毫米坐标系绘制（原点位于单元左上角）
+            try (Graphics2DRenderer cellRenderer = new Graphics2DRenderer(graphics)) {
+                cellRenderer.beginPage(tileWidth, tileHeight);
+                writeContent(cellRenderer, pattern.getCellContent(),
+                        StyleScope.document().child(StyleScopeKind.COMPOSITE, null, null), MatrixUtils.base(), styleResolver);
+                cellRenderer.endPage();
+            }
+        } catch (Exception e) {
+            logger.warn("底纹单元渲染失败，已跳过该底纹填充：单元尺寸 [{} x {}] mm", width, height, e);
+            return null;
+        } finally {
+            graphics.dispose();
+        }
+        final java.awt.geom.AffineTransform anchor = new java.awt.geom.AffineTransform();
+        final Double[] ctmValues = pattern.getCTM() == null ? null : pattern.getCTM().toDouble();
+        if (ctmValues != null && ctmValues.length >= 6) {
+            anchor.setTransform(ctmValues[0], ctmValues[1], ctmValues[2],
+                    ctmValues[3], ctmValues[4], ctmValues[5]);
+        }
+        // 单元位图的一像素对应 width/tileWidth 个单位
+        anchor.scale(width / tileWidth, height / tileHeight);
+        // TexturePaint 的锚点必须是轴对齐矩形：取单元位图在锚点变换下的包围盒
+        final java.awt.geom.Rectangle2D.Double cellRect = new java.awt.geom.Rectangle2D.Double(0, 0, tileWidth, tileHeight);
+        final java.awt.Shape anchored = anchor.createTransformedShape(cellRect);
+        final TexturePaint texture = new TexturePaint(cellImage, anchored.getBounds2D());
+        return new ResolvedPaint(new CanvasPaint(texture), 1f);
+    }
+
+    /**
      * 把单色颜色包装为渲染器着色源。
      *
      * @param color   颜色，不能为空
@@ -1123,6 +1275,53 @@ public abstract class AWTMaker {
         }
         return FillRule.NON_ZERO;
     }
+
+    /**
+     * 取颜色中的底纹（Pattern）填充。
+     *
+     * @param color OFD 颜色，可为 null
+     * @return 底纹对象；颜色为空、非底纹或解析失败时返回 null
+     */
+    private static CT_Pattern fillPatternOf(CT_Color color) {
+        if (color == null) {
+            return null;
+        }
+        try {
+            final ColorClusterType type = color.getColorByType();
+            return type instanceof CT_Pattern ? (CT_Pattern) type : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * 记录暂不支持的底纹填充告警（同一图元只告警一次）。
+     * <p>
+     * 底纹填充当前不参与渲染：既不做平铺绘制，也不回落为纯黑，避免整块纯黑这种灾难性退化。
+     *
+     * @param unitKind 图元类型名称，如 PathObject
+     * @param unitId   图元 ID
+     * @param color    图元的填充颜色定义
+     * @param pattern  底纹对象
+     */
+    private void warnUnsupportedFill(String unitKind, ST_ID unitId, CT_Color color, CT_Pattern pattern) {
+        final String key = unitKind + ":" + unitId;
+        if (!warnedUnsupportedFill.add(key)) {
+            return;
+        }
+        final Integer alpha = color == null ? null : color.getAlpha();
+        logger.warn("底纹（Pattern）填充暂不支持，已跳过该图元的填充：{}ID [{}]，底纹单元 [{}]，尺寸 [{} x {}] mm，"
+                        + "步进 [{} x {}] mm，透明度 [{}]",
+                unitKind, unitId,
+                pattern.getCellContent() == null ? "空"
+                        : String.valueOf(pattern.getCellContent().getPageBlocks().size()) + " 个图元",
+                pattern.getWidth(), pattern.getHeight(), pattern.getXStep(), pattern.getYStep(), alpha);
+    }
+
+    /**
+     * 已告警过的“不支持的底纹填充”图元集合，避免同一图元在多次绘制中重复刷屏
+     */
+    private final Set<String> warnedUnsupportedFill = java.util.Collections.synchronizedSet(new HashSet<String>());
 
     /**
      * 把 sRGB 整数换算为 AWT 颜色。
