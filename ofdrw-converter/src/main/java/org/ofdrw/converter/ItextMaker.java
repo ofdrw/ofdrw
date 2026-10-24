@@ -61,6 +61,8 @@ import org.ofdrw.reader.ResourceManage;
 import org.ofdrw.reader.model.AnnotionEntity;
 import org.ofdrw.reader.model.StampAnnotEntity;
 import org.ofdrw.reader.tools.ImageUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -84,6 +86,8 @@ import static org.ofdrw.core.text.text.Direction.*;
  * @since 2020.08.11
  */
 public class ItextMaker {
+
+    private static final Logger logger = LoggerFactory.getLogger(ItextMaker.class);
 
     // 与 AWT 渲染保持一致，避免倾斜或描边字形超出紧边界时被裁切。
     private static final double TEXT_CLIP_MARGIN = 1d;
@@ -716,7 +720,7 @@ public class ItextMaker {
         try {
             imageByteArray = resMgt.getImageByteArray(resourceID.toString());
         } catch (Exception e) {
-            System.err.println("图片ID: " + resourceID + " 解析失败 跳过，原因 " + e.getMessage());
+            logger.warn("图片ID: {} 解析失败 跳过，原因 {}", resourceID, e.getMessage());
         }
         if (imageByteArray == null) {
             return;

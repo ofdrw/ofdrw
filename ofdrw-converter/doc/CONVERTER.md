@@ -121,13 +121,13 @@ converter.close();
 
 接口实现类命名格式为： ***原媒体格式+Converter***
 
-例如：`TextExporter`表示将文本转换为OFD文件中的页面，`Text`表示待转换的媒体格式是文本。
+例如：`TextConverter`表示将文本转换为OFD文件中的页面，`Text`表示待转换的媒体格式是文本。
 
 目前DocConverter支持转换为以下类型：
 
-- 图片：`ImageExporter`
-- PDF文档：`PDFConverter`、`PDFExporterPDFBox`
-- 纯文本：`TextExporter`
+- 图片：`ImageConverter`
+- PDF文档：`PDFConverter`
+- 纯文本：`TextConverter`
 
 不同的转换实现结合目标类型特性具有不同的接口，下面将介绍各种转换器的使用方式，以及特有方法。
 
@@ -164,15 +164,15 @@ System.out.println(">> " + dst.toAbsolutePath());
 
 ### 图片转换OFD
 
-导入图片到OFD中，图片格式支持PNG、BPM、JPG。
+导入图片到OFD中，图片格式支持PNG、BMP、JPG。
 
 实现类：`org.ofdrw.converter.ofdconverter.ImageConverter`
 
 注意事项：
 
-- 可以通过构造器指定导出的图片类型，目前支持`PNG`、`JPG`、`BPM`，默认为`PNG`格式。
+- 图片格式由输入文件本身决定，无需额外指定。
 - 若图片格式不在上述范围您可能需要通过手动的方式设置加入图片大小。
-- 可以通过方法设置导出图片的质量，也就是`ppm`参数，默认`ppm`为**15**（15像素1毫米）。
+- 可以通过方法设置图片的质量，也就是`ppm`参数，默认`ppm`为**15**（15像素1毫米）。
 - 每个添加的图片都将独立为一页，并且居中。
 
 示例：

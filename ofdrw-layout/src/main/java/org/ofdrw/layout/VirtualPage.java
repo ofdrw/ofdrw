@@ -7,6 +7,8 @@ import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.layout.element.AFloat;
 import org.ofdrw.layout.element.Div;
 import org.ofdrw.layout.element.Position;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -24,6 +26,8 @@ import java.util.stream.Collectors;
  * @since 2020-02-28 02:32:27
  */
 public class VirtualPage {
+
+    private static final Logger logger = LoggerFactory.getLogger(VirtualPage.class);
 
     /**
      * 虚拟页面的样式
@@ -92,7 +96,7 @@ public class VirtualPage {
             return this;
         }
         if (d.getFloat() != AFloat.left) {
-            System.err.println("虚拟页面下不支持浮动属性，仅支持绝对定位");
+            logger.warn("虚拟页面下不支持浮动属性，仅支持绝对定位");
         }
         if (d.getPosition() != Position.Absolute) {
             throw new IllegalArgumentException("加入虚拟页面的对象应该采用绝对定位（Position: Absolute）");

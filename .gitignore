@@ -38,3 +38,7 @@ ofdrw-sign/target/
 ofdrw-full/target/
 target
 .vscode
+### 本地 OFD/PDF 比对样本与生成的图片，不入库 ###
+/ofd_pdf_match/
+/.local_compare/
+.agent-teams

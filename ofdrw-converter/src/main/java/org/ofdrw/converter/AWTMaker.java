@@ -139,12 +139,12 @@ public abstract class AWTMaker {
         graphics = (Graphics2D) graphics.create();
         try (ByteArrayInputStream inputStream = stampAnnotVo.getImageStream()) {
             if (stampAnnotVo.getImgType().equals("ofd")) {
-                ImageMaker imageMaker = new ImageMaker(new OFDReader(inputStream), ppm);
+                AWTMaker imageMaker = createStampMaker(new OFDReader(inputStream), ppm);
                 imageMaker.isStamp = true;
                 imageMaker.config.setDrawBoundary(config.drawBoundary);
                 if (imageMaker.pageSize() > 0) {
                     logger.debug("渲染ofd格式印章");
-                    stampImage = imageMaker.makePage(0);
+                    stampImage = makeStampPage(imageMaker, 0);
                 }
             } else {
                 stampImage = ImageIO.read(inputStream);
@@ -185,6 +185,35 @@ public abstract class AWTMaker {
         } finally {
             graphics.dispose();
         }
+    }
+
+    /**
+     * 创建用于渲染嵌套 OFD 印章的绘制器。
+     * <p>
+     * 默认返回 {@link ImageMaker}，保持现有实现行为不变；子类可以覆盖该方法以替换印章渲染的设备层。
+     *
+     * @param nestedReader 印章 OFD 解析器
+     * @param ppm          每毫米像素数量，单位：像素/毫米
+     * @return 印章绘制器
+     */
+    protected AWTMaker createStampMaker(OFDReader nestedReader, double ppm) {
+        return new ImageMaker(nestedReader, ppm);
+    }
+
+    /**
+     * 将印章绘制器的指定页面渲染为位图，供正片叠底合成使用。
+     * <p>
+     * 默认调用 {@link ImageMaker#makePage(int)}；无法渲染时返回 null。
+     *
+     * @param maker     印章绘制器
+     * @param pageIndex 页码，从 0 起
+     * @return 位图，或 null 表示无可用页面
+     */
+    protected BufferedImage makeStampPage(AWTMaker maker, int pageIndex) {
+        if (!(maker instanceof ImageMaker)) {
+            return null;
+        }
+        return ((ImageMaker) maker).makePage(pageIndex);
     }
 
 //    /**
@@ -506,8 +535,9 @@ public abstract class AWTMaker {
             int len = content.length();
             // 当前正在处理的字符编码 在 该字符编码中的偏移量
             int offset = 0;
-            // 待绘制的字形数据序列
+            // 待绘制的字形及其字宽（字宽用于 DeltaX 缺失时估算字符步进）
             List<GeneralPath> tbDrawChars = new ArrayList<>(5);
+            List<Integer> tbDrawGids = new ArrayList<>(5);
             while (offset < len) {
                 CT_CGTransform tsfInfo = tsfMap.get(globalOffset);
                 // 不存在字形变换，使用字体cmap查找字形
@@ -518,12 +548,14 @@ public abstract class AWTMaker {
                         GlyphData glyphData = typeFont.getUnicodeGlyph(c);
                         if (glyphData != null) {
                             tbDrawChars.add(glyphData.getPath());
-                        }else{
+                        } else {
                             // 找不到字形
                             tbDrawChars.add(null);
                         }
+                        tbDrawGids.add(typeFont.getUnicodeCmapLookup().getGlyphId(c));
                     } catch (Exception e) {
                         tbDrawChars.add(null);
+                        tbDrawGids.add(-1);
                         logger.debug(String.format("找不到字形 unicode: %c", c));
                     }
                     globalOffset++;
@@ -542,15 +574,28 @@ public abstract class AWTMaker {
                      * "一对一"、“多对一”、“多对多” 指的是字符和字形的映射关系，不用于绘制。
                      * 用于处理字符偏移量。
                      */
-                    for (int gid : glyphIndexArr) {
-
-                        try {
-                            // 通过字形索引到字体中找到字形数据
-                            GeneralPath drawPath = typeFont.getPath(gid);
+                    // 字体被相似字体或默认字体替换后，字体内的字形索引与原文档字体不再对应，跳过该段字形
+                    if (fontWrapper != null && fontWrapper.isEnableSimilarFontReplace()) {
+                        logger.warn("字体已替换，字形索引失效，跳过字形绘制, 字体ID: {}, gid: {}",
+                                textObject.getFont(), Arrays.toString(glyphIndexArr));
+                        tbDrawChars.add(null);
+                        tbDrawGids.add(-1);
+                    } else {
+                        for (int gid : glyphIndexArr) {
+                            GeneralPath drawPath;
+                            try {
+                                // 通过字形索引到字体中找到字形数据
+                                drawPath = typeFont.getPath(gid);
+                            } catch (Exception e) {
+                                // 单个字形解析失败时跳过该字形，不影响其余文字渲染
+                                drawPath = null;
+                                logger.debug(String.format("找不到字形 gid: %s", gid), e);
+                            }
+                            if (drawPath == null) {
+                                logger.debug(String.format("字形索引越界或字体中不存在该字形 gid: %s", gid));
+                            }
                             tbDrawChars.add(drawPath);
-                        } catch (IOException e) {
-                            tbDrawChars.add(null);
-                            logger.debug(String.format("找不到字形 gid: %s", gid));
+                            tbDrawGids.add(gid);
                         }
                     }
                     // 根据变换信息处理全局偏移量和局部偏移量
@@ -594,6 +639,9 @@ public abstract class AWTMaker {
                             // 如果deltaX 数组长度不及字符长度，使用deltaX数组的最后一个数值作为剩余字符的偏移量，防止其错位打印。
                             x += deltaX.get(deltaX.size() - 1);
                         }
+                    } else {
+                        // DeltaX 缺失，按上一个字形在当前字体中的字宽估算字符步进
+                        x += estimateAdvanceWidth(typeFont, tbDrawGids.get(drawOffset - 1), fontSize, fontMatrix);
                     }
                     if (deltaY.size() > 0) {
                         // 计算Y偏移量
@@ -622,6 +670,29 @@ public abstract class AWTMaker {
             }
         }
         logger.debug("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛");
+    }
+
+    /**
+     * 估算字形的字符步进（水平排版时下一个字形的 X 位置增量）
+     * <p>
+     * 字宽取自字体的 hmtx 表，按字号与字体矩阵换算为页面上毫米单位的步进量；
+     * 字体没有字宽（如裸 CFF 无 hmtx 表）或字形索引无效时，按 1 个 em 估算。
+     *
+     * @param typeFont   当前绘制使用的字体
+     * @param gid        用于估算步进的字形索引，无效时为负数
+     * @param fontSize   字号，单位为毫米（mm）
+     * @param fontMatrix 字体矩阵，用于把字体单位换算为 em
+     * @return 字符步进，单位为毫米（mm）
+     */
+    static double estimateAdvanceWidth(TrueTypeFont typeFont, int gid, double fontSize, List<Number> fontMatrix) {
+        double advanceWidth = typeFont.getAdvanceWidth(gid);
+        if (advanceWidth > 0 && fontMatrix != null && fontMatrix.size() > 0) {
+            // 渲染前字形的横向缩放为 |fontMatrix[0]|，用它把字体单位换算为 em，再乘以字号得到页面步进
+            double scaleX = Math.abs(fontMatrix.get(0).doubleValue());
+            return advanceWidth * scaleX * fontSize;
+        }
+        // 字体没有字宽信息（如裸 CFF 无 hmtx），按 1 个 em 估算，保证字符位置单调递增且间距合理
+        return fontSize;
     }
 
     private Matrix chatMatrix(TextObject ctText, Double deltaX, Double deltaY, Double fontSize, List<Number> fontMatrix, Matrix baseMatrix) {

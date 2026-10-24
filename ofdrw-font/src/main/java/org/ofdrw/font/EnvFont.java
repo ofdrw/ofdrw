@@ -1,5 +1,8 @@
 package org.ofdrw.font;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.awt.Font;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
@@ -20,6 +23,8 @@ import java.util.stream.Stream;
  * @since 2023-3-2 22:05:45
  */
 public final class EnvFont {
+
+    private static final Logger logger = LoggerFactory.getLogger(EnvFont.class);
 
     /**
      * 是否初始化完成
@@ -153,7 +158,7 @@ public final class EnvFont {
                     font = Font.createFont(Font.TRUETYPE_FONT, path.toFile());
                 } catch (Exception e) {
                     // 加载字体失败，打印错误并继续
-                    System.err.println("加载字体文件失败：" + path + "，错误：" + e.getMessage());
+                    logger.warn("加载字体文件失败：{}，错误：{}", path, e.getMessage());
                 }
                 return font;
             }).filter(Objects::nonNull).collect(Collectors.groupingBy(Font::getFamily));

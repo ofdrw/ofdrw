@@ -45,6 +45,12 @@
             <artifactId>ofdrw-graphics2d</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- 字体解析实现 org.ofdrw.converter.font 已迁移至 ofdrw-font 模块 -->
+        <dependency>
+            <groupId>org.ofdrw</groupId>
+            <artifactId>ofdrw-font</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>

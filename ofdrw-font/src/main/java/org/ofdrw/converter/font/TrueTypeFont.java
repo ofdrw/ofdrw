@@ -9,6 +9,8 @@ import org.apache.fontbox.ttf.CmapLookup;
 import org.apache.fontbox.ttf.CmapTable;
 import org.apache.fontbox.type1.Type1Font;
 import org.ofdrw.converter.font.type1.Type1SegSplitParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.geom.GeneralPath;
 import java.io.IOException;
@@ -33,6 +35,8 @@ import java.util.Map;
  * @since 2021-09-28 21:05:09
  */
 public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
+
+    private static final Logger logger = LoggerFactory.getLogger(TrueTypeFont.class);
 
     /**
      * 字形数量
@@ -157,7 +161,17 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
             return this;
         }
 
+        // 裸CFF数据（首4字节为 CFF 主版本号与次版本号，如 0x01000402），没有 sfnt 表目录
+        if (isBareCFF(version)) {
+            if (!parseCFF(IOUtils.toByteArray(raf.getOriginalData()), null)) {
+                throw new IllegalArgumentException("无法解析 CFF 字体数据");
+            }
+            return this;
+        }
 
+        // sfnt 版本标识：0x00010000 - TrueType；0x74727565('true') - TrueType（Apple 旧版标记）；
+        // 0x4F54544F('OTTO') - OpenType/CFF；0x74746366('ttcf') - TTC 集合；
+        // 以上版本均带有 sfnt 表目录，按同一条 sfnt 解析路径处理
         int numberOfTables = raf.readUnsignedShort();
         int searchRange = raf.readUnsignedShort();
         int entrySelector = raf.readUnsignedShort();
@@ -182,13 +196,10 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
         if (!tables.containsKey("head")) {
             InputStream originalData = raf.getOriginalData();
             // head 表都不存在的情况，尝试使用CFF格式解析字体
-            List<CFFFont> fonts = new CFFParser().parse(IOUtils.toByteArray(originalData));
-            if (fonts != null && !fonts.isEmpty()) {
-                this.cffFont = fonts.get(0);
-                return this;
-            } else {
+            if (!parseCFF(IOUtils.toByteArray(originalData), null)) {
                 throw new IllegalArgumentException("没有 head 表");
             }
+            return this;
         }
 
         // =========> CFF 表（OpenType/CFF 格式）
@@ -200,17 +211,10 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
             raf.seek(cffOffset);
             byte[] cffData = new byte[(int) cffLength];
             raf.read(cffData, 0, (int) cffLength);
-            List<CFFFont> fonts = new CFFParser().parse(cffData);
-            if (fonts != null && !fonts.isEmpty()) {
-                this.cffFont = fonts.get(0);
-                // CFF 字体仍需要从 head 读取 unitsPerEm
-                raf.seek(tables.get("head")[0] + 18);
-                unitsPerEm = raf.readUnsignedShort();
-
-                // =========> maxp (CFF 字体也需要读取字形数量)
-                if (tables.containsKey("maxp")) {
-                    raf.seek(tables.get("maxp")[0] + 4);
-                    numGlyphs = raf.readUnsignedShort();
+            if (parseCFF(cffData, tables)) {
+                // =========> hhea || hmtx (CFF 字体同样需要读取字宽，用于字符步进兜底)
+                if (tables.containsKey("hhea") && tables.containsKey("hmtx")) {
+                    parseHorizontalMetrics(tables);
                 }
 
                 // =========> cmap (CFF 字体也需要字符到字形的映射)
@@ -281,13 +285,29 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
         }
         // =========> hhea || hmtx 字体宽度
         if (tables.containsKey("hhea") && tables.containsKey("hmtx")) {
+            parseHorizontalMetrics(tables);
+        }
+
+        return this;
+    }
+
+    /**
+     * 解析 hhea 与 hmtx 表，得到字体字宽信息
+     * <p>
+     * 表数据损坏时不影响字体其余能力的解析，仅记录告警并放弃字宽信息。
+     *
+     * @param tables sfnt 表目录，KEY 为表标签，VALUE 为 [偏移量, 长度]
+     */
+    private void parseHorizontalMetrics(Map<String, long[]> tables) {
+        try {
             final long[] hhOff = tables.get("hhea");
             final long[] hmOff = tables.get("hmtx");
             int numberOfHMetrics = new HorizontalHeaderTable(hhOff).parse(data).getNumberOfHMetrics();
             hmt = new HorizontalMetricsTable(hmOff).parse(numberOfHMetrics, numGlyphs, data);
+        } catch (Exception e) {
+            hmt = null;
+            logger.warn("解析 hhea/hmtx 字宽表失败，字符步进将无法按字宽兜底", e);
         }
-
-        return this;
     }
 
     /**
@@ -298,28 +318,23 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
      */
     @Override
     public GlyphData getGlyph(int gid) throws IOException {
-        if (gid < 0 || gid >= numGlyphs) {
+        if (gid < 0 || (numGlyphs > 0 && gid >= numGlyphs)) {
             return null;
         }
 
         if (cffFont != null) {
             // CFF 字体：通过 CFF 获取路径，包装成 GlyphData 返回
-            try {
-                Type2CharString cs = this.cffFont.getType2CharString(gid);
-                if (cs != null) {
-                    return new GlyphData(cs.getPath());
-                }
-                return new GlyphData();
-            } catch (Exception e) {
-                // 如果获取失败，返回空 GlyphData
-                if (numGlyphs > 0) {
-                    // 仅在有字形时记录警告，避免初始化阶段误报
-                    System.err.println("警告: CFF 字体获取字形路径失败, gid=" + gid + ", 原因: " + e.getMessage());
-                }
-                return new GlyphData();
+            Type2CharString cs = this.cffFont.getType2CharString(gid);
+            if (cs != null) {
+                return new GlyphData(cs.getPath());
             }
+            return new GlyphData();
         }
 
+        if (glyphOffsets == null || glyphOffsets.length <= gid + 1) {
+            // 没有 sfnt 字形索引表，无法读取字形
+            return null;
+        }
 
         if (glyphs != null && glyphs[gid] != null) {
             return glyphs[gid];
@@ -366,14 +381,120 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
      */
     @Override
     public GeneralPath getPath(int gid) throws IOException {
+        // 字形索引越界，找不到字形
+        if (gid < 0 || (numGlyphs > 0 && gid >= numGlyphs)) {
+            return null;
+        }
         // 存在CFF的时候采用CFF直接获取字形
         if (this.cffFont != null) {
-            org.apache.fontbox.cff.Type2CharString charString = this.cffFont.getType2CharString(gid);
-            return charString != null ? charString.getPath() : null;
+            try {
+                org.apache.fontbox.cff.Type2CharString charString = this.cffFont.getType2CharString(gid);
+                return charString != null ? charString.getPath() : null;
+            } catch (Exception e) {
+                // 字形数据异常时跳过该字形，不影响其余文字的渲染
+                logger.warn("CFF 字体获取字形路径失败，gid=" + gid, e);
+                return null;
+            }
         }
-        return getGlyph(gid).getPath();
+        GlyphData glyph = getGlyph(gid);
+        if (glyph == null) {
+            return null;
+        }
+        return glyph.getPath();
     }
 
+    /**
+     * 获取字形在字体单位下的水平宽度（字宽）
+     * <p>
+     * 字宽取自字体 hmtx 表，单位为字体单位（1 个字体单位 = 1 / unitsPerEm 个 em），
+     * 渲染时需要结合 {@link #getFontMatrix()} 换算为页面尺寸。
+     *
+     * @param gid 字形索引号
+     * @return 字宽，单位为字体单位；字形索引越界或字体没有 hmtx 表时返回 -1
+     */
+    public int getAdvanceWidth(int gid) {
+        if (gid < 0 || (numGlyphs > 0 && gid >= numGlyphs)) {
+            return -1;
+        }
+        if (hmt == null) {
+            return -1;
+        }
+        try {
+            return hmt.getAdvanceWidth(gid);
+        } catch (Exception e) {
+            logger.debug("获取字形字宽失败，gid=" + gid, e);
+            return -1;
+        }
+    }
+
+
+    /**
+     * 判断字体数据是否为裸 CFF 数据
+     * <p>
+     * 裸 CFF 数据没有 sfnt 表目录，首4字节为 CFF 头部的 主版本号(1字节) + 次版本号(1字节) + hdrSize(1字节) + offSize(1字节)，
+     * 其中主次版本号固定为 1.0。
+     *
+     * @param version 字体数据的首4字节
+     * @return true - 裸 CFF 数据；false - 其他格式
+     */
+    private static boolean isBareCFF(byte[] version) {
+        if (version == null || version.length < 4) {
+            return false;
+        }
+        // 主版本号必须为 1
+        if ((version[0] & 0xff) != 0x01) {
+            return false;
+        }
+        int headVersion = ((version[0] & 0xff) << 24) | ((version[1] & 0xff) << 16)
+                | ((version[2] & 0xff) << 8) | (version[3] & 0xff);
+        return headVersion == 0x01000402 || headVersion == 0x01000403;
+    }
+
+    /**
+     * 使用 CFF 解析器解析字体数据，并记录 CFF 字体对象
+     * <p>
+     * 存在 sfnt 表目录时从 head、maxp 表读取 unitsPerEm 与 numGlyphs，字体名称由 name 表读取；
+     * 否则（裸 CFF）字形数量取自 CFF 的 Top DICT（CharStrings INDEX），
+     * unitsPerEm 取自 Top DICT（FontMatrix），字体名称来自 CFF 字体本身。
+     *
+     * @param cffData CFF 字体数据
+     * @param tables  sfnt 表目录，KEY 为表标签，VALUE 为 [偏移量, 长度]；裸 CFF 时为 null
+     * @return true - 解析成功；false - 数据中没有可用的 CFF 字体
+     * @throws IOException IO异常
+     */
+    private boolean parseCFF(byte[] cffData, Map<String, long[]> tables) throws IOException {
+        if (cffData == null || cffData.length == 0) {
+            return false;
+        }
+        List<CFFFont> fonts = new CFFParser().parse(cffData);
+        if (fonts == null || fonts.isEmpty()) {
+            return false;
+        }
+        this.cffFont = fonts.get(0);
+        // 字形数量来自 CFF 的 CharStrings INDEX
+        numGlyphs = cffFont.getNumCharStrings();
+        unitsPerEm = 0;
+        if (tables != null && tables.containsKey("head")) {
+            long headOffset = tables.get("head")[0];
+            data.seek(headOffset + 18);
+            unitsPerEm = data.readUnsignedShort();
+            // CFF 字体同样需要从 maxp 读取字形数量（与 CFF CharStrings 一致）
+            if (tables.containsKey("maxp")) {
+                data.seek(tables.get("maxp")[0] + 4);
+                numGlyphs = data.readUnsignedShort();
+            }
+        }
+        if (tables == null) {
+            // 裸 CFF 没有 head 表，unitsPerEm 由 CFF 的 Top DICT（FontMatrix）决定，
+            // 与 getFontMatrix() 保持一致，无法确定时按 1000 单位/em 处理
+            unitsPerEm = 1000;
+            logger.debug("已按裸 CFF 数据解析字体 {}，字形数量 {}，unitsPerEm {}", cffFont.getName(), numGlyphs, unitsPerEm);
+        }
+        if (this.psName == null) {
+            this.psName = cffFont.getName();
+        }
+        return true;
+    }
 
     /**
      * 从但前偏移量位置读取字形
@@ -502,6 +623,11 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
     public List<Number> getFontMatrix() {
         if (cffFont !=null){
             return cffFont.getFontMatrix();
+        }
+        if (unitsPerEm <= 0) {
+            // 没有有效的 unitsPerEm（如裸 CFF 未提供 FontMatrix），按 1000 单位/em 处理
+            float fallbackScale = 0.001f;
+            return Arrays.<Number>asList(fallbackScale, 0, 0, fallbackScale, 0, 0);
         }
         float scale = 1000f / unitsPerEm;
         return Arrays.<Number>asList(0.001f * scale, 0, 0, 0.001f * scale, 0, 0);

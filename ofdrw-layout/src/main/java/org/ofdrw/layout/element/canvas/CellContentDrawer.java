@@ -1,6 +1,8 @@
 package org.ofdrw.layout.element.canvas;
 
 import org.ofdrw.core.basicType.STBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -18,6 +20,8 @@ import java.util.LinkedList;
  * @since 2023-11-13 18:48:53
  */
 public class CellContentDrawer implements Drawer {
+
+    private static final Logger logger = LoggerFactory.getLogger(CellContentDrawer.class);
 
     /**
      * 调试开关，在开启后会绘制辅助线
@@ -171,7 +175,7 @@ public class CellContentDrawer implements Drawer {
             this.text = text;
             this.width = width;
             if (DEBUG) {
-                System.out.println(">> text:" + text + " width:" + width);
+                logger.debug(">> text:{} width:{}", text, width);
             }
         }
     }
@@ -244,7 +248,7 @@ public class CellContentDrawer implements Drawer {
             this.img.width = ctx.mm(gImg.getWidth());
             this.img.height = ctx.mm(gImg.getHeight());
             if (DEBUG) {
-                System.out.printf(">> 从图片中获取宽高 img.width:%.2f img.height:%.2f\n", img.width, img.height);
+                logger.debug(">> 从图片中获取宽高 img.width:{} img.height:{}", img.width, img.height);
             }
         }
 

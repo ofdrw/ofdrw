@@ -21,6 +21,8 @@ import org.ofdrw.reader.BadOFDException;
 import org.ofdrw.reader.ErrorPathException;
 import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -33,6 +35,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 2020-05-15 18:42:49
  */
 public class AnnotationRender {
+
+    private static final Logger logger = LoggerFactory.getLogger(AnnotationRender.class);
 
     /**
      * 文档目录
@@ -105,7 +109,7 @@ public class AnnotationRender {
                 // 切换目录到注解目录文件所在目录中
                 rl.cd(parent);
             } catch (FileNotFoundException | DocumentException e) {
-                System.err.println(e.getMessage());
+                logger.warn("无法获取到注解对象，将重建注解对象：{}", e.getMessage());
                 // 无法获取到注解对象，因此重建注解对象
             }
         }

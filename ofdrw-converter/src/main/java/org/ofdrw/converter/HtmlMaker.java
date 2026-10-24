@@ -153,7 +153,7 @@ public class HtmlMaker {
     public void parse() {
 
         if (this.outputPath == null) {
-            System.err.println("没有设置输出路径");
+            logger.warn("没有设置输出路径");
             return;
         }
 

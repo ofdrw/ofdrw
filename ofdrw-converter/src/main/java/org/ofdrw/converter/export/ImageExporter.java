@@ -1,55 +1,48 @@
 package org.ofdrw.converter.export;
 
 import org.ofdrw.converter.GeneralConvertException;
-import org.ofdrw.converter.ImageMaker;
-import org.ofdrw.reader.OFDReader;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
- * OFD图片转换器
+ * OFD图片转换器。
+ * <p>
+ * <b>已废弃</b>：请改用 {@link CanvasImageExporter}。本类仅为兼容 2.4.x 调用方保留，
+ * 内部完全委托给 {@link CanvasImageExporter}，并固定使用“导出序号”命名（{@code 0.png}、{@code 1.png}），
+ * 与旧版本产物命名一致。
+ * <p>
+ * 与旧实现的差异（来自 {@link CanvasImageExporter}）：
+ * <ul>
+ *     <li>页面像素尺寸改为向上取整，高分辨率下右侧、底部不再被裁掉 1 像素；</li>
+ *     <li>JPG 使用默认 0.92 质量编码，并写入物理分辨率（DPI）元数据；</li>
+ *     <li>导出图片像素在使用后及时释放。</li>
+ * </ul>
+ * 为兼容既有调用方，委托时关闭像素上限校验（{@code setMaxPixels(0)}），保持旧实现“不限制尺寸”的行为。
  *
  * @author 权观宇
  * @since 2023-3-8 19:50:52
+ * @deprecated 请使用 {@link CanvasImageExporter}，该类支持页码命名、背景色、旋转、JPG 质量与像素上限等能力
  */
+@Deprecated
 public class ImageExporter implements OFDExporter {
 
     /**
-     * OFD解析器
+     * 兼容旧行为的文件名模式：占位符仅输出导出序号
      */
-    final OFDReader ofdReader;
+    private static final String LEGACY_FILENAME_PATTERN = "%d";
+
     /**
-     * 图片转换器
+     * 实际执行导出的图片导出器
      */
-    final ImageMaker imageMaker;
+    private final CanvasImageExporter delegate;
 
     /**
      * 图片类型
      */
-    final String imageType;
-
-    /**
-     * 图片文件输出路径
-     */
-    final Path outDirPath;
-
-    /**
-     * 转换生成的图片文件序列
-     */
-    List<Path> imgFileArr;
-
-    /**
-     * 是否已经关闭
-     */
-    private boolean closed = false;
+    private final String imageType;
 
     /**
      * 构造图片转换器
@@ -57,7 +50,9 @@ public class ImageExporter implements OFDExporter {
      * @param ofdFilePath 待转换OFD文件
      * @param imgDirPath  生成图片存放目录
      * @throws IOException 文件解析异常
+     * @deprecated 请使用 {@link CanvasImageExporter#CanvasImageExporter(Path, Path)}
      */
+    @Deprecated
     public ImageExporter(Path ofdFilePath, Path imgDirPath) throws IOException {
         this(ofdFilePath, imgDirPath, "PNG", 15);
     }
@@ -68,7 +63,9 @@ public class ImageExporter implements OFDExporter {
      * @param ofdInput   待转换OFD文件流，该流由调用者负责关闭
      * @param imgDirPath 生成图片存放目录
      * @throws IOException 文件解析异常
+     * @deprecated 请使用 {@link CanvasImageExporter#CanvasImageExporter(InputStream, Path)}
      */
+    @Deprecated
     public ImageExporter(InputStream ofdInput, Path imgDirPath) throws IOException {
         this(ofdInput, imgDirPath, "PNG", 15);
     }
@@ -78,28 +75,15 @@ public class ImageExporter implements OFDExporter {
      *
      * @param ofdFilePath 待转换OFD文件
      * @param imgDirPath  生成图片存放目录
-     * @param imageType   生成图片的格式，如 JPG、PNG、GIF、BMP
-     * @param ppm         转换图片质量，每毫米像素数量(Pixels per millimeter)
+     * @param imageType   生成图片的格式，支持 PNG、JPG、BMP
+     * @param ppm         每毫米像素数量(Pixels per millimeter)
      * @throws IOException 文件解析异常
+     * @deprecated 请使用 {@link CanvasImageExporter#CanvasImageExporter(Path, Path, String, double)}
      */
+    @Deprecated
     public ImageExporter(Path ofdFilePath, Path imgDirPath, String imageType, double ppm) throws IOException {
-        ofdReader = new OFDReader(ofdFilePath);
-
-        if (imgDirPath == null) {
-            throw new IllegalArgumentException("导出图片文件路径为空");
-        }
-        imgDirPath = imgDirPath.toAbsolutePath();
-        if (Files.exists(imgDirPath) && !Files.isDirectory(imgDirPath)) {
-            throw new IllegalArgumentException("已经存在同名文件");
-        }
-        if (!Files.exists(imgDirPath)) {
-            Files.createDirectories(imgDirPath);
-        }
-        imageMaker = new ImageMaker(ofdReader, ppm);
-        imageMaker.config.setDrawBoundary(false);
+        this.delegate = configureLegacyNaming(new CanvasImageExporter(ofdFilePath, imgDirPath, imageType, ppm));
         this.imageType = imageType;
-        imgFileArr = new ArrayList<>();
-        outDirPath = imgDirPath;
     }
 
     /**
@@ -107,27 +91,29 @@ public class ImageExporter implements OFDExporter {
      *
      * @param ofdInput   待转换OFD文件流，该文件流由调用者负责关闭
      * @param imgDirPath 生成图片存放目录
-     * @param imageType  生成图片的格式，如 JPG、PNG、GIF、BMP
-     * @param ppm        转换图片质量，每毫米像素数量(Pixels per millimeter)
+     * @param imageType  生成图片的格式，支持 PNG、JPG、BMP
+     * @param ppm        每毫米像素数量(Pixels per millimeter)
      * @throws IOException 文件解析异常
+     * @deprecated 请使用 {@link CanvasImageExporter#CanvasImageExporter(InputStream, Path, String, double)}
      */
+    @Deprecated
     public ImageExporter(InputStream ofdInput, Path imgDirPath, String imageType, double ppm) throws IOException {
-        ofdReader = new OFDReader(ofdInput);
-        if (imgDirPath == null) {
-            throw new IllegalArgumentException("导出图片文件路径为空");
-        }
-        imgDirPath = imgDirPath.toAbsolutePath();
-        if (Files.exists(imgDirPath) && !Files.isDirectory(imgDirPath)) {
-            throw new IllegalArgumentException("已经存在同名文件");
-        }
-        if (!Files.exists(imgDirPath)) {
-            Files.createDirectories(imgDirPath);
-        }
-        imageMaker = new ImageMaker(ofdReader, ppm);
-        imageMaker.config.setDrawBoundary(false);
+        this.delegate = configureLegacyNaming(new CanvasImageExporter(ofdInput, imgDirPath, imageType, ppm));
         this.imageType = imageType;
-        imgFileArr = new ArrayList<>();
-        outDirPath = imgDirPath;
+    }
+
+    /**
+     * 把画布导出器配置为旧版行为：按导出序号命名、不限制单页像素。
+     *
+     * @param exporter 新建的画布导出器
+     * @return 完成配置的导出器
+     */
+    private static CanvasImageExporter configureLegacyNaming(CanvasImageExporter exporter) {
+        exporter.setFilenamePattern(LEGACY_FILENAME_PATTERN);
+        exporter.setFilenameIndexBase(IndexBase.SEQUENCE);
+        // 旧实现未限制页面像素数量，保持不设上限，避免既有调用方因尺寸受限而失败
+        exporter.setMaxPixels(0);
+        return exporter;
     }
 
     /**
@@ -135,61 +121,44 @@ public class ImageExporter implements OFDExporter {
      *
      * @param indexes 页码序列，如果为空表示全部页码（注意：页码从0起）
      * @throws GeneralConvertException 转换异常
+     * @deprecated 请使用 {@link CanvasImageExporter#export(int...)}
      */
     @Override
+    @Deprecated
     public void export(int... indexes) throws GeneralConvertException {
-        List<Integer> targetPages = new LinkedList<>();
-        if (indexes == null || indexes.length == 0) {
-            for (int i = 0; i < ofdReader.getNumberOfPages(); i++) {
-                targetPages.add(i);
-            }
-        } else {
-            int maxPageIndex = ofdReader.getNumberOfPages();
-            // 获取指定页面信息
-            for (int index : indexes) {
-                if (index < 0 || index >= maxPageIndex) {
-                    continue;
-                }
-                targetPages.add(index);
-            }
-        }
-        try {
-            for (Integer index : targetPages) {
-                BufferedImage image = imageMaker.makePage(index);
-                Path dst = this.outDirPath.resolve(imgFileArr.size() + "." + imageType.toLowerCase());
-                ImageIO.write(image, imageType, dst.toFile());
-                this.imgFileArr.add(dst);
-            }
-        } catch (IOException e) {
-            throw new GeneralConvertException("图片转换异常", e);
-        }
+        delegate.export(indexes);
     }
 
+    /**
+     * 关闭图片转换器。
+     *
+     * @throws IOException 关闭失败
+     * @deprecated 请关闭 {@link CanvasImageExporter}
+     */
     @Override
+    @Deprecated
     public void close() throws IOException {
-        if (closed) {
-            return;
-        }
-        closed = true;
-        if (ofdReader != null) {
-            ofdReader.close();
-        }
+        delegate.close();
     }
 
     /**
      * 获取已经转换完成的页面的图片路径
      *
      * @return 页面图片路径
+     * @deprecated 请使用 {@link CanvasImageExporter#getImgFilePaths()}
      */
+    @Deprecated
     public List<Path> getImgFilePaths() {
-        return imgFileArr;
+        return delegate.getImgFilePaths();
     }
 
     /**
      * 获取转换图片类型
      *
      * @return 图片类型
+     * @deprecated 请使用 {@link CanvasImageExporter#setImageFormat(String)}
      */
+    @Deprecated
     public String getImageType() {
         return imageType;
     }
@@ -200,11 +169,10 @@ public class ImageExporter implements OFDExporter {
      * 请在调用 {@link #export(int...)} 方法之前设置PPM！
      *
      * @param ppm 每毫米像素数量(Pixels per millimeter)
+     * @deprecated 请使用 {@link CanvasImageExporter#setPPM(double)}
      */
+    @Deprecated
     public void setPPM(double ppm) {
-        if (imageMaker == null) {
-            return;
-        }
-        imageMaker.setPPM(ppm);
+        delegate.setPPM(ppm);
     }
 }

@@ -29,6 +29,8 @@ import org.ofdrw.pkg.container.OFDDir;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
 import org.ofdrw.reader.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.FileNotFoundException;
@@ -54,6 +56,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 2020-3-17 20:13:51
  */
 public class OFDDoc implements Closeable {
+
+    private static final Logger logger = LoggerFactory.getLogger(OFDDoc.class);
 
     /**
      * 已有的OFD文档解析器
@@ -603,7 +607,7 @@ public class OFDDoc implements Closeable {
                 rl.cd(attLoc.parent());
             } catch (DocumentException | FileNotFoundException e) {
                 // 忽略错误
-                System.err.println(">> 无法解析Attachments.xml文件，将重新创建该文件");
+                logger.warn(">> 无法解析Attachments.xml文件，将重新创建该文件");
                 attachments = null;
             }
         }

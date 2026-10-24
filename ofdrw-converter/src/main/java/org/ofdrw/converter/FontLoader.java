@@ -580,11 +580,9 @@ public final class FontLoader {
                     }
                     return selectedFont;
             }
-        } catch (IOException e) {
-            if (DEBUG) {
-                log.warn("字体" + absPath + " 加载失败", e);
-            }
-
+        } catch (Exception e) {
+            // 字体缺少必需表等 RuntimeException 同样视为加载失败，交由上层使用相似字体替换
+            log.warn("字体 " + absPath + " 加载失败，将使用相似字体替换，原因: " + e.getMessage(), e);
         }
         return null;
     }
