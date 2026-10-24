@@ -30,6 +30,8 @@ public class DrawParamResolver {
 
     /**
      * Relative 链默认最大深度
+     * <p>
+     * 单位为层，即沿 Relative 引用最多向上追溯的绘制参数数量。
      */
     public static final int DEFAULT_MAX_DEPTH = 16;
 
@@ -40,16 +42,23 @@ public class DrawParamResolver {
 
     /**
      * 绘制参数查找器
+     * <p>
+     * 按 ID 返回 OFD 文档中的绘制参数对象，由调用方在创建结算器时注入。
      */
     private final DrawParamLookup lookup;
 
     /**
      * 已结算的绘制参数缓存，KEY：绘制参数 ID
+     * <p>
+     * 同一个 ID 的结算结果在一次解析会话内复用，避免重复遍历 Relative 链；
+     * 缓存按实例隔离，非线程安全。
      */
     private final Map<String, ResolvedStyle> cache = new HashMap<>();
 
     /**
      * 已告警过的缺失绘制参数 ID，避免同一文档重复输出相同告警
+     * <p>
+     * 记录已经输出过缺失告警的 DrawParam ID；非线程安全。
      */
     private final Set<String> reportedMissing = new HashSet<>();
 

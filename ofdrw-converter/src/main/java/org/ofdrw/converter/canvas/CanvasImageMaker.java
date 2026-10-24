@@ -2,6 +2,7 @@ package org.ofdrw.converter.canvas;
 
 import org.ofdrw.converter.AWTMaker;
 import org.ofdrw.converter.GeneralConvertException;
+import org.ofdrw.converter.renderer.Graphics2DRenderer;
 import org.ofdrw.converter.utils.CommonUtil;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.reader.OFDReader;
@@ -93,10 +94,22 @@ public class CanvasImageMaker extends AWTMaker {
         PageInfo pageInfo = pages.get(pageIndex);
         Graphics2D graphics = surface.createGraphics();
         try {
-            if (transform != null) {
-                graphics.transform(transform);
+            /*
+             * 画布是像素后端（BufferedImage），按离屏能力构造渲染器：
+             * 这样正片叠底等混合模式会走离屏图层逐像素合成，而不是退化为普通覆盖。
+             * 调用方在画布上预设的画布级变换（例如旋转导出）放在绘制调用中应用，
+             * 因为 beginPage 会把变换重置为单位矩阵。
+             */
+            Graphics2DRenderer renderer = new Graphics2DRenderer(graphics, true);
+            renderer.beginPage(surface.getWidth(), surface.getHeight());
+            try {
+                if (transform != null) {
+                    renderer.transform(transform);
+                }
+                writePage(renderer, pageInfo, null);
+            } finally {
+                renderer.endPage();
             }
-            writePage(graphics, pageInfo, null);
         } finally {
             graphics.dispose();
         }

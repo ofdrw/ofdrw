@@ -620,41 +620,71 @@ public final class FontLoader {
         if (ctFont == null) {
             return null;
         }
+        // 是否使用了非内嵌字体（内嵌字体缺失、加载失败或被迫换字体）
         boolean hasReplace = false;
+        // 字形索引是否已失去原字体的含义（此时按字形索引取轮廓会输出错乱字形）
+        boolean useSimulatedGlyphIndex = false;
+        // 文档是否内嵌了该字体
+        boolean hasEmbeddedFont = ctFont.getFontFile() != null;
 
         TrueTypeFont trueTypeFont = null;
+        // 当前加载到的替代字体（相似字体 / 默认字体），用于校验它能否覆盖文档文字
+        TrueTypeFont probeFont = null;
+        // 是否需要校验替代字体能否覆盖文档文字（内嵌字体加载失败 / 系统找不到 / 回落到默认字体）
+        boolean checkTextCoverage = false;
         try {
-            // 内嵌字体绝对路径
-            ST_Loc fontFileLoc = ctFont.getFontFile();
-
-            if (fontFileLoc != null) {
-                // 通过资源加载器获取文件的绝对路径
+            if (hasEmbeddedFont) {
+                // 内嵌字体：通过资源加载器获取文件的绝对路径
                 String fontAbsPath = rl.getFile(ctFont.getFontFile()).toAbsolutePath().toString();
                 trueTypeFont = loadExternalFont(fontAbsPath, ctFont.getFamilyName(), ctFont.getFontName());
+                checkTextCoverage = trueTypeFont == null;
             }
             if (trueTypeFont == null) {
                 // 无法从内部加载时，通过相似字体查找
                 String similarFontPath = getReplaceSimilarFontPath(ctFont.getFamilyName(), ctFont.getFontName());
+                boolean systemFontMatched = false;
                 if (similarFontPath != null) {
                     // 传递原始字体名称，帮助 TTC 选择正确的字体索引
                     trueTypeFont = loadExternalFont(similarFontPath, ctFont.getFamilyName(), ctFont.getFontName());
+                    systemFontMatched = true;
                     if (DEBUG && trueTypeFont != null) {
                         log.debug("相似字体替换成功: 原始字体={}/{}, 系统字体路径={}, 加载字体PSName={}",
                                 ctFont.getFamilyName(), ctFont.getFontName(), similarFontPath, trueTypeFont.psName);
                     }
                 }
                 hasReplace = true;
+                /*
+                 * 文档未内嵌字体时，字形索引本就由文档作者按宿主系统的同名字体给出，
+                 * 系统字体匹配成功属于正常加载，字形索引依然有效；
+                 * 只有内嵌字体存在却加载失败，或系统也没有该字体、回落到默认字体时，
+                 * 字形索引才失去原字体的含义。
+                 */
+                useSimulatedGlyphIndex = hasEmbeddedFont || !systemFontMatched;
+                checkTextCoverage = !systemFontMatched;
+                probeFont = trueTypeFont;
             }
         } catch (Exception e) {
             if (DEBUG) {
                 log.warn("无法加载字体: " + ctFont.getFamilyName() + " " + ctFont.getFontName() + " " + ctFont.getFontFile(), e);
             }
+            // 加载过程异常时按失败处理，字形索引视为已失去原字体含义
+            useSimulatedGlyphIndex = true;
+            checkTextCoverage = true;
         }
         if (trueTypeFont == null) {
             trueTypeFont = defaultFont;
+            probeFont = defaultFont;
             hasReplace = true;
+            useSimulatedGlyphIndex = true;
         }
-        return new FontWrapper<>(trueTypeFont, hasReplace);
+        // 替代字体能否覆盖文档文字：不能覆盖时，跳过字形与绘制 .notdef 同样无法还原文字，渲染侧据此保留既有行为
+        boolean replacementSupportsText = !checkTextCoverage || supportsTextGlyph(probeFont, ctFont);
+        FontWrapper<TrueTypeFont> wrapper = new FontWrapper<>(trueTypeFont, hasReplace);
+        // 记录字体来源信息，供字形索引有效性判断使用
+        wrapper.setUseSimulatedGlyphIndex(useSimulatedGlyphIndex);
+        wrapper.setEmbedded(hasEmbeddedFont);
+        wrapper.setReplacementSupportsText(replacementSupportsText);
+        return wrapper;
     }
 
 
@@ -956,5 +986,52 @@ public final class FontLoader {
      */
     public Path getDefaultFontPath() {
         return DefaultFontPath;
+    }
+
+    /**
+     * 判断替代字体能否覆盖文档中该字体所需的字符
+     * <p>
+     * 用于识别“字体已替换、且替代字体根本不具备文档字符”的情形：此时无论按字形索引还是
+     * 按 Unicode 取轮廓，都只能得到 .notdef 方块。判断方式是看替代字体的 cmap 能否把
+     * 文档字体名/字族名中的非 ASCII 字符（如汉字）映射到非 0 的字形索引。
+     *
+     * @param font   当前加载到的替代字体，可为 null
+     * @param ctFont 文档中的字体对象，其字体名与字族名用作探测字符
+     * @return true - 替代字体具备文档所需的字形（或无法判断）；false - 缺少这些字形
+     */
+    private static boolean supportsTextGlyph(TrueTypeFont font, CT_Font ctFont) {
+        if (font == null) {
+            return false;
+        }
+        String fontName = ctFont.getFontName();
+        String familyName = ctFont.getFamilyName();
+        StringBuilder probe = new StringBuilder();
+        if (fontName != null) {
+            probe.append(fontName);
+        }
+        if (familyName != null) {
+            probe.append(familyName);
+        }
+        int missing = 0;
+        int total = 0;
+        for (int i = 0; i < probe.length(); i++) {
+            char c = probe.charAt(i);
+            if (c < 0x80) {
+                // 只用非 ASCII 字符（汉字等）判断字体是否具备文档所需的字形
+                continue;
+            }
+            total++;
+            int glyphId;
+            try {
+                glyphId = font.getUnicodeCmapLookup().getGlyphId(c);
+            } catch (Exception e) {
+                // 字体没有 cmap 时无法判断，按“可以覆盖”处理，保持既有行为
+                return true;
+            }
+            if (glyphId == 0) {
+                missing++;
+            }
+        }
+        return total == 0 || missing < total;
     }
 }

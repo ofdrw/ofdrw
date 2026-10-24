@@ -114,4 +114,75 @@ class Graphics2DBlendCompositeTest {
         assertEquals(new Color(128, 128, 128).getRGB(), renderer.getOutput().getRGB(9, 9));
         renderer.close();
     }
+
+    /**
+     * 印章场景：图片带透明边缘时，透明像素参与正片叠底不得变黑。
+     * <p>
+     * 复现缺陷：以空白位图（目标色为透明黑）作为混合目标时，透明源像素会与黑色相乘，
+     * 导致印章透明区域变成不透明黑块。此处断言透明区域保持白色底、边缘半透明像素只按 alpha 淡入。
+     */
+    @Test
+    void multiplyKeepsTransparentPixelsOfStamp() {
+        BufferedImage stamp = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = stamp.createGraphics();
+        // 中心 4x4 为不透明红色印章线条，其余为完全透明
+        g.setColor(Color.RED);
+        g.fillRect(3, 3, 4, 4);
+        g.dispose();
+
+        Graphics2DRenderer renderer = new Graphics2DRenderer();
+        renderer.beginPage(20, 20);
+        renderer.beginPath();
+        renderer.rect(0, 0, 20, 20);
+        renderer.fill(DrawStyle.defaultStyle(), new ResolvedPaint(CanvasPaint.of(Color.WHITE), 1f), FillRule.NON_ZERO);
+        renderer.drawImage(renderer.createImage(stamp), AffineTransform.getTranslateInstance(5, 5), 1f, false, null,
+                BlendMode.MULTIPLY);
+        renderer.endPage();
+
+        BufferedImage output = renderer.getOutput();
+        // 印章透明区域：应保持白色底，不能变成黑色
+        assertEquals(Color.WHITE.getRGB(), output.getRGB(6, 6), "印章透明区域应保持目标色，不能变黑");
+        assertEquals(Color.WHITE.getRGB(), output.getRGB(5, 5), "印章左上角透明像素应保持目标色");
+        // 不透明红色区域：白底 255 × 红(255,0,0) = (255,0,0)
+        assertEquals(new Color(255, 0, 0).getRGB(), output.getRGB(8, 8), "不透明红色区域应与白色底相乘后仍为红色");
+        renderer.close();
+        stamp.flush();
+    }
+
+    /**
+     * 调用方像素画布：混合必须以画布已有内容为目标色。
+     * <p>
+     * 用封装了一层“像素中间层”的 Graphics2D 模拟真实画布（绘制结果可回读为像素），
+     * 直接走 {@code new Graphics2DRenderer(graphics, raster)} 的像素分支。
+     */
+    @Test
+    void multiplyOnCallerPixelCanvasUsesExistingPixelsAsDestination() {
+        BufferedImage canvas = new BufferedImage(20, 20, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D raw = canvas.createGraphics();
+        raw.setColor(new Color(0, 255, 255));
+        raw.fillRect(0, 0, 20, 20);
+        raw.dispose();
+
+        BufferedImage stamp = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D sg = stamp.createGraphics();
+        sg.setColor(Color.RED);
+        sg.fillRect(3, 3, 4, 4);
+        sg.dispose();
+
+        Graphics2D graphics = canvas.createGraphics();
+        Graphics2DRenderer renderer = new Graphics2DRenderer(graphics, canvas.getRaster());
+        renderer.beginPage(20, 20);
+        renderer.drawImage(renderer.createImage(stamp), AffineTransform.getTranslateInstance(5, 5), 1f, false, null,
+                BlendMode.MULTIPLY);
+        renderer.endPage();
+        graphics.dispose();
+
+        // 透明区域保持青色（不是黑色）
+        assertEquals(new Color(0, 255, 255).getRGB(), canvas.getRGB(6, 6), "透明像素应保持画布原有颜色");
+        assertEquals(new Color(0, 255, 255).getRGB(), canvas.getRGB(19, 19), "图片区域之外不受影响");
+        // 青(0,255,255) × 红(255,0,0) = (0,0,0)；若未混合会保留红色
+        assertEquals(0xFF000000, canvas.getRGB(8, 8), "不透明区域应执行正片叠底（红与青相乘为黑）");
+        canvas.flush();
+        stamp.flush();
+    }
 }

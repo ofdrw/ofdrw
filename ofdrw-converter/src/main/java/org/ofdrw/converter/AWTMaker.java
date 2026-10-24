@@ -76,6 +76,9 @@ import java.util.*;
 
 /**
  * AWT设备转换类
+ * <p>
+ * <b>线程安全</b>：本类内部持有实例级的字体缓存与样式缓存（含 {@code fontCache}），
+ * <b>非线程安全</b>，不应跨线程共享；每个渲染任务应各自创建独立实例。
  *
  * @author qaqtutu
  * @since 2021-05-06 23:00:01
@@ -206,6 +209,10 @@ public abstract class AWTMaker {
                 if (imageMaker.pageSize() > 0) {
                     logger.debug("渲染ofd格式印章");
                     stampImage = makeStampPage(imageMaker, 0);
+                } else {
+                    // ID 缺失时 getID 会抛异常，这里只记录可安全读取的字段，便于排查印章被跳过
+                    logger.debug("印章OFD不含任何页面，跳过印章渲染：页面引用={}, 边界={}",
+                            stampAnnot.getPageRef(), stampAnnot.getBoundary());
                 }
             } else {
                 stampImage = ImageIO.read(inputStream);
@@ -430,32 +437,60 @@ public abstract class AWTMaker {
 
             for (PageBlockType object : pageBlock.getPageBlocks()) {
                 try {
-                    if (object instanceof TextObject) {
-                        TextObject textObject = (TextObject) object;
-                        writeText(renderer, textObject, objectScope(scope, textObject, resolver), parentMatrix, resolver);
-                    } else if (object instanceof ImageObject) {
-                        ImageObject imageObject = (ImageObject) object;
-                        writeImage(renderer, imageObject, objectScope(scope, imageObject, resolver), parentMatrix, resolver);
-                    } else if (object instanceof PathObject) {
-                        PathObject pathObject = (PathObject) object;
-                        writePath(renderer, pathObject, objectScope(scope, pathObject, resolver), parentMatrix, resolver);
-                    } else if (object instanceof CompositeObject) {
-                        CompositeObject compositeObject = (CompositeObject) object;
-                        writeComposite(renderer, compositeObject, objectScope(scope, compositeObject, resolver), parentMatrix, resolver);
-                    } else if (object instanceof CT_PageBlock) {
-                        // 子块（非图层）：以页块作用域递归，不再追加绘制参数
-                        CT_PageBlock block = (CT_PageBlock) object;
-                        writeContent(renderer, block, scope.child(StyleScopeKind.PAGEBLOCK, null, null), parentMatrix, resolver);
-                    } else if (object instanceof CT_Layer) {
-                        CT_Layer layer = (CT_Layer) object;
-                        writeContent(renderer, layer, scope, parentMatrix, resolver);
+                    /*
+                     * 图元级裁剪（Clips）：在绘制图元之前按其自身裁剪区域限制可见范围，
+                     * 用独立的 save/restore 限定作用域，避免泄漏到后续图元。
+                     * 注意：包围框裁剪已被各图元内部处理，这里只处理文档显式声明的 Clips。
+                     */
+                    if (object instanceof CT_GraphicUnit && applyUnitClips(renderer, (CT_GraphicUnit<?>) object, parentMatrix)) {
+                        renderer.save();
+                        try {
+                            writeUnit(renderer, object, scope, parentMatrix, resolver);
+                        } finally {
+                            renderer.restore();
+                        }
+                        continue;
                     }
+                    writeUnit(renderer, object, scope, parentMatrix, resolver);
                 } catch (Exception e) {
                     logger.warn("PageBlock无法渲染:", e);
                 }
             }
         } finally {
             renderer.restore();
+        }
+    }
+
+    /**
+     * 绘制单个页面块成员。
+     *
+     * @param renderer     目标渲染器
+     * @param object       页面块成员
+     * @param scope        当前样式作用域
+     * @param parentMatrix 父级变换矩阵
+     * @param resolver     样式结算器
+     */
+    private void writeUnit(Renderer renderer, PageBlockType object, StyleScope scope, Matrix parentMatrix,
+                           StyleResolver resolver) {
+        if (object instanceof TextObject) {
+            TextObject textObject = (TextObject) object;
+            writeText(renderer, textObject, objectScope(scope, textObject, resolver), parentMatrix, resolver);
+        } else if (object instanceof ImageObject) {
+            ImageObject imageObject = (ImageObject) object;
+            writeImage(renderer, imageObject, objectScope(scope, imageObject, resolver), parentMatrix, resolver);
+        } else if (object instanceof PathObject) {
+            PathObject pathObject = (PathObject) object;
+            writePath(renderer, pathObject, objectScope(scope, pathObject, resolver), parentMatrix, resolver);
+        } else if (object instanceof CompositeObject) {
+            CompositeObject compositeObject = (CompositeObject) object;
+            writeComposite(renderer, compositeObject, objectScope(scope, compositeObject, resolver), parentMatrix, resolver);
+        } else if (object instanceof CT_PageBlock) {
+            // 子块（非图层）：以页块作用域递归，不再追加绘制参数
+            CT_PageBlock block = (CT_PageBlock) object;
+            writeContent(renderer, block, scope.child(StyleScopeKind.PAGEBLOCK, null, null), parentMatrix, resolver);
+        } else if (object instanceof CT_Layer) {
+            CT_Layer layer = (CT_Layer) object;
+            writeContent(renderer, layer, scope, parentMatrix, resolver);
         }
     }
 
@@ -580,12 +615,10 @@ public abstract class AWTMaker {
      * {@code Boundary.height / Height} 的比例映射到组合对象自身的边界框后再落到页面，
      * 否则内部坐标会被当成页面毫米数原样绘制（表现为整页被黑色矩形遮盖）。
      * <p>
-     * 变换按“先缩放、后平移”组合：
-     * {@code m = [缩放 Width→Boundary 宽、Height→Boundary 高] × [平移到 Boundary 左上角] × CTM × parentMatrix}；
-     * 矩阵按行向量约定左乘，因此缩放写在最左侧即最先作用在图元坐标上。
+     * 变换按“先 CTM、后父级”组合：{@code m = CTM × parentMatrix}；
+     * 子图元坐标与组合对象处于同一坐标系，不再叠加 Boundary 平移。
      * <p>
-     * 退化行为：Boundary 缺失或尺寸非法时，直接以 Width/Height 作为目标尺寸（缩放为 1），
-     * 即以单元自身单位进入页面坐标系；CTM 缺失时按单位矩阵处理。
+     * 退化行为：CTM 缺失时按单位矩阵处理。
      *
      * @param renderer        目标渲染器
      * @param compositeObject 组合对象
@@ -602,70 +635,46 @@ public abstract class AWTMaker {
         if (vectorG == null) return;
         ST_Box boundary = compositeObject.getBoundary();
 
-        // 矢量图像的单位空间尺寸（Width/Height），取不到时无法换算，退回旧行为保证兼容
-        Double unitWidth = compositeUnitSize(vectorG.getWidth(), "Width", vectorG.getID());
-        Double unitHeight = compositeUnitSize(vectorG.getHeight(), "Height", vectorG.getID());
-
-        // 目标边界框尺寸，单位：毫米
-        double targetWidth = boundary == null ? (unitWidth == null ? 0 : unitWidth) : boundary.getWidth();
-        double targetHeight = boundary == null ? (unitHeight == null ? 0 : unitHeight) : boundary.getHeight();
-
-        double scaleX = 1;
-        double scaleY = 1;
-        if (unitWidth != null && unitWidth != 0 && targetWidth > 0) {
-            scaleX = targetWidth / unitWidth;
-        }
-        if (unitHeight != null && unitHeight != 0 && targetHeight > 0) {
-            scaleY = targetHeight / unitHeight;
-        }
-
+        /*
+         * 矢量图像（CompositeGraphicUnit）的 Width/Height 只描述其自身坐标系范围（超出部分裁剪），
+         * 不用于把子图元归一化到 Boundary：子图元坐标与组合对象处于同一坐标系，
+         * 由组合对象的 CTM 与 Boundary 定位（与 ofdrw-viewer-engine 的 drawComposite 一致）。
+         * 若按 Width/Height 缩放，会把内容整体缩小（曾导致整页内容只剩细条）。
+         */
         Matrix m = MatrixUtils.base();
-        // 单位空间 → 目标边界框（先缩放）
-        m = MatrixUtils.scale(m, scaleX, scaleY);
         if (compositeObject.getCTM() != null) {
             m = m.mtimes(MatrixUtils.ctm(compositeObject.getCTM().toDouble()));
         }
-        if (boundary != null) {
-            // 再平移到边界框位置
-            m = MatrixUtils.move(m, boundary.getTopLeftX(), boundary.getTopLeftY());
-        }
+        /*
+         * 组合内容与页面共用坐标系：Boundary 只描述组合对象自身的位置，子图元已用绝对坐标表达，
+         * 因此不在组合内容上叠加 Boundary 平移（与 ofdrw-viewer-engine 的 drawComposite 一致）。
+         * 若叠加平移，组合内容会整体偏移一个组合对象位置，文字与图像无法对齐。
+         */
         m = m.mtimes(parentMatrix);
-
-        if (scaleX != 1 || scaleY != 1) {
-            logger.debug("组合对象单位空间换算：Width={} Height={} → Boundary={}x{}，缩放 {}x{}",
-                    unitWidth, unitHeight, targetWidth, targetHeight, scaleX, scaleY);
-        }
 
         writeContent(renderer, vectorG.getContent(), scope.child(StyleScopeKind.COMPOSITE, null, null), m, resolver);
     }
 
-    /**
-     * 读取矢量图像的单位空间尺寸。
-     *
-     * @param value 属性值，单位：单位空间长度，无量纲
-     * @param name  属性名，用于告警
-     * @param id    矢量图像 ID，用于告警
-     * @return 尺寸，null 表示缺失或非法（调用方按不换算处理）
-     */
-    private Double compositeUnitSize(Double value, String name, ST_ID id) {
-        if (value == null || value.isNaN() || value <= 0) {
-            logger.debug("矢量图像 {} 的 {} 缺失或非法，跳过单位空间换算：{}", id, name, value);
-            return null;
-        }
-        return value;
-    }
-
-
     private void writePath(Renderer renderer, PathObject pathObject, StyleScope scope, Matrix parentMatrix,
                            StyleResolver resolver) {
         ST_Box boundary = pathObject.getBoundary();
+        // 裁剪只作用于本图元：绘制前 save、结束后 restore，避免包围框求交扩散到后续图元
+        renderer.save();
+        try {
+            drawPath(renderer, pathObject, scope, parentMatrix, resolver, boundary);
+        } finally {
+            renderer.restore();
+        }
+    }
+
+    private void drawPath(Renderer renderer, PathObject pathObject, StyleScope scope, Matrix parentMatrix,
+                          StyleResolver resolver, ST_Box boundary) {
         Matrix baseMatrix = renderBoundaryAndSetClip(renderer, boundary, parentMatrix);
+        applyUnitClip(renderer, boundary, parentMatrix);
         Matrix matrix = MatrixUtils.base();
         if (pathObject.getCTM() != null) {
             matrix = matrix.mtimes(MatrixUtils.ctm(pathObject.getCTM().toDouble()));
-        }
-
-        if (boundary != null) {
+        } else if (boundary != null) {
             matrix = MatrixUtils.move(matrix, boundary.getTopLeftX(), boundary.getTopLeftY());
         }
         matrix = matrix.mtimes(baseMatrix);
@@ -707,7 +716,23 @@ public abstract class AWTMaker {
     private void writeImage(Renderer renderer, ImageObject imageObject, StyleScope scope, Matrix parentMatrix,
                             StyleResolver resolver) {
         ST_Box boundary = imageObject.getBoundary();
+        // 裁剪只作用于本图元：绘制前 save、结束后 restore，避免包围框求交扩散到后续图元
+        renderer.save();
+        try {
+            drawImageUnit(renderer, imageObject, scope, parentMatrix, resolver, boundary);
+        } finally {
+            renderer.restore();
+        }
+    }
+
+    private void drawImageUnit(Renderer renderer, ImageObject imageObject, StyleScope scope, Matrix parentMatrix,
+                               StyleResolver resolver, ST_Box boundary) {
         Matrix baseMatrix = renderBoundaryAndSetClip(renderer, boundary, parentMatrix);
+        /*
+         * 图片以“包围框 + CTM”自行完成定位，若同时按包围框裁剪，部分文档中包围框与 CTM 不一致
+         * 会把图片整块裁掉，因此这里只应用图元显式声明的 Clips。
+         */
+        applyUnitClips(renderer, imageObject, parentMatrix);
 
         BufferedImage image;
         try {
@@ -728,18 +753,6 @@ public abstract class AWTMaker {
                     imageObject.getID(), imageObject.getResourceID());
             return;
         }
-        Matrix m = MatrixUtils.base();
-        // 图片像素 → 1x1 单位空间，再由 CTM 与边界框决定最终位置与尺寸
-        m = MatrixUtils.scale(m, 1.0 / image.getWidth(), 1.0 / image.getHeight());
-
-        if (imageObject.getCTM() != null) {
-            m = m.mtimes(MatrixUtils.ctm(imageObject.getCTM().toDouble()));
-        }
-        if (boundary != null) {
-            m = MatrixUtils.move(m, boundary.getTopLeftX(), boundary.getTopLeftY());
-        }
-        m = m.mtimes(baseMatrix);
-
         float alpha = 1;
         if (imageObject.attributeValue("Alpha") != null) {
             alpha = imageObject.getAlpha() / 255.0f;
@@ -749,9 +762,41 @@ public abstract class AWTMaker {
                 imageObject.attributeValue("Alpha") == null ? null : Double.valueOf(alpha));
         alpha = (float) style.getAlpha();
 
-        renderer.setTransform(MatrixUtils.createAffineTransform(MatrixUtils.base()));
+        /*
+         * 图片自身没有缩放语义：像素坐标先在 1x1 单位空间归一化，再由图片对象的 CTM 与包围框决定
+         * 尺寸和位置。CTM 缺失时退化为以包围框尺寸作为目标尺寸。
+         * 变换在设备空间表达（已含 ppm 与父级变换），不受画布当前视图变换影响。
+         */
+        Matrix imageMatrix = MatrixUtils.base();
+        double targetWidth = image.getWidth();
+        double targetHeight = image.getHeight();
+        if (imageObject.getCTM() != null) {
+            /*
+             * 图片的 CTM 把 1x1 单位空间映射为目标尺寸，这里再把像素坐标归一化到该单位空间，
+             * 因此必须先乘 1/像素宽高，否则图片会被放大到“像素数 × 目标尺寸”的尺寸。
+             */
+            Double[] ctm = imageObject.getCTM().toDouble();
+            targetWidth = Math.abs(ctm[0]);
+            targetHeight = Math.abs(ctm[3]);
+        } else if (boundary != null) {
+            targetWidth = boundary.getWidth();
+            targetHeight = boundary.getHeight();
+        }
+        imageMatrix = MatrixUtils.scale(imageMatrix, targetWidth / image.getWidth(), targetHeight / image.getHeight());
+        imageMatrix = imageMatrix.mtimes(baseMatrix);
+
         ImageHandle handle = renderer.createImage(image);
-        renderer.drawImage(handle, MatrixUtils.createAffineTransform(m), alpha, true, null, BlendMode.NORMAL);
+        /*
+         * 先复位画布视图变换：图片变换已经在设备空间表达（含页面缩放与父级变换），
+         * 若在页面视图变换之上再叠加，图片会随外层变换二次偏移。
+         */
+        renderer.save();
+        try {
+            renderer.setTransform(MatrixUtils.createAffineTransform(MatrixUtils.base()));
+            renderer.drawImage(handle, MatrixUtils.createAffineTransform(imageMatrix), alpha, true, null, BlendMode.NORMAL);
+        } finally {
+            renderer.restore();
+        }
     }
 
     /**
@@ -794,6 +839,17 @@ public abstract class AWTMaker {
 
     private void writeText(Renderer renderer, TextObject textObject, StyleScope scope, Matrix parentMatrix,
                            StyleResolver resolver) {
+        // 裁剪只作用于本图元：绘制前 save、结束后 restore，避免包围框求交扩散到后续图元
+        renderer.save();
+        try {
+            drawTextUnit(renderer, textObject, scope, parentMatrix, resolver);
+        } finally {
+            renderer.restore();
+        }
+    }
+
+    private void drawTextUnit(Renderer renderer, TextObject textObject, StyleScope scope, Matrix parentMatrix,
+                              StyleResolver resolver) {
         logger.debug("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━TextObject━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓");
         Double fontSize = getTextObjectSize(textObject);
         final CT_Color textFillColor = textObject.getFillColor();
@@ -810,6 +866,7 @@ public abstract class AWTMaker {
 
         ST_Box boundary = textObject.getBoundary();
         Matrix baseMatrix = renderBoundaryAndSetClip(renderer, boundary, parentMatrix);
+        applyUnitClip(renderer, boundary, parentMatrix);
 
 
         // 读取字体
@@ -873,7 +930,14 @@ public abstract class AWTMaker {
                             // 找不到字形
                             tbDrawChars.add(null);
                         }
-                        tbDrawGids.add(typeFont.getUnicodeCmapLookup().getGlyphId(c));
+                        int unicodeGid = typeFont.getUnicodeCmapLookup().getGlyphId(c);
+                        if (unicodeGid == 0 && fontWrapper.isUseSimulatedGlyphIndex()) {
+                            // 替代字体缺少该字符：两者都会退回 .notdef 字形，说明该段文字无法按原字形呈现
+                            logger.warn("替代字体缺少字符，字形可能显示为方框：字符 '{}'(U+{})，字体ID={}，字体={}",
+                                    c, String.format("%04X", (int) c), textObject.getFont(),
+                                    typeFont.psName == null ? "未知" : typeFont.psName);
+                        }
+                        tbDrawGids.add(unicodeGid);
                     } catch (Exception e) {
                         tbDrawChars.add(null);
                         tbDrawGids.add(-1);
@@ -895,10 +959,21 @@ public abstract class AWTMaker {
                      * "一对一"、“多对一”、“多对多” 指的是字符和字形的映射关系，不用于绘制。
                      * 用于处理字符偏移量。
                      */
-                    // 字体被相似字体或默认字体替换后，字体内的字形索引与原文档字体不再对应，跳过该段字形
-                    if (fontWrapper != null && fontWrapper.isEnableSimilarFontReplace()) {
-                        logger.warn("字体已替换，字形索引失效，跳过字形绘制, 字体ID: {}, gid: {}",
-                                textObject.getFont(), Arrays.toString(glyphIndexArr));
+                    /*
+                     * 字形索引只在字体来自文档自身（内嵌字体加载成功）或宿主系统的同名/相似字体时才有效。
+                     *
+                     * 文档未内嵌字体（FontFile 为空）时，字形索引由文档作者按目标字体给出，
+                     * 系统字体匹配成功属于正常加载，不能跳过字形；
+                     * 内嵌字体存在却加载失败、被迫换成相似字体或回落到默认字体时，
+                     * 字体内部的字形索引与文档不符，此时跳过该段字形以免输出错乱字符；
+                     * 但若替代字体根本不具备文档文字（例如宿主系统无中文字体），
+                     * 跳过与绘制 .notdef 同样无法还原文字，保留既有绘制行为（上方已有告警）。
+                     */
+                    boolean glyphIndexInvalid = fontWrapper.isUseSimulatedGlyphIndex()
+                            && fontWrapper.isReplacementSupportsText();
+                    if (glyphIndexInvalid) {
+                        logger.warn("字体已替换为相似字体或默认字体，字形索引失效，跳过字形绘制, 字体ID: {}, 内嵌字体: {}, gid: {}",
+                                textObject.getFont(), fontWrapper.isEmbedded(), Arrays.toString(glyphIndexArr));
                         tbDrawChars.add(null);
                         tbDrawGids.add(-1);
                     } else {
@@ -1127,13 +1202,147 @@ public abstract class AWTMaker {
                         resolvePaint(Color.RED, 1f));
                 renderer.restore();
             }
-            if (config.clip) {
-                renderer.clip(shape, FillRule.NON_ZERO);
-            }
         }
 
         m = MatrixUtils.scale(m, ppm, ppm);
         return m;
+    }
+
+    /**
+     * 应用图元级裁剪区域（{@code <Clips>}）。
+     * <p>
+     * 依据 GB/T 33190-2016 第 8.5 节：{@code Clips} 由若干 {@code Clip} 组成，
+     * 每个 {@code Clip} 内的 {@code Area} 采用<em>对象空间坐标系</em>（即图元自身的坐标系，原点位于 Boundary 左上角），
+     * 多个 Area 取并集，多个 Clip 之间取交集；Area 可带自己的 CTM。
+     * 调用方必须在绘制图元前 {@link Renderer#save()}、绘制后 {@link Renderer#restore()}，使裁剪只作用于当前图元。
+     *
+     * @param renderer 目标渲染器
+     * @param unit     图元
+     * @param parentMatrix 图元所在页块/组合对象空间的父级变换矩阵
+     * @return true 表示已应用裁剪，调用方需自行 save/restore；false 表示该图元没有 Clips
+     */
+    private boolean applyUnitClips(Renderer renderer, CT_GraphicUnit<?> unit, Matrix parentMatrix) {
+        org.ofdrw.core.pageDescription.clips.Clips clips = unit.getClips();
+        if (clips == null) {
+            return false;
+        }
+        boolean applied = false;
+        for (org.ofdrw.core.pageDescription.clips.CT_Clip clip : clips.getClips()) {
+            java.awt.geom.Area clipArea = null;
+            for (org.ofdrw.core.pageDescription.clips.Area area : clip.getAreas()) {
+                java.awt.geom.Area areaShape = clipShape(area, unit, parentMatrix);
+                if (areaShape == null) {
+                    continue;
+                }
+                if (clipArea == null) {
+                    clipArea = areaShape;
+                } else {
+                    // 同一 Clip 内的多个 Area 取并集
+                    clipArea.add(areaShape);
+                }
+            }
+            if (clipArea != null) {
+                renderer.clip(clipArea, FillRule.NON_ZERO);
+                applied = true;
+            }
+        }
+        return applied;
+    }
+
+    /**
+     * 计算单个裁剪区域在设备空间（像素）中的形状。
+     *
+     * @param area         裁剪区域
+     * @param unit         图元，用于取对象空间原点（Boundary 左上角）
+     * @param parentMatrix 父级变换矩阵
+     * @return 设备空间形状，null 表示该区域无法解析
+     */
+    private java.awt.geom.Area clipShape(org.ofdrw.core.pageDescription.clips.Area area,
+                           CT_GraphicUnit<?> unit, Matrix parentMatrix) {
+        try {
+            org.ofdrw.core.pageDescription.clips.ClipAble clipObj = area.getClipObj();
+            if (clipObj == null) {
+                return null;
+            }
+            ST_Box boundary = unit.getBoundary();
+            double originX = boundary == null ? 0 : boundary.getTopLeftX();
+            double originY = boundary == null ? 0 : boundary.getTopLeftY();
+            Matrix m = MatrixUtils.base();
+            if (area.getCTM() != null) {
+                // Area 自身的 CTM 把区域坐标换算到对象空间，最先作用在区域坐标上
+                m = m.mtimes(MatrixUtils.ctm(area.getCTM().toDouble()));
+            }
+            if (unit.getCTM() != null) {
+                m = m.mtimes(MatrixUtils.ctm(unit.getCTM().toDouble()));
+            }
+            m = MatrixUtils.move(m, originX, originY);
+            m = m.mtimes(parentMatrix);
+
+            Path2D path = clipPath(clipObj);
+            if (path == null) {
+                return null;
+            }
+            Shape device = MatrixUtils.createAffineTransform(MatrixUtils.scale(m, ppm, ppm)).createTransformedShape(path);
+            return new java.awt.geom.Area(device);
+        } catch (Exception e) {
+            logger.warn("裁剪区域解析失败，已忽略该裁剪：{}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 把可裁剪对象（路径或文字轮廓）转换为路径。
+     *
+     * @param clipObj 可裁剪对象
+     * @return 路径，null 表示不支持
+     */
+    private Path2D clipPath(org.ofdrw.core.pageDescription.clips.ClipAble clipObj) {
+        if (clipObj instanceof org.ofdrw.core.graph.pathObj.CT_Path) {
+            return buildPath(((org.ofdrw.core.graph.pathObj.CT_Path) clipObj).getAbbreviatedData());
+        }
+        if (clipObj instanceof org.ofdrw.core.text.text.CT_Text) {
+            // 文字作为裁剪区域需要字形轮廓，暂不支持，记录并可读地跳过
+            logger.debug("暂不支持以文字对象作为裁剪区域，已跳过该裁剪");
+        }
+        return null;
+    }
+
+    /**
+     * 以图元的包围框设置裁剪，裁剪只作用于当前图元。
+     * <p>
+     * 调用方必须在绘制图元前 save()、绘制后 restore()，否则后一个图元的裁剪会与前一个图元的
+     * 包围框求交，后续图元被越裁越小甚至完全消失。
+     *
+     * @param renderer     绘制器
+     * @param boundary     包围框，单位：毫米；null 表示不裁剪
+     * @param parentMatrix 父级变换矩阵，null 表示单位矩阵
+     */
+    private void applyUnitClip(Renderer renderer, ST_Box boundary, Matrix parentMatrix) {
+        if (!config.clip || boundary == null) {
+            return;
+        }
+        Matrix m = MatrixUtils.base().mtimes(parentMatrix);
+        renderer.clip(boundaryPolygon(m, boundary), FillRule.NON_ZERO);
+    }
+
+    /**
+     * 计算包围框在设备空间（像素）中的四边形。
+     *
+     * @param m        世界变换矩阵（未乘 ppm）
+     * @param boundary 包围框，单位：毫米
+     * @return 设备空间多边形，坐标单位：像素
+     */
+    private Polygon boundaryPolygon(Matrix m, ST_Box boundary) {
+        Polygon shape = new Polygon();
+        Tuple2<Double, Double> p00 = MatrixUtils.pointTransform(m, boundary.getTopLeftX(), boundary.getTopLeftY() - 1);
+        Tuple2<Double, Double> p01 = MatrixUtils.pointTransform(m, boundary.getTopLeftX() + boundary.getWidth() + 2, boundary.getTopLeftY() - 1);
+        Tuple2<Double, Double> p10 = MatrixUtils.pointTransform(m, boundary.getTopLeftX(), boundary.getTopLeftY() + boundary.getHeight() + 2);
+        Tuple2<Double, Double> p11 = MatrixUtils.pointTransform(m, boundary.getTopLeftX() + boundary.getWidth() + 2, boundary.getTopLeftY() + boundary.getHeight() + 2);
+        shape.addPoint(Double.valueOf(p00.getFirst() * ppm).intValue(), Double.valueOf(p00.getSecond() * ppm).intValue());
+        shape.addPoint(Double.valueOf(p01.getFirst() * ppm).intValue(), Double.valueOf(p01.getSecond() * ppm).intValue());
+        shape.addPoint(Double.valueOf(p11.getFirst() * ppm).intValue(), Double.valueOf(p11.getSecond() * ppm).intValue());
+        shape.addPoint(Double.valueOf(p10.getFirst() * ppm).intValue(), Double.valueOf(p10.getSecond() * ppm).intValue());
+        return shape;
     }
 
     private Path2D buildPath(String abbreviatedData) {

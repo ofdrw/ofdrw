@@ -16,6 +16,9 @@ import java.awt.Color;
  * </ol>
  * 其中 Fill/Stroke 开关与 Alpha 不从父作用域继承，只取图元自身的属性；
  * 绘制参数中的颜色优先于类型默认色，图元自身的颜色优先级最高。
+ * <p>
+ * <b>线程安全</b>：本类内部持有实例级缓存，<b>非线程安全</b>，不应跨线程共享；
+ * 每个渲染任务应各自创建独立实例。
  */
 public class StyleResolver {
 

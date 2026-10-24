@@ -19,14 +19,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 组合对象（CompositeObject / CompositeGraphicUnit）坐标系换算测试。
+ * 组合对象（CompositeObject / CompositeGraphicUnit）绘制测试。
  * <p>
- * 依据 GB/T 33190-2016 对矢量图像（CompositeGraphicUnit）的定义：其 Width/Height 界定内部图元的单位空间，
- * 内部坐标需按 Boundary 宽高比例映射后落入页面。本类构造单位空间（100x100）与目标边界框（20x20mm）不一致的文档，
- * 断言渲染出的图形尺寸与位置符合预期。
+ * 依据 ofdrw-viewer-engine 的 drawComposite 行为：组合对象的子图元与组合对象处于同一坐标系，
+ * 由组合对象自身的 CTM 与 Boundary 定位；CompositeGraphicUnit 的 Width/Height 只描述矢量图像自身
+ * 的坐标系范围（超出裁剪），<b>不</b>用于把子图元归一化到 Boundary。
+ * 因此本类断言：子图元按“CTM 缩放 + Boundary 平移”落位，不做 Width/Height 缩放。
  *
  * @author 权观宇
  * @since 2026-10-25
@@ -45,36 +45,38 @@ class CompositeObjectScaleTest {
     private static final double PPM = 1.0;
 
     @Test
-    @DisplayName("组合对象按 Width/Height 换算：100x100 单位空间映射到 20x20mm 边界框")
-    void compositeUnitMapsToBoundarySize() throws Exception {
-        // 单位空间内绘制 (10,10)-(60,60) 的黑色方块，边界框位于 (20,20) 尺寸 20x20mm
+    @DisplayName("组合对象按 CTM 缩放定位，不做 Width/Height 归一化")
+    void compositeUsesCtmAndBoundary() throws Exception {
+        // CTM 为 0.5 倍（mm/单位）；内部方块 (10,10)-(60,60)
+        BufferedImage image = render(compositeOfd(100, 100, "20 20 20 20", "0.5 0 0 0.5 0 0"));
+        // 方块映射为 (5,5)-(30,30)mm，即 (5,5)-(30,30) 像素
+        assertEquals(Color.BLACK, at(image, 15, 15), "方块应按 CTM 缩放后落在页面坐标系");
+        assertEquals(Color.WHITE, at(image, 2, 2), "方块左上角之外应为空白");
+        assertEquals(Color.WHITE, at(image, 40, 40), "超出方块范围应为空白");
+    }
+
+    @Test
+    @DisplayName("单位空间尺寸不影响绘制结果（Width/Height 只描述矢量图像自身范围）")
+    void compositeUnitSizeDoesNotScale() throws Exception {
+        BufferedImage small = render(compositeOfd(100, 100, "20 20 20 20", "0.5 0 0 0.5 0 0"));
+        BufferedImage large = render(compositeOfd(1000, 1000, "20 20 20 20", "0.5 0 0 0.5 0 0"));
+        for (int y : new int[]{6, 15, 29}) {
+            for (int x : new int[]{6, 15, 29}) {
+                assertEquals(small.getRGB(x, y), large.getRGB(x, y),
+                        "不同的 Width/Height 不应改变绘制结果：(" + x + "," + y + ")");
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("组合对象没有 CTM 时按单位坐标直接进入页面坐标系")
+    void compositeWithoutCtmUsesBoundaryOnly() throws Exception {
         BufferedImage image = render(compositeOfd(100, 100, "20 20 20 20", null));
-
-        // 预期：方块映射为 (22,22)-(32,32)mm，即 1 像素/毫米下 (22,22)-(32,32) 像素
-        assertEquals(Color.BLACK, at(image, 27, 27), "单位空间方块应缩放后落在边界框中部");
-        assertEquals(Color.WHITE, at(image, 17, 17), "边界框左上外侧应为空白");
-        assertEquals(Color.WHITE, at(image, 37, 37), "边界框右下外侧应为空白（未按 1:1 铺开）");
-        assertEquals(Color.WHITE, at(image, 21, 21), "单位空间原点 (0,0) 对应边界框左上角，应仍为空白");
-    }
-
-    @Test
-    @DisplayName("单位空间换算与 CTM 叠加：CTM 只做整体平移时图形整体右移")
-    void compositeUnitMapsWithCtm() throws Exception {
-        // 无 CTM：方块落在 (22,22)-(32,32)mm
-        BufferedImage plain = render(compositeOfd(100, 100, "20 20 20 20", null));
-        // CTM 平移 40mm：方块整体右移到 (62,22)-(72,32)mm
-        BufferedImage shifted = render(compositeOfd(100, 100, "20 20 20 20", "1 0 0 1 40 0"));
-        assertEquals(Color.BLACK, at(plain, 27, 27), "无 CTM 时方块位于边界框中部");
-        assertEquals(Color.WHITE, at(shifted, 27, 27), "带 CTM 平移后原位置应变为空白");
-        assertEquals(Color.BLACK, at(shifted, 67, 27), "CTM 平移后方块应整体右移");
-    }
-
-    @Test
-    @DisplayName("边界框缺失时以 Width/Height 作为目标尺寸（不缩放）")
-    void compositeWithoutBoundaryFallsBackToUnitSize() throws Exception {
-        BufferedImage image = render(compositeOfd(60, 60, null, null));
-        // 无边界框：单位空间按 1:1 作为毫米使用，方块 (10,10)-(60,60) 直接落在页面
-        assertEquals(Color.BLACK, at(image, 30, 30), "无边界框时应按单位尺寸直接绘制");
+        // 无 CTM：组合内容与页面共用坐标系，内部方块 (10,10)-(60,60) 以毫米直接落位；
+        // 组合对象自身的包围框 (20,20)-(40,40) 仅用于包围框裁剪，不影响子图元坐标
+        assertEquals(Color.BLACK, at(image, 40, 40), "无 CTM 时子图元按原坐标绘制");
+        assertEquals(Color.BLACK, at(image, 30, 30), "方块应连续覆盖到包围框范围之外");
+        assertEquals(Color.WHITE, at(image, 90, 90), "超出方块范围应为空白");
     }
 
     /**
@@ -108,14 +110,11 @@ class CompositeObjectScaleTest {
 
     /**
      * 构造只含一个组合对象的 OFD 文档。
-     * <p>
-     * 组合图形单元的单位空间为 {@code unitWidth x unitHeight}，内部黑色方块占 (10,10)-(60,60)；
-     * 组合对象可选设置边界框与 CTM。
      *
-     * @param unitWidth   单位空间宽度，无量纲
-     * @param unitHeight  单位空间高度，无量纲
-     * @param boundary    边界框 "x y w h"，单位：毫米；null 表示不设置
-     * @param ctm         CTM 六元组，null 表示不设置
+     * @param unitWidth  单位空间宽度，无量纲
+     * @param unitHeight 单位空间高度，无量纲
+     * @param boundary   边界框 "x y w h"，单位：毫米；null 表示不设置
+     * @param ctm        CTM 六元组，null 表示不设置
      * @return OFD 文档路径
      * @throws IOException 写入失败
      */
@@ -131,7 +130,7 @@ class CompositeObjectScaleTest {
 
         String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                 + "<ofd:Page xmlns:ofd=\"http://www.ofdspec.org/2016\">"
-                + "<ofd:Area><ofd:PhysicalBox>0 0 100 80</ofd:PhysicalBox></ofd:Area>"
+                + "<ofd:Area><ofd:PhysicalBox>0 0 100 100</ofd:PhysicalBox></ofd:Area>"
                 + "<ofd:Content><ofd:Layer ID=\"2\">" + composite + "</ofd:Layer></ofd:Content></ofd:Page>";
 
         String documentRes = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -147,7 +146,7 @@ class CompositeObjectScaleTest {
 
         String document = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                 + "<ofd:Document xmlns:ofd=\"http://www.ofdspec.org/2016\">"
-                + "<ofd:CommonData><ofd:PageArea><ofd:PhysicalBox>0 0 100 80</ofd:PhysicalBox></ofd:PageArea>"
+                + "<ofd:CommonData><ofd:PageArea><ofd:PhysicalBox>0 0 100 100</ofd:PhysicalBox></ofd:PageArea>"
                 + "<ofd:DocumentRes>DocumentRes.xml</ofd:DocumentRes>"
                 + "<ofd:MaxUnitID>12</ofd:MaxUnitID></ofd:CommonData>"
                 + "<ofd:Pages><ofd:Page ID=\"1\" BaseLoc=\"Pages/Page_0/Content.xml\"/></ofd:Pages>"
@@ -169,7 +168,6 @@ class CompositeObjectScaleTest {
                 zos.closeEntry();
             }
         }
-        assertTrue(Files.size(ofdPath) > 0);
         return ofdPath;
     }
 }
