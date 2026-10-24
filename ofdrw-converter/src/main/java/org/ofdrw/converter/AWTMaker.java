@@ -1655,16 +1655,39 @@ public abstract class AWTMaker {
          * CTM 的旋转与缩放已烘焙进纹理位图，锚点不再重复承载，避免步进被二次缩放。
          */
         /*
-         * 锚点必须与纹理位图同比例，否则纹理会被非等比拉伸、单元内的文字随之变形缩小。
-         * 纹理尺寸是「旋转后的步进包围盒（像素）」，因此锚点取「旋转后的步进包围盒（毫米）」，
-         * 二者宽高比一致，纹理 1px 恰好对应 1/ppm 毫米。
+         * 锚点必须与纹理位图严格一一对应，否则纹理会被非等比拉伸、单元内的文字随之变形缩小。
+         * 纹理位图的像素尺寸就是 rotBounds（旋转后的平铺块包围盒）乘 ppm，
+         * 因此锚点必须取同一个 rotBounds 的毫米尺寸，使纹理 1px 恰好对应 1/ppm 毫米。
+         *
+         * 注意不能改用 xStep/yStep 作为锚点尺寸：CTM 含 45° 旋转时，
+         * 127.0×66.2 的步进旋转后包围盒是 136.6×136.6，二者宽高比分别为 1.918 与 1.0，
+         * 纹理会被横向压缩到约 1/1.9，表现为“水印密度成倍偏大、字号偏小”。
          */
-        final java.awt.geom.Rectangle2D anchorMm = linear
-                .createTransformedShape(new java.awt.geom.Rectangle2D.Double(0, 0, xStep, yStep)).getBounds2D();
         final java.awt.geom.Rectangle2D.Double anchorRect = new java.awt.geom.Rectangle2D.Double(
                 ctm.getTranslateX(), ctm.getTranslateY(),
-                anchorMm.getWidth(), anchorMm.getHeight());
+                rotBounds.getWidth(), rotBounds.getHeight());
         return new ResolvedPaint(new CanvasPaint(new TexturePaint(textureImage, anchorRect)), 1f);
+    }
+
+    /**
+     * 计算覆盖旋转后包围盒所需的晶格整数组合上限。
+     * <p>
+     * 位移矢量 vx、vy 定义单元的平铺晶格，单元位置为 m·vx + n·vy。
+     * 纹理需覆盖 rotBounds 的宽高，故上限取「包围盒对角线长度 / 最短矢量长度」，
+     * 再加 1 保证边界处不留缺口。
+     *
+     * @param rotBounds 旋转后的包围盒，单位：毫米
+     * @param vx        沿单元宽度方向的位移矢量，单位：毫米
+     * @param vy        沿单元高度方向的位移矢量，单位：毫米
+     * @return 整数组合的取值范围（对称，即 [-n, n]）
+     */
+    private static int latticeSpan(java.awt.geom.Rectangle2D rotBounds, double[] vx, double[] vy) {
+        final double shortest = Math.min(Math.hypot(vx[0], vx[1]), Math.hypot(vy[0], vy[1]));
+        if (shortest < 1e-9) {
+            return 4;
+        }
+        final double diagonal = Math.hypot(rotBounds.getWidth(), rotBounds.getHeight());
+        return (int) Math.ceil(diagonal / shortest) + 1;
     }
 
     /**
@@ -1690,12 +1713,21 @@ public abstract class AWTMaker {
             g.setComposite(AlphaComposite.SrcOver);
             g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
                     java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            final long columns = Math.max(1, (long) Math.ceil(rotBounds.getWidth() / Math.max(1e-9, xStep)));
-            final long rows = Math.max(1, (long) Math.ceil(rotBounds.getHeight() / Math.max(1e-9, yStep)));
-            for (long row = 0; row < rows; row++) {
-                for (long column = 0; column < columns; column++) {
+            /*
+             * 单元在纹理内的摆放按「旋转后的晶格」进行：CTM 旋转后，相邻单元的两个位移矢量是
+             * linear 分别作用于 (xStep,0) 与 (0,yStep) 的结果，二者仍正交但整体转了一个角度。
+             * 若改用未旋转的步进（xStep/yStep）决定行列数，行列间距与旋转后的实际晶格不一致，
+             * 纹理内部就会出现空白或加倍重叠，平铺后表现为水印密度与参考不一致。
+             *
+             * 这里直接枚举晶格的整数组合 m·vx + n·vy，范围取到足以覆盖整个包围盒。
+             */
+            final double[] vx = {linear.getScaleX() * xStep, linear.getShearY() * xStep};
+            final double[] vy = {linear.getShearX() * yStep, linear.getScaleY() * yStep};
+            final int span = latticeSpan(rotBounds, vx, vy);
+            for (int m = -span; m <= span; m++) {
+                for (int n = -span; n <= span; n++) {
                     final java.awt.geom.AffineTransform at = new java.awt.geom.AffineTransform(linear);
-                    at.translate(column * tilePxWidth, row * tilePxHeight);
+                    at.translate(m * tilePxWidth, n * tilePxHeight);
                     g.drawImage(tileImage, at, null);
                 }
             }
