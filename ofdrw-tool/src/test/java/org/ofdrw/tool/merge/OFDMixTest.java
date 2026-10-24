@@ -20,8 +20,8 @@ public class OFDMixTest {
     @Test
     public void testAddMix() throws Exception {
         Path dst = Paths.get("target/mixed.ofd");
-        Path p1P = Paths.get("src/test/resources", "Page1.ofd");
-        Path p2P = Paths.get("src/test/resources", "Page2.ofd");
+        Path p1P = Paths.get("src/test/resources", "page1.ofd");
+        Path p2P = Paths.get("src/test/resources", "page2.ofd");
         // 1. 创建一个新的OFD文档合并对象
         try (OFDMerger ofdMerger = new OFDMerger(dst)) {
             // 2. 合并两页
@@ -38,9 +38,9 @@ public class OFDMixTest {
     public void testMixMilPage() throws Exception {
         Path dst = Paths.get("target/mixed_multi_page.ofd");
 
-        Path p1P = Paths.get("src/test/resources", "Page1.ofd");
-        Path p2P = Paths.get("src/test/resources", "Page2.ofd");
-        Path p3P = Paths.get("src/test/resources", "Page3.ofd");
+        Path p1P = Paths.get("src/test/resources", "page1.ofd");
+        Path p2P = Paths.get("src/test/resources", "page2.ofd");
+        Path p3P = Paths.get("src/test/resources", "page3.ofd");
 
         try (OFDMerger ofdMerger = new OFDMerger(dst)) {
 

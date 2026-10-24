@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.PrivateKey;
+import java.security.Security;
 import java.security.Signature;
 import java.security.cert.Certificate;
 import java.util.Date;
@@ -29,6 +30,16 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class SES_SignatureTest {
 
+    /**
+     * 注册 BouncyCastle 提供者。
+     * <p>
+     * 用例中 {@code Signature.getInstance("SM3withSm2", "BC")} 按名称查找已注册的提供者，
+     * 仅 new 一个 BouncyCastleProvider 实例并不会完成注册，缺少本静态块时
+     * 在未自动注册该提供者的 JDK 上会抛出 NoSuchProviderException。
+     */
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
 
     @Test
     void build() throws Exception {

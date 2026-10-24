@@ -1,6 +1,9 @@
 package org.ofdrw.sign.signContainer;
 
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.ofdrw.gm.cert.PKCS12Tools;
 import org.ofdrw.gm.ses.v1.SESeal;
 import org.ofdrw.reader.OFDReader;
@@ -24,9 +27,11 @@ import java.security.cert.Certificate;
  * @author 权观宇
  * @since 2020-05-18 19:48:29
  */
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class NoSealSignTest {
 
     @Test
+    @Order(1)
     public void testSign() throws Exception{
         Path userP12Path = Paths.get("src/test/resources", "USER.p12");
         Path sealPath = Paths.get("src/test/resources", "UserV1.esl");
@@ -55,7 +60,14 @@ public class NoSealSignTest {
         System.out.println(">> 生成文件位置: " + out.toAbsolutePath().toAbsolutePath());
     }
 
+    /**
+     * 校验 testSign 产出的文档。
+     * <p>
+     * 本方法读取 {@code target/NoSealV1Sign.ofd}，该文件由 {@link #testSign()} 生成，
+     * 因此用 {@code @Order} 固定为事后执行，避免被先执行时文件尚不存在。
+     */
     @Test
+    @Order(2)
     void validate() throws IOException, GeneralSecurityException {
         Path src = Paths.get("target/NoSealV1Sign.ofd");
 

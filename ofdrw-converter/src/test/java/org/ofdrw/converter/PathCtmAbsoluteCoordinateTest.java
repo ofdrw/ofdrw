@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -119,6 +120,6 @@ class PathCtmAbsoluteCoordinateTest {
      */
     @Test
     void testResourcesAreAvailable() {
-        assertTrue(Files.isDirectory(Path.of("src/test/resources")), "测试资源目录应存在");
+        assertTrue(Files.isDirectory(Paths.get("src/test/resources")), "测试资源目录应存在");
     }
 }

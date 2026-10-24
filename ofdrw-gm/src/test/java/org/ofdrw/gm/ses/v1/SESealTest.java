@@ -4,7 +4,9 @@ import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
 import org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.ofdrw.gm.cert.PKCS12Tools;
 
 import java.io.IOException;
@@ -27,6 +29,7 @@ import java.util.UUID;
  * @author 权观宇
  * @since 2020-04-21 10:16:02
  */
+@TestMethodOrder(MethodOrderer.Alphanumeric.class)
 public class SESealTest {
 
     static {

@@ -135,7 +135,7 @@ class StyleScopeTest {
         StyleScope layer = StyleScope.document().child(StyleScopeKind.LAYER, null, parentInline);
         StyleScope object = layer.child(StyleScopeKind.OBJECT, null, null);
 
-        ResolvedStyle style = resolverWith(null).resolve(object, GraphicUnitType.IMAGE, null, null, null, null, null);
+        ResolvedStyle style = resolverWith(new CT_DrawParam[0]).resolve(object, GraphicUnitType.IMAGE, null, null, null, null, null);
         assertEquals(Integer.valueOf(0x123456), style.getFillColor(), "颜色属于可继承内容");
         assertFalse(style.isFill(), "IMAGE 类型默认 Fill=false，说明开关没有从父作用域继承");
         assertFalse(style.isStroke(), "IMAGE 类型默认 Stroke=false，说明开关没有从父作用域继承");
