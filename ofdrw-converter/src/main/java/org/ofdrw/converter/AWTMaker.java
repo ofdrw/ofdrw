@@ -443,13 +443,16 @@ public abstract class AWTMaker {
             for (PageBlockType object : pageBlock.getPageBlocks()) {
                 try {
                     /*
-                     * 图元级裁剪（Clips）：在绘制图元之前按其自身裁剪区域限制可见范围，
-                     * 用独立的 save/restore 限定作用域，避免泄漏到后续图元。
-                     * 注意：包围框裁剪已被各图元内部处理，这里只处理文档显式声明的 Clips。
+                     * 图元级裁剪（Clips）：在绘制图元之前按其自身裁剪区域限制可见范围。
+                     * save() 必须先于 applyUnitClips()：applyUnitClips 会改写当前裁剪区域，
+                     * 若先应用裁剪再 save，压栈保存的就已经是图元自身的裁剪，
+                     * restore 之后这份裁剪不会被撤销，而是泄漏给后续图元——
+                     * 后续图元与它求交后可用的绘制区域被压缩甚至清空，表现为图元凭空消失。
                      */
-                    if (object instanceof CT_GraphicUnit && applyUnitClips(renderer, (CT_GraphicUnit<?>) object, parentMatrix)) {
+                    if (object instanceof CT_GraphicUnit) {
                         renderer.save();
                         try {
+                            applyUnitClips(renderer, (CT_GraphicUnit<?>) object, parentMatrix);
                             writeUnit(renderer, object, scope, parentMatrix, resolver);
                         } finally {
                             renderer.restore();
