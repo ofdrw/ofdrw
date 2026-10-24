@@ -54,7 +54,7 @@
 
     <licenses>
         <license>
-            <name>Apache License 2.0</name>
+            <name>MIT License</name>
             <url>https://github.com/ofdrw/ofdrw/blob/master/LICENSE</url>
             <distribution>repo</distribution>
         </license>
