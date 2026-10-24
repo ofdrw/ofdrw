@@ -774,6 +774,13 @@ public abstract class AWTMaker {
         if (width <= 0 || height <= 0) {
             return false;
         }
+        /*
+         * CTM 含旋转/斜切时（如 90° 旋转，a=d=0、b=-c），a、d 不再代表宽高，
+         * 不能用它们与包围框比较，也不能据此换算尺寸；这类图元以包围框为准。
+         */
+        if (Math.abs(ctm[1]) > ABSOLUTE_CTM_TOLERANCE || Math.abs(ctm[2]) > ABSOLUTE_CTM_TOLERANCE) {
+            return true;
+        }
         final double widthDeviation = Math.abs(Math.abs(ctm[0]) - width) / width;
         final double heightDeviation = Math.abs(Math.abs(ctm[3]) - height) / height;
         return widthDeviation <= 0.1 && heightDeviation <= 0.1;
@@ -829,12 +836,19 @@ public abstract class AWTMaker {
         double originX;
         double originY;
         Double[] ctmArr = imageObject.getCTM() == null ? null : imageObject.getCTM().toDouble();
-        if (boundary != null && (ctmArr == null || ctmMatchesBoundary(ctmArr, boundary))) {
+        /*
+         * CTM 含旋转/斜切时无法拆成「轴对齐尺寸 + 平移」，必须整矩阵作用于图片，
+         * 否则旋转会被丢弃（testImageOverridePage.ofd 的模板图为 90° 旋转，
+         * 按尺寸绘制会把整份表单横过来）。
+         */
+        final boolean ctmRotated = ctmArr != null && ctmArr.length == 6
+                && (Math.abs(ctmArr[1]) > ABSOLUTE_CTM_TOLERANCE || Math.abs(ctmArr[2]) > ABSOLUTE_CTM_TOLERANCE);
+        if (!ctmRotated && boundary != null && (ctmArr == null || ctmMatchesBoundary(ctmArr, boundary))) {
             targetWidth = boundary.getWidth();
             targetHeight = boundary.getHeight();
             originX = boundary.getTopLeftX();
             originY = boundary.getTopLeftY();
-        } else if (ctmArr != null) {
+        } else if (!ctmRotated && ctmArr != null) {
             targetWidth = Math.abs(ctmArr[0]);
             targetHeight = Math.abs(ctmArr[3]);
             originX = ctmArr[4];
@@ -845,9 +859,33 @@ public abstract class AWTMaker {
             originX = 0;
             originY = 0;
         }
-        Matrix imageMatrix = MatrixUtils.scale(MatrixUtils.base(),
-                targetWidth / image.getWidth(), targetHeight / image.getHeight());
-        imageMatrix = MatrixUtils.move(imageMatrix, originX, originY);
+        Matrix imageMatrix;
+        if (ctmRotated) {
+            /*
+             * 旋转情形：把像素坐标先归一化到单位框（除以像素宽高），再由 CTM 承担单位框到物理尺寸的映射，
+             * 于是图片按 CTM 的完整线性变换（含旋转）落位。
+             */
+            final double pxWidth = image.getWidth();
+            final double pxHeight = image.getHeight();
+            /*
+             * 该矩阵为行向量约定（[x y 1] × M）：像素 x 落在第 0 列、像素 y 落在第 1 列，
+             * 因此像素宽度只缩放第 0 列（ctm[0], ctm[1]），像素高度只缩放第 1 列（ctm[2], ctm[3]）。
+             */
+            /*
+             * 平移分量需要叠加包围框原点：CTM 的平移按旋转前坐标系给出，而图片原点要落到 Boundary 左上角。
+             * testImageOverridePage.ofd 的模板图即为该形态：CTM 平移 e=419.95mm 已含 -boundary.x 的补偿，
+             * 直接使用会把图片推到画布外，叠加 boundary.x(-50.8) 后恰为页面宽度 369.15mm。
+             */
+            imageMatrix = MatrixUtils.create(
+                    ctmArr[0] / pxWidth, ctmArr[1] / pxWidth,
+                    ctmArr[2] / pxHeight, ctmArr[3] / pxHeight,
+                    ctmArr[4] + (boundary == null ? 0 : boundary.getTopLeftX()),
+                    ctmArr[5] + (boundary == null ? 0 : boundary.getTopLeftY()));
+        } else {
+            imageMatrix = MatrixUtils.scale(MatrixUtils.base(),
+                    targetWidth / image.getWidth(), targetHeight / image.getHeight());
+            imageMatrix = MatrixUtils.move(imageMatrix, originX, originY);
+        }
         imageMatrix = imageMatrix.mtimes(baseMatrix);
 
         /*
