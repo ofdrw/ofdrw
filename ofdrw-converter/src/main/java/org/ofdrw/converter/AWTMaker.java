@@ -728,11 +728,6 @@ public abstract class AWTMaker {
     private void drawImageUnit(Renderer renderer, ImageObject imageObject, StyleScope scope, Matrix parentMatrix,
                                StyleResolver resolver, ST_Box boundary) {
         Matrix baseMatrix = renderBoundaryAndSetClip(renderer, boundary, parentMatrix);
-        /*
-         * 图片以“包围框 + CTM”自行完成定位，若同时按包围框裁剪，部分文档中包围框与 CTM 不一致
-         * 会把图片整块裁掉，因此这里只应用图元显式声明的 Clips。
-         */
-        applyUnitClips(renderer, imageObject, parentMatrix);
 
         BufferedImage image;
         try {
@@ -763,27 +758,45 @@ public abstract class AWTMaker {
         alpha = (float) style.getAlpha();
 
         /*
-         * 图片自身没有缩放语义：像素坐标先在 1x1 单位空间归一化，再由图片对象的 CTM 与包围框决定
-         * 尺寸和位置。CTM 缺失时退化为以包围框尺寸作为目标尺寸。
-         * 变换在设备空间表达（已含 ppm 与父级变换），不受画布当前视图变换影响。
+         * 图片自身没有缩放语义：像素坐标先归一化，再由包围框决定尺寸与位置。
+         * 目标尺寸与位置必须同源，统一取包围框（Boundary）—— 它同时表达图片的位置与覆盖范围，
+         * 缺失时才退回 CTM 尺寸与平移（再缺失则用图片像素尺寸）。
+         * 依据：manual.ofd 的截图类图片 CTM 平移恒为 (0,0)，位置只写在 Boundary 上；
+         * 若尺寸取 CTM、位置取 Boundary，封面图会因两者不等而覆盖不满、页面露出白边。
+         * 尺寸单位：毫米；换算成像素由 baseMatrix 统一完成，这里不得再乘 ppm。
          */
-        Matrix imageMatrix = MatrixUtils.base();
-        double targetWidth = image.getWidth();
-        double targetHeight = image.getHeight();
-        if (imageObject.getCTM() != null) {
-            /*
-             * 图片的 CTM 把 1x1 单位空间映射为目标尺寸，这里再把像素坐标归一化到该单位空间，
-             * 因此必须先乘 1/像素宽高，否则图片会被放大到“像素数 × 目标尺寸”的尺寸。
-             */
-            Double[] ctm = imageObject.getCTM().toDouble();
-            targetWidth = Math.abs(ctm[0]);
-            targetHeight = Math.abs(ctm[3]);
-        } else if (boundary != null) {
+        double targetWidth;
+        double targetHeight;
+        double originX;
+        double originY;
+        Double[] ctmArr = imageObject.getCTM() == null ? null : imageObject.getCTM().toDouble();
+        if (boundary != null) {
             targetWidth = boundary.getWidth();
             targetHeight = boundary.getHeight();
+            originX = boundary.getTopLeftX();
+            originY = boundary.getTopLeftY();
+        } else if (ctmArr != null) {
+            targetWidth = Math.abs(ctmArr[0]);
+            targetHeight = Math.abs(ctmArr[3]);
+            originX = ctmArr[4];
+            originY = ctmArr[5];
+        } else {
+            targetWidth = image.getWidth();
+            targetHeight = image.getHeight();
+            originX = 0;
+            originY = 0;
         }
-        imageMatrix = MatrixUtils.scale(imageMatrix, targetWidth / image.getWidth(), targetHeight / image.getHeight());
+        Matrix imageMatrix = MatrixUtils.scale(MatrixUtils.base(),
+                targetWidth / image.getWidth(), targetHeight / image.getHeight());
+        imageMatrix = MatrixUtils.move(imageMatrix, originX, originY);
         imageMatrix = imageMatrix.mtimes(baseMatrix);
+
+        /*
+         * 图元显式声明的 Clips 在图片变换之后应用：渲染器把裁剪区域按设备空间保存，
+         * 它应当按“图元变换 → 裁剪”的顺序作用在图片上，与图片内容保持同一基准。
+         * 图片以“包围框 + CTM”自行定位，因此不再叠加按包围框裁剪。
+         */
+        applyUnitClips(renderer, imageObject, parentMatrix);
 
         ImageHandle handle = renderer.createImage(image);
         /*
@@ -1267,14 +1280,39 @@ public abstract class AWTMaker {
             ST_Box boundary = unit.getBoundary();
             double originX = boundary == null ? 0 : boundary.getTopLeftX();
             double originY = boundary == null ? 0 : boundary.getTopLeftY();
+            /*
+             * 裁剪路径坐标到对象空间的换算分两级：
+             * 1. 裁剪对象的 CTM 先把裁剪点坐标换算到**归一化单位空间**，即图元的 Boundary
+             *    被该矩阵映射为 [0,1]×[0,1]（与图片绘制“像素 → 1x1 单位空间”的约定一致）；
+             * 2. 再按图元 Boundary 的宽高（单位：毫米）放大，并平移到 Boundary 左上角。
+             *
+             * 以 manual.ofd p61 的 ImageObject 为例：Path 的 CTM 为 0.00914/0.01377 配平移
+             * -0.45975/-1.45688，恰好把页面坐标 (50.292,105.833)-(159.681,178.477) 映射为 (0,0)-(1,1)；
+             * 若把该 CTM 的结果直接当成对象空间使用，裁剪框会缩成约 1×1 单位，图片被整块裁掉。
+             */
+            Double[] clipCtm = clipCtmOf(area, clipObj);
             Matrix m = MatrixUtils.base();
-            if (area.getCTM() != null) {
-                // Area 自身的 CTM 把区域坐标换算到对象空间，最先作用在区域坐标上
-                m = m.mtimes(MatrixUtils.ctm(area.getCTM().toDouble()));
+            if (clipCtm != null) {
+                /*
+                 * 裁剪对象声明了 CTM：它把裁剪点坐标换算到**归一化单位空间**（图元 Boundary 被映射为
+                 * [0,1]×[0,1]），再按 Boundary 宽高（单位：毫米）放大回对象空间。
+                 */
+                m = m.mtimes(MatrixUtils.ctm(clipCtm));
+                if (boundary != null) {
+                    m = MatrixUtils.scale(m, boundary.getWidth(), boundary.getHeight());
+                }
+            } else if (isUnitClipBox(clipObj)) {
+                /*
+                 * 未声明 CTM，但裁剪对象的包围框是 1×1 单位框：表示裁剪区域已归一化，
+                 * 需按图元 Boundary 宽高（单位：毫米）放大回对象空间。
+                 */
+                if (boundary != null) {
+                    m = MatrixUtils.scale(m, boundary.getWidth(), boundary.getHeight());
+                }
             }
-            if (unit.getCTM() != null) {
-                m = m.mtimes(MatrixUtils.ctm(unit.getCTM().toDouble()));
-            }
+            /*
+             * 其余情况：裁剪点坐标已经是对象空间（毫米），只需平移到图元自身的原点。
+             */
             m = MatrixUtils.move(m, originX, originY);
             m = m.mtimes(parentMatrix);
 
@@ -1282,12 +1320,85 @@ public abstract class AWTMaker {
             if (path == null) {
                 return null;
             }
-            Shape device = MatrixUtils.createAffineTransform(MatrixUtils.scale(m, ppm, ppm)).createTransformedShape(path);
-            return new java.awt.geom.Area(device);
+            /*
+             * 矩阵为行向量约定（第 0、1 行是线性分量，第 2 行是平移分量），ppm 先作用在线性分量上，
+             * 平移分量随之放大。这里直接按 double 逐点变换，原因有两点：
+             * 1. MatrixUtils.createAffineTransform 通过 getAsFloat 读分量，大比例下平移会被截断；
+             * 2. 先构造像素矩阵再做矩阵乘法时，中间矩阵的浮点误差会被放大成错误的裁剪框。
+             */
+            double m00 = m.getAsDouble(0, 0) * ppm;
+            double m10 = m.getAsDouble(1, 0) * ppm;
+            double m01 = m.getAsDouble(0, 1) * ppm;
+            double m11 = m.getAsDouble(1, 1) * ppm;
+            double m20 = m.getAsDouble(2, 0) * ppm;
+            double m21 = m.getAsDouble(2, 1) * ppm;
+            java.awt.geom.Path2D devPath = new java.awt.geom.Path2D.Double();
+            double[] c = new double[6];
+            for (java.awt.geom.PathIterator it = path.getPathIterator(null); !it.isDone(); it.next()) {
+                int type = it.currentSegment(c);
+                if (type == java.awt.geom.PathIterator.SEG_CLOSE) {
+                    devPath.closePath();
+                    continue;
+                }
+                double x = m00 * c[0] + m10 * c[1] + m20;
+                double y = m01 * c[0] + m11 * c[1] + m21;
+                if (type == java.awt.geom.PathIterator.SEG_MOVETO) {
+                    devPath.moveTo(x, y);
+                } else if (type == java.awt.geom.PathIterator.SEG_LINETO) {
+                    devPath.lineTo(x, y);
+                } else if (type == java.awt.geom.PathIterator.SEG_QUADTO) {
+                    devPath.quadTo(x, y, m00 * c[2] + m10 * c[3] + m20, m01 * c[2] + m11 * c[3] + m21);
+                } else if (type == java.awt.geom.PathIterator.SEG_CUBICTO) {
+                    devPath.curveTo(x, y,
+                            m00 * c[2] + m10 * c[3] + m20, m01 * c[2] + m11 * c[3] + m21,
+                            m00 * c[4] + m10 * c[5] + m20, m01 * c[4] + m11 * c[5] + m21);
+                }
+            }
+            return new java.awt.geom.Area(devPath);
         } catch (Exception e) {
             logger.warn("裁剪区域解析失败，已忽略该裁剪：{}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * 判断裁剪对象的包围框是否为 1×1 单位框（表示裁剪区域已归一化到单位空间）。
+     *
+     * @param clipObj 区域内的可裁剪对象
+     * @return true 表示包围框宽高均为 1（容差 1e-3），单位为无量纲
+     */
+    private boolean isUnitClipBox(org.ofdrw.core.pageDescription.clips.ClipAble clipObj) {
+        if (clipObj == null || clipObj.attribute("Boundary") == null) {
+            return false;
+        }
+        ST_Box box = ST_Box.getInstance((String) clipObj.attribute("Boundary").getData());
+        return box != null && Math.abs(box.getWidth() - 1) < 1e-3 && Math.abs(box.getHeight() - 1) < 1e-3;
+    }
+
+    /**
+     * 获取裁剪对象用于“裁剪点坐标 → 归一化单位空间”的 CTM。
+     * <p>
+     * 优先使用 {@code Clips/Area} 自身的 CTM；Area 未声明时退回裁剪对象
+     * （{@code Area/Path} 或 {@code Area/Text}）自身的 CTM。
+     *
+     * @param area    裁剪区域
+     * @param clipObj 区域内的可裁剪对象
+     * @return 六元组 CTM，null 表示两者都未声明
+     */
+    private Double[] clipCtmOf(org.ofdrw.core.pageDescription.clips.Area area,
+                               org.ofdrw.core.pageDescription.clips.ClipAble clipObj) {
+        if (area.getCTM() != null) {
+            return area.getCTM().toDouble();
+        }
+        if (clipObj instanceof org.ofdrw.core.graph.pathObj.CT_Path
+                && ((org.ofdrw.core.graph.pathObj.CT_Path) clipObj).getCTM() != null) {
+            return ((org.ofdrw.core.graph.pathObj.CT_Path) clipObj).getCTM().toDouble();
+        }
+        if (clipObj instanceof org.ofdrw.core.text.text.CT_Text
+                && ((org.ofdrw.core.text.text.CT_Text) clipObj).getCTM() != null) {
+            return ((org.ofdrw.core.text.text.CT_Text) clipObj).getCTM().toDouble();
+        }
+        return null;
     }
 
     /**
@@ -1401,11 +1512,24 @@ public abstract class AWTMaker {
     /**
      * 把底纹（Pattern）填充解析为可平铺的着色源。
      * <p>
-     * 处理流程：把 CellContent 中的图元渲染到一张宽高为 Pattern 单元尺寸的离屏位图（平铺单元），
-     * 再用 {@link java.awt.TexturePaint} 按 Pattern 的 CTM 与该单元的宽高建立平铺锚点，
-     * 由渲染器在当前变换（图元坐标系，单位与 Pattern 的 Width/Height 一致）下平铺填充。
+     * 处理流程分三步：
+     * <ol>
+     *     <li>在「单元尺寸」坐标系（单位 mm）下把 {@code CellContent} 渲染成单元位图；</li>
+     *     <li>把单元位图贴到「步进尺寸」的平铺位图左上角，形成单元之间留空的平铺块；</li>
+     *     <li>对平铺位图应用 Pattern 的 CTM 线性部分（旋转/斜切），再交给
+     *         {@link java.awt.TexturePaint} 平铺。</li>
+     * </ol>
      * <p>
-     * 平铺单元的像素密度取 ppm 与「单元毫米尺寸」的乘积，保证平铺后的清晰度与页面一致。
+     * 关键约束：
+     * <ul>
+     *     <li><b>步进语义</b>：{@link java.awt.TexturePaint} 只能“按锚点矩形无间隙平铺”，而 OFD 的
+     *         {@code XStep}/{@code YStep} 是相邻单元之间的距离，可以大于单元的 {@code Width}/{@code Height}。
+     *         因此平铺位图必须取步进尺寸，单元内容只画在左上角；否则会把单元按单元尺寸密铺，
+     *         表现为“水印密度成倍偏大、字号偏大”。</li>
+     *     <li><b>锚点语义</b>：锚点矩形必须与纹理像素一一对应（宽高取纹理像素数，原点取 CTM 平移），
+     *         使纹理在用户空间（当前图元所在的毫米坐标系）中按 1 纹理像素 = 1 用户单位平铺。
+     *         若把 CTM 的旋转也塞进锚点再包围盒化，会出现旋转外接矩形（45° 时约 1.41 倍）导致的步进失真。</li>
+     * </ul>
      *
      * @param pattern 底纹对象
      * @return 已解析着色源；单元为空、尺寸非法或渲染失败时返回 null（调用方应跳过填充并告警）
@@ -1419,18 +1543,24 @@ public abstract class AWTMaker {
         if (widthObj == null || heightObj == null || widthObj <= 0 || heightObj <= 0) {
             return null;
         }
+        // 单元尺寸，单位：毫米（mm）
         final double width = widthObj;
         final double height = heightObj;
-        final int tileWidth = Math.max(1, (int) Math.ceil(ppm * width));
-        final int tileHeight = Math.max(1, (int) Math.ceil(ppm * height));
-        final BufferedImage cellImage = new BufferedImage(tileWidth, tileHeight, BufferedImage.TYPE_INT_ARGB);
-        final Graphics2D graphics = cellImage.createGraphics();
+        // 平铺步进，单位：毫米（mm）；缺失或不合法时退回单元尺寸（无间隙平铺）
+        final double xStep = legalStep(pattern.getXStep(), width);
+        final double yStep = legalStep(pattern.getYStep(), height);
+
+        // 1. 在「单元尺寸」坐标系下渲染单元内容
+        final int cellPxWidth = Math.max(1, (int) Math.ceil(ppm * width));
+        final int cellPxHeight = Math.max(1, (int) Math.ceil(ppm * height));
+        final BufferedImage cellImage = new BufferedImage(cellPxWidth, cellPxHeight, BufferedImage.TYPE_INT_ARGB);
+        final Graphics2D cellGraphics = cellImage.createGraphics();
         try {
-            graphics.setComposite(AlphaComposite.SrcOver);
-            graphics.scale(tileWidth / width, tileHeight / height);
+            cellGraphics.setComposite(AlphaComposite.SrcOver);
+            cellGraphics.scale(cellPxWidth / width, cellPxHeight / height);
             // 单元内容以 Pattern 自身的毫米坐标系绘制（原点位于单元左上角）
-            try (Graphics2DRenderer cellRenderer = new Graphics2DRenderer(graphics)) {
-                cellRenderer.beginPage(tileWidth, tileHeight);
+            try (Graphics2DRenderer cellRenderer = new Graphics2DRenderer(cellGraphics)) {
+                cellRenderer.beginPage(cellPxWidth, cellPxHeight);
                 writeContent(cellRenderer, pattern.getCellContent(),
                         StyleScope.document().child(StyleScopeKind.COMPOSITE, null, null), MatrixUtils.base(), styleResolver);
                 cellRenderer.endPage();
@@ -1439,21 +1569,145 @@ public abstract class AWTMaker {
             logger.warn("底纹单元渲染失败，已跳过该底纹填充：单元尺寸 [{} x {}] mm", width, height, e);
             return null;
         } finally {
-            graphics.dispose();
+            cellGraphics.dispose();
         }
-        final java.awt.geom.AffineTransform anchor = new java.awt.geom.AffineTransform();
+
+        // 2. 把单元内容贴到「步进尺寸」的平铺位图左上角，形成带间隙的平铺块
+        final int tilePxWidth = Math.max(cellPxWidth, (int) Math.ceil(ppm * xStep));
+        final int tilePxHeight = Math.max(cellPxHeight, (int) Math.ceil(ppm * yStep));
+        final BufferedImage tileImage = new BufferedImage(tilePxWidth, tilePxHeight, BufferedImage.TYPE_INT_ARGB);
+        final Graphics2D tileGraphics = tileImage.createGraphics();
+        try {
+            tileGraphics.setComposite(AlphaComposite.Src);
+            tileGraphics.drawImage(cellImage, 0, 0, null);
+        } finally {
+            tileGraphics.dispose();
+            cellImage.flush();
+        }
+
+        // 3. 把 CTM 的线性部分（旋转/斜切/缩放）烘焙进纹理位图
+        final java.awt.geom.AffineTransform ctm = new java.awt.geom.AffineTransform();
         final Double[] ctmValues = pattern.getCTM() == null ? null : pattern.getCTM().toDouble();
         if (ctmValues != null && ctmValues.length >= 6) {
-            anchor.setTransform(ctmValues[0], ctmValues[1], ctmValues[2],
+            ctm.setTransform(ctmValues[0], ctmValues[1], ctmValues[2],
                     ctmValues[3], ctmValues[4], ctmValues[5]);
         }
-        // 单元位图的一像素对应 width/tileWidth 个单位
-        anchor.scale(width / tileWidth, height / tileHeight);
-        // TexturePaint 的锚点必须是轴对齐矩形：取单元位图在锚点变换下的包围盒
-        final java.awt.geom.Rectangle2D.Double cellRect = new java.awt.geom.Rectangle2D.Double(0, 0, tileWidth, tileHeight);
-        final java.awt.Shape anchored = anchor.createTransformedShape(cellRect);
-        final TexturePaint texture = new TexturePaint(cellImage, anchored.getBounds2D());
-        return new ResolvedPaint(new CanvasPaint(texture), 1f);
+        final java.awt.geom.AffineTransform linear = new java.awt.geom.AffineTransform(
+                ctm.getScaleX(), ctm.getShearY(), ctm.getShearX(), ctm.getScaleY(), 0, 0);
+        /*
+         * 旋转后相邻单元在设备空间交错重叠，单层纹理平铺会在每个周期留下空白条带（实测覆盖率约 60%）。
+         * 这里把单元在纹理内按步进摆放多次，覆盖旋转后的整个包围盒，保证纹理自身无空白。
+         */
+        final java.awt.geom.Rectangle2D rotBounds = linear
+                .createTransformedShape(new java.awt.geom.Rectangle2D.Double(0, 0, tilePxWidth, tilePxHeight))
+                .getBounds2D();
+        final BufferedImage textureImage = buildRotatedTile(tileImage, linear,
+                tilePxWidth, tilePxHeight, xStep, yStep, rotBounds);
+        /*
+         * TexturePaint 的平铺周期（设备像素）= 锚点矩形宽高 × 用户空间缩放（实测：用户缩放 3.78 时
+         * 锚点 127 得到 481px 周期）。当前用户空间单位为毫米、缩放即 ppm，
+         * 因此锚点宽高直接取步进的毫米值（XStep/YStep），周期即为 XStep×ppm，与 OFD 语义一致。
+         * CTM 的旋转与缩放已烘焙进纹理位图，锚点不再重复承载，避免步进被二次缩放。
+         */
+        /*
+         * 锚点必须与纹理位图同比例，否则纹理会被非等比拉伸、单元内的文字随之变形缩小。
+         * 纹理尺寸是「旋转后的步进包围盒（像素）」，因此锚点取「旋转后的步进包围盒（毫米）」，
+         * 二者宽高比一致，纹理 1px 恰好对应 1/ppm 毫米。
+         */
+        final java.awt.geom.Rectangle2D anchorMm = linear
+                .createTransformedShape(new java.awt.geom.Rectangle2D.Double(0, 0, xStep, yStep)).getBounds2D();
+        final java.awt.geom.Rectangle2D.Double anchorRect = new java.awt.geom.Rectangle2D.Double(
+                ctm.getTranslateX(), ctm.getTranslateY(),
+                anchorMm.getWidth(), anchorMm.getHeight());
+        return new ResolvedPaint(new CanvasPaint(new TexturePaint(textureImage, anchorRect)), 1f);
+    }
+
+    /**
+     * 构造经过旋转的平铺纹理，并在纹理内重复摆放单元，保证纹理自身无空白区域。
+     *
+     * @param tileImage    已填充单元内容的平铺块位图，单位：像素
+     * @param linear       Pattern CTM 的线性部分（不含平移）
+     * @param tilePxWidth  平铺块宽度，单位：像素
+     * @param tilePxHeight 平铺块高度，单位：像素
+     * @param xStep        水平步进，单位：毫米（mm）
+     * @param yStep        垂直步进，单位：毫米（mm）
+     * @param rotBounds    旋转后的包围盒，单位：毫米（mm）
+     * @return 旋转后的纹理位图
+     */
+    private BufferedImage buildRotatedTile(BufferedImage tileImage, java.awt.geom.AffineTransform linear,
+                                           int tilePxWidth, int tilePxHeight, double xStep, double yStep,
+                                           java.awt.geom.Rectangle2D rotBounds) {
+        final int outWidth = Math.max(1, (int) Math.ceil(rotBounds.getWidth() * ppm));
+        final int outHeight = Math.max(1, (int) Math.ceil(rotBounds.getHeight() * ppm));
+        final BufferedImage out = new BufferedImage(outWidth, outHeight, BufferedImage.TYPE_INT_ARGB);
+        final Graphics2D g = out.createGraphics();
+        try {
+            g.setComposite(AlphaComposite.SrcOver);
+            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                    java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            final long columns = Math.max(1, (long) Math.ceil(rotBounds.getWidth() / Math.max(1e-9, xStep)));
+            final long rows = Math.max(1, (long) Math.ceil(rotBounds.getHeight() / Math.max(1e-9, yStep)));
+            for (long row = 0; row < rows; row++) {
+                for (long column = 0; column < columns; column++) {
+                    final java.awt.geom.AffineTransform at = new java.awt.geom.AffineTransform(linear);
+                    at.translate(column * tilePxWidth, row * tilePxHeight);
+                    g.drawImage(tileImage, at, null);
+                }
+            }
+        } finally {
+            g.dispose();
+            tileImage.flush();
+        }
+        return out;
+    }
+
+    /**
+     * 按给定线性变换重绘位图。
+     * <p>
+     * 用于把底纹平铺单元的 CTM 旋转预先烘焙进位图，使 {@link java.awt.TexturePaint} 的轴对齐锚点
+     * 只需承载平移。输出尺寸取变换后矩形在像素坐标下的包围盒，变换结果左上角对齐到新位图原点。
+     *
+     * @param source    源位图
+     * @param transform 线性变换（不含平移）
+     * @return 变换后的新位图；变换退化时返回源位图本身
+     */
+    private static BufferedImage transformImage(BufferedImage source, java.awt.geom.AffineTransform transform) {
+        final java.awt.geom.Rectangle2D.Double srcRect =
+                new java.awt.geom.Rectangle2D.Double(0, 0, source.getWidth(), source.getHeight());
+        final java.awt.geom.Rectangle2D bounds = transform.createTransformedShape(srcRect).getBounds2D();
+        if (bounds.getWidth() < 0.5 || bounds.getHeight() < 0.5) {
+            return source;
+        }
+        final int outWidth = Math.max(1, (int) Math.ceil(bounds.getWidth()));
+        final int outHeight = Math.max(1, (int) Math.ceil(bounds.getHeight()));
+        final BufferedImage result = new BufferedImage(outWidth, outHeight, BufferedImage.TYPE_INT_ARGB);
+        final Graphics2D g = result.createGraphics();
+        try {
+            g.setComposite(AlphaComposite.Src);
+            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                    java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g.translate(-bounds.getX(), -bounds.getY());
+            g.transform(transform);
+            g.drawImage(source, 0, 0, null);
+        } finally {
+            g.dispose();
+            source.flush();
+        }
+        return result;
+    }
+
+    /**
+     * 取合法的平铺步进值。
+     *
+     * @param step     文档中声明的步进，单位：毫米（mm），可为 null
+     * @param fallback 步进缺失或不合法时使用的回退值，单位：毫米（mm）
+     * @return 平铺步进，单位：毫米（mm）
+     */
+    private static double legalStep(Double step, double fallback) {
+        if (step == null || step <= 0 || step.isNaN() || step.isInfinite()) {
+            return fallback;
+        }
+        return step;
     }
 
     /**
