@@ -702,9 +702,21 @@ public abstract class AWTMaker {
 
         final CT_Color fillColorSpec = pathObject.getFillColor();
         final CT_Pattern fillPattern = fillPatternOf(fillColorSpec);
+        /*
+         * 图元自身的 Alpha 表示不透明度（0..255，0 为完全透明）。
+         * 此前该属性被忽略，导致 Alpha=0 的整页覆盖路径按不透明绘制，
+         * 把其下方已绘制的正文整块遮住（testPathFillOpacity.ofd 即为此类文档）。
+         */
+        final Integer alphaAttr = pathObject.getAlpha();
+        final Double alpha = alphaAttr == null ? null : Double.valueOf(alphaAttr / 255.0d);
         ResolvedStyle style = resolver.resolve(scope, GraphicUnitType.PATH, pathObject.getFill(), pathObject.getStroke(),
-                fillColorSpec, pathObject.getStrokeColor(), null, fillPattern != null);
+                fillColorSpec, pathObject.getStrokeColor(), alpha, fillPattern != null);
 
+        /*
+         * 结算出的透明度必须显式交给渲染器：fill/stroke 只接收颜色与线型，
+         * 透明度由渲染器的当前 Alpha 承担。遗漏这一步会让 Alpha=0 的图元按不透明绘制。
+         */
+        renderer.setAlpha((float) style.getAlpha());
         if (style.isStroke()) {
             Color strokeColor = toAwtColor(style.getStrokeColor());
             if (strokeColor != null) {
