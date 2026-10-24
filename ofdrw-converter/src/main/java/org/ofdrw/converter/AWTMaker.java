@@ -755,6 +755,30 @@ public abstract class AWTMaker {
         }
     }
 
+    /**
+     * 判断图片 CTM 的尺寸分量是否与其包围框一致。
+     * <p>
+     * 一致表示该图片用包围框表达位置与尺寸（CTM 只承载缩放）；
+     * 不一致则说明包围框并非实际绘制范围，应以 CTM 为准。
+     *
+     * @param ctm      CTM 的 6 个分量，前 4 个为线性部分，单位：毫米
+     * @param boundary 图元包围框，单位：毫米
+     * @return true 表示两者尺寸相差不超过 10%
+     */
+    private static boolean ctmMatchesBoundary(Double[] ctm, ST_Box boundary) {
+        if (ctm == null || ctm.length != 6 || boundary == null) {
+            return false;
+        }
+        final double width = boundary.getWidth();
+        final double height = boundary.getHeight();
+        if (width <= 0 || height <= 0) {
+            return false;
+        }
+        final double widthDeviation = Math.abs(Math.abs(ctm[0]) - width) / width;
+        final double heightDeviation = Math.abs(Math.abs(ctm[3]) - height) / height;
+        return widthDeviation <= 0.1 && heightDeviation <= 0.1;
+    }
+
     private void drawImageUnit(Renderer renderer, ImageObject imageObject, StyleScope scope, Matrix parentMatrix,
                                StyleResolver resolver, ST_Box boundary) {
         Matrix baseMatrix = renderBoundaryAndSetClip(renderer, boundary, parentMatrix);
@@ -788,11 +812,16 @@ public abstract class AWTMaker {
         alpha = (float) style.getAlpha();
 
         /*
-         * 图片自身没有缩放语义：像素坐标先归一化，再由包围框决定尺寸与位置。
-         * 目标尺寸与位置必须同源，统一取包围框（Boundary）—— 它同时表达图片的位置与覆盖范围，
-         * 缺失时才退回 CTM 尺寸与平移（再缺失则用图片像素尺寸）。
-         * 依据：manual.ofd 的截图类图片 CTM 平移恒为 (0,0)，位置只写在 Boundary 上；
-         * 若尺寸取 CTM、位置取 Boundary，封面图会因两者不等而覆盖不满、页面露出白边。
+         * 图片自身没有缩放语义：像素坐标先归一化，再由「目标尺寸与位置」决定落点，
+         * 二者必须同源，否则图片会被拉伸到不正确的范围。取值优先级按文档实测确定：
+         *
+         * 1. Boundary 与 CTM 尺寸一致时用 Boundary（位置也只取 Boundary 原点）。
+         *    依据 manual.ofd：封面图 Boundary 与 CTM 宽度同为 211.4mm，但 CTM 平移为 (0,13.8)，
+         *    若位置取 CTM，封面会整体下移 13.8mm、页面顶部露出白边。
+         * 2. 二者尺寸差异显著时用 CTM 的尺寸与平移。
+         *    依据 y.ofd：图片 Boundary 被写成整页 204x264mm，而 CTM 只有 77.6x61.0mm 并带大平移；
+         *    若按 Boundary 铺满整页，单张配图会盖住全部正文。
+         *
          * 尺寸单位：毫米；换算成像素由 baseMatrix 统一完成，这里不得再乘 ppm。
          */
         double targetWidth;
@@ -800,7 +829,7 @@ public abstract class AWTMaker {
         double originX;
         double originY;
         Double[] ctmArr = imageObject.getCTM() == null ? null : imageObject.getCTM().toDouble();
-        if (boundary != null) {
+        if (boundary != null && (ctmArr == null || ctmMatchesBoundary(ctmArr, boundary))) {
             targetWidth = boundary.getWidth();
             targetHeight = boundary.getHeight();
             originX = boundary.getTopLeftX();
