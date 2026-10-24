@@ -30,7 +30,7 @@ OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、
 - [**ofdrw-gm**](./ofdrw-gm) 用于支持签章模块需要的国密电子签章数据结构。
 - [**ofrw-crypto**](./ofdrw-crypto) 用于实现《GM/T 0099-2020 开放版式文档密码应用技术规范》对OFD的密码相关功能。
 - [**ofdrw-gv**](./ofdrw-gv) OFDRW 所有模块所共用的全局变量。
-- [**ofdrw-converter**](./ofdrw-converter) OFD文档转换（格式迁移用，**不建议用于预览**，预览见下方 OFDRW 系列）。
+- [**ofdrw-converter**](./ofdrw-converter) OFD文档转换（格式迁移用，**不建议用于预览**，预览见下方 OFDRW 可视化工具链）。
 - [**ofdrw-tool**](./ofdrw-tool) OFD文档工具，文档合并、裁剪、重组、混合。
 - [**ofdrw-archive**](./ofdrw-archive) OFD-A 档案模块，依据 GB/T 42133-2022 实现 OFD 文件的合规检查和去技术化转换。
 - [**ofdrw-graphics2d**](./ofdrw-graphics2d) 实现了AWT Graphics2D接口，生成OFD文档内容。
@@ -41,7 +41,7 @@ OFD Reader & Writer 开源的OFD处理库，支持文档生成、数字签名、
 - 您可以根据需求裁剪模块优化程序体积。
 - 您可以仅引用`ofdrw-core`中定义的数据结来构建属于您自己的OFD库，就像[ofdrw-graphics2d](./ofdrw-graphics2d)那样。
 
-## OFDRW Viewer开发工具链 ***New***
+## OFDRW 可视化工具链 ***New***
 
 [**ofdrw-viewer**](https://github.com/ofdrw/ofdrw-viewer) 是 OFDRW 系列项目之一，由一组可独立使用的 OFD 预览与渲染库、组件构成，为开发者补齐 OFD 处理链路的最后一环：
 
@@ -120,7 +120,7 @@ public class HelloWorld {
 
 #### HTML5
 
-OFD 预览请优先使用 OFDRW 系列中的 [ofdrw-viewer](https://github.com/ofdrw/ofdrw-viewer)，可按需选用其阅读器组件、渲染引擎或 CLI；以下为社区其它方案（非本项目维护）：
+OFD 预览请优先使用 OFDRW 可视化工具链中的 [ofdrw-viewer](https://github.com/ofdrw/ofdrw-viewer)，可按需选用其阅读器组件、渲染引擎或 CLI；以下为社区其它方案（非本项目维护）：
 
 - [DLTech21/ofd.js . https://github.com/DLTech21/ofd.js](https://github.com/DLTech21/ofd.js)
 - [xxss0903/LiteOfd . https://github.com/xxss0903/liteofd](https://github.com/xxss0903/liteofd)
@@ -165,7 +165,7 @@ OFD 预览请优先使用 OFDRW 系列中的 [ofdrw-viewer](https://github.com/o
 - [数科网维公司 . 数科OFD阅读器 . www.ofd.cn](https://www.ofd.cn/)
 - [Foxit . 福昕OFD . www.foxitsoftware.cn/ofd/](https://www.foxitsoftware.cn/ofd/)
 
-开源、可嵌入的 OFD 预览与渲染方案见 OFDRW 系列中的 [ofdrw-viewer](https://github.com/ofdrw/ofdrw-viewer)。
+开源、可嵌入的 OFD 预览与渲染方案见 OFDRW 可视化工具链中的 [ofdrw-viewer](https://github.com/ofdrw/ofdrw-viewer)。
 
 ## 源码安装
 
@@ -181,8 +181,7 @@ mvn install
 
 ## 社区交流 💬
 
-- 若您遇到与OFD相关的技术问题，欢迎进群交流!
-- 若您对项目有建设性意见或方案欢迎提交**Issue**与**Pull Request**。
+- 若您对项目有建设性意见或方案欢迎提交**Pull Request**。
 
 ## 参与贡献 🤝
 
