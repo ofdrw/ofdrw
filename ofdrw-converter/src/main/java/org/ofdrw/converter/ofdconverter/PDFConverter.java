@@ -1,5 +1,6 @@
 package org.ofdrw.converter.ofdconverter;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSInputStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
@@ -17,8 +18,10 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.*;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineNode;
-import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.ofdrw.converter.GeneralConvertException;
+import org.ofdrw.converter.pdf.textobj.OfdTextObjectConverter;
+import org.ofdrw.converter.pdf.textobj.PdfFontRegistry;
 import org.ofdrw.core.action.actionType.actionGoto.CT_Dest;
 import org.ofdrw.core.action.actionType.actionGoto.DestType;
 import org.ofdrw.core.attachment.CT_Attachment;
@@ -86,6 +89,13 @@ public class PDFConverter implements DocConverter {
     private boolean enableCopyBookmarks;
 
     /**
+     * PDF 字体资源登记器（文字对象化时使用）
+     * <p>
+     * 每个 PDFConverter 实例保留一个，保证同一字体在多次 convert 调用中只登记一次、字体资源 ID 稳定。
+     */
+    private PdfFontRegistry fontRegistry;
+
+    /**
      * 创建PDF转换OFD转换器
      *
      * @param ofdPath 转换后的OFD文件路径
@@ -129,7 +139,8 @@ public class PDFConverter implements DocConverter {
             return;
         }
 
-        try (PDDocument pdfDoc = PDDocument.load(filepath.toFile())) {
+        // PDFBox 3.x 不再提供 PDDocument.load，统一使用 Loader 加载
+        try (PDDocument pdfDoc = Loader.loadPDF(filepath.toFile())) {
             int total = pdfDoc.getNumberOfPages();
             List<Integer> targetPages = new LinkedList<>();
             if (indexes == null || indexes.length == 0) {
@@ -146,13 +157,17 @@ public class PDFConverter implements DocConverter {
                 }
             }
 
-            PDFRenderer pdfRender = new PDFRenderer(pdfDoc);
+            // 文字对象化：在 PDFBox 字形级入口拦截，输出 OFD 文字对象并内嵌字体
+            OfdTextObjectConverter textConverter = new OfdTextObjectConverter(pdfDoc, ofdDoc,
+                    this::registerFont, this::flushFonts);
+
             RenderingHints r = new RenderingHints(null);
             r.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
             // 设置渲染模式为快速，关闭PDFBox对图片的压缩
             r.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
             r.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            pdfRender.setRenderingHints(r);
+            // 图片插值/抗锯齿：文字对象化渲染器与普通渲染器使用同一组参数
+            textConverter.setRenderingHints(r);
 
             PDDocumentOutline pdfOutline = pdfDoc.getDocumentCatalog().getDocumentOutline();
 
@@ -175,16 +190,13 @@ public class PDFConverter implements DocConverter {
 
                 // 将PDF页面尺寸缩放至OFD尺寸
                 OFDPageGraphics2D ofdPageG2d = ofdDoc.newPage(width / uuPmm, height/ uuPmm);
-                pdfRender.renderPageToGraphics(index, ofdPageG2d, (float) (1d / uuPmm));
+                textConverter.renderPage(index, ofdPageG2d, (float) (1d / uuPmm));
                 if (enableCopyBookmarks) {
                     exportBookmark(pdfDoc, pdfOutline, ofdPageG2d.pageID, index);
                 }
-//                BufferedImage image = new BufferedImage((int) pdfPageSize.getWidth(), (int) pdfPageSize.getHeight(), BufferedImage.TYPE_INT_ARGB);
-//                Graphics2D g = image.createGraphics();
-//                pdfRender.renderPageToGraphics(index, g);
-//                Path path = Paths.get("target/" + index + ".png");
-//                ImageIO.write(image, "png", path.toFile());
             }
+
+            textConverter.finish();
 
             if (!enableCopyAttachFiles) {
                 return;
@@ -199,6 +211,36 @@ public class PDFConverter implements DocConverter {
             copyAttachFiles(pdfDoc, targetPages);
         } catch (IOException e) {
             throw new GeneralConvertException("PDF转换OFD异常", e);
+        }
+    }
+
+    /**
+     * 登记 PDF 字体到 OFD 字体资源
+     *
+     * @param font PDF 字体
+     * @return OFD 字体资源 ID；无法嵌入时返回 null（该字体文字回退路径）
+     */
+    private ST_ID registerFont(PDFont font) {
+        if (fontRegistry == null) {
+            fontRegistry = new PdfFontRegistry(ofdDoc);
+        }
+        try {
+            return fontRegistry.registerFont(font);
+        } catch (RuntimeException e) {
+            // 字体登记失败不阻断转换，该字体文字回退路径绘制
+            return null;
+        }
+    }
+
+    /**
+     * 在 OFD 打包前写入字体文件并回填字体资源
+     *
+     * @param doc      OFD 文档
+     * @param fontIds  已登记的 PDF 字体 -> OFD 字体资源 ID
+     */
+    private void flushFonts(OFDGraphicsDocument doc, Map<PDFont, ST_ID> fontIds) {
+        if (fontRegistry != null) {
+            fontRegistry.flush();
         }
     }
 
@@ -485,6 +527,13 @@ public class PDFConverter implements DocConverter {
             return;
         }
         closed = true;
+        if (fontRegistry != null) {
+            try {
+                fontRegistry.close();
+            } catch (RuntimeException e) {
+                // 字体写入失败不阻断 OFD 打包
+            }
+        }
         if (ofdDoc != null) {
             ofdDoc.close();
         }

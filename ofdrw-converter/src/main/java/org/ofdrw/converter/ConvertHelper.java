@@ -1,6 +1,7 @@
 package org.ofdrw.converter;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.ofdrw.converter.export.PDFExporter;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
 import org.slf4j.Logger;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -84,40 +86,10 @@ public class ConvertHelper {
                 throw new IllegalArgumentException("不支持的输入格式(input)，仅支持InputStream、Path、File、String");
             }
 
+            // 决策 4：全库只保留一种实现，iText/PDFBox 两种历史开关统一走新渲染管线
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            switch (lib) {
-                case iText: {
-                    try (PDDocument pdfDocument = new PDDocument()) {
-                        long start;
-                        long end;
-                        int pageNum = 1;
-                        ItextMaker pdfMaker = new ItextMaker(reader);
-                        // 循环添加Page
-                        for (PageInfo pageInfo : reader.getPageList()) {
-                            start = System.currentTimeMillis();
-                            pdfMaker.makePage(pdfDocument, pageInfo);
-                            end = System.currentTimeMillis();
-                            logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
-                        }
-                        // 添加附件
-                        pdfMaker.addAttachments(pdfDocument, reader);
-                        pdfDocument.save(bos);
-                    }
-                    break;
-                }
-                case PDFBox: {
-                    try (PDDocument pdfDocument = new PDDocument()) {
-                        PdfboxMaker pdfMaker = new PdfboxMaker(reader, pdfDocument);
-                        long start = 0, end = 0, pageNum = 1;
-                        for (PageInfo pageInfo : reader.getPageList()) {
-                            start = System.currentTimeMillis();
-                            pdfMaker.makePage(pageInfo);
-                            end = System.currentTimeMillis();
-                            logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
-                        }
-                        pdfDocument.save(bos);
-                    }
-                }
+            try (PDFExporter exporter = new PDFExporter(reader, bos)) {
+                exporter.export();
             }
 
             if (output instanceof OutputStream) {
@@ -237,22 +209,12 @@ public class ConvertHelper {
      */
     public static void toPdf(String unzippedPathRoot, String output, boolean deleteOnClose) {
         OFDReader reader = null;
-        PDDocument pdfDocument = null;
+        PDFExporter exporter = null;
         try {
             reader = new OFDReader(unzippedPathRoot, deleteOnClose);
-            pdfDocument = new PDDocument();
-
-            PdfboxMaker pdfMaker = new PdfboxMaker(reader, pdfDocument);
-            List<PageInfo> ofdPageVoList = reader.getPageList();
-            long start = 0, end = 0, pageNum = 1;
-            for (PageInfo pageInfo : ofdPageVoList) {
-                start = System.currentTimeMillis();
-                pdfMaker.makePage(pageInfo);
-                end = System.currentTimeMillis();
-                logger.debug(String.format("page %d speed time %d", pageNum++, end - start));
-            }
-            pdfDocument.save(output);
-
+            // 决策 4：统一走新渲染管线
+            exporter = new PDFExporter(reader, Paths.get(output));
+            exporter.export();
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
@@ -260,9 +222,13 @@ public class ConvertHelper {
             throw new GeneralConvertException(e);
         } finally {
             try {
-                if (pdfDocument != null) {
-                    pdfDocument.close();
+                if (exporter != null) {
+                    exporter.close();
                 }
+            } catch (IOException e) {
+                logger.error("close PDFExporter failed", e);
+            }
+            try {
                 if (reader != null) {
                     reader.close();
                 }
