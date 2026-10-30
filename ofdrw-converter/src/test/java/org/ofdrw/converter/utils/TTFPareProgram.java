@@ -104,7 +104,9 @@ public class TTFPareProgram {
     public void testCFF() throws IOException {
         final Path path = Paths.get("src/test/resources/font_83_83.cff");
         CFFParser parser = new CFFParser();
-        final List<CFFFont> fontList = parser.parse(Files.readAllBytes(path));
+        // PDFBox 3.x 的 CFF 解析器需要显式提供字节数据与字节来源
+        final byte[] cffData = Files.readAllBytes(path);
+        final List<CFFFont> fontList = parser.parse(cffData, () -> cffData);
 
         System.out.println(fontList);
     }

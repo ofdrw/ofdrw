@@ -1,3 +1,4 @@
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -32,7 +33,7 @@ public class PDF2OFDTest {
             }
         }
         try (OFDGraphicsDocument ofdDoc = new OFDGraphicsDocument(dst);
-             PDDocument pdfDoc = PDDocument.load(path.toFile())) {
+             PDDocument pdfDoc = Loader.loadPDF(path.toFile())) {
             PDFRenderer pdfRender = new PDFRenderer(pdfDoc);
             for (int pageIndex = 0; pageIndex < pdfDoc.getNumberOfPages(); pageIndex++) {
                 PDRectangle pdfPageSize = pdfDoc.getPage(pageIndex).getBBox();
@@ -51,7 +52,7 @@ public class PDF2OFDTest {
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try (OFDGraphicsDocument ofdDoc = new OFDGraphicsDocument(outputStream);
-             PDDocument pdfDoc = PDDocument.load(path.toFile())) {
+             PDDocument pdfDoc = Loader.loadPDF(path.toFile())) {
             PDFRenderer pdfRender = new PDFRenderer(pdfDoc);
             for (int pageIndex = 0; pageIndex < pdfDoc.getNumberOfPages(); pageIndex++) {
                 PDRectangle pdfPageSize = pdfDoc.getPage(pageIndex).getBBox();

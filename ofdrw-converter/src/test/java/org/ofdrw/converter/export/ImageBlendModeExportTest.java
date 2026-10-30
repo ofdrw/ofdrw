@@ -1,5 +1,6 @@
 package org.ofdrw.converter.export;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ class ImageBlendModeExportTest {
             exporter.export();
         }
 
-        try (PDDocument document = PDDocument.load(pdf.toFile())) {
+        try (PDDocument document = Loader.loadPDF(pdf.toFile())) {
             BufferedImage page = new PDFRenderer(document).renderImageWithDPI(0, 144);
             // 黑色底层铺满整页，白色图片位于页面中部；页面为正方形，取对角线上的底层像素容易落入图片区域，
             // 因此取顶部边缘中间位置（图片上边界之外）的像素作为底层颜色

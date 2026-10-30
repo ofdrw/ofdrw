@@ -1,5 +1,6 @@
 package org.ofdrw.converter.export;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.contentstream.operator.Operator;
 import org.apache.pdfbox.cos.COSNumber;
 import org.apache.pdfbox.pdfparser.PDFStreamParser;
@@ -49,13 +50,26 @@ class LegacyPathExportTest {
             exporter.export();
         }
 
-        try (PDDocument document = PDDocument.load(pdf.toFile())) {
+        try (PDDocument document = Loader.loadPDF(pdf.toFile())) {
+            /*
+             * 旧实现把 OFD 的 mm 线宽直接写成 PDF 的 w（1.35467），把 Foxit 的像素坐标按 300dpi 猜成 pt；
+             * 新管线统一按 GB/T 33190 语义换算：线宽 1.35467mm → 3.8400pt，
+             * 路径点由 CTM(0.010948/0.010925) 与 Boundary 平移换算为页面 pt。
+             * 两个历史入口现在委托同一套实现（决策 4），因此断言语义一致。
+             */
+            // PDFBox 3.x 不再提供 getTokens()，parse() 直接返回指令序列
             PDFStreamParser parser = new PDFStreamParser(document.getPage(0));
-            parser.parse();
-            List<Object> tokens = parser.getTokens();
-            assertEquals(1.35467d, operand(tokens, "w", 1, 0), 0.01d);
-            assertEquals(456d * 72d / 300d, operand(tokens, "m", 2, 0), 0.001d);
-            assertEquals(486d * 72d / 300d, operand(tokens, "l", 2, 0), 0.001d);
+            List<Object> tokens = parser.parse();
+            assertEquals(1.35467d * 72d / 25.4d, operand(tokens, "w", 1, 0), 0.01d);
+            // 起点：(456 × 0.010948 − 6.688669 + 38.438663) mm → pt
+            assertEquals((456d * 0.010948d - 6.688669d + 38.438663d) * 72d / 25.4d,
+                    operand(tokens, "m", 2, 0), 0.001d);
+            // 终点：(486 × 0.010948 − 6.688669 + 38.438663) mm → pt
+            assertEquals((486d * 0.010948d - 6.688669d + 38.438663d) * 72d / 25.4d,
+                    operand(tokens, "l", 2, 0), 0.001d);
+            // 线端/线连接保持 Round
+            assertEquals(1d, operand(tokens, "J", 1, 0), 0.001d);
+            assertEquals(1d, operand(tokens, "j", 1, 0), 0.001d);
         }
     }
 
@@ -63,7 +77,8 @@ class LegacyPathExportTest {
         for (int i = 0; i < tokens.size(); i++) {
             Object token = tokens.get(i);
             if (token instanceof Operator && operator.equals(((Operator) token).getName())) {
-                return ((COSNumber) tokens.get(i - operandCount + operandIndex)).doubleValue();
+                // PDFBox 3.x 的 COSNumber 不再提供 doubleValue()，按 double 精度转换 float 值
+                return ((COSNumber) tokens.get(i - operandCount + operandIndex)).floatValue();
             }
         }
         throw new AssertionError("Missing PDF operator: " + operator);
