@@ -123,7 +123,7 @@ exporter.close();
 
 - 图片：`CanvasImageExporter`（`ImageExporter` 已废弃，见下节“从 ImageExporter 迁移”）
 - SVG矢量图形：`SVGExporter`
-- PDF文档：`PDFExporterIText`、`PDFExporterPDFBox`
+- PDF文档：`PDFExporter`
 - HTML网页：`HTMLExporter`
 - 纯文本：`TextExporter`
 
@@ -350,49 +350,113 @@ try (TextExporter exporter = new TextExporter(ofdPath, txtPath)) {
 
 ### [不推荐] 导出为PDF
 
-**警告：不推荐导出为PDF，OFD本身就是国产的板式文件，非特殊场景没有必要导出为PDF文件，该模块将进入LTS状态，不再持续更新！**
+> **不建议导出为 PDF。**OFD 是国产版式文档，除交换存档等特殊需求外无需转换为 PDF；
+> **如果只是需要查看文档内容，请直接使用 [ofdrw-viewer](https://github.com/ofdrw/ofdrw-viewer) 预览，无需转换。**
 
-导出OFD文档页面为PDF文件，提供两种实现类：
+导出OFD文档页面为PDF文件，使用 `org.ofdrw.converter.export.PDFExporter`。
 
-- `org.ofdrw.converter.export.PDFExporterPDFBox`：基于 PDFBox 实现，推荐使用。
-- `[已过时] org.ofdrw.converter.export.PDFExporterIText`：历史上基于 iText 实现，现已改为基于 PDFBox 生成 PDF，
-  对外接口保持不变、不再引入 iText 依赖；类名保留历史命名，已标记为过时，新代码请使用 `PDFExporterPDFBox`。
+> 自 2.5.1 起，PDF 导出只保留一种实现：`PDFExporter`。它基于 PDFBox 3.x 的新渲染管线
+> （`org.ofdrw.converter.pdf`，属内部实现，不承诺 API 稳定），逐图元换算坐标、显式计算绘制参数，
+> 支持文字可提取（字形优先 + ToUnicode）、CMYK 保真、JPEG 原样嵌入、书签/附件/注释等结构映射。
 
-> 同理，`org.ofdrw.converter.ItextMaker`、`FontLoader#getITextDefaultFont()`、`ConvertHelper#useIText()`、
-> `ColorConvert#convertOfdColor`/`#pdfRGB` 等与 iText 相关的公开接口均已保留并标记为过时，
-> 各自注释中给出了对应的替代 API。
-
-注意事项：
-
-- 导出无法保证文档效果一致性，若您有建设性意见请提交PR。
-
-基于PDFBox实现示例：
-
-```
+```java
 Path ofdPath = Paths.get("src/test/resources/999.ofd");
 Path pdfPath = Paths.get("target/999.pdf");
-try (OFDExporter exporter = new PDFExporterPDFBox(ofdPath, pdfPath)) {
+try (OFDExporter exporter = new PDFExporter(ofdPath, pdfPath)) {
     exporter.export();
 }
 ```
 
-> 详见 [基于PDFBox导出 测试用例](../src/test/java/org/ofdrw/converter/export/PDFExporterPDFBoxTest.java)
+构造器与其他导出器一致，支持文件、流与已有解析器三种输入：
 
+| 构造器 | 说明 |
+|---|---|
+| `PDFExporter(Path ofdFilePath, Path pdfFilePath)` | 文件 → 文件，父目录不存在时自动创建 |
+| `PDFExporter(InputStream ofdInStream, OutputStream pdfOutStream)` | 流 → 流，流由调用者负责关闭 |
+| `PDFExporter(OFDReader ofdReader, Path pdfFilePath)` | 复用已有解析器 → 文件 |
+| `PDFExporter(OFDReader ofdReader, OutputStream pdfOutStream)` | 复用已有解析器 → 流 |
 
+`export(int... indexes)` 的页码从 0 起，不传参数表示导出全部页面，越界页码会被剔除；可以多次调用。
 
-基于 `PDFExporterIText` 示例（接口名称保留历史命名，内部已使用 PDFBox 生成 PDF，已标记为过时）：
+#### ⚠️ 必须调用 `close()`，否则不会产生 PDF 文件
 
-```
-Path ofdPath = Paths.get("src/test/resources/999.ofd");
-Path pdfPath = Paths.get("target/999.pdf");
-try (OFDExporter exporter = new PDFExporterIText(ofdPath, pdfPath)) {
+`export()` **只把页面渲染到内存中的文档对象**；PDF 文件（或输出流）是在 `close()` 时才真正写出的
+（附件、书签、注释、文档属性等文档级信息也在此步骤写入）。
+
+```java
+// 正确：try-with-resources 会自动调用 close()，从而写出 PDF
+try (OFDExporter exporter = new PDFExporter(ofdPath, pdfPath)) {
     exporter.export();
 }
+
+// 错误：只调用 export() 而没有 close()，结果是 0 字节文件
+PDFExporter exporter = new PDFExporter(ofdPath, pdfPath);
+exporter.export();
+// 缺少 exporter.close() —— 输出文件为空，读取时报 "End-of-File, expected line at offset 0"
 ```
 
-> 详见 [PDFExporterIText 导出 测试用例](../src/test/java/org/ofdrw/converter/export/PDFExporterITextTest.java)
+已关闭的导出器再调用 `export` 会抛 `GeneralConvertException`；重复调用 `close()` 是安全的。
 
+#### 页面框与坐标
+
+- 输出页面的 `MediaBox` 与 `CropBox` 均取 OFD 的 `PhysicalBox`（决策 26），不做内缩与旋转。
+- 所有图元坐标在写入前换算为 PDF 坐标（mm→pt、Y 轴翻转），页面 CTM 保持恒等，
+  避免部分渲染器对“页面级翻转矩阵”处理不一致的问题。
+
+#### 支持范围与降级
+
+| 特性 | 处理 |
+|---|---|
+| 文字 | 字形优先（GID）+ `ToUnicode`，保证视觉一致且文本可选中、可提取；字体按**整字体嵌入**，不做子集裁剪 |
+| 字体缺失/无法解析 | 按字族名等信息匹配替代字体，输出 **warning 日志**，不中断导出 |
+| 颜色 | GRAY / RGB / CMYK 保持原颜色空间（CMYK 不转 RGB）；调色板按位宽归一化；ICC 按同色空间 Device 输出并告警 |
+| 透明度 | 图元 Alpha × 颜色 Alpha；缺省按不透明处理（决策 2） |
+| 渐变 | 轴向/径向完整支持 `Extend`、`Segment` 位置；`MapType=Repeat/Reflect` 与非默认 `MapUnit` 降级为 `Direct` 并告警 |
+| 底纹 | 首版按 `ReflectMethod=Normal` 近似平铺，其余翻转与页面相对定位标记“近似”并告警（决策 17） |
+| 图像 | JPEG 原样嵌入不重编码；PNG 等无损；`ImageMask`/透明通道转软蒙版；`Border` 单独绘制路径（线宽 0 表示不绘制） |
+| 结构 | 书签（仅标题与目标）、附件、注释外观与交互、`Goto`/`URI`/`GotoA` 动作、文档属性、数字签名**仅转外观** |
+| 音视频动作 | `Sound`/`Movie` 跳过并告警（决策 18），图片图元仍正常绘制 |
+| 加密（密码保护）文档 | **直接抛出异常**，不输出空白页（决策 24） |
+| 单图元异常 | 跳过该图元并输出 warning，不中断整页（决策 8） |
+
+#### 注意事项
+
+- 导出无法保证与 OFD 原始版式完全一致，若您有建设性意见请提交 PR。
+- 不达标的样本与降级项见本节末尾「已知限制」。
+- 历史实现 `PDFExporterIText`、`PDFExporterPDFBox`（以及 `ItextMaker`、`PdfboxMaker`）已标记 `@Deprecated`：
+  签名与可见性保持不变，内部直接委托 `PDFExporter`，Javadoc 的 `@deprecated` 已写明对应的替代成员，文档不再展开说明；
+  新代码请统一使用 `PDFExporter`。
 
 效果如下：
 
 ![转图片效果](../src/test/resources/转换结果截图.jpg)
+
+#### 已知限制（2.5.1）
+
+> 以下结论来自 59 组有效样本的本地全量对照（`-Dofd.match.full=true`，脚本见
+> [scripts/README.md](../scripts/README.md)），达标标准为像素差异 ≤ 0.5%、MAE ≤ 2/255、文本相似度 ≥ 0.99。
+
+1. **文本可提取性仍是当前主要短板**：部分样本像素已接近基准，但提取出的文字不完整或相似度偏低。
+
+   | 样本 | 文本相似度 |
+   |---|---|
+   | `hello_watermark` | 0.053 |
+   | `ano` | 0.129 |
+   | `透明度文字` | 0.184 |
+   | `999` | 0.245 |
+
+   其中多页文档曾因“字体对象在首次使用时创建 ToUnicode、后续页新增字形无法补充”导致大量文字丢失
+   （`999.ofd` 基准 3948 字符、修复前仅 1120 字符），现已改为**保存前统一刷新全部字体的 ToUnicode**修复；
+   连带修正了 Identity-H 恒为双字节 CID 的 `codeBlockRange`/字节长度判断，`page1`/`page2`/`page3`
+   等此前“像素达标但文本为 0”的样本已转为通过。
+
+2. **其他未达标样本**：全量 59 组有效样本中通过 12 组，其余多为路径（`path_unstd`、`1`）、中文字形
+   （`AddWatermarkAnnot`、`testImageNotFound`）、注释与附件等场景的像素差异超标。
+
+3. **既定降级项**（刻意为之，均输出 warning 日志）：底纹按 `ReflectMethod=Normal` 近似（决策 17）；
+   `Sound`/`Movie` 动作跳过（决策 18）；渐变 `MapType=Repeat/Reflect` 降级为 `Direct`；ICC 颜色按同色空间 Device 输出。
+
+4. **不保留的语义**：数字签名只转换外观，签名的密码学有效性不再成立；动画、音视频内容不转换。
+
+5. **回归判定建议**：纯像素比较对文字整体错位不敏感（文字面积占比很小时差异仍在阈值内）。
+   自建质量门禁时请同时断言“提取文本的包围盒位置”与“文本相似度”，不要只用像素差异。

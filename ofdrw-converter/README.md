@@ -8,6 +8,8 @@ OFDRW 转换模块提供各类文档或媒体格式与OFD文档互相转换功�
 > - 仅需图片：使用 [ofdrw-viewer-cli](https://github.com/ofdrw/ofdrw-viewer/tree/main/packages/ofdrw-viewer-cli)，支持 PNG / JPEG / WebP，无需引入本模块的三方依赖。
 > - 转换有损：字体替换、复杂图形、电子签章与印章、加密文档均可能失真或失败。
 > - 适用场景：PDF/文本/图片转 OFD 归档、OFD 导出 PDF 用于交换存档。
+> - **不建议导出 PDF**：除交换存档等特殊需求外无需转换，仅需查看内容请直接用 ofdrw-viewer，详见[《OFD导出》](./doc/EXPORTER.md)。
+> - 提示**只写在文档与代码注释中**，转换运行时不会输出这条提示（运行日志只记录降级/资源缺失等 warning）。
 
 以OFD文档文档角度出发转换可分为：
 
@@ -18,4 +20,23 @@ OFDRW 转换模块提供各类文档或媒体格式与OFD文档互相转换功�
 
 - [《转换OFD》](./doc/CONVERTER.md)
 - [《OFD导出》](./doc/EXPORTER.md)
+
+## PDF 导出（2.5.1 起）
+
+PDF 导出统一使用 `org.ofdrw.converter.export.PDFExporter`：
+
+```java
+try (OFDExporter exporter = new PDFExporter(ofdPath, pdfPath)) {
+    exporter.export();      // 不传参数导出全部页面，页码从 0 起
+}
+```
+
+- 基于 PDFBox 3.x 的新渲染管线（`org.ofdrw.converter.pdf`，内部实现，不承诺 API 稳定）。
+- 历史入口 `PDFExporterIText`、`PDFExporterPDFBox`、`ItextMaker`、`PdfboxMaker` 已废弃，
+  签名与可见性保持不变，内部委托 `PDFExporter`，**不再推荐使用**。
+- **`export()` 只渲染到内存，PDF 在 `close()` 时才写出**——务必用 try-with-resources 或显式 `close()`，否则得到 0 字节文件。
+- 本地回归请用脚本（不要裸跑 `mvn -Dtest=ManualPdfMatchTest`，surefire 的系统属性需经 `argLine` 进 fork JVM）：
+  `OFD_M2_REPO=<仓库>/target/m2merge ./scripts/local-pdf-match.sh --assert`，
+  详见 [scripts/README.md](./scripts/README.md)；重构设计见[《PDF 转换重构设计》](./doc/PDF转换重构设计.md)。
+- 已知限制（含“像素一致但文本不可提取”的样本清单）见 [《OFD导出》](./doc/EXPORTER.md#已知限制251)。
 
