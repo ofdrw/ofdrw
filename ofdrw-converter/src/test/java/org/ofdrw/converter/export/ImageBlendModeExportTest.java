@@ -41,7 +41,9 @@ class ImageBlendModeExportTest {
 
         try (PDDocument document = PDDocument.load(pdf.toFile())) {
             BufferedImage page = new PDFRenderer(document).renderImageWithDPI(0, 144);
-            Color background = new Color(page.getRGB(page.getWidth() / 10, page.getHeight() / 10));
+            // 黑色底层铺满整页，白色图片位于页面中部；页面为正方形，取对角线上的底层像素容易落入图片区域，
+            // 因此取顶部边缘中间位置（图片上边界之外）的像素作为底层颜色
+            Color background = new Color(page.getRGB(page.getWidth() / 2, page.getHeight() / 40));
             Color covered = new Color(page.getRGB(page.getWidth() / 2, page.getHeight() / 2));
 
             assertTrue(isAlmostBlack(background), "The lower black layer was not rendered");

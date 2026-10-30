@@ -15,7 +15,6 @@
 
     <properties>
         <pdfbox.version>2.0.27</pdfbox.version>
-        <itext.version>7.2.6</itext.version>
     </properties>
 
     <dependencies>
@@ -85,24 +84,6 @@
             <artifactId>log4j-slf4j-impl</artifactId>
             <version>2.16.0</version>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>kernel</artifactId>
-            <version>${itext.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>layout</artifactId>
-            <version>${itext.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>font-asian</artifactId>
-            <version>${itext.version}</version>
         </dependency>
 
         <!--SVG-->

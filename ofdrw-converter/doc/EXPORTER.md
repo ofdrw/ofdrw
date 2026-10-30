@@ -352,12 +352,15 @@ try (TextExporter exporter = new TextExporter(ofdPath, txtPath)) {
 
 **警告：不推荐导出为PDF，OFD本身就是国产的板式文件，非特殊场景没有必要导出为PDF文件，该模块将进入LTS状态，不再持续更新！**
 
-导出OFD文档页面为PDF文件，该导出根据实现所使用的库不一致具有两种导出实现。
+导出OFD文档页面为PDF文件，提供两种实现类：
 
-实现类：
+- `org.ofdrw.converter.export.PDFExporterPDFBox`：基于 PDFBox 实现，推荐使用。
+- `[已过时] org.ofdrw.converter.export.PDFExporterIText`：历史上基于 iText 实现，现已改为基于 PDFBox 生成 PDF，
+  对外接口保持不变、不再引入 iText 依赖；类名保留历史命名，已标记为过时，新代码请使用 `PDFExporterPDFBox`。
 
-- `org.ofdrw.converter.export.PDFExporterIText`
-- `org.ofdrw.converter.export.PDFExporterPDFBox`
+> 同理，`org.ofdrw.converter.ItextMaker`、`FontLoader#getITextDefaultFont()`、`ConvertHelper#useIText()`、
+> `ColorConvert#convertOfdColor`/`#pdfRGB` 等与 iText 相关的公开接口均已保留并标记为过时，
+> 各自注释中给出了对应的替代 API。
 
 注意事项：
 
@@ -377,7 +380,7 @@ try (OFDExporter exporter = new PDFExporterPDFBox(ofdPath, pdfPath)) {
 
 
 
-基于iText实现示例：
+基于 `PDFExporterIText` 示例（接口名称保留历史命名，内部已使用 PDFBox 生成 PDF，已标记为过时）：
 
 ```
 Path ofdPath = Paths.get("src/test/resources/999.ofd");
@@ -387,7 +390,7 @@ try (OFDExporter exporter = new PDFExporterIText(ofdPath, pdfPath)) {
 }
 ```
 
-> 详见 [基于iText导出 测试用例](../src/test/java/org/ofdrw/converter/export/PDFExporterITextTest.java)
+> 详见 [PDFExporterIText 导出 测试用例](../src/test/java/org/ofdrw/converter/export/PDFExporterITextTest.java)
 
 
 效果如下：

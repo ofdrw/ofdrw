@@ -11,10 +11,6 @@
 
     <artifactId>ofdrw-font</artifactId>
     <name>OFDRW Font</name>
-    <properties>
-        <!-- 与 ofdrw-converter 保持一致的 iText 版本（仅 optional 依赖使用） -->
-        <itext.version>7.2.6</itext.version>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>org.ofdrw</groupId>
@@ -41,15 +37,13 @@
         </dependency>
 
         <!--
-            PdfFontWrapper 与 iText 的 PdfFont 类型绑定（PDF 字体是否被相近字体替换的标识）。
-            该依赖仅用于类型引用，标记 optional：
-            1. 使用该封装的下游模块（ofdrw-converter 生成 PDF）自行提供 iText；
-            2. 避免仅使用字体解析能力（如 ofdrw-layout）的项目被强制引入 iText。
+            PdfFontWrapper 使用 PDFBox 的 PDFont 类型标识 PDF 字体（是否被相近字体替换），
+            该依赖仅用于类型引用，标记 optional 避免仅使用字体解析能力的项目被强制引入 PDFBox。
         -->
         <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>kernel</artifactId>
-            <version>${itext.version}</version>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>2.0.27</version>
             <optional>true</optional>
         </dependency>
 

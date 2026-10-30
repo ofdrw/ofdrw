@@ -748,7 +748,7 @@ class ApiCompatibilityTest {
     }
 
     /**
-     * 锁定已废弃的 PdfFontWrapper 的构造器与访问器（null 字体场景，无需 iText 运行时对象）
+     * 锁定已废弃的 PdfFontWrapper 的构造器与访问器（null 字体场景）
      */
     @Test
     @DisplayName("PdfFontWrapper：构造器与访问器")
@@ -764,6 +764,42 @@ class ApiCompatibilityTest {
         assertNull(single.getPdfFont());
         PdfFontWrapper pair = new PdfFontWrapper(null, true);
         assertTrue(pair.isEnableSimilarFontReplace());
+    }
+
+    // =================== ItextTrueTypeFont ===================
+
+    /**
+     * 锁定 ItextTrueTypeFont 的构造器、字段与访问器，并验证其与 TrueTypeFont 解析结果一致
+     */
+    @SuppressWarnings("deprecation")
+    @Test
+    @DisplayName("ItextTrueTypeFont：构造器、访问器与解析结果")
+    void itextTrueTypeFontApis() throws IOException {
+        byte[] data = fontBytes(FONT_WITHOUT_CMAP);
+        ItextTrueTypeFont font = new ItextTrueTypeFont(data);
+        assertNotNull(font.getFont());
+        assertNotNull(font.getRawData());
+        assertNotNull(font.getFontName());
+        assertNotNull(font.getFamilyName());
+        assertEquals(6, font.getFontMatrix().size());
+        // 裁剪字体缺少 cmap，isEmptyCmap 标识为 true
+        assertTrue(font.isEmptyCmap);
+        assertNull(font.getUnicodeCmapLookup());
+        assertNotNull(font.getUnicodeGlyph('A'));
+
+        // 与 TrueTypeFont 解析结果一致
+        TrueTypeFont expected = loadFont(FONT_WITHOUT_CMAP);
+        assertEquals(expected.psName == null ? "" : expected.psName, font.getFontName());
+        assertEquals(expected.fontFamily == null ? "" : expected.fontFamily, font.getFamilyName());
+
+        // 文件路径构造器
+        ItextTrueTypeFont fromPath = new ItextTrueTypeFont(FONT_WITHOUT_CMAP);
+        assertEquals(font.getFontName(), fromPath.getFontName());
+
+        // 静态工具方法
+        assertFalse(ItextTrueTypeFont.isTrueTypeCollection(data));
+        assertEquals(0, ItextTrueTypeFont.getTrueTypeCollectionFontCount(data));
+        assertEquals(1, ItextTrueTypeFont.getTrueTypeFonts(data).size());
     }
 
     // =================== 字形轮廓描述类 ===================
@@ -857,6 +893,7 @@ class ApiCompatibilityTest {
         expected.add("org.ofdrw.converter.font.GlyfSimpleDescript");
         expected.add("org.ofdrw.converter.font.GlyfCompositeDescript");
         expected.add("org.ofdrw.converter.font.GlyfCompositeComp");
+        expected.add("org.ofdrw.converter.font.ItextTrueTypeFont");
         for (String className : expected) {
             assertNotNull(Class.forName(className), className);
         }

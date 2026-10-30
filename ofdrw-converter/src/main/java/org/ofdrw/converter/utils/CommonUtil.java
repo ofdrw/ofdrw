@@ -1,6 +1,5 @@
 package org.ofdrw.converter.utils;
 
-import com.itextpdf.kernel.colors.DeviceRgb;
 import org.apache.pdfbox.jbig2.JBIG2ImageReader;
 import org.apache.pdfbox.jbig2.JBIG2ImageReaderSpi;
 import org.apache.pdfbox.jbig2.io.DefaultInputStreamFactory;
@@ -221,6 +220,19 @@ public class CommonUtil {
     }
 
     public static org.ujmp.core.Matrix getImageMatrixFromOfd(ImageObject nImageObject, ST_Box pageBox, ST_Array compositeObjectCTM) {
+        return getImageMatrixFromOfd(nImageObject, pageBox, compositeObjectCTM, true);
+    }
+
+    /**
+     * 计算图片在内容坐标系中的变换矩阵
+     *
+     * @param nImageObject        图片对象
+     * @param pageBox             页面区域，单位：毫米
+     * @param compositeObjectCTM  组合对象变换矩阵，可为空
+     * @param withPageHeight      是否包含平移页面高度的步骤（OFD 坐标原点位于左上角，平移后位于左下角）
+     * @return 变换矩阵；withPageHeight 为 true 时单元格为磅（1/72 英寸），否则为毫米
+     */
+    public static org.ujmp.core.Matrix getImageMatrixFromOfd(ImageObject nImageObject, ST_Box pageBox, ST_Array compositeObjectCTM, boolean withPageHeight) {
         org.ujmp.core.Matrix matrix = MatrixUtils.base();
         matrix = MatrixUtils.imageMatrix(matrix, 0, 1, 0);
         matrix = MatrixUtils.move(matrix, 0, 1);
@@ -248,9 +260,10 @@ public class CommonUtil {
         matrix = matrix.mtimes(MatrixUtils.create(1, 0, 0, 1, x, y));
 
         matrix = MatrixUtils.imageMatrix(matrix, 0, 1, 0);
-        matrix = matrix.mtimes(MatrixUtils.create(1, 0, 0, 1, 0, pageBox.getHeight()));
-
-        matrix = matrix.mtimes(MatrixUtils.create(converterDpi(1), 0, 0, converterDpi(1), 0, 0));
+        if (withPageHeight) {
+            matrix = matrix.mtimes(MatrixUtils.create(1, 0, 0, 1, 0, pageBox.getHeight()));
+            matrix = matrix.mtimes(MatrixUtils.create(converterDpi(1), 0, 0, converterDpi(1), 0, 0));
+        }
         return matrix;
     }
 
@@ -402,36 +415,13 @@ public class CommonUtil {
 //    }
 
     /**
-     * @deprecated see {@link org.ofdrw.converter.ColorConvert#pdfRGB(ResourceManage, CT_Color)}
+     * @deprecated see {@link org.ofdrw.converter.ColorConvert#convertOfdColor(ST_Array)}
      * @param colorArray 颜色数组
      * @return PDF颜色对象
      */
     @Deprecated
-    public static com.itextpdf.kernel.colors.Color convertOfdColor(ST_Array colorArray) {
-        com.itextpdf.kernel.colors.Color color = null;
-        String colorStr = colorArray.toString();
-        if (colorStr.indexOf("#") != -1) {
-            String[] rgbStr = colorStr.split(" ");
-            String r = rgbStr[0].replaceAll("#", "");
-            String g = rgbStr[1].replaceAll("#", "");
-            String b = rgbStr[2].replaceAll("#", "");
-            if (r.length() == 1) {
-                r += "0";
-            }
-            if (g.length() == 1) {
-                g += "0";
-            }
-            if (b.length() == 1) {
-                b += "0";
-            }
-            java.awt.Color jColor = java.awt.Color.decode(String.format("#%s%s%s", r, g, b));
-            color = new DeviceRgb(jColor.getRed() / 255f, jColor.getGreen() / 255f, jColor.getBlue() / 255f);
-        } else {
-            float[] colors = CommonUtil.doubleArrayToFloatArray(colorArray.toDouble());
-            if (colors.length == 3) {
-                color = new DeviceRgb(colors[0] / 255f, (int) colors[1] / 255f, (int) colors[2] / 255f);
-            }
-        }
-        return color;
+    public static PDColor convertOfdColor(ST_Array colorArray) {
+        return org.ofdrw.converter.ColorConvert.convertOfdColor(colorArray);
     }
+
 }

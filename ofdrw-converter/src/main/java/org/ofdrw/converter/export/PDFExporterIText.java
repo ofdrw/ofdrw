@@ -1,7 +1,6 @@
 package org.ofdrw.converter.export;
 
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.ofdrw.converter.GeneralConvertException;
 import org.ofdrw.converter.ItextMaker;
 import org.ofdrw.reader.OFDReader;
@@ -16,23 +15,32 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * iText7 实现的OFD转换PDF
+ * OFD转换PDF
+ * <p>
+ * 历史上该实现基于 iText7，现已改为基于 PDFBox 生成 PDF，对外接口保持不变。
  *
  * @author 权观宇
  * @since 2023-3-7 21:30:40
+ * @deprecated 类名保留历史命名（iText），实现已迁移为 PDFBox；新代码请使用
+ * {@link PDFExporterPDFBox}。
  */
+@Deprecated
 public class PDFExporterIText implements OFDExporter {
-
-    /**
-     * PDF打包器
-     */
-    final PdfWriter pdfWriter;
 
     /**
      * PDF文档对象
      */
-    final PdfDocument pdfDoc;
+    final PDDocument pdfDoc;
 
+    /**
+     * PDF输出文件路径，为空表示输出到流
+     */
+    private final Path pdfFilePath;
+
+    /**
+     * PDF输出流，为空表示输出到文件
+     */
+    private final OutputStream pdfOutStream;
 
     /**
      * OFD解析器
@@ -56,7 +64,9 @@ public class PDFExporterIText implements OFDExporter {
      * @param ofdFilePath 待转换的OFD文件路径
      * @param pdfFilePath 生成PDF文件路径
      * @throws IOException 文件创建失败
+     * @deprecated 请使用 {@link PDFExporterPDFBox#PDFExporterPDFBox(Path, Path)}
      */
+    @Deprecated
     public PDFExporterIText(Path ofdFilePath, Path pdfFilePath) throws IOException {
         ofdReader = new OFDReader(ofdFilePath);
         pdfMaker = new ItextMaker(this.ofdReader);
@@ -76,8 +86,9 @@ public class PDFExporterIText implements OFDExporter {
             }
             Files.createFile(pdfFilePath);
         }
-        pdfWriter = new PdfWriter(pdfFilePath.toAbsolutePath().toString());
-        pdfDoc = new PdfDocument(pdfWriter);
+        this.pdfFilePath = pdfFilePath;
+        this.pdfOutStream = null;
+        pdfDoc = new PDDocument();
     }
 
     /**
@@ -88,7 +99,9 @@ public class PDFExporterIText implements OFDExporter {
      * @param ofdInStream  待转换的OFD文件流，流由调用者负责关闭。
      * @param pdfOutStream 生成PDF文件流，流由调用者负责关闭。
      * @throws IOException 流操作失败
+     * @deprecated 请使用 {@link PDFExporterPDFBox#PDFExporterPDFBox(InputStream, OutputStream)}
      */
+    @Deprecated
     public PDFExporterIText(InputStream ofdInStream, OutputStream pdfOutStream) throws IOException {
         ofdReader = new OFDReader(ofdInStream);
         pdfMaker = new ItextMaker(this.ofdReader);
@@ -96,8 +109,9 @@ public class PDFExporterIText implements OFDExporter {
         if (pdfOutStream == null) {
             throw new IllegalArgumentException("导出PDF流为空");
         }
-        pdfWriter = new PdfWriter(pdfOutStream);
-        pdfDoc = new PdfDocument(pdfWriter);
+        this.pdfFilePath = null;
+        this.pdfOutStream = pdfOutStream;
+        pdfDoc = new PDDocument();
     }
 
     /**
@@ -105,8 +119,10 @@ public class PDFExporterIText implements OFDExporter {
      *
      * @param indexes 页码序列，如果为空表示全部页码（注意：页码从0起）
      * @throws GeneralConvertException 导出异常
+     * @deprecated 请使用 {@link PDFExporterPDFBox#export(int...)}
      */
     @Override
+    @Deprecated
     public void export(int... indexes) throws GeneralConvertException {
         try {
             List<PageInfo> targetPages = new LinkedList<>();
@@ -124,7 +140,6 @@ public class PDFExporterIText implements OFDExporter {
             }
 
             // 循环添加Page
-            targetPages = ofdReader.getPageList();
             for (PageInfo pageInfo : targetPages) {
                 pdfMaker.makePage(pdfDoc, pageInfo);
             }
@@ -140,26 +155,35 @@ public class PDFExporterIText implements OFDExporter {
      * 并把附件添加到PDF文件中
      *
      * @throws IOException 文件关闭异常
+     * @deprecated 请使用 {@link PDFExporterPDFBox#close()}
      */
     @Override
+    @Deprecated
     public void close() throws IOException {
         if (closed) {
             return;
         }
         closed = true;
-        if (pdfMaker != null && pdfDoc != null && ofdReader != null) {
-            // 添加附件
-            pdfMaker.addAttachments(pdfDoc, ofdReader);
-        }
+        try {
+            if (pdfMaker != null && pdfDoc != null && ofdReader != null) {
+                // 添加附件
+                pdfMaker.addAttachments(pdfDoc, ofdReader);
+            }
 
-        if (pdfDoc != null) {
-            pdfDoc.close();
-        }
-        if (pdfWriter != null) {
-            pdfWriter.close();
-        }
-        if (ofdReader != null) {
-            ofdReader.close();
+            if (pdfDoc != null) {
+                if (pdfFilePath != null) {
+                    pdfDoc.save(pdfFilePath.toFile());
+                } else if (pdfOutStream != null) {
+                    pdfDoc.save(pdfOutStream);
+                    // PDF 内容完整写出后刷新流，流由调用者负责关闭
+                    pdfOutStream.flush();
+                }
+                pdfDoc.close();
+            }
+        } finally {
+            if (ofdReader != null) {
+                ofdReader.close();
+            }
         }
     }
 }

@@ -1,12 +1,6 @@
 package org.ofdrw.converter;
 
 
-import com.itextpdf.io.font.FontProgram;
-import com.itextpdf.io.font.ItextFontUtil;
-import com.itextpdf.io.font.ItextTrueTypeFont;
-import com.itextpdf.io.font.PdfEncodings;
-import com.itextpdf.kernel.font.PdfFont;
-import com.itextpdf.kernel.font.PdfFontFactory;
 import org.apache.commons.io.IOUtils;
 import org.ofdrw.converter.font.*;
 import org.ofdrw.converter.utils.OSinfo;
@@ -131,7 +125,13 @@ public final class FontLoader {
      * 默认字体
      */
     private static TrueTypeFont defaultFont;
-    private static com.itextpdf.io.font.TrueTypeFont iTextDefaultFont;
+
+    /**
+     * 默认字体（TrueType 字体对象）
+     * <p>
+     * 失败时为空，见 {@link #getITextDefaultFont()}
+     */
+    private static ItextTrueTypeFont iTextDefaultFont;
 
     /**
      * 默认字体路径
@@ -327,7 +327,6 @@ public final class FontLoader {
      * 解析字体数据中指定索引的字体
      * <p>
      * 字体集合（TTC）取指定索引的字体（越界时取最后一个）；单个字体文件直接解析。
-     * iText 默认字体仍按整份数据加载，以兼容 iText 对字体集合的处理。
      *
      * @param buf      字体文件数据
      * @param ttcIndex 字体集合内索引，单位：个，非字体集合时忽略
@@ -585,15 +584,11 @@ public final class FontLoader {
             byte[] buf = IOUtils.toByteArray(in);
             DefaultFontPath = loc;
             defaultFont = parseFontAt(buf, ttcIndex);
-            // 默认文本字体已可用；iText 字体加载失败（如字体集合）时退化为按路径加载，不影响默认字体选择
+            // 默认文本字体已可用；字体对象加载失败（如字体集合）时置空，不影响默认字体选择
             try {
-                // 使用统一的工具类加载iText字体，对裁剪字体进行兼容
-                iTextDefaultFont = ItextFontUtil.loadFont(buf);
+                iTextDefaultFont = new ItextTrueTypeFont(buf, ttcIndex);
             } catch (Exception e) {
-                // 字体集合等无法直接解析的数据，按路径加载取集合内首个字体
-                com.itextpdf.io.font.FontProgram program = ItextFontUtil.loadFontProgram(path);
-                iTextDefaultFont = program instanceof com.itextpdf.io.font.TrueTypeFont
-                        ? (com.itextpdf.io.font.TrueTypeFont) program : null;
+                iTextDefaultFont = null;
             }
         } catch (Exception ignored) {
             return false;
@@ -1105,105 +1100,6 @@ public final class FontLoader {
     }
 
     /**
-     * 尽可能的加载字体
-     * <p>
-     * 如果字体无法加载时使用相近字体替换
-     *
-     * @param rl     资源加载器，用于从虚拟容器中取出文件
-     * @param ctFont 字体对象
-     * @param isNoGlyphs 是否不存在字符索引
-     * @return 字体 或 null
-     */
-    public FontWrapper<PdfFont> loadPDFFontSimilar(ResourceLocator rl, CT_Font ctFont, boolean isNoGlyphs) {
-        if (ctFont == null) {
-            return null;
-        }
-
-        /**
-         * - 包含路径，尝试从OFD中加载字体
-         *      - 失败了 继续流程
-         *      - 成功就返还
-         * - 不含路径，尝试从操作系统中加载字体
-         */
-        final String fontName = ctFont.attributeValue("FontName");
-        final String familyName = ctFont.getFamilyName();
-        try {
-            ST_Loc fontFileLoc = ctFont.getFontFile();
-            FontProgram fontProgram = null;
-
-            // 1、尝试加载内嵌字体
-            if (fontFileLoc != null) {
-                String fontAbsPath = rl.getFile(fontFileLoc).toAbsolutePath().toString();
-                fontProgram = getFontProgram(fontAbsPath);
-            }
-
-            // 是否要加载系统字体
-            boolean isLoadSystemFont = false;
-            // 源文件不存在索引标签且加载的映射表为空，也需要选择加载操作系统字体
-            if (isNoGlyphs && fontProgram instanceof ItextTrueTypeFont) {
-                isLoadSystemFont = ((ItextTrueTypeFont) fontProgram).isEmptyCmap;
-            }
-            if (DEBUG) {
-                log.info("是否加载系统字体 {} {} {}", isLoadSystemFont, isNoGlyphs, fontProgram == null);
-            }
-
-            // 2、尝试根据名字从操作系统加载字体，只要替换了内嵌字体，就需要设置为需要替换
-            boolean hasReplace = isLoadSystemFont || fontProgram == null;
-            if (hasReplace) {
-                // 首先尝试从操作系统
-                String fontAbsPath = getSystemFontPath(familyName, fontName);
-                if (fontAbsPath == null && enableSimilarFontReplace) {
-                    // 操作系统中不存在，那么尝试使用近似的字体替换
-                    fontAbsPath = getReplaceSimilarFontPath(familyName, fontName);
-                }
-                fontProgram = getFontProgram(fontAbsPath);
-            }
-            if (DEBUG) {
-                log.info("加载PDF中的字体 status=加载{}, {}, {}, {}", fontProgram == null ? "失败" : "成功", familyName, fontName, ctFont.getFontFile());
-            }
-
-            // 3、前面两种加载机制都失效时，使用默认字体
-            if (fontProgram == null) {
-                fontProgram = iTextDefaultFont;
-            }
-
-            return new FontWrapper<>(PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED), hasReplace);
-        } catch (Exception e) {
-            if (DEBUG) {
-                log.warn("加载字体异常 " + familyName + " " + fontName + " " + ctFont.getFontFile(), e);
-            }
-            return new FontWrapper<>(PdfFontFactory.createFont(iTextDefaultFont, PdfEncodings.IDENTITY_H, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED), true);
-        }
-
-    }
-
-    /**
-     * 加载字体
-     * <p>
-     * 如果无法加载则返回null
-     *
-     * @param fontAbsPath 字体路径
-     * @return 字体对象
-     */
-    private FontProgram getFontProgram(String fontAbsPath) {
-        if (fontAbsPath == null) {
-            return null;
-        }
-        FontProgram fontProgram = null;
-		try {
-		 // 使用统一的工具类加载iText字体，对裁剪字体进行兼容
-			fontProgram = ItextFontUtil.loadFontProgram(fontAbsPath);
-			return fontProgram;
-		} catch (Exception e) {
-			if (DEBUG) {
-				log.info("已跳过 {} 字体文件解析，原因 {}" ,fontAbsPath, e.getMessage());
-			}
-			return null;
-		}
-    }
-
-
-    /**
      * 加载默认字体
      *
      * @return 默认字体宋体
@@ -1379,11 +1275,17 @@ public final class FontLoader {
     }
 
     /**
-     * 默认字体iText格式
+     * 默认字体（TrueType 字体对象）
+     * <p>
+     * 返回 {@link ItextTrueTypeFont}，提供字体名称、cmap 可用性与字形查询等访问器；
+     * 默认字体未加载或加载失败时返回 null。
      *
-     * @return 字体
+     * @return 默认字体
+     * @deprecated 方法名沿用历史命名（iText），返回值已不再依赖 iText；请使用
+     * {@link #getDefaultFont()} 或 {@link #getDefaultFontPath()}。
      */
-    public com.itextpdf.io.font.TrueTypeFont getITextDefaultFont() {
+    @Deprecated
+    public ItextTrueTypeFont getITextDefaultFont() {
         return iTextDefaultFont;
     }
 

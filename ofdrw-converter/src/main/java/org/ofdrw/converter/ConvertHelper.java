@@ -1,7 +1,5 @@
 package org.ofdrw.converter;
 
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.ofdrw.reader.OFDReader;
 import org.ofdrw.reader.PageInfo;
@@ -25,16 +23,30 @@ public class ConvertHelper {
 
     /**
      * 转换使用库名称
+     *
+     * @deprecated 两种取值均由 PDFBox 生成 PDF，请直接调用 {@link #toPdf(Path, Path)} 系列方法
      */
+    @Deprecated
     public static Lib lib = Lib.iText;
 
+    /**
+     * 转换实现类型
+     *
+     * @deprecated 两种取值均由 PDFBox 生成 PDF，请直接调用 {@link #toPdf(Path, Path)} 系列方法
+     */
+    @Deprecated
     public static enum Lib {
         iText, PDFBox
     }
 
     /**
-     * 使用iText作为转换实现
+     * 使用iText兼容实现作为转换实现
+     * <p>
+     * 该实现已改为基于 PDFBox 生成 PDF，接口名称保持不变。
+     *
+     * @deprecated 请使用 {@link #toPdf(Path, Path)} 系列方法，转换结果与使用哪种实现无关
      */
+    @Deprecated
     public static void useIText() {
         lib = Lib.iText;
     }
@@ -75,8 +87,7 @@ public class ConvertHelper {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             switch (lib) {
                 case iText: {
-                    try (PdfWriter pdfWriter = new PdfWriter(bos);
-                         PdfDocument pdfDocument = new PdfDocument(pdfWriter)) {
+                    try (PDDocument pdfDocument = new PDDocument()) {
                         long start;
                         long end;
                         int pageNum = 1;
@@ -90,6 +101,7 @@ public class ConvertHelper {
                         }
                         // 添加附件
                         pdfMaker.addAttachments(pdfDocument, reader);
+                        pdfDocument.save(bos);
                     }
                     break;
                 }
