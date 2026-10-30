@@ -466,7 +466,8 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
         if (cffData == null || cffData.length == 0) {
             return false;
         }
-        List<CFFFont> fonts = new CFFParser().parse(cffData);
+        // fontbox 3.x 不再接受裸 byte[]，需显式提供字节来源；CFF 数据已整体载入内存，直接返回完整数据
+        List<CFFFont> fonts = new CFFParser().parse(cffData, () -> cffData);
         if (fonts == null || fonts.isEmpty()) {
             return false;
         }
@@ -614,6 +615,56 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
         return getGlyph(gid);
     }
 
+
+    /**
+     * 获取字体原始随机访问流
+     * <p>
+     * 供同包内的嵌入元信息、字体度量与嵌入数据汇总复用解析结果，不对外公开。
+     *
+     * @return 字体随机访问流；字体解析完成前调用返回 null
+     */
+    TTFDataStream getDataStream() {
+        return data;
+    }
+
+    /**
+     * 判断字体轮廓是否由 CFF 提供（OpenType/CFF 或裸 CFF 数据）
+     *
+     * @return true - CFF 轮廓；false - TrueType 轮廓（glyf/loca）或 Type1 轮廓
+     */
+    boolean isCffOutline() {
+        return cffFont != null;
+    }
+
+    /**
+     * 判断字体是否为 Type1 字体
+     *
+     * @return true - Type1 字体
+     */
+    boolean isType1() {
+        return type1Font != null;
+    }
+
+    /**
+     * 获取字体的全部 cmap 子表
+     * <p>
+     * 供同包内的 ToUnicode 映射生成等能力使用，不对外公开。
+     *
+     * @return cmap 子表数组；字体没有 cmap 表时返回 null
+     */
+    CmapSubtable[] getCmaps() {
+        return cmaps;
+    }
+
+    /**
+     * 获取字形数量
+     *
+     * @return 字形数量，单位为个；解析前调用返回 0
+     * @since 2.5.1
+     */
+    public int getNumGlyphs() {
+        return numGlyphs;
+    }
 
     /**
      * 获取变换矩阵
