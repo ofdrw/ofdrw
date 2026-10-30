@@ -46,3 +46,4 @@ target
 ### 调研/临时目录，不入库 ###
 /.research/
 ofdrw-reader/DOC_0_copy/
+src_material/
