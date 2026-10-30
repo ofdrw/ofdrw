@@ -5,6 +5,7 @@ import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.core.basicStructure.pageObj.layer.CT_Layer;
 import org.ofdrw.core.basicStructure.pageObj.layer.Type;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.CT_PageBlock;
+import org.ofdrw.core.basicStructure.pageObj.layer.PageBlockType;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.ImageObject;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
@@ -1345,6 +1346,34 @@ public class OFDPageGraphics2D extends Graphics2D {
            }
         }
         return null;
+    }
+
+    /**
+     * 在当前页面内容容器（CT_PageBlock）尾部追加一个页块对象
+     * <p>
+     * 供其他绘制管线（如 PDF 转换的文字对象输出）按内容流顺序追加 {@link TextObject} 等图元，
+     * 保证与 {@link #fill(Shape)}、{@link #draw(Shape)} 产生的路径对象在 z-order 上严格一致。
+     * 追加操作不受当前绘制属性（画笔、描边、变换矩阵）影响，调用方负责自行给出图元的坐标与属性。
+     *
+     * @param block 待追加的页块对象，为 null 时忽略
+     */
+    public void appendPageBlock(PageBlockType block) {
+        if (block == null) {
+            return;
+        }
+        container.addPageBlock(block);
+    }
+
+    /**
+     * 生成页面所在文档内的新对象 ID
+     * <p>
+     * 供通过 {@link #appendPageBlock(PageBlockType)} 追加图元的调用方分配对象 ID，
+     * 与 {@code fill/draw/drawImage} 生成的图元共用同一套 ID 空间。
+     *
+     * @return 文档内唯一的新对象 ID
+     */
+    public ST_ID newObjectId() {
+        return doc.newID();
     }
 
     /**

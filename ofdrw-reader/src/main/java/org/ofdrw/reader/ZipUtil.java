@@ -4,6 +4,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 
 import java.io.*;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -226,8 +227,12 @@ public class ZipUtil {
             long base = origin;
             int carry = 0;
             while (true) {
-                buffer.clear();
-                buffer.position(carry);
+                // JDK 8 兼容：JDK 9 起 ByteBuffer 覆写了 clear/flip/rewind/mark/reset/position/limit，
+                // 返回类型由 Buffer 协变收窄为 ByteBuffer，方法描述符随之改变；
+                // 用高版本 JDK 编译出的字节码在 JDK 8 上会抛 NoSuchMethodError。
+                // 先向上转型为 Buffer 再调用，强制使用 Buffer.clear()Ljava/nio/Buffer; 这一描述符。
+                ((Buffer) buffer).clear();
+                ((Buffer) buffer).position(carry);
                 final int read = channel.read(buffer, base);
                 if (read <= 0) {
                     return 0;
