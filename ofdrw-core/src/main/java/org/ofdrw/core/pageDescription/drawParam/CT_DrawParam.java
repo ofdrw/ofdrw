@@ -130,6 +130,25 @@ public class CT_DrawParam extends OFDElement {
 
     /**
      * 【可选 属性】
+     * 获取 线宽，仅返回元素上**显式书写**的值
+     * <p>
+     * 与 {@link #getLineWidth()} 的区别：{@code getLineWidth()} 在属性缺失时返回规范默认值 {@code 0.353}，
+     * 调用方无法判断“未定义”；本方法在属性缺失时返回 {@code null}，
+     * 供渲染侧按“就近原则”取值时避免默认值打断 {@code Relative} 继承链。
+     *
+     * @return 显式书写的线宽，单位 mm；属性缺失时返回 null
+     * @since 2.5.1
+     */
+    public Double getLineWidthExplicit() {
+        String str = this.attributeValue("LineWidth");
+        if (str == null || str.trim().length() == 0) {
+            return null;
+        }
+        return Double.parseDouble(str);
+    }
+
+    /**
+     * 【可选 属性】
      * 设置 线条连接样式
      * <p>
      * 可选样式参照{@link LineJoinType}，线条连接样式的取值和显示效果之间的关系见表

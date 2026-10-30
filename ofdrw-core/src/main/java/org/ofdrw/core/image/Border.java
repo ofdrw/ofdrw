@@ -63,6 +63,25 @@ public class Border extends OFDElement {
 
     /**
      * 【可选 属性】
+     * 获取 边框线宽，仅返回元素上**显式书写**的值
+     * <p>
+     * 与 {@link #getLineWidth()} 的区别：{@code getLineWidth()} 在属性缺失时返回规范默认值 {@code 0.353}，
+     * 调用方无法区分“未定义”；本方法在属性缺失时返回 {@code null}。
+     * 边框“线宽为 0 表示不绘制”，因此必须能区分“未声明”与“显式 0”。
+     *
+     * @return 显式书写的边框线宽，单位 mm；属性缺失时返回 null
+     * @since 2.5.1
+     */
+    public Double getLineWidthExplicit() {
+        String str = this.attributeValue("LineWidth");
+        if (str == null || str.trim().length() == 0) {
+            return null;
+        }
+        return Double.parseDouble(str);
+    }
+
+    /**
+     * 【可选 属性】
      * 设置 边框水平角半径
      * <p>
      * 默认值为 0

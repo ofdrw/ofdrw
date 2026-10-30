@@ -264,6 +264,25 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
 
     /**
      * 【可选 属性】
+     * 获取 线端点样式，仅返回元素上**显式书写**的值
+     * <p>
+     * 与 {@link #getCap()} 的区别：{@code getCap()} 在属性缺失时返回规范默认值 {@code Butt}，
+     * 调用方无法判断“未定义”；本方法在属性缺失时返回 {@code null}，
+     * 供渲染侧按“图元属性 &gt; DrawParam &gt; Relative 继承链 &gt; 规范默认值”的优先级取值。
+     *
+     * @return 显式书写的线端点样式；属性缺失时返回 null
+     * @since 2.5.1
+     */
+    public LineCapType getCapExplicit() {
+        String str = this.attributeValue("Cap");
+        if (str == null || str.trim().length() == 0) {
+            return null;
+        }
+        return LineCapType.getInstance(str);
+    }
+
+    /**
+     * 【可选 属性】
      * 设置 线条连接样式
      * <p>
      * 见 8.2 绘制参数
@@ -295,6 +314,25 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
      */
     public LineJoinType getJoin() {
         return LineJoinType.getInstance(this.attributeValue("Join"));
+    }
+
+    /**
+     * 【可选 属性】
+     * 获取 线条连接样式，仅返回元素上**显式书写**的值
+     * <p>
+     * 与 {@link #getJoin()} 的区别：{@code getJoin()} 在属性缺失时返回规范默认值 {@code Miter}，
+     * 调用方无法判断“未定义”；本方法在属性缺失时返回 {@code null}，
+     * 供渲染侧按“图元属性 &gt; DrawParam &gt; Relative 继承链 &gt; 规范默认值”的优先级取值。
+     *
+     * @return 显式书写的线条连接样式；属性缺失时返回 null
+     * @since 2.5.1
+     */
+    public LineJoinType getJoinExplicit() {
+        String str = this.attributeValue("Join");
+        if (str == null || str.trim().length() == 0) {
+            return null;
+        }
+        return LineJoinType.getInstance(str);
     }
 
     /**
@@ -480,6 +518,26 @@ public abstract class CT_GraphicUnit<T extends CT_GraphicUnit> extends OFDElemen
         String str = this.attributeValue("Alpha");
         if (str == null || str.trim().length() == 0) {
             return 255;
+        }
+        return Integer.parseInt(str);
+    }
+
+    /**
+     * 【可选 属性】
+     * 获取 图元对象透明度，仅返回元素上**显式书写**的值
+     * <p>
+     * 与 {@link #getAlpha()} 的区别：{@code getAlpha()} 在属性缺失时返回规范默认值 {@code 255}（不透明），
+     * 调用方无法判断“未定义”；本方法在属性缺失时返回 {@code null}，
+     * 供渲染侧按“图元属性 &gt; DrawParam &gt; Relative 继承链 &gt; 规范默认值”的优先级取值，
+     * 避免把“未显式设置”误判为“显式 255”从而打断继承链。
+     *
+     * @return 显式书写的透明度，取值区间 [0,255]；属性缺失时返回 null
+     * @since 2.5.1
+     */
+    public Integer getAlphaExplicit() {
+        String str = this.attributeValue("Alpha");
+        if (str == null || str.trim().length() == 0) {
+            return null;
         }
         return Integer.parseInt(str);
     }

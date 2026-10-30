@@ -113,6 +113,25 @@ public class CT_ColorSpace extends OFDElement {
 
     /**
      * 【可选 属性】
+     * 获取 每个颜色通道使用的位数，仅返回元素上**显式书写**的值
+     * <p>
+     * 与 {@link #getBitsPerComponent()} 的区别：{@code getBitsPerComponent()} 在属性缺失时返回规范默认值
+     * {@code BIT_8}，调用方无法判断“未定义”；本方法在属性缺失时返回 {@code null}。
+     * 颜色通道归一化需要区分“未声明位宽”（按 8 位处理）与“显式声明 8 位”，否则默认值会干扰判定。
+     *
+     * @return 显式书写的位数；属性缺失时返回 null
+     * @since 2.5.1
+     */
+    public BitsPerComponent getBitsPerComponentExplicit() {
+        String str = this.attributeValue("BitsPerComponent");
+        if (str == null || str.trim().length() == 0) {
+            return null;
+        }
+        return BitsPerComponent.getInstance(str);
+    }
+
+    /**
+     * 【可选 属性】
      * 设置 指向包内颜色配置文件
      *
      * @param profile 指向包内颜色配置文件路径
