@@ -6,6 +6,7 @@ import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -140,6 +141,33 @@ class StampBlendPixelTest {
             BufferedImage stamp = stampImageOf(resource);
             assertTrue(stamp.getWidth() > 0 && stamp.getHeight() > 0, resource + " 中的图片尺寸非法");
         }
+    }
+
+    /**
+     * 离屏混合必须遵守设备空间裁剪：印章按 {@code StampAnnot.Clip} 裁剪后，
+     * 裁剪区域外的像素不应被印章图像覆盖。
+     */
+    @Test
+    void multiplyRespectsDeviceClip() {
+        Graphics2DRenderer renderer = new Graphics2DRenderer();
+        renderer.beginPage(40, 40);
+        renderer.beginPath();
+        renderer.rect(0, 0, 40, 40);
+        renderer.fill(DrawStyle.defaultStyle(), new ResolvedPaint(CanvasPaint.of(Color.WHITE), 1f), FillRule.NON_ZERO);
+        // 仅保留左侧 10px 宽的区域，模拟印章 Clip
+        renderer.clip(new Rectangle2D.Double(0, 0, 10, 40), FillRule.NON_ZERO);
+        BufferedImage source = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = source.createGraphics();
+        g.setColor(new Color(255, 0, 0));
+        g.fillRect(0, 0, 40, 40);
+        g.dispose();
+        ImageHandle handle = renderer.createImage(source);
+        renderer.drawImage(handle, new AffineTransform(), 1f, false, null, BlendMode.MULTIPLY);
+        renderer.endPage();
+        BufferedImage output = renderer.getOutput();
+        assertEquals(new Color(255, 0, 0).getRGB(), output.getRGB(5, 20), "裁剪区域内应绘制印章");
+        assertEquals(Color.WHITE.getRGB(), output.getRGB(20, 20), "裁剪区域外应保持白底");
+        renderer.close();
     }
 
     /**

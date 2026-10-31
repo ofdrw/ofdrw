@@ -18,6 +18,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ImageBlendModeExportTest {
 
+    static {
+        // 渲染测试依赖 BufferedImage/Graphics2D，固定 headless 模式，避免无 X11 环境时 AWT 初始化失败
+        System.setProperty("java.awt.headless", "true");
+    }
+
     @TempDir
     Path tempDir;
 

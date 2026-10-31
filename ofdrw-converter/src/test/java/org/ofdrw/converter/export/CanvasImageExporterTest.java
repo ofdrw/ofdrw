@@ -3,13 +3,20 @@ package org.ofdrw.converter.export;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.ofdrw.converter.AWTMaker;
 import org.ofdrw.converter.GeneralConvertException;
+import org.ofdrw.graphics2d.OFDGraphicsDocument;
+import org.ofdrw.graphics2d.OFDPageGraphics2D;
 import org.ofdrw.reader.OFDReader;
 
 import javax.imageio.ImageIO;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,6 +46,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @since 2026-10-25
  */
 class CanvasImageExporterTest {
+
+    static {
+        // 渲染测试依赖 BufferedImage/Graphics2D，固定 headless 模式，避免无 X11 环境时 AWT 初始化失败
+        System.setProperty("java.awt.headless", "true");
+    }
 
     /**
      * 测试文档目录前缀
@@ -608,5 +620,163 @@ class CanvasImageExporterTest {
         }
         assertSame(IndexBase.PAGE, IndexBase.valueOf("PAGE"));
         assertSame(IndexBase.SEQUENCE, IndexBase.valueOf("SEQUENCE"));
+    }
+
+    /**
+     * 线宽语义：LineWidth 以毫米用户空间参与描边，最终像素宽度只放大一次 ppm。
+     * <p>
+     * 96 DPI 下 0.353mm 描边约 1.33px；若线宽再乘一次 ppm，会变成约 5px（3.78 倍）。
+     * 本用例在 10px/mm 下绘制 0.353mm 边框，期望约 3.5px，而不是约 13px。
+     */
+    @Test
+    @DisplayName("线宽：0.353mm 描边只放大一次 ppm")
+    void strokeWidthUsesUserSpaceMillimeters() throws Exception {
+        Path ofd = tempDir.resolve("stroke-width.ofd");
+        try (OFDGraphicsDocument document = new OFDGraphicsDocument(ofd)) {
+            OFDPageGraphics2D page = document.newPage(100, 100);
+            page.setColor(Color.BLACK);
+            page.setStroke(new BasicStroke(0.353f));
+            page.drawRect(10, 10, 80, 80);
+        }
+        Path outDir = tempDir.resolve("stroke-width-out");
+        try (CanvasImageExporter exporter = new CanvasImageExporter(ofd, outDir, "PNG", 10.0)) {
+            exporter.export(0);
+            BufferedImage image = read(exporter.getImgFilePaths().get(0));
+            int y = image.getHeight() / 2;
+            int darkRun = 0;
+            // 左边框位于 10mm × 10px/mm = 100px 附近，统计该处连续深色像素宽度
+            for (int x = 88; x <= 114; x++) {
+                if ((image.getRGB(x, y) & 0xFFFFFF) != 0xFFFFFF) {
+                    darkRun++;
+                }
+            }
+            assertTrue(darkRun >= 2 && darkRun <= 7,
+                    "0.353mm 描边在 10px/mm 下应约 3.5px，实际连续深色像素 " + darkRun + "px（疑似线宽被 ppm 二次放大）");
+        }
+    }
+
+    /**
+     * 尺寸取整：毫米宽度与 ppm 相乘落在整数附近时，不应因浮点误差多取 1px。
+     * <p>
+     * 228.6mm × 96/25.4 = 864.0000000000001，旧实现 Math.ceil 得到 865；修复后应为 864。
+     */
+    @Test
+    @DisplayName("尺寸取整：整数像素附近不因浮点误差多取 1px")
+    void pixelSizeDoesNotCeilFloatingPointNoise() throws Exception {
+        Path ofd = tempDir.resolve("size-228-6.ofd");
+        try (OFDGraphicsDocument document = new OFDGraphicsDocument(ofd)) {
+            document.newPage(228.6, 100);
+        }
+        final double ppm = 96.0 / 25.4;
+        Path outDir = tempDir.resolve("size-228-6-out");
+        try (CanvasImageExporter exporter = new CanvasImageExporter(ofd, outDir, "PNG", ppm)) {
+            exporter.export(0);
+            BufferedImage image = read(exporter.getImgFilePaths().get(0));
+            assertEquals(864, image.getWidth(), "228.6mm 在 96 DPI 下应取整为 864px，而不是 865px");
+            assertEquals(378, image.getHeight(), "100mm 在 96 DPI 下应取整为 378px");
+        }
+    }
+
+    /**
+     * 无效内嵌字体回退：{@code intro-数科.ofd} 内嵌的 {@code font_128_128.ttf} 是裸 CFF
+     * （文件头 {@code 01 00 04 03}），没有 cmap，文档中的字形索引无法映射到子集轮廓。
+     * <p>
+     * 修复前该字体全部字形被跳过，p14 左上角中文整段缺失；修复后按 TextCode 的 Unicode
+     * 字符经替代字体 cmap 补绘。本用例只断言该区域有足量亮色文字像素，不依赖具体字体文件。
+     */
+    @Test
+    @DisplayName("Clips 原点：像素坐标裁剪不叠加 Path/图元 Boundary，页面边缘不被裁白")
+    void pixelCoordinateClipsKeepPageEdges() throws Exception {
+        Path outDir = tempDir.resolve("clip-edges");
+        try (CanvasImageExporter exporter = new CanvasImageExporter(
+                Paths.get(RES + "intro-数科.ofd"), outDir, "PNG", 5.0)) {
+            // p12 为整幅照片、p14 为深色整页：两者顶部/左侧都应被内容覆盖
+            for (int page : new int[]{11, 13}) {
+                exporter.export(page);
+                BufferedImage image = read(exporter.getImgFilePaths().get(0));
+                int topNonWhite = 0;
+                for (int x = 0; x < image.getWidth(); x++) {
+                    if ((image.getRGB(x, 0) & 0xFFFFFF) != 0xFFFFFF) {
+                        topNonWhite++;
+                    }
+                }
+                int leftNonWhite = 0;
+                for (int y = 0; y < image.getHeight(); y++) {
+                    if ((image.getRGB(0, y) & 0xFFFFFF) != 0xFFFFFF) {
+                        leftNonWhite++;
+                    }
+                }
+                assertTrue(topNonWhite > image.getWidth() * 0.8,
+                        "p" + (page + 1) + " 顶部被裁剪成白边：非白像素 " + topNonWhite + "/" + image.getWidth());
+                assertTrue(leftNonWhite > image.getHeight() * 0.8,
+                        "p" + (page + 1) + " 左侧被裁剪成白边：非白像素 " + leftNonWhite + "/" + image.getHeight());
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("Clips 原点：合成整页裁剪不内缩边缘")
+    void syntheticFullPageClipDoesNotInsetEdges() throws Exception {
+        Path ofd = tempDir.resolve("clip-page-edge.ofd");
+        try (OFDGraphicsDocument document = new OFDGraphicsDocument(ofd)) {
+            OFDPageGraphics2D page = document.newPage(100, 100);
+            page.setColor(Color.BLACK);
+            page.clip(new Rectangle2D.Double(0, 0, 100, 100));
+            page.fillRect(0, 0, 100, 100);
+        }
+        Path outDir = tempDir.resolve("clip-page-edge-out");
+        try (CanvasImageExporter exporter = new CanvasImageExporter(ofd, outDir, "PNG", 10.0)) {
+            exporter.export(0);
+            BufferedImage image = read(exporter.getImgFilePaths().get(0));
+            int topDark = 0;
+            for (int x = 0; x < image.getWidth(); x++) {
+                if ((image.getRGB(x, 0) & 0xFFFFFF) != 0xFFFFFF) {
+                    topDark++;
+                }
+            }
+            int leftDark = 0;
+            for (int y = 0; y < image.getHeight(); y++) {
+                if ((image.getRGB(0, y) & 0xFFFFFF) != 0xFFFFFF) {
+                    leftDark++;
+                }
+            }
+            assertTrue(topDark > image.getWidth() * 0.8,
+                    "合成整页裁剪顶部内缩：深色像素 " + topDark + "/" + image.getWidth());
+            assertTrue(leftDark > image.getHeight() * 0.8,
+                    "合成整页裁剪左侧内缩：深色像素 " + leftDark + "/" + image.getHeight());
+        }
+    }
+
+    @Test
+    @DisplayName("无效内嵌 CFF 字体：按 Unicode 回退补绘中文，不再整段跳过")
+    void invalidEmbeddedCffFallsBackToUnicode() throws Exception {
+        Path outDir = tempDir.resolve("invalid-cff");
+        try (CanvasImageExporter exporter = new CanvasImageExporter(
+                Paths.get(RES + "intro-数科.ofd"), outDir, "PNG", 5.0)) {
+            exporter.export(13);
+            BufferedImage image = read(exporter.getImgFilePaths().get(0));
+            long bright = 0;
+            for (int y = 0; y < Math.min(300, image.getHeight()); y++) {
+                for (int x = 0; x < Math.min(1200, image.getWidth()); x++) {
+                    int rgb = image.getRGB(x, y);
+                    int r = (rgb >> 16) & 0xFF;
+                    int g = (rgb >> 8) & 0xFF;
+                    int b = rgb & 0xFF;
+                    if (r > 180 && g > 180 && b > 180) {
+                        bright++;
+                    }
+                }
+            }
+            assertTrue(bright > 8000,
+                    "无效内嵌字体应回退 Unicode 补绘中文：左上角亮色文字像素仅 " + bright + "（修复前约 5k）");
+
+            // 中文标点也属于 Unicode 回退范围，避免只补汉字而漏掉 、（） 等
+            Method isCjk = AWTMaker.class.getDeclaredMethod("isCjkChar", char.class);
+            isCjk.setAccessible(true);
+            for (char punctuation : new char[]{'、', '（', '）', '，', '。'}) {
+                assertTrue((Boolean) isCjk.invoke(null, punctuation),
+                        "中文标点应由 Unicode 回退补绘：" + punctuation);
+            }
+        }
     }
 }

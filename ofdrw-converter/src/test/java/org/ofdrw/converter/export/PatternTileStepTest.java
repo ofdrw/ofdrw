@@ -34,6 +34,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class PatternTileStepTest {
 
+    static {
+        // 渲染测试依赖 BufferedImage/Graphics2D，固定 headless 模式，避免无 X11 环境时 AWT 初始化失败
+        System.setProperty("java.awt.headless", "true");
+    }
+
     /**
      * 带步进间隙的底纹文档：单元 20×10 mm，步进 40×30 mm，45° 旋转
      */

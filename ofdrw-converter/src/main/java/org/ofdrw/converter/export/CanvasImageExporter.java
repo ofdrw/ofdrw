@@ -378,9 +378,13 @@ public class CanvasImageExporter implements OFDExporter {
         int degree = rotation;
         // 页面尺寸，单位：毫米
         ST_Box pageBox = imageMaker.pageSize(pageIndex);
-        // 毫米 转 像素，向上取整避免右侧/底部被裁掉
-        int baseW = Math.max(1, (int) Math.ceil(ppm * pageBox.getWidth()));
-        int baseH = Math.max(1, (int) Math.ceil(ppm * pageBox.getHeight()));
+        /*
+         * 毫米转像素向上取整，避免右侧/底部被裁掉。
+         * 先减去 epsilon：像 228.6mm × 96/25.4 这类本应为整数的值会因浮点误差得到 864.0000000000001，
+         * 直接 ceil 会多出 1px，与 PDF 渲染器（就近取整）的尺寸不一致；真实小数部分仍按向上取整处理。
+         */
+        int baseW = pixelSize(pageBox.getWidth(), ppm);
+        int baseH = pixelSize(pageBox.getHeight(), ppm);
         boolean swap = degree == 90 || degree == 270;
         int outW = swap ? baseH : baseW;
         int outH = swap ? baseW : baseH;
@@ -422,6 +426,21 @@ public class CanvasImageExporter implements OFDExporter {
         }
         imgFileArr.add(dst);
         imageInfos.add(new ImageInfo(pageIndex, outW, outH, degree, ppm, dst));
+    }
+
+    /**
+     * 计算页面某一方向的像素尺寸。
+     * <p>
+     * 语义仍为向上取整（不裁边），但会先吸收浮点乘法误差，避免本应为整数的结果多出 1 像素。
+     *
+     * @param millimeters 页面宽度或高度，单位：毫米
+     * @param ppm         每毫米像素数量，单位：像素/毫米
+     * @return 像素尺寸，单位：像素，至少为 1
+     */
+    private static int pixelSize(double millimeters, double ppm) {
+        // 1e-6 像素远小于任何真实小数部分，只用于抵消 IEEE-754 乘法误差
+        final double epsilon = 1e-6;
+        return Math.max(1, (int) Math.ceil(ppm * millimeters - epsilon));
     }
 
     /**

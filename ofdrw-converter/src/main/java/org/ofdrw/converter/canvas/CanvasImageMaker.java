@@ -11,6 +11,7 @@ import org.ofdrw.reader.PageInfo;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
 
 /**
  * 将 OFD 页面绘制到 {@link CanvasSurface} 的图片绘制器。
@@ -97,10 +98,17 @@ public class CanvasImageMaker extends AWTMaker {
             /*
              * 画布是像素后端（BufferedImage），按离屏能力构造渲染器：
              * 这样正片叠底等混合模式会走离屏图层逐像素合成，而不是退化为普通覆盖。
+             * 直接传入画布栅格，避免渲染器再从 Graphics2D 反射探测底层像素（JDK 的
+             * SunGraphics2D#getSurface 返回 SurfaceData，无法得到 BufferedImage）。
              * 调用方在画布上预设的画布级变换（例如旋转导出）放在绘制调用中应用，
              * 因为 beginPage 会把变换重置为单位矩阵。
              */
-            Graphics2DRenderer renderer = new Graphics2DRenderer(graphics, true);
+            WritableRaster raster = surface instanceof BufferedImageSurface
+                    ? ((BufferedImageSurface) surface).getImage().getRaster()
+                    : null;
+            Graphics2DRenderer renderer = raster != null
+                    ? new Graphics2DRenderer(graphics, raster)
+                    : new Graphics2DRenderer(graphics, true);
             renderer.beginPage(surface.getWidth(), surface.getHeight());
             try {
                 if (transform != null) {

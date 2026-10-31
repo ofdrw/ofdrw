@@ -34,13 +34,17 @@ import org.ofdrw.core.basicStructure.pageObj.layer.block.*;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_ID;
 import org.ofdrw.core.basicType.ST_Box;
+import org.ofdrw.core.basicType.ST_Pos;
 import org.ofdrw.core.basicType.ST_RefID;
 import org.ofdrw.core.compositeObj.CT_VectorG;
 import org.ofdrw.core.graph.pathObj.AbbreviatedData;
 import org.ofdrw.core.graph.pathObj.OptVal;
 import org.ofdrw.core.pageDescription.CT_GraphicUnit;
+import org.ofdrw.core.pageDescription.color.color.CT_AxialShd;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
+import org.ofdrw.core.pageDescription.color.color.CT_RadialShd;
 import org.ofdrw.core.pageDescription.color.color.ColorClusterType;
+import org.ofdrw.core.pageDescription.color.color.Segment;
 import org.ofdrw.core.pageDescription.color.pattern.CT_Pattern;
 import org.ofdrw.core.pageDescription.color.colorSpace.CT_ColorSpace;
 import org.ofdrw.core.pageDescription.color.colorSpace.OFDColorSpaceType;
@@ -63,7 +67,9 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
+import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -691,6 +697,15 @@ public abstract class AWTMaker {
                 matrix = matrix.mtimes(MatrixUtils.create(ctmArr[0], ctmArr[1], ctmArr[2], ctmArr[3], 0D, 0D));
             } else {
                 matrix = matrix.mtimes(MatrixUtils.ctm(ctmArr));
+                /*
+                 * CTM 表达的是路径点相对图元自身坐标系的变换，图元自身坐标系原点位于
+                 * Boundary 左上角；因此 CTM 之后还要叠加 Boundary 平移。
+                 * 例如 KingGrid 模板的 LineWidth 路径 CTM 为单位矩阵、路径点从 (1.94,2.12)
+                 * 开始，若不加 Boundary 平移，整张表格的线条会画到页面左上角。
+                 */
+                if (boundary != null) {
+                    matrix = MatrixUtils.move(matrix, boundary.getTopLeftX(), boundary.getTopLeftY());
+                }
             }
         } else if (boundary != null) {
             matrix = MatrixUtils.move(matrix, boundary.getTopLeftX(), boundary.getTopLeftY());
@@ -727,14 +742,21 @@ public abstract class AWTMaker {
             ResolvedPaint fillPaint = null;
             if (fillPattern != null) {
                 // 底纹填充：把 CellContent 渲染为平铺单元，再沿 CTM 平铺到被填充的路径内
-                fillPaint = resolvePatternPaint(fillPattern);
+                fillPaint = resolvePatternPaint(fillPattern, path2D);
                 if (fillPaint == null) {
                     warnUnsupportedFill("PathObject", pathObject.getID(), fillColorSpec, fillPattern);
                 }
             } else {
-                final Color fillColor = toAwtColor(style.getFillColor());
-                if (fillColor != null) {
-                    fillPaint = resolvePaint(fillColor, 1f);
+                /*
+                 * 渐变填充按颜色族单独构造着色源；解析失败时保持无填充，
+                 * 不再回落到 FillColor 的 Value（通常是一个无意义的底色，会把国徽画成黑色）。
+                 */
+                fillPaint = resolveFillPaint(fillColorSpec, boundary, matrix, ppm);
+                if (fillPaint == null && !isShadingFill(fillColorSpec)) {
+                    final Color fillColor = toAwtColor(style.getFillColor());
+                    if (fillColor != null) {
+                        fillPaint = resolvePaint(fillColor, 1f);
+                    }
                 }
             }
             if (fillPaint != null) {
@@ -1389,16 +1411,17 @@ public abstract class AWTMaker {
              */
             Double[] clipCtm = clipCtmOf(area, clipObj);
             Matrix m = MatrixUtils.base();
-            if (clipCtm != null) {
+            boolean pageAbsoluteClip = false;
+            if (clipCtm != null && isNormalizedClipCtm(clipCtm, boundary)) {
                 /*
-                 * 裁剪对象声明了 CTM：它把裁剪点坐标换算到**归一化单位空间**（图元 Boundary 被映射为
-                 * [0,1]×[0,1]），再按 Boundary 宽高（单位：毫米）放大回对象空间。
+                 * 裁剪 CTM 把页面坐标归一化为 [0,1]（线性分量约为 Boundary 边长的倒数）：
+                 * 先按 Boundary 宽高（单位：毫米）放大回对象空间。
                  */
                 m = m.mtimes(MatrixUtils.ctm(clipCtm));
                 if (boundary != null) {
                     m = MatrixUtils.scale(m, boundary.getWidth(), boundary.getHeight());
                 }
-            } else if (isUnitClipBox(clipObj)) {
+            } else if (clipCtm == null && isUnitClipBox(clipObj)) {
                 /*
                  * 未声明 CTM，但裁剪对象的包围框是 1×1 单位框：表示裁剪区域已归一化，
                  * 需按图元 Boundary 宽高（单位：毫米）放大回对象空间。
@@ -1406,11 +1429,24 @@ public abstract class AWTMaker {
                 if (boundary != null) {
                     m = MatrixUtils.scale(m, boundary.getWidth(), boundary.getHeight());
                 }
+            } else if (clipCtm != null) {
+                /*
+                 * 普通 CTM（如 1、0.3528）的裁剪路径从 (0,0) 开始，是相对被裁剪图元
+                 * 本地原点的坐标：只需在最后叠加图元 Boundary 原点，不能叠加 Path 自身的
+                 * Boundary（它在 1–2mm 量级，会让裁剪窗口内缩，intro-数科 p12/p14 顶部/左侧出现白边）。
+                 * 图元原点为负（整页图片/Composite 蒙版，如 -0.36、-0.9、-7mm）时，裁剪框本身
+                 * 已从页面边界外开始，直接按路径坐标裁剪即可；叠加负原点会把裁剪框整体平移，
+                 * p12 会内缩 0.9mm、p14 蒙版会上移 7mm 重新露出图片带。
+                 */
+                m = m.mtimes(MatrixUtils.ctm(clipCtm));
+                pageAbsoluteClip = originX < 0 || originY < 0;
             }
             /*
              * 其余情况：裁剪点坐标已经是对象空间（毫米），只需平移到图元自身的原点。
              */
-            m = MatrixUtils.move(m, originX, originY);
+            if (!pageAbsoluteClip) {
+                m = MatrixUtils.move(m, originX, originY);
+            }
             m = m.mtimes(parentMatrix);
 
             Path2D path = clipPath(clipObj);
@@ -1456,6 +1492,31 @@ public abstract class AWTMaker {
             logger.warn("裁剪区域解析失败，已忽略该裁剪：{}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * 判断裁剪 CTM 是否把页面坐标归一化为单位空间。
+     * <p>
+     * 归一化写法（如 manual.ofd 的图片裁剪）满足：X 线性分量 ≈ 1/Boundary 宽度、
+     * Y 线性分量 ≈ 1/Boundary 高度，这样 CTM 把页面坐标映射到 [0,1]，再乘回 Boundary
+     * 宽高就恢复到页面坐标。普通像素→毫米的 CTM（0.3528）或页面坐标 CTM（1）不满足该关系。
+     *
+     * @param ctm      裁剪 CTM 的 6 个分量
+     * @param boundary 被裁剪图元的包围框，单位：毫米
+     * @return true 表示需要按 Boundary 宽高放大
+     */
+    private boolean isNormalizedClipCtm(Double[] ctm, ST_Box boundary) {
+        if (ctm == null || ctm.length != 6 || boundary == null) {
+            return false;
+        }
+        double width = boundary.getWidth();
+        double height = boundary.getHeight();
+        if (width <= 0 || height <= 0) {
+            return false;
+        }
+        final double tolerance = 0.05;
+        return Math.abs(Math.abs(ctm[0]) * width - 1) < tolerance
+                && Math.abs(Math.abs(ctm[3]) * height - 1) < tolerance;
     }
 
     /**
@@ -1615,51 +1676,47 @@ public abstract class AWTMaker {
 
     /**
      * 按结算样式创建绘制样式（线宽、端点、连接、虚线）。
+     * <p>
+     * 路径点位于图元自身坐标系（毫米），绘制时由渲染器的当前变换统一换算为像素，
+     * 因此线宽与虚线长度也必须保持毫米单位，不能再乘 ppm；否则 BasicStroke 会随
+     * 变换与 ppm 各放大一次，描边宽度变为 ppm² 倍。
      *
      * @param style 结算后的样式；线宽与虚线长度单位：毫米（mm）
-     * @return 渲染器绘制样式；线宽与虚线长度已换算为像素
+     * @return 渲染器绘制样式；线宽与虚线长度保持用户空间（毫米）单位
      */
     private DrawStyle createStroke(ResolvedStyle style) {
-        float width = Math.max(0.01f, (float) (style.getLineWidth() * ppm));
+        float width = Math.max(0.01f, (float) style.getLineWidth());
         double[] pattern = style.getDashPattern();
         float[] dash = null;
         if (pattern.length > 0) {
             dash = new float[pattern.length];
             for (int i = 0; i < pattern.length; i++) {
-                dash[i] = (float) (pattern[i] * ppm);
+                dash[i] = (float) pattern[i];
             }
         }
-        return new DrawStyle(width, dash, (float) (style.getDashOffset() * ppm),
+        return new DrawStyle(width, dash, (float) style.getDashOffset(),
                 style.getLineCap().toAwtValue(), style.getLineJoin().toAwtValue(), (float) style.getMiterLimit());
     }
 
     /**
-     * 把底纹（Pattern）填充解析为可平铺的着色源。
+     * 把底纹（Pattern）填充解析为着色源。
      * <p>
-     * 处理流程分三步：
-     * <ol>
-     *     <li>在「单元尺寸」坐标系（单位 mm）下把 {@code CellContent} 渲染成单元位图；</li>
-     *     <li>把单元位图贴到「步进尺寸」的平铺位图左上角，形成单元之间留空的平铺块；</li>
-     *     <li>对平铺位图应用 Pattern 的 CTM 线性部分（旋转/斜切），再交给
-     *         {@link java.awt.TexturePaint} 平铺。</li>
-     * </ol>
+     * OFD 底纹的平铺发生在「Pattern 坐标系」中：单元内容放在 (0,0)，相邻单元间隔
+     * {@code XStep}/{@code YStep}，整个平面再经 Pattern 的 CTM 旋转/平移后填充图元。
+     * 由于 CTM 常含非 90° 旋转，旋转后的晶格在用户空间一般不存在轴对齐周期，
+     * 不能直接交给按轴对齐矩形平铺的 {@link java.awt.TexturePaint}（会多出错误位置的副本，
+     * 表现为水印密度成倍偏大）。
      * <p>
-     * 关键约束：
-     * <ul>
-     *     <li><b>步进语义</b>：{@link java.awt.TexturePaint} 只能“按锚点矩形无间隙平铺”，而 OFD 的
-     *         {@code XStep}/{@code YStep} 是相邻单元之间的距离，可以大于单元的 {@code Width}/{@code Height}。
-     *         因此平铺位图必须取步进尺寸，单元内容只画在左上角；否则会把单元按单元尺寸密铺，
-     *         表现为“水印密度成倍偏大、字号偏大”。</li>
-     *     <li><b>锚点语义</b>：锚点矩形必须与纹理像素一一对应（宽高取纹理像素数，原点取 CTM 平移），
-     *         使纹理在用户空间（当前图元所在的毫米坐标系）中按 1 纹理像素 = 1 用户单位平铺。
-     *         若把 CTM 的旋转也塞进锚点再包围盒化，会出现旋转外接矩形（45° 时约 1.41 倍）导致的步进失真。</li>
-     * </ul>
+     * 这里先在用户空间生成覆盖图元包围盒的纹理：按 Pattern 坐标系铺满单元，再整体施加 CTM，
+     * 最后用一个与纹理像素一一对应的锚点矩形交给 TexturePaint。图元只会落在包围盒内，
+     * 纹理周期在包围盒内不会重复，因此平铺结果与 OFD 语义一致。
      *
      * @param pattern 底纹对象
+     * @param shape   使用该底纹填充的图元路径，单位：毫米（mm）
      * @return 已解析着色源；单元为空、尺寸非法或渲染失败时返回 null（调用方应跳过填充并告警）
      */
-    private ResolvedPaint resolvePatternPaint(CT_Pattern pattern) {
-        if (pattern == null || pattern.getCellContent() == null) {
+    private ResolvedPaint resolvePatternPaint(CT_Pattern pattern, Path2D shape) {
+        if (pattern == null || pattern.getCellContent() == null || shape == null) {
             return null;
         }
         final Double widthObj = pattern.getWidth();
@@ -1674,7 +1731,7 @@ public abstract class AWTMaker {
         final double xStep = legalStep(pattern.getXStep(), width);
         final double yStep = legalStep(pattern.getYStep(), height);
 
-        // 1. 在「单元尺寸」坐标系下渲染单元内容
+        // 1. 渲染单元内容（Pattern 自身坐标系，原点位于单元左上角）
         final int cellPxWidth = Math.max(1, (int) Math.ceil(ppm * width));
         final int cellPxHeight = Math.max(1, (int) Math.ceil(ppm * height));
         final BufferedImage cellImage = new BufferedImage(cellPxWidth, cellPxHeight, BufferedImage.TYPE_INT_ARGB);
@@ -1682,7 +1739,6 @@ public abstract class AWTMaker {
         try {
             cellGraphics.setComposite(AlphaComposite.SrcOver);
             cellGraphics.scale(cellPxWidth / width, cellPxHeight / height);
-            // 单元内容以 Pattern 自身的毫米坐标系绘制（原点位于单元左上角）
             try (Graphics2DRenderer cellRenderer = new Graphics2DRenderer(cellGraphics)) {
                 cellRenderer.beginPage(cellPxWidth, cellPxHeight);
                 writeContent(cellRenderer, pattern.getCellContent(),
@@ -1696,7 +1752,7 @@ public abstract class AWTMaker {
             cellGraphics.dispose();
         }
 
-        // 2. 把单元内容贴到「步进尺寸」的平铺位图左上角，形成带间隙的平铺块
+        // 2. 把单元贴到「步进尺寸」的平铺块左上角，保留单元之间的间隙
         final int tilePxWidth = Math.max(cellPxWidth, (int) Math.ceil(ppm * xStep));
         final int tilePxHeight = Math.max(cellPxHeight, (int) Math.ceil(ppm * yStep));
         final BufferedImage tileImage = new BufferedImage(tilePxWidth, tilePxHeight, BufferedImage.TYPE_INT_ARGB);
@@ -1709,147 +1765,77 @@ public abstract class AWTMaker {
             cellImage.flush();
         }
 
-        // 3. 把 CTM 的线性部分（旋转/斜切/缩放）烘焙进纹理位图
+        // 3. 在用户空间生成覆盖图元包围盒的纹理
+        final java.awt.geom.Rectangle2D bounds = shape.getBounds2D();
+        if (bounds.isEmpty()) {
+            tileImage.flush();
+            return null;
+        }
+        // 外扩半个毫米，避免填充路径边缘因取整落在纹理之外
+        final double originX = bounds.getX() - 0.5;
+        final double originY = bounds.getY() - 0.5;
+        final double boundsWidth = bounds.getWidth() + 1.0;
+        final double boundsHeight = bounds.getHeight() + 1.0;
+        /*
+         * 纹理按 ppm 一比一生成；包围盒异常大时降低分辨率，避免单页占用过多内存。
+         * 降分辨率只影响纹理清晰度，不影响平铺位置与周期。
+         */
+        final long maxPixels = 16L * 1024 * 1024;
+        double renderScale = ppm;
+        if (boundsWidth * boundsHeight * renderScale * renderScale > maxPixels) {
+            renderScale = Math.sqrt(maxPixels / (boundsWidth * boundsHeight));
+        }
+        final int textureWidth = Math.max(1, (int) Math.ceil(boundsWidth * renderScale));
+        final int textureHeight = Math.max(1, (int) Math.ceil(boundsHeight * renderScale));
+        final BufferedImage textureImage = new BufferedImage(textureWidth, textureHeight, BufferedImage.TYPE_INT_ARGB);
         final java.awt.geom.AffineTransform ctm = new java.awt.geom.AffineTransform();
         final Double[] ctmValues = pattern.getCTM() == null ? null : pattern.getCTM().toDouble();
         if (ctmValues != null && ctmValues.length >= 6) {
             ctm.setTransform(ctmValues[0], ctmValues[1], ctmValues[2],
                     ctmValues[3], ctmValues[4], ctmValues[5]);
         }
-        final java.awt.geom.AffineTransform linear = new java.awt.geom.AffineTransform(
-                ctm.getScaleX(), ctm.getShearY(), ctm.getShearX(), ctm.getScaleY(), 0, 0);
-        /*
-         * 旋转后相邻单元在设备空间交错重叠，单层纹理平铺会在每个周期留下空白条带（实测覆盖率约 60%）。
-         * 这里把单元在纹理内按步进摆放多次，覆盖旋转后的整个包围盒，保证纹理自身无空白。
-         */
-        final java.awt.geom.Rectangle2D rotBounds = linear
-                .createTransformedShape(new java.awt.geom.Rectangle2D.Double(0, 0, tilePxWidth, tilePxHeight))
-                .getBounds2D();
-        final BufferedImage textureImage = buildRotatedTile(tileImage, linear,
-                tilePxWidth, tilePxHeight, xStep, yStep, rotBounds);
-        /*
-         * TexturePaint 的平铺周期（设备像素）= 锚点矩形宽高 × 用户空间缩放（实测：用户缩放 3.78 时
-         * 锚点 127 得到 481px 周期）。当前用户空间单位为毫米、缩放即 ppm，
-         * 因此锚点宽高直接取步进的毫米值（XStep/YStep），周期即为 XStep×ppm，与 OFD 语义一致。
-         * CTM 的旋转与缩放已烘焙进纹理位图，锚点不再重复承载，避免步进被二次缩放。
-         */
-        /*
-         * 锚点必须与纹理位图严格一一对应，否则纹理会被非等比拉伸、单元内的文字随之变形缩小。
-         * 纹理位图的像素尺寸就是 rotBounds（旋转后的平铺块包围盒）乘 ppm，
-         * 因此锚点必须取同一个 rotBounds 的毫米尺寸，使纹理 1px 恰好对应 1/ppm 毫米。
-         *
-         * 注意不能改用 xStep/yStep 作为锚点尺寸：CTM 含 45° 旋转时，
-         * 127.0×66.2 的步进旋转后包围盒是 136.6×136.6，二者宽高比分别为 1.918 与 1.0，
-         * 纹理会被横向压缩到约 1/1.9，表现为“水印密度成倍偏大、字号偏小”。
-         */
-        final java.awt.geom.Rectangle2D.Double anchorRect = new java.awt.geom.Rectangle2D.Double(
-                ctm.getTranslateX(), ctm.getTranslateY(),
-                rotBounds.getWidth(), rotBounds.getHeight());
-        return new ResolvedPaint(new CanvasPaint(new TexturePaint(textureImage, anchorRect)), 1f);
-    }
-
-    /**
-     * 计算覆盖旋转后包围盒所需的晶格整数组合上限。
-     * <p>
-     * 位移矢量 vx、vy 定义单元的平铺晶格，单元位置为 m·vx + n·vy。
-     * 纹理需覆盖 rotBounds 的宽高，故上限取「包围盒对角线长度 / 最短矢量长度」，
-     * 再加 1 保证边界处不留缺口。
-     *
-     * @param rotBounds 旋转后的包围盒，单位：毫米
-     * @param vx        沿单元宽度方向的位移矢量，单位：毫米
-     * @param vy        沿单元高度方向的位移矢量，单位：毫米
-     * @return 整数组合的取值范围（对称，即 [-n, n]）
-     */
-    private static int latticeSpan(java.awt.geom.Rectangle2D rotBounds, double[] vx, double[] vy) {
-        final double shortest = Math.min(Math.hypot(vx[0], vx[1]), Math.hypot(vy[0], vy[1]));
-        if (shortest < 1e-9) {
-            return 4;
-        }
-        final double diagonal = Math.hypot(rotBounds.getWidth(), rotBounds.getHeight());
-        return (int) Math.ceil(diagonal / shortest) + 1;
-    }
-
-    /**
-     * 构造经过旋转的平铺纹理，并在纹理内重复摆放单元，保证纹理自身无空白区域。
-     *
-     * @param tileImage    已填充单元内容的平铺块位图，单位：像素
-     * @param linear       Pattern CTM 的线性部分（不含平移）
-     * @param tilePxWidth  平铺块宽度，单位：像素
-     * @param tilePxHeight 平铺块高度，单位：像素
-     * @param xStep        水平步进，单位：毫米（mm）
-     * @param yStep        垂直步进，单位：毫米（mm）
-     * @param rotBounds    旋转后的包围盒，单位：毫米（mm）
-     * @return 旋转后的纹理位图
-     */
-    private BufferedImage buildRotatedTile(BufferedImage tileImage, java.awt.geom.AffineTransform linear,
-                                           int tilePxWidth, int tilePxHeight, double xStep, double yStep,
-                                           java.awt.geom.Rectangle2D rotBounds) {
-        final int outWidth = Math.max(1, (int) Math.ceil(rotBounds.getWidth() * ppm));
-        final int outHeight = Math.max(1, (int) Math.ceil(rotBounds.getHeight() * ppm));
-        final BufferedImage out = new BufferedImage(outWidth, outHeight, BufferedImage.TYPE_INT_ARGB);
-        final Graphics2D g = out.createGraphics();
+        final Graphics2D textureGraphics = textureImage.createGraphics();
         try {
-            g.setComposite(AlphaComposite.SrcOver);
-            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+            textureGraphics.setComposite(AlphaComposite.SrcOver);
+            textureGraphics.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
                     java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            // 纹理像素 → 用户空间毫米 → 设备像素
+            textureGraphics.scale(renderScale, renderScale);
+            textureGraphics.translate(-originX, -originY);
+            textureGraphics.transform(ctm);
             /*
-             * 单元在纹理内的摆放按「旋转后的晶格」进行：CTM 旋转后，相邻单元的两个位移矢量是
-             * linear 分别作用于 (xStep,0) 与 (0,yStep) 的结果，二者仍正交但整体转了一个角度。
-             * 若改用未旋转的步进（xStep/yStep）决定行列数，行列间距与旋转后的实际晶格不一致，
-             * 纹理内部就会出现空白或加倍重叠，平铺后表现为水印密度与参考不一致。
-             *
-             * 这里直接枚举晶格的整数组合 m·vx + n·vy，范围取到足以覆盖整个包围盒。
+             * 求图元包围盒在 Pattern 坐标系中的范围，据此决定需要铺设的单元索引。
+             * 旋转 45° 时包围盒对应一个斜放的矩形，索引范围按逆变换后的包围盒取。
              */
-            final double[] vx = {linear.getScaleX() * xStep, linear.getShearY() * xStep};
-            final double[] vy = {linear.getShearX() * yStep, linear.getScaleY() * yStep};
-            final int span = latticeSpan(rotBounds, vx, vy);
-            for (int m = -span; m <= span; m++) {
-                for (int n = -span; n <= span; n++) {
-                    final java.awt.geom.AffineTransform at = new java.awt.geom.AffineTransform(linear);
-                    at.translate(m * tilePxWidth, n * tilePxHeight);
-                    g.drawImage(tileImage, at, null);
+            final java.awt.geom.AffineTransform inverse = ctm.createInverse();
+            final java.awt.geom.Rectangle2D patternBounds =
+                    inverse.createTransformedShape(bounds).getBounds2D();
+            final int fromX = (int) Math.floor(patternBounds.getMinX() / xStep) - 1;
+            final int toX = (int) Math.ceil(patternBounds.getMaxX() / xStep) + 1;
+            final int fromY = (int) Math.floor(patternBounds.getMinY() / yStep) - 1;
+            final int toY = (int) Math.ceil(patternBounds.getMaxY() / yStep) + 1;
+            for (int i = fromX; i <= toX; i++) {
+                for (int j = fromY; j <= toY; j++) {
+                    final java.awt.geom.AffineTransform at = new java.awt.geom.AffineTransform(
+                            1d / renderScale, 0, 0, 1d / renderScale, i * xStep, j * yStep);
+                    textureGraphics.drawImage(tileImage, at, null);
                 }
             }
+        } catch (NoninvertibleTransformException e) {
+            logger.warn("底纹 CTM 不可逆，已跳过该底纹填充：{}", pattern.getCTM());
+            textureImage.flush();
+            return null;
         } finally {
-            g.dispose();
+            textureGraphics.dispose();
             tileImage.flush();
         }
-        return out;
-    }
-
-    /**
-     * 按给定线性变换重绘位图。
-     * <p>
-     * 用于把底纹平铺单元的 CTM 旋转预先烘焙进位图，使 {@link java.awt.TexturePaint} 的轴对齐锚点
-     * 只需承载平移。输出尺寸取变换后矩形在像素坐标下的包围盒，变换结果左上角对齐到新位图原点。
-     *
-     * @param source    源位图
-     * @param transform 线性变换（不含平移）
-     * @return 变换后的新位图；变换退化时返回源位图本身
-     */
-    private static BufferedImage transformImage(BufferedImage source, java.awt.geom.AffineTransform transform) {
-        final java.awt.geom.Rectangle2D.Double srcRect =
-                new java.awt.geom.Rectangle2D.Double(0, 0, source.getWidth(), source.getHeight());
-        final java.awt.geom.Rectangle2D bounds = transform.createTransformedShape(srcRect).getBounds2D();
-        if (bounds.getWidth() < 0.5 || bounds.getHeight() < 0.5) {
-            return source;
-        }
-        final int outWidth = Math.max(1, (int) Math.ceil(bounds.getWidth()));
-        final int outHeight = Math.max(1, (int) Math.ceil(bounds.getHeight()));
-        final BufferedImage result = new BufferedImage(outWidth, outHeight, BufferedImage.TYPE_INT_ARGB);
-        final Graphics2D g = result.createGraphics();
-        try {
-            g.setComposite(AlphaComposite.Src);
-            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
-                    java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g.translate(-bounds.getX(), -bounds.getY());
-            g.transform(transform);
-            g.drawImage(source, 0, 0, null);
-        } finally {
-            g.dispose();
-            source.flush();
-        }
-        return result;
+        /*
+         * 锚点尺寸与纹理像素一一对应（1 纹理像素 = 1/renderScale 毫米），
+         * 使 TexturePaint 在当前用户空间（毫米，再乘 ppm）中不做额外缩放。
+         */
+        final java.awt.geom.Rectangle2D.Double anchorRect = new java.awt.geom.Rectangle2D.Double(
+                originX, originY, textureWidth / renderScale, textureHeight / renderScale);
+        return new ResolvedPaint(new CanvasPaint(new TexturePaint(textureImage, anchorRect)), 1f);
     }
 
     /**
@@ -1875,6 +1861,278 @@ public abstract class AWTMaker {
      */
     private ResolvedPaint resolvePaint(Color color, float opacity) {
         return new ResolvedPaint(CanvasPaint.of(color), opacity);
+    }
+
+    /**
+     * 把填充颜色解析为着色源。
+     * <p>
+     * 径向/轴向渐变按颜色族构造；纯色回落到 FillColor 的通道值。
+     * 渐变坐标定义在图元对象的毫米坐标系中（相对 Boundary 左上角），
+     * 因此先换算到页面像素，再反变换到路径用户空间，交由渲染器当前变换统一映射。
+     *
+     * @param color    图元的填充颜色定义，可为 null
+     * @param boundary 图元包围框，单位：毫米；null 表示无包围框
+     * @param matrix   路径对象坐标到页面像素的变换
+     * @param ppm      每毫米像素数量，单位：像素/毫米
+     * @return 已解析着色源；颜色为空或无法解析时返回 null
+     */
+    private ResolvedPaint resolveFillPaint(CT_Color color, ST_Box boundary, Matrix matrix, double ppm) {
+        if (color == null) {
+            return null;
+        }
+        final ColorClusterType cluster;
+        try {
+            cluster = color.getColorByType();
+        } catch (RuntimeException e) {
+            logger.warn("填充颜色族解析失败，按无填充处理：{}", e.getMessage());
+            return null;
+        }
+        if (cluster instanceof CT_RadialShd) {
+            return resolveRadialPaint((CT_RadialShd) cluster, boundary, matrix, ppm);
+        }
+        if (cluster instanceof CT_AxialShd) {
+            return resolveAxialPaint((CT_AxialShd) cluster, boundary, matrix, ppm);
+        }
+        final Color solid = getColor(color);
+        return solid == null ? null : resolvePaint(solid, 1f);
+    }
+
+    /**
+     * 判断填充颜色是否为渐变（径向/轴向）。
+     *
+     * @param color 图元的填充颜色定义，可为 null
+     * @return true 表示渐变填充
+     */
+    private static boolean isShadingFill(CT_Color color) {
+        if (color == null) {
+            return false;
+        }
+        try {
+            final ColorClusterType cluster = color.getColorByType();
+            return cluster instanceof CT_RadialShd || cluster instanceof CT_AxialShd;
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    /**
+     * 把径向渐变转换为画布着色源。
+     *
+     * @param radial   OFD 径向渐变
+     * @param boundary 图元包围框，单位：毫米
+     * @param matrix   路径对象坐标到页面像素的变换
+     * @param ppm      每毫米像素数量，单位：像素/毫米
+     * @return 已解析着色源；渐变数据非法时返回 null
+     */
+    private ResolvedPaint resolveRadialPaint(CT_RadialShd radial, ST_Box boundary, Matrix matrix, double ppm) {
+        try {
+            final ST_Pos start = radial.getStartPoint();
+            final ST_Pos end = radial.getEndPoint();
+            final double endRadius = radial.getEndRadius();
+            if (start == null || end == null || endRadius <= 0) {
+                logger.warn("径向渐变缺少起止点或结束半径非法，已跳过该填充");
+                return null;
+            }
+            GradientStops stops = resolveGradientStops(radial.getSegments(), "径向渐变");
+            if (stops == null) {
+                return null;
+            }
+            final AffineTransform deviceToUser;
+            try {
+                deviceToUser = MatrixUtils.createAffineTransform(matrix).createInverse();
+            } catch (NoninvertibleTransformException e) {
+                logger.warn("径向渐变的坐标变换不可逆，已跳过该填充");
+                return null;
+            }
+            final double startRadius = radial.getStartRadius() == null ? 0 : radial.getStartRadius();
+            final double eccentricity = radial.getEccentricity() == null ? 0 : radial.getEccentricity();
+            final double angle = radial.getAngle() == null ? 0 : radial.getAngle();
+            if (eccentricity != 0 || angle != 0) {
+                logger.debug("径向渐变带离心率/倾角（{} / {}°），画布按正圆近似", eccentricity, angle);
+            }
+            float[] fractions = stops.fractions;
+            Color[] colors = stops.colors;
+            if (startRadius > 0 && startRadius < endRadius) {
+                // Java2D 不支持内半径：在 0 处补一个首色，并把原色标映射到 [startRadius/endRadius, 1]
+                final double inner = startRadius / endRadius;
+                final float[] adjusted = new float[fractions.length + 1];
+                final Color[] adjustedColors = new Color[colors.length + 1];
+                adjusted[0] = 0;
+                adjustedColors[0] = colors[0];
+                for (int i = 0; i < fractions.length; i++) {
+                    adjusted[i + 1] = (float) (inner + fractions[i] * (1 - inner));
+                    adjustedColors[i + 1] = colors[i];
+                }
+                fractions = adjusted;
+                colors = adjustedColors;
+            }
+            final Point2D center = shadingPointToUser(end.getX(), end.getY(), boundary, deviceToUser, ppm);
+            final float radius = (float) shadingRadiusToUser(endRadius, ppm, deviceToUser);
+            RadialGradientPaint paint;
+            if (start.getX() == end.getX() && start.getY() == end.getY()) {
+                paint = new RadialGradientPaint(center, radius, fractions, colors,
+                        MultipleGradientPaint.CycleMethod.NO_CYCLE);
+            } else {
+                final Point2D focus = shadingPointToUser(start.getX(), start.getY(), boundary, deviceToUser, ppm);
+                try {
+                    paint = new RadialGradientPaint(center, radius, focus, fractions, colors,
+                            MultipleGradientPaint.CycleMethod.NO_CYCLE);
+                } catch (IllegalArgumentException e) {
+                    // 焦点落在结束圆外时 Java2D 拒绝构造，按同心圆近似，避免整块填充丢失
+                    logger.debug("径向渐变焦点超出结束半径，按同心圆近似");
+                    paint = new RadialGradientPaint(center, radius, fractions, colors,
+                            MultipleGradientPaint.CycleMethod.NO_CYCLE);
+                }
+            }
+            return new ResolvedPaint(new CanvasPaint(paint), 1f);
+        } catch (RuntimeException e) {
+            logger.warn("径向渐变构造失败，已跳过该填充：{}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 把轴向渐变转换为画布着色源。
+     *
+     * @param axial    OFD 轴向渐变
+     * @param boundary 图元包围框，单位：毫米
+     * @param matrix   路径对象坐标到页面像素的变换
+     * @param ppm      每毫米像素数量，单位：像素/毫米
+     * @return 已解析着色源；渐变数据非法时返回 null
+     */
+    private ResolvedPaint resolveAxialPaint(CT_AxialShd axial, ST_Box boundary, Matrix matrix, double ppm) {
+        try {
+            final ST_Pos start = axial.getStartPoint();
+            final ST_Pos end = axial.getEndPoint();
+            if (start == null || end == null) {
+                logger.warn("轴向渐变缺少起点或终点，已跳过该填充");
+                return null;
+            }
+            if (start.getX() == end.getX() && start.getY() == end.getY()) {
+                logger.warn("轴向渐变起止点重合，已跳过该填充");
+                return null;
+            }
+            GradientStops stops = resolveGradientStops(axial.getSegments(), "轴向渐变");
+            if (stops == null) {
+                return null;
+            }
+            final AffineTransform deviceToUser;
+            try {
+                deviceToUser = MatrixUtils.createAffineTransform(matrix).createInverse();
+            } catch (NoninvertibleTransformException e) {
+                logger.warn("轴向渐变的坐标变换不可逆，已跳过该填充");
+                return null;
+            }
+            final LinearGradientPaint paint = new LinearGradientPaint(
+                    shadingPointToUser(start.getX(), start.getY(), boundary, deviceToUser, ppm),
+                    shadingPointToUser(end.getX(), end.getY(), boundary, deviceToUser, ppm),
+                    stops.fractions, stops.colors, MultipleGradientPaint.CycleMethod.NO_CYCLE);
+            return new ResolvedPaint(new CanvasPaint(paint), 1f);
+        } catch (RuntimeException e) {
+            logger.warn("轴向渐变构造失败，已跳过该填充：{}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 把渐变坐标从图元对象的毫米坐标系换算到路径用户空间。
+     *
+     * @param x            渐变点 X 坐标，单位：毫米（相对 Boundary 左上角）
+     * @param y            渐变点 Y 坐标，单位：毫米（相对 Boundary 左上角）
+     * @param boundary     图元包围框，单位：毫米；null 表示页面原点
+     * @param deviceToUser 页面像素到路径用户空间的变换
+     * @param ppm          每毫米像素数量，单位：像素/毫米
+     * @return 路径用户空间中的点
+     */
+    private static Point2D shadingPointToUser(double x, double y, ST_Box boundary,
+                                             AffineTransform deviceToUser, double ppm) {
+        final double originX = boundary == null ? 0 : boundary.getTopLeftX();
+        final double originY = boundary == null ? 0 : boundary.getTopLeftY();
+        return deviceToUser.transform(new Point2D.Double((originX + x) * ppm, (originY + y) * ppm), null);
+    }
+
+    /**
+     * 把渐变半径从毫米换算到路径用户空间。
+     *
+     * @param radius       半径，单位：毫米
+     * @param ppm          每毫米像素数量，单位：像素/毫米
+     * @param deviceToUser 页面像素到路径用户空间的变换
+     * @return 路径用户空间中的半径
+     */
+    private static double shadingRadiusToUser(double radius, double ppm,
+                                              AffineTransform deviceToUser) {
+        final double deviceToUserScale = Math.sqrt(Math.abs(deviceToUser.getDeterminant()));
+        return radius * ppm * deviceToUserScale;
+    }
+
+    /**
+     * 提取渐变颜色段，并规范化为 Java2D 要求的递增色标。
+     *
+     * @param segments 颜色段列表
+     * @param usage    用途文案，仅用于告警
+     * @return 颜色与色标；段数不足或颜色非法时返回 null
+     */
+    private GradientStops resolveGradientStops(List<Segment> segments, String usage) {
+        if (segments == null || segments.size() < 2) {
+            logger.warn("{} 的颜色段少于 2 个，已跳过该填充", usage);
+            return null;
+        }
+        final int count = segments.size();
+        final Color[] colors = new Color[count];
+        final float[] fractions = new float[count];
+        for (int i = 0; i < count; i++) {
+            final Segment segment = segments.get(i);
+            if (segment == null || segment.getColor() == null) {
+                logger.warn("{} 的第 {} 个颜色段缺少颜色，已跳过该填充", usage, i + 1);
+                return null;
+            }
+            final Color color = getColor(segment.getColor());
+            if (color == null) {
+                logger.warn("{} 的第 {} 个颜色段颜色无法解析，已跳过该填充", usage, i + 1);
+                return null;
+            }
+            colors[i] = color;
+            final Double position = segment.getPosition();
+            fractions[i] = position == null
+                    ? (i == 0 ? 0f : i == count - 1 ? 1f : (float) i / (count - 1))
+                    : position.floatValue();
+        }
+        fractions[0] = 0;
+        for (int i = 1; i < count; i++) {
+            final float max = (float) (1 - (count - 1 - i) * 1e-6);
+            float value = fractions[i];
+            if (Float.isNaN(value) || value <= fractions[i - 1]) {
+                value = fractions[i - 1] + 1e-6f;
+            }
+            fractions[i] = Math.min(max, value);
+        }
+        fractions[count - 1] = 1;
+        return new GradientStops(colors, fractions);
+    }
+
+    /**
+     * 渐变颜色与色标
+     */
+    private static final class GradientStops {
+
+        /**
+         * 颜色数组
+         */
+        private final Color[] colors;
+
+        /**
+         * 色标数组，取值 0..1，严格递增
+         */
+        private final float[] fractions;
+
+        /**
+         * @param colors    颜色数组
+         * @param fractions 色标数组
+         */
+        private GradientStops(Color[] colors, float[] fractions) {
+            this.colors = colors;
+            this.fractions = fractions;
+        }
     }
 
     /**

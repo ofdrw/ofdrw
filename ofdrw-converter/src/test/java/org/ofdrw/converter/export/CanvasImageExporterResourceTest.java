@@ -27,6 +27,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class CanvasImageExporterResourceTest {
 
+    static {
+        // 渲染测试依赖 BufferedImage/Graphics2D，固定 headless 模式，避免无 X11 环境时 AWT 初始化失败
+        System.setProperty("java.awt.headless", "true");
+    }
+
     /**
      * 资源目录实际为 DOC_0（大写），文档中引用为 Doc_0/Res/...，用于验证大小写兜底
      */
@@ -36,6 +41,11 @@ class CanvasImageExporterResourceTest {
      * 水印注释外观使用 Pattern（底纹）填充的文档
      */
     private static final Path PATTERN_OFD = Paths.get("src/test/resources/pattern类型.ofd");
+
+    /**
+     * 资源声明的通用存储路径 Res_0 在压缩包内不存在，实际图片位于 Res 目录
+     */
+    private static final Path BAD_BASE_LOC_IMAGE_OFD = Paths.get("src/test/resources/testImageNotFound.ofd");
 
     @TempDir
     Path tempDir;
@@ -48,6 +58,19 @@ class CanvasImageExporterResourceTest {
             final BufferedImage image = resMgt.getImage("4");
             assertNotNull(image, "资源目录大小写不一致时图片仍应能加载");
             assertTrue(image.getWidth() > 0 && image.getHeight() > 0, "图片尺寸应有效");
+        }
+    }
+
+    /**
+     * 资源通用存储路径（BaseLoc）与实际目录不一致时，应按文件名回退找到图片，
+     * 不能因路径不存在把图片静默跳过。
+     */
+    @Test
+    void shouldLoadImageWhenBaseLocDirectoryIsMissing() throws IOException {
+        try (OFDReader reader = new OFDReader(BAD_BASE_LOC_IMAGE_OFD)) {
+            final BufferedImage image = reader.getResMgt().getImage("135");
+            assertNotNull(image, "BaseLoc=Res_0 不存在时应回退到实际目录 Res 下的 image_135.PNG");
+            assertTrue(image.getWidth() > 0 && image.getHeight() > 0, "回退加载的图片尺寸应有效");
         }
     }
 

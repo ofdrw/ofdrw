@@ -295,6 +295,12 @@ public class Graphics2DRenderer implements Renderer {
             graphics = output.createGraphics();
         }
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        /*
+         * 关闭 Java2D 对“接近水平/垂直”的描边做像素网格归整：
+         * 归整会把 1.334px 的线宽压成整数像素覆盖，描边边缘的灰度与 PDF 渲染器不一致。
+         * 保留亚像素定位后，线上各像素的覆盖率与矢量原始几何一致。
+         */
+        graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
     }
 
     /**
@@ -714,8 +720,13 @@ public class Graphics2DRenderer implements Renderer {
                     smoothing ? RenderingHints.VALUE_INTERPOLATION_BILINEAR : RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             /*
              * 图层与页面同尺寸，但没有页面的视图变换（例如调用方在画布上设置的旋转或平移），
-             * 因此先把视图变换带过来，否则混合结果会偏离页面坐标。裁剪单独按设备空间还原。
+             * 因此先把视图变换带过来，否则混合结果会偏离页面坐标。
+             * 裁剪区域保存在设备空间：先在恒等变换下设置，再恢复视图变换，避免被二次缩放。
              */
+            layerGraphics.setTransform(new AffineTransform());
+            if (currentClip != null) {
+                layerGraphics.setClip(currentClip);
+            }
             layerGraphics.setTransform(graphics.getTransform());
             layerGraphics.drawImage(image.getImage(), transform, null);
         } finally {
