@@ -9,11 +9,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 
+/**
+ * SESV5 电子签章验签测试。
+ * <p>
+ * 被测文件固定为测试资源 {@code src/test/resources/SESV5SignDoc.ofd}，
+ * 不依赖其他测试类在 target 目录下生成的临时产物，可单独执行。
+ */
 class SESV5ValidateContainerTest {
 
     @Test
     void validate() throws IOException, GeneralSecurityException {
-        Path src = Paths.get("target/SESV5SignDoc.ofd");
+        Path src = Paths.get("src/test/resources", "SESV5SignDoc.ofd");
 
         try (OFDReader reader = new OFDReader(src);
              OFDValidator validator = new OFDValidator(reader)) {
