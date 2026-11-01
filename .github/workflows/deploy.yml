@@ -29,8 +29,11 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: GPG_PASSPHRASE
 
-      # 发布前的质量门禁：编译、测试、文档、打包、签名依次执行，
-      # 任一环节失败即中断，不会进入发布步骤
+      # 发布前的质量门禁：编译、测试、打包、签名依次执行，
+      # 任一环节失败即中断，不会进入发布步骤。
+      # 多模块工程在 package/verify/deploy 阶段必须带 -am：兄弟模块（如 ofdrw-gv）
+      # 需先安装到本地仓库，否则会去 Central 解析尚未发布的同版本构件而失败。
+      # Javadoc 由 javadoc:jar（attach-javadocs）在 package 中生成，无需单独调用
       - name: Compile
         run: mvn -B clean compile -Dgpg.skip=true --no-transfer-progress
 
@@ -39,20 +42,17 @@ jobs:
         env:
           MAVEN_OPTS: -Djava.awt.headless=true
 
-      - name: Javadoc
-        run: mvn -B javadoc:javadoc -Ddoclint=none --no-transfer-progress
-
       - name: Package
-        run: mvn -B package -DskipTests -Dgpg.skip=true --no-transfer-progress
+        run: mvn -B package -DskipTests -Dgpg.skip=true -am --no-transfer-progress
 
       # 独立校验签名可用性，确保 GPG 私钥与口令正确后再发布
       - name: Verify GPG signing
-        run: mvn -B verify -DskipTests -Dgpg.skip=false --no-transfer-progress
+        run: mvn -B verify -DskipTests -Dgpg.skip=false -am --no-transfer-progress
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Publish to Apache Maven Central
-        run: mvn -B deploy -DskipTests -Dgpg.skip=false --no-transfer-progress
+        run: mvn -B deploy -DskipTests -Dgpg.skip=false -am --no-transfer-progress
         env:
           SERVER_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           SERVER_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
