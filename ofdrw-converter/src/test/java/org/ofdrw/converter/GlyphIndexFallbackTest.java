@@ -216,13 +216,15 @@ class GlyphIndexFallbackTest {
     }
 
     /**
-     * 获取本机存在的等宽字体路径，用于构造“系统字体匹配成功”的场景
+     * 获取用于构造“系统字体匹配成功”场景的字体路径
+     * <p>
+     * 使用本仓库内的测试字体，不依赖运行环境中安装了哪些字体。
      *
      * @return 字体绝对路径
      */
     private static String systemMonoFontPath() {
-        Path font = Paths.get("/usr/share/fonts/truetype/ubuntu/UbuntuMono[wght].ttf");
-        assertTrue(java.nio.file.Files.exists(font), "测试依赖本机 UbuntuMono 字体: " + font);
-        return font.toAbsolutePath().toString();
+        Path font = Paths.get("src", "test", "resources", "font_10.ttf").toAbsolutePath();
+        assertTrue(java.nio.file.Files.exists(font), "测试字体文件不存在：" + font);
+        return font.toString();
     }
 }

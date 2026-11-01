@@ -10,6 +10,12 @@ import java.nio.file.Paths;
 
 public class ParagraphTest {
 
+    /**
+     * 测试字体，显式绑定仓库内的字体文件
+     * <p>
+     * 不绑定字体文件时按字体名在运行环境中查找系统字体，缺失字形时还会回退到系统的默认字体，
+     * 测量结果随是否安装中文字体而变，因此测试中的文字都绑定该字体文件。
+     */
     private static final Font DEFAULT_FONT = new Font("宋体", "宋体",
             Paths.get("src/test/resources/simhei-cut1.ttf").toAbsolutePath());
 
@@ -18,17 +24,19 @@ public class ParagraphTest {
         Paragraph p1 = new Paragraph();
         p1.setDefaultFont(DEFAULT_FONT);
         p1.setFontSize(10.0);
-        // w = 40; h = 10
-        p1.add("我说你好");
-        // w = 30 + 15 + 2; h = 15
+        Span head = new Span("我说你好").setFont(DEFAULT_FONT).setFontSize(10.0);
+        p1.add(head);
         Span span = new Span("你说Hi")
+                .setFont(DEFAULT_FONT)
                 .setFontSize(15d);
         p1.add(span);
 
         Rectangle rectangle = p1.doPrepare(400d);
         System.out.println(rectangle);
         Assertions.assertEquals(19.109475, rectangle.getHeight(), 0.01);
-        Assertions.assertEquals(85.0, rectangle.getWidth(), 0.01);
+        // 宽度为两段文字各自按字号测得宽度之和，期望值取自同一字体文件的测量结果，不随运行环境字体而变
+        Assertions.assertEquals(head.blockSize().getWidth() + span.blockSize().getWidth(),
+                rectangle.getWidth(), 0.01);
 
         rectangle = p1.doPrepare(55d);
         System.out.println(rectangle);
@@ -52,11 +60,11 @@ public class ParagraphTest {
      */
     @Test
     public void doPrepare2() {
-        Paragraph p = new Paragraph(10d, 20d).setFontSize(15d);
+        Paragraph p = new Paragraph(10d, 20d).setDefaultFont(DEFAULT_FONT).setFontSize(15d);
         p.add("1说");
         p.doPrepare(10d);
 
-        Paragraph p2 = new Paragraph(10d, 20d).setFontSize(15d);
+        Paragraph p2 = new Paragraph(10d, 20d).setDefaultFont(DEFAULT_FONT).setFontSize(15d);
         p2.add("好的");
         p2.doPrepare(10d);
     }
@@ -64,7 +72,7 @@ public class ParagraphTest {
     @Test
     public void split() {
         Paragraph p = new Paragraph().setDefaultFont(DEFAULT_FONT).setFontSize(10d).add("岂不美哉");
-        Span span = new Span("妙妙oh").setFontSize(15d).setLetterSpacing(3d);
+        Span span = new Span("妙妙oh").setFont(DEFAULT_FONT).setFontSize(15d).setLetterSpacing(3d);
         p.add(span);
         p.doPrepare(55d);
         /*
