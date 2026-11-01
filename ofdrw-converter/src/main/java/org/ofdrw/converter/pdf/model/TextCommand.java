@@ -46,6 +46,11 @@ public final class TextCommand extends AbstractCommand {
     private final PdfColor color;
 
     /**
+     * 加粗描边线宽，单位 pt；0 表示不描边（非加粗）
+     */
+    private final double strokeWidthPt;
+
+    /**
      * 构造文字指令（页面坐标作用域）
      *
      * @param fontRef      字体引用，不能为空
@@ -55,7 +60,22 @@ public final class TextCommand extends AbstractCommand {
      * @param color        文字颜色，不能为空
      */
     public TextCommand(String fontRef, double fontSizePt, AffineMatrix textMatrix, List<GlyphRun> glyphs, PdfColor color) {
-        this(CoordSpace.PAGE, fontRef, fontSizePt, textMatrix, glyphs, color);
+        this(CoordSpace.PAGE, fontRef, fontSizePt, textMatrix, glyphs, color, 0);
+    }
+
+    /**
+     * 构造文字指令（带加粗描边）
+     *
+     * @param fontRef       字体引用，不能为空
+     * @param fontSizePt    字号，单位 pt，必须大于 0
+     * @param textMatrix    文本矩阵，不能为空
+     * @param glyphs        字形序列，不能为空
+     * @param color         文字颜色，不能为空
+     * @param strokeWidthPt 加粗描边线宽，单位 pt；0 表示不描边
+     */
+    public TextCommand(String fontRef, double fontSizePt, AffineMatrix textMatrix, List<GlyphRun> glyphs,
+                       PdfColor color, double strokeWidthPt) {
+        this(CoordSpace.PAGE, fontRef, fontSizePt, textMatrix, glyphs, color, strokeWidthPt);
     }
 
     /**
@@ -70,6 +90,22 @@ public final class TextCommand extends AbstractCommand {
      */
     public TextCommand(CoordSpace coordSpace, String fontRef, double fontSizePt, AffineMatrix textMatrix,
                        List<GlyphRun> glyphs, PdfColor color) {
+        this(coordSpace, fontRef, fontSizePt, textMatrix, glyphs, color, 0);
+    }
+
+    /**
+     * 构造文字指令（带加粗描边）
+     *
+     * @param coordSpace    坐标作用域
+     * @param fontRef       字体引用，不能为空
+     * @param fontSizePt    字号，单位 pt，必须大于 0
+     * @param textMatrix    文本矩阵，不能为空
+     * @param glyphs        字形序列，不能为空
+     * @param color         文字颜色，不能为空
+     * @param strokeWidthPt 加粗描边线宽，单位 pt；0 表示不描边
+     */
+    public TextCommand(CoordSpace coordSpace, String fontRef, double fontSizePt, AffineMatrix textMatrix,
+                       List<GlyphRun> glyphs, PdfColor color, double strokeWidthPt) {
         super(coordSpace);
         if (fontRef == null || fontRef.isEmpty()) {
             throw new IllegalArgumentException("字体引用不能为空");
@@ -91,6 +127,7 @@ public final class TextCommand extends AbstractCommand {
         this.textMatrix = textMatrix;
         this.glyphs = Collections.unmodifiableList(new ArrayList<>(glyphs));
         this.color = color;
+        this.strokeWidthPt = strokeWidthPt > 0 ? strokeWidthPt : 0;
     }
 
     /**
@@ -126,6 +163,22 @@ public final class TextCommand extends AbstractCommand {
      */
     public PdfColor getColor() {
         return color;
+    }
+
+    /**
+     * 加粗描边线宽
+     *
+     * @return 描边线宽，单位 pt；0 表示不描边
+     */
+    public double getStrokeWidthPt() {
+        return strokeWidthPt;
+    }
+
+    /**
+     * @return 是否加粗（以描边模拟粗体）
+     */
+    public boolean isBold() {
+        return strokeWidthPt > 0;
     }
 
     /**

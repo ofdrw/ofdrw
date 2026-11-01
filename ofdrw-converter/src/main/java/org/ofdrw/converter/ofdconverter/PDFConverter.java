@@ -95,6 +95,22 @@ public class PDFConverter implements DocConverter {
      */
     private PdfFontRegistry fontRegistry;
 
+
+    /**
+     * 非内嵌字体查找目录：{@code null}（默认）表示不查系统字体，直接回退路径绘制
+     */
+    private Path fontDir;
+
+    /**
+     * 是否开启字体子集化（默认 {@code false}：PDF 内嵌字体原样嵌入）
+     */
+    private boolean subsetFont = false;
+
+    /**
+     * 字体程序摘要 → OFD 字体资源 ID（同一字体程序的多个 PDFont 对象复用同一资源）
+     */
+    private final Map<String, ST_ID> fontIdCache = new java.util.concurrent.ConcurrentHashMap<>();
+
     /**
      * 创建PDF转换OFD转换器
      *
@@ -157,9 +173,23 @@ public class PDFConverter implements DocConverter {
                 }
             }
 
+            // 字体注册表必须在渲染前创建，以便把子集化开关（GID 重排）传给文字对象化转换器
+            if (fontRegistry == null) {
+                fontRegistry = new PdfFontRegistry(ofdDoc);
+                if (fontDir != null) {
+                    fontRegistry.setFontDir(fontDir);
+                }
+                if (subsetFont) {
+                    fontRegistry.setSubsetFont(true);
+                }
+            }
             // 文字对象化：在 PDFBox 字形级入口拦截，输出 OFD 文字对象并内嵌字体
             OfdTextObjectConverter textConverter = new OfdTextObjectConverter(pdfDoc, ofdDoc,
-                    this::registerFont, this::flushFonts);
+                    this::registerFont, this::flushFonts, this::resolveGid, this::registerGlyphUsage,
+                    // 子集化时 GID 会重排，需要登记 CGTransform 节点以便打包前改写（默认 null，不登记）
+                    fontRegistry != null && fontRegistry.isSubsetMode(),
+                    // 注释/底纹单元允许系统字体兜底（仅在配置 fontDir 时生效；正文仍走严格策略）
+                    fontRegistry == null ? null : fontRegistry::registerAnnotationFont);
 
             RenderingHints r = new RenderingHints(null);
             r.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
@@ -223,11 +253,99 @@ public class PDFConverter implements DocConverter {
     private ST_ID registerFont(PDFont font) {
         if (fontRegistry == null) {
             fontRegistry = new PdfFontRegistry(ofdDoc);
+            // 字体注册表统一在渲染前创建（见 convert()），这里只兜底
         }
         try {
-            return fontRegistry.registerFont(font);
+            /* 文字对象化时 PDFBox 的 PageDrawer 会为同一字体程序创建多个 PDFont 对象，
+             * 而字体登记按“字体程序 SHA-256”去重；这里按字体程序哈希缓存资源 ID，
+             * 命中缓存直接返回，避免每个字形都重新读取、解析字体程序。 */
+            String fontKey = fontProgramKey(font);
+            ST_ID cached = fontKey == null ? null : fontIdCache.get(fontKey);
+            if (cached != null) {
+                return cached;
+            }
+            ST_ID id = fontRegistry.registerFont(font);
+            if (id != null && fontKey != null) {
+                fontIdCache.put(fontKey, id);
+            }
+            return id;
         } catch (RuntimeException e) {
             // 字体登记失败不阻断转换，该字体文字回退路径绘制
+            return null;
+        }
+    }
+
+    /**
+     * 把 PDF 原始 GID 换算为最终写入 OFD 字体文件的 GID（CGTransform 使用）
+     * <p>
+     * 默认（原样嵌入）为恒等；开启字体子集化后，子集字体的 GID 会重排，必须在 flush 之后用
+     * {@link PdfFontRegistry#subsetGid(PDFont, int)} 取新 GID，否则 CGTransform 指向旧字形。
+     *
+     * @param font   PDF 字体
+     * @param pdfGid PDF 原始 GID
+     * @return 最终 GID
+     */
+    private int resolveGid(PDFont font, int pdfGid) {
+        return fontRegistry == null ? pdfGid : fontRegistry.subsetGid(font, pdfGid);
+    }
+
+    /**
+     * 记录字形使用（PDF 原始 GID 与 Unicode），供字体子集化重建 cmap
+     * <p>
+     * 默认（原样嵌入）只做统计；开启子集化时作为子集与 cmap 重建的依据。
+     *
+     * @param font    PDF 字体
+     * @param code    PDF 字符编码
+     * @param gid     PDF 原始字形索引
+     * @param unicode 该字形对应的 Unicode 码位，未知时为 -1
+     */
+    private void registerGlyphUsage(PDFont font, int code, int gid, int unicode) {
+        if (fontRegistry == null) {
+            registerFont(font);
+        }
+        if (fontRegistry != null) {
+            fontRegistry.addUsedGlyph(font, code, gid, unicode);
+        }
+    }
+
+    /**
+     * 计算字体程序缓存键（字体程序的 SHA-256；无字体程序时返回 null）
+     * <p>
+     * 只读取字体程序的字节摘要，不做完整解析；结果用于把同一字体程序的多个 PDFont 对象
+     * 映射到同一个 OFD 字体资源。
+     *
+     * @param font PDF 字体
+     * @return 字体程序摘要（64 位十六进制），无字体程序或读取失败时返回 null
+     */
+    private String fontProgramKey(PDFont font) {
+        org.apache.pdfbox.pdmodel.font.PDFontLike owner = font instanceof org.apache.pdfbox.pdmodel.font.PDType0Font
+                ? ((org.apache.pdfbox.pdmodel.font.PDType0Font) font).getDescendantFont() : font;
+        if (owner == null || owner.getFontDescriptor() == null) {
+            return null;
+        }
+        org.apache.pdfbox.pdmodel.common.PDStream stream = owner.getFontDescriptor().getFontFile2();
+        if (stream == null) {
+            stream = owner.getFontDescriptor().getFontFile3();
+        }
+        if (stream == null) {
+            stream = owner.getFontDescriptor().getFontFile();
+        }
+        if (stream == null) {
+            return null;
+        }
+        try (org.apache.pdfbox.cos.COSInputStream in = stream.createInputStream()) {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) != -1) {
+                digest.update(buf, 0, n);
+            }
+            StringBuilder sb = new StringBuilder(64);
+            for (byte b : digest.digest()) {
+                sb.append(Character.forDigit((b >> 4) & 0xF, 16)).append(Character.forDigit(b & 0xF, 16));
+            }
+            return sb.toString();
+        } catch (IOException | java.security.NoSuchAlgorithmException | RuntimeException e) {
             return null;
         }
     }
@@ -241,6 +359,40 @@ public class PDFConverter implements DocConverter {
     private void flushFonts(OFDGraphicsDocument doc, Map<PDFont, ST_ID> fontIds) {
         if (fontRegistry != null) {
             fontRegistry.flush();
+        }
+    }
+
+    /**
+     * 设置非内嵌字体的查找目录（精确匹配，默认关闭）
+     * <p>
+     * 默认行为：只使用 PDF 自带的字体程序；没有内嵌程序时直接回退路径绘制。
+     * 显式设置目录后，PDF 未内嵌的字体按“字体名/字族名 + 字重 + 斜体”精确匹配该目录下的字体文件，
+     * 匹配成功后原样嵌入（UTF 字形与 PDF 编码的对应关系由 CGTransform 表达），匹配失败仍回退路径绘制。
+     * <p>
+     * 系统字体不属于“PDF 内嵌字体”，因此本方法只影响未内嵌字体，不改变内嵌字体的原样嵌入策略。
+     *
+     * @param fontDir 字体目录；{@code null} 表示关闭系统字体匹配（默认）
+     */
+    public void setFontDir(Path fontDir) {
+        this.fontDir = fontDir;
+        if (fontRegistry != null) {
+            fontRegistry.setFontDir(fontDir);
+        }
+    }
+
+    /**
+     * 设置是否开启字体子集化（默认关闭）
+     * <p>
+     * 开启后，字体写出时会按实际使用字形子集化并重建 cmap、裁剪冗余表；
+     * 与之配套的 CGTransform GID 会在 OFD 打包前按 old→new 映射统一改写，保证字形不错位。
+     * <b>默认关闭</b>：用户要求“PDF 内嵌字体直接作为 OFD 内嵌字体”，子集化仅作为体积优化选项。
+     *
+     * @param subsetFont true 开启子集化；false（默认）原样嵌入
+     */
+    public void setSubsetFont(boolean subsetFont) {
+        this.subsetFont = subsetFont;
+        if (fontRegistry != null) {
+            fontRegistry.setSubsetFont(subsetFont);
         }
     }
 

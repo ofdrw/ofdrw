@@ -126,6 +126,7 @@ final class FontSubsetTool {
 
         TrueTypeFont font = new TTFParser().parse(new RandomAccessReadBuffer(fontData));
         byte[] subsetData;
+        int maxGid;
         Map<Integer, Integer> oldToNew = new HashMap<>();
         try {
             TTFSubsetter subsetter = new TTFSubsetter(font);
@@ -137,7 +138,24 @@ final class FontSubsetTool {
             }
             // 关键 2：把 PDF 实际使用的 GID 一并加入（0 号 .notdef 由 GID 集合保证）
             gids.add(0);
-            subsetter.addGlyphIds(gids);
+            /*
+             * GID 必须落在字体字形范围内：PDF 的 CIDToGIDMap / 编码可能给出越界 GID（.notdef 的常见写法），
+             * 越界值交给 TTFSubsetter 会抛 IndexOutOfBounds；这里过滤掉并记录数量，由调用方决定是否告警。
+             */
+            maxGid = font.getNumberOfGlyphs();
+            java.util.Set<Integer> validGids = new TreeSet<>();
+            int dropped = 0;
+            for (Integer gid : gids) {
+                if (gid >= 0 && gid < maxGid) {
+                    validGids.add(gid);
+                } else {
+                    dropped++;
+                }
+            }
+            if (dropped > 0) {
+                logger.warn("子集化忽略 {} 个越界 GID（字体共 {} 个字形）", dropped, maxGid);
+            }
+            subsetter.addGlyphIds(validGids);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             subsetter.writeToStream(out);
             subsetData = out.toByteArray();
@@ -152,7 +170,7 @@ final class FontSubsetTool {
         byte[] pruned = pruneTables(subsetData);
         int numGlyphs = verify(pruned, gids.size());
         for (Integer gid : gids) {
-            if (!oldToNew.containsKey(gid)) {
+            if (gid < maxGid && !oldToNew.containsKey(gid)) {
                 throw new IOException("子集字形映射缺少 PDF 原始 GID " + gid + "（共 " + gids.size() + " 个）");
             }
         }

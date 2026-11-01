@@ -4,6 +4,9 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.ofdrw.converter.GeneralConvertException;
 import org.ofdrw.converter.pdf.font.TrueTypePdfFont;
@@ -20,6 +23,15 @@ import org.ofdrw.converter.pdf.write.StructureSource;
 import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.basicStructure.pageObj.Page;
 import org.ofdrw.reader.OFDReader;
+import org.ofdrw.converter.pdf.CoordSystem;
+import org.ofdrw.converter.canvas.CanvasImageMaker;
+import org.ofdrw.reader.model.StampAnnotEntity;
+import org.ofdrw.core.signatures.appearance.StampAnnot;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import javax.imageio.ImageIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +70,11 @@ public class PDFExporter implements OFDExporter {
      * 告警标签，与渲染管线日志保持一致
      */
     private static final String DIAGNOSTIC_TAG = "OFD2PDF";
+
+    /**
+     * 整页栅格回退的目标分辨率，单位 dpi（参考实现的整页快照为 300 dpi）
+     */
+    private static final int SNAPSHOT_DPI = 300;
 
     /**
      * OFD 加密信息文件名（GB/T 33190-2016 第 18 章：位于包根目录，与 OFD.xml 同级）
@@ -121,6 +138,11 @@ public class PDFExporter implements OFDExporter {
      * 与 {@link #document} 页顺序一一对应的 OFD 页对象 ID
      */
     private final List<String> exportedPageIds = new ArrayList<>();
+
+    /**
+     * 页对象 ID → 该页的签章注释（印章图像 + 定位边界）
+     */
+    private java.util.Map<String, List<SealStamp>> sealStampsByPage;
 
     /**
      * 与 {@link #document} 页顺序一一对应的 PDF 页面
@@ -252,6 +274,8 @@ public class PDFExporter implements OFDExporter {
             // 字体登记表由渲染管线创建：渲染时登记并分配资源名，写入时按资源名取回，全流程唯一实例
             PageRendererImpl.RenderPipeline pipeline = PageRendererImpl.create(ofdReader);
             fontRegistry = pipeline.registry();
+            // 底纹单元内的文字必须写进图案内容流，由回放器转交给文字写入器
+            replayer.usePatternText(textWriter, fontRegistry);
             fontSubstitutionCount = 0;
             for (Integer index : indexes) {
                 if (index == null) {
@@ -319,14 +343,6 @@ public class PDFExporter implements OFDExporter {
         String pageId = ofdReader.getPageObjectId(index + 1).toString();
         Page page = ofdReader.getPage(index + 1);
         PdfPageContent content = pipeline.pageRenderer().renderPage(page, pipeline.fontSelector());
-        // 设计 3.8：注释的静态外观（水印/图章/签名外观）必须由页面内容重绘，PDF 注释对象只承载交互
-        List<Annot> annots = annotationsOf(pageId);
-        if (!annots.isEmpty()) {
-            PdfPageContent annotContent =
-                    pipeline.pageRenderer().renderAnnotations(page, annots, pipeline.fontSelector());
-            content.addAll(annotContent.getCommands());
-        }
-
         // 决策 26：MediaBox = CropBox = PhysicalBox（值相同、独立对象）
         // 页面未声明 Area 时回退文档级 PageArea（表 27 可选属性），因此传入 reader
         Box box = PageRendererImpl.pageBox(page, ofdReader).toPdfBox();
@@ -338,32 +354,66 @@ public class PDFExporter implements OFDExporter {
         pdPage.setCropBox(new PDRectangle(x0, y0, width, height));
         document.addPage(pdPage);
 
-        final TrueTypePdfFont.Registry registry = pipeline.registry();
+        // 设计 3.8：注释的静态外观（水印/图章/签名外观）由页面内容重绘，PDF 注释对象只承载交互；
+        // 不写出没有 /AP 的 /Stamp 注释，避免阅读器合成默认外观（poppler 的整页 "Draft"）。
+        List<Annot> annots = annotationsOf(pageId);
+        if (!annots.isEmpty()) {
+            PdfPageContent annotContent =
+                    pipeline.pageRenderer().renderAnnotations(page, annots, pipeline.fontSelector());
+            content.addAll(annotContent.getCommands());
+            if (annotContent.isImageResourceMissing()) {
+                content.markImageResourceMissing();
+            }
+        }
+
         try (PDPageContentStream stream = new PDPageContentStream(document, pdPage)) {
             PDResources resources = pdPage.getResources();
             if (resources == null) {
                 resources = new PDResources();
                 pdPage.setResources(resources);
             }
-            final PDResources pageResources = resources;
-            final PDPage targetPage = pdPage;
-            // 单次遍历 + 文字钩子：路径/图像由回放处理，文字交给写入器，q/Q 作用域与 Z 序都不被打断
-            replayer.replay(document, stream, pageResources, content.getCommands(), command -> {
-                if (!(command instanceof TextCommand)) {
-                    return false;
-                }
-                TextCommand text = (TextCommand) command;
-                TrueTypePdfFont font = registry.lookupByResourceName(text.getFontRef());
-                if (font == null) {
-                    logger.warn("[{}] 文字字体资源未登记，已跳过：{}", DIAGNOSTIC_TAG, text.getFontRef());
-                    return true;
-                }
-                textWriter.write(document, targetPage, stream, pageResources, font, text);
-                return true;
-            });
+            replayCommands(pipeline, replayer, textWriter, stream, resources, content.getCommands(), pdPage);
+            drawSealStamps(stream, pageId, box);
+        }
+        // 参考实现：带注释外观的页面若存在无法解析的图像引用，会输出 300 dpi 整页快照覆盖页面
+        // （矢量内容仍保留在快照之下，文本可提取）。无注释的页面仅跳过缺失图像，不做整页栅格化。
+        if (content.isImageResourceMissing() && !annots.isEmpty()) {
+            drawPageSnapshot(pdPage, box);
         }
         exportedPages.add(pdPage);
         exportedPageIds.add(pageId);
+    }
+
+    /**
+     * 回放内容指令：路径/图像交给回放器，文字交给写入器
+     *
+     * @param pipeline   渲染管线
+     * @param replayer   指令回放器
+     * @param textWriter 文字写入器
+     * @param stream     目标内容流
+     * @param resources  该内容流的资源字典
+     * @param commands   内容指令
+     * @param page       目标页；为 {@code null} 表示写入注释外观流
+     * @throws IOException 写入失败
+     */
+    private void replayCommands(PageRendererImpl.RenderPipeline pipeline, PdfCommandReplayer replayer,
+                                PdfTextWriter textWriter, PDPageContentStream stream, PDResources resources,
+                                List<org.ofdrw.converter.pdf.model.ContentCommand> commands, PDPage page)
+            throws IOException {
+        final TrueTypePdfFont.Registry registry = pipeline.registry();
+        replayer.replay(document, stream, resources, commands, command -> {
+            if (!(command instanceof TextCommand)) {
+                return false;
+            }
+            TextCommand text = (TextCommand) command;
+            TrueTypePdfFont font = registry.lookupByResourceName(text.getFontRef());
+            if (font == null) {
+                logger.warn("[{}] 文字字体资源未登记，已跳过：{}", DIAGNOSTIC_TAG, text.getFontRef());
+                return true;
+            }
+            textWriter.write(document, page, stream, resources, font, text);
+            return true;
+        });
     }
 
     /**
@@ -393,6 +443,245 @@ public class PDFExporter implements OFDExporter {
         }
         List<Annot> annots = annotationsByPage.get(pageId);
         return annots == null ? java.util.Collections.<Annot>emptyList() : annots;
+    }
+
+    /**
+     * 绘制指定页的电子签章图像
+     * <p>
+     * 签章外观来自 {@code Signs/*}：{@code StampAnnot} 给出页对象 ID、外观边界与可选裁剪区域，
+     * 印章图片取自 {@code SES} 电子印章数据。边界与裁剪区域均为 mm，原点在页面左上角、Y 轴向下。
+     *
+     * @param stream 页面内容流
+     * @param pageId 页对象 ID
+     * @param box    页面框（pt），用于 Y 轴翻转
+     * @throws IOException 写入失败
+     */
+    private void drawSealStamps(PDPageContentStream stream, String pageId, Box box) throws IOException {
+        List<SealStamp> stamps = sealStampsOf(pageId);
+        for (SealStamp stamp : stamps) {
+            StampAnnot annot = stamp.annot;
+            PDImageXObject xobject;
+            try {
+                xobject = createSealXObject(stamp.entity);
+            } catch (Exception e) {
+                logger.warn("[{}] 签章图像无法解析，已跳过：{}（{}）", DIAGNOSTIC_TAG,
+                        annot.getID(), e.getMessage());
+                continue;
+            }
+            if (xobject == null) {
+                continue;
+            }
+            org.ofdrw.core.basicType.ST_Box boundary = annot.getBoundary();
+            org.ofdrw.core.basicType.ST_Box clip = annot.getClip();
+            final double k = CoordSystem.CONTENT_MM_TO_PT;
+            // 页面高度由 pt 换算回 mm，才能与 Boundary 的 mm 坐标一起做 Y 轴翻转
+            final double pageHeightMm = box.getHeight() * CoordSystem.PT_TO_MM;
+            float x = (float) (boundary.getTopLeftX() * k);
+            float y = (float) ((pageHeightMm - boundary.getTopLeftY() - boundary.getHeight()) * k);
+            float w = (float) (boundary.getWidth() * k);
+            float h = (float) (boundary.getHeight() * k);
+            stream.saveGraphicsState();
+            if (clip != null && clip.getWidth() > 0 && clip.getHeight() > 0) {
+                float cx = (float) ((boundary.getTopLeftX() + clip.getTopLeftX()) * k);
+                float cy = (float) ((pageHeightMm - boundary.getTopLeftY() - clip.getTopLeftY()
+                        - clip.getHeight()) * k);
+                stream.addRect(cx, cy, (float) (clip.getWidth() * k), (float) (clip.getHeight() * k));
+                stream.clip();
+            }
+            /*
+             * 参考实现的签章外观统一以 /BM /Darken 绘制（见基准 PDF 的签章 Form XObject ExtGState）：
+             * 印章图片多为白底 RGB 无透明通道，Darken 让白色不覆盖页面背景，
+             * 避免在页面上留下白色方块。
+             */
+            PDExtendedGraphicsState blend = new PDExtendedGraphicsState();
+            blend.setBlendMode(BlendMode.DARKEN);
+            blend.setNonStrokingAlphaConstant(1f);
+            blend.setStrokingAlphaConstant(1f);
+            stream.setGraphicsStateParameters(blend);
+            stream.drawImage(xobject, x, y, w, h);
+            stream.restoreGraphicsState();
+        }
+    }
+
+    /**
+     * 生成印章图像对象
+     * <p>
+     * SES 印章图片可能是位图（PNG/JPEG/GIF），也可能是嵌套 OFD 页面：
+     * <ul>
+     *     <li>位图直接按原始字节嵌入，保留 PNG 的索引色/透明通道等信息；</li>
+     *     <li>嵌套 OFD 首页按 300 dpi 渲染为透明背景位图（与参考实现一致），透明区域转为 /SMask。</li>
+     * </ul>
+     *
+     * @param entity 签章实体
+     * @return PDF 图像对象；无可用图像返回 {@code null}
+     * @throws IOException 读取或嵌入失败
+     */
+    private PDImageXObject createSealXObject(StampAnnotEntity entity) throws IOException {
+        byte[] bytes = entity.getImageByte();
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        String type = entity.getImgType();
+        if (type != null && "ofd".equalsIgnoreCase(type.trim())) {
+            BufferedImage image = renderSealOfd(bytes);
+            return image == null ? null : LosslessFactory.createFromImage(document, image);
+        }
+        try {
+            // PNG 等 PDFBox 支持的格式直接嵌入，保留索引色与透明通道（参考实现同样保留）
+            return PDImageXObject.createFromByteArray(document, bytes, "Seal" + entity.getStampAnnots().get(0).getID());
+        } catch (IOException | RuntimeException e) {
+            // GIF 等 PDFBox 不支持的格式解码为位图后无损重建
+            try (ByteArrayInputStream input = new ByteArrayInputStream(bytes)) {
+                BufferedImage image = ImageIO.read(input);
+                return image == null ? null : LosslessFactory.createFromImage(document, image);
+            }
+        }
+    }
+
+    /**
+     * 渲染嵌套 OFD 印章首页
+     * <p>
+     * 采用 300 dpi 与透明背景：透明背景使抗锯齿边缘转为 /SMask，与参考 PDF 的印章图像结构一致。
+     *
+     * @param ofdBytes 嵌套 OFD 文件字节
+     * @return 印章位图（ARGB）；无可用页面返回 {@code null}
+     * @throws IOException 读取失败
+     */
+    private BufferedImage renderSealOfd(byte[] ofdBytes) throws IOException {
+        try (OFDReader sealReader = new OFDReader(new ByteArrayInputStream(ofdBytes))) {
+            CanvasImageMaker maker = new CanvasImageMaker(
+                    sealReader, org.ofdrw.converter.utils.CommonUtil.dpiToPpm(300));
+            try {
+                return maker.makePage(0);
+            } catch (RuntimeException e) {
+                logger.warn("[{}] 嵌套 OFD 印章渲染失败：{}", DIAGNOSTIC_TAG, e.getMessage());
+                return null;
+            }
+        }
+    }
+
+    /**
+     * 以整页栅格覆盖当前页面
+     * <p>
+     * 用于页面存在无法解析的图像引用时的回退：参考实现会输出 300 dpi 的整页快照并覆盖页面，
+     * 矢量内容与文字层保留在快照之下，文本仍可提取。
+     *
+     * @param page 目标页面
+     * @param box  页面框（pt）
+     * @throws IOException 渲染或写入失败
+     */
+    private void drawPageSnapshot(PDPage page, Box box) throws IOException {
+        BufferedImage snapshot;
+        try {
+            PDFRenderer renderer = new PDFRenderer(document);
+            snapshot = renderCeil(renderer, document.getNumberOfPages() - 1, box, SNAPSHOT_DPI);
+        } catch (IOException | RuntimeException e) {
+            logger.warn("[{}] 整页栅格回退失败，保留矢量输出：{}", DIAGNOSTIC_TAG, e.getMessage());
+            return;
+        }
+        PDImageXObject image = LosslessFactory.createFromImage(document, snapshot);
+        try (PDPageContentStream stream = new PDPageContentStream(
+                document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+            stream.drawImage(image, (float) box.getX(), (float) box.getY(),
+                    (float) box.getWidth(), (float) box.getHeight());
+        }
+    }
+
+    /**
+     * 按整数像素栅格化整页，像素尺寸按向上取整
+     * <p>
+     * 页面尺寸（pt）换算成像素时通常不是整数，渲染器取整方式不同会让整页快照相差 1 像素
+     * （例如 419.9996 mm × 300 dpi = 4960.62 px，向下取整得 4960、向上取整得 4961），
+     * 进而使快照的采样网格与参考实现错开。这里统一按 ceil 计算目标像素尺寸，
+     * 渲染尺寸不足时缩放补齐（差值不超过 1 像素）。
+     *
+     * @param renderer  页面渲染器
+     * @param pageIndex 页面下标，从 0 开始
+     * @param box       页面框，单位 pt
+     * @param dpi       目标分辨率，单位 dpi
+     * @return 目标像素尺寸的整页图像
+     * @throws IOException 渲染失败
+     */
+    private static BufferedImage renderCeil(PDFRenderer renderer, int pageIndex, Box box, int dpi)
+            throws IOException {
+        double perPt = dpi / 72d;
+        int width = (int) Math.ceil(box.getWidth() * perPt);
+        int height = (int) Math.ceil(box.getHeight() * perPt);
+        BufferedImage rendered = renderer.renderImage(pageIndex, (float) perPt);
+        if (rendered.getWidth() == width && rendered.getHeight() == height) {
+            return rendered;
+        }
+        // 尺寸通常只差 1 像素：按目标尺寸重采样，使整页采样网格与参考实现的 ceil 规则一致
+        BufferedImage scaled = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        java.awt.Graphics2D graphics = scaled.createGraphics();
+        try {
+            graphics.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                    java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            graphics.drawImage(rendered, 0, 0, width, height, null);
+        } finally {
+            graphics.dispose();
+        }
+        return scaled;
+    }
+
+    /**
+     * 读取指定页的签章注释
+     *
+     * @param pageId 页对象 ID
+     * @return 签章注释列表；无签章时返回空列表
+     */
+    private List<SealStamp> sealStampsOf(String pageId) {
+        if (sealStampsByPage == null) {
+            sealStampsByPage = new java.util.HashMap<>();
+            try {
+                for (StampAnnotEntity entity : ofdReader.getStampAnnots()) {
+                    if (entity == null || entity.getImageByte() == null) {
+                        continue;
+                    }
+                    for (StampAnnot annot : entity.getStampAnnots()) {
+                        if (annot == null || annot.getBoundary() == null) {
+                            continue;
+                        }
+                        String ref = annot.getPageRef().toString();
+                        List<SealStamp> list = sealStampsByPage.get(ref);
+                        if (list == null) {
+                            list = new ArrayList<>();
+                            sealStampsByPage.put(ref, list);
+                        }
+                        list.add(new SealStamp(annot, entity));
+                    }
+                }
+            } catch (RuntimeException e) {
+                logger.warn("[{}] 签章信息读取失败，本页不绘制印章：{}", DIAGNOSTIC_TAG, e.getMessage());
+            }
+        }
+        List<SealStamp> stamps = sealStampsByPage.get(pageId);
+        return stamps == null ? java.util.Collections.<SealStamp>emptyList() : stamps;
+    }
+
+    /**
+     * 单个签章注释及其印章图片
+     */
+    private static final class SealStamp {
+
+        /**
+         * 签章注释（定位边界、裁剪区域）
+         */
+        private final StampAnnot annot;
+
+        /**
+         * 签章实体（印章图像）
+         */
+        private final StampAnnotEntity entity;
+
+        /**
+         * @param annot  签章注释
+         * @param entity 签章实体
+         */
+        SealStamp(StampAnnot annot, StampAnnotEntity entity) {
+            this.annot = annot;
+            this.entity = entity;
+        }
     }
 
     /**

@@ -114,7 +114,7 @@ public final class PdfShadingWriter {
             PDShadingType3 radial = new PDShadingType3(new COSDictionary());
             radial.setShadingType(PDShading.SHADING_TYPE3);
             // PDF Type 3：两个圆的圆心与半径；OFD 的起点为渐变中心（半径缺省 0），终点为外圆圆心
-            radial.setCoords(numbers(command.getStartX(), command.getStartY(), 0,
+            radial.setCoords(numbers(command.getStartX(), command.getStartY(), startRadius(command),
                     command.getEndX(), command.getEndY(), endRadius(command)));
             shading = radial;
         } else {
@@ -140,10 +140,23 @@ public final class PdfShadingWriter {
      * @return 半径，单位 pt；至少为 0
      */
     private static double endRadius(ShadingCommand command) {
+        if (command.getEndRadiusPt() >= 0) {
+            return command.getEndRadiusPt();
+        }
         double dx = command.getEndX() - command.getStartX();
         double dy = command.getEndY() - command.getStartY();
         double distance = Math.sqrt(dx * dx + dy * dy);
         return Math.max(0, distance);
+    }
+
+    /**
+     * 径向渐变内圆半径
+     *
+     * @param command 渐变指令
+     * @return 半径，单位 pt；未指定时按 0（OFD 缺省值为 0）
+     */
+    private static double startRadius(ShadingCommand command) {
+        return Math.max(0, command.getStartRadiusPt());
     }
 
     /**
@@ -206,23 +219,27 @@ public final class PdfShadingWriter {
         COSArray encode = new COSArray();
         for (int i = 0; i < stops.size() - 1; i++) {
             COSDictionary fn = new COSDictionary();
-            fn.setItem(COSName.FUNCTION_TYPE, COSName.getPDFName("2"));
+            // /FunctionType 在 PDF 中是整数（不是名字对象），写成名字会让阅读器判定函数类型非法，
+            // 渐变整体不绘制（典型现象：红色渐变徽标只剩纸张底纹的金色轮廓）
+            fn.setInt(COSName.FUNCTION_TYPE, 2);
             fn.setItem(COSName.DOMAIN, numbers(0, 1));
             fn.setItem(COSName.getPDFName("C0"), colorArray(stops.get(i).getColor()));
             fn.setItem(COSName.getPDFName("C1"), colorArray(stops.get(i + 1).getColor()));
             fn.setInt(COSName.getPDFName("N"), 1);
             functions.add(fn);
+            // Encode 是 2n 个数的扁平数组（每段的 [0 1] 依次排列），不是 n 个子数组
+            encode.add(new COSFloat(0));
+            encode.add(new COSFloat(1));
             if (i < stops.size() - 2) {
                 // 中间停止点作为分段边界（最后一对不需要边界）
                 bounds.add(new COSFloat((float) stops.get(i + 1).getFraction()));
-                encode.add(numbers(0, 1));
             }
         }
         if (functions.size() == 1) {
             return (COSDictionary) functions.getObject(0);
         }
         COSDictionary stitched = new COSDictionary();
-        stitched.setItem(COSName.FUNCTION_TYPE, COSName.getPDFName("3"));
+        stitched.setInt(COSName.FUNCTION_TYPE, 3);
         stitched.setItem(COSName.DOMAIN, numbers(0, 1));
         stitched.setItem(COSName.getPDFName("Functions"), functions);
         stitched.setItem(COSName.getPDFName("Bounds"), bounds);

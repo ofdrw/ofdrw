@@ -326,6 +326,9 @@ public final class ImageResourceLoader implements ImageSource {
         if (size == null) {
             size = readBmpSize(data);
         }
+        if (size == null) {
+            size = readJbig2Size(data);
+        }
         if (size != null && size[0] > 0 && size[1] > 0) {
             return size;
         }
@@ -593,5 +596,92 @@ public final class ImageResourceLoader implements ImageSource {
      */
     static boolean isJpeg(byte[] data) {
         return data != null && data.length > 3 && (data[0] & 0xFF) == 0xFF && (data[1] & 0xFF) == 0xD8;
+    }
+
+    /**
+     * 解析 JBIG2 的图像尺寸
+     * <p>
+     * OFD 中 {@code Format="GBIG2"} 的图片即 JBIG2 位图（二维码、黑白扫描常使用）。
+     * 实测文件（GB/T 33190 的 {@code .jb2} 资源）起始布局为：
+     * <pre>
+     * 魔数 8 字节 | 标志 1 字节 | 段号等 8 字节 | 段序列
+     * </pre>
+     * 每个段的段头为 7 字节：段类型(1) 被引用段数(1) 标志(1) 数据长度(4)，
+     * 之后是段数据与被引用段号（每项 4 字节）。页面信息段（类型 {@code 0x30}）的数据区以“宽(4) 高(4)”开头。
+     * <p>
+     * <b>必须按段长度逐段跳过</b>：紧随其后的符号字典段（类型 {@code 0x00}）数据里同样出现
+     * 尺寸量级的整数，退化成字节扫描会把 4864/25600 当成宽高，得到与真实位图（100×100）无关的尺寸。
+     *
+     * @param data 图片原始字节，不能为空
+     * @return {@code [宽, 高]}；不是 JBIG2 或无法解析时返回 {@code null}
+     */
+    static int[] readJbig2Size(byte[] data) {
+        if (data == null || data.length < 19) {
+            return null;
+        }
+        // 完整文件：魔数 8 + 标志 1 + 段号等 8 = 17；已剥离成 PDF 内嵌流时从 0 开始
+        int pos = jbig2SegmentStart(data);
+        while (pos + 7 <= data.length) {
+            int type = data[pos] & 0xFF;
+            int refCount = data[pos + 1] & 0xFF;
+            int dataLength = readInt32(data, pos + 3);
+            if (dataLength < 0) {
+                return null;
+            }
+            int dataStart = pos + 7;
+            if (dataStart + dataLength + refCount * 4 > data.length) {
+                return null;
+            }
+            if (type == 0x30) {
+                if (dataLength < 8) {
+                    return null;
+                }
+                int width = readInt32(data, dataStart);
+                int height = readInt32(data, dataStart + 4);
+                if (isSaneJbig2Dimension(width) && isSaneJbig2Dimension(height)) {
+                    return new int[]{width, height};
+                }
+                return null;
+            }
+            pos = dataStart + dataLength + refCount * 4;
+        }
+        return null;
+    }
+
+    /**
+     * 计算 JBIG2 首个段头的起始偏移
+     * <p>
+     * 完整 JBIG2 文件在魔数（8 字节）与标志（1 字节）之后还有 8 字节文件级信息，
+     * 因此首个段头位于偏移 17；PDF {@code JBIG2Decode} 内嵌流已剥离文件头，此时从 0 开始。
+     *
+     * @param data 图片原始字节
+     * @return 首个段头的起始偏移
+     */
+    private static int jbig2SegmentStart(byte[] data) {
+        boolean hasFileHeader = (data[0] & 0xFF) == 0x97 && (data[1] & 0xFF) == 0x4A
+                && (data[2] & 0xFF) == 0x42 && (data[3] & 0xFF) == 0x32;
+        return hasFileHeader ? 17 : 0;
+    }
+
+    /**
+     * 读取大端 32 位整数
+     *
+     * @param data   字节数组
+     * @param offset 起始偏移
+     * @return 无符号解释后的 int 值
+     */
+    private static int readInt32(byte[] data, int offset) {
+        return ((data[offset] & 0xFF) << 24) | ((data[offset + 1] & 0xFF) << 16)
+                | ((data[offset + 2] & 0xFF) << 8) | (data[offset + 3] & 0xFF);
+    }
+
+    /**
+     * 判断 JBIG2 页面信息段中的尺寸是否合理
+     *
+     * @param value 尺寸值，单位像素
+     * @return 取值合理返回 true
+     */
+    private static boolean isSaneJbig2Dimension(int value) {
+        return value > 0 && value <= 100000;
     }
 }

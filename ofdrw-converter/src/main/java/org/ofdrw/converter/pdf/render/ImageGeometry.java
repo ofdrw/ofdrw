@@ -100,9 +100,63 @@ public final class ImageGeometry {
         AffineMatrix translate = AffineMatrix.translate(bx + context.getPageX0Mm(), by + context.getPageY0Mm());
         AffineMatrix objectToOfd = elementCtm.multiply(translate).multiply(context.getCurrentCtm());
         // OFD 页面坐标（mm，Y 向下）→ PDF 页面坐标（pt，Y 向上）：需要乘 mm→pt 并翻转 Y
-        AffineMatrix flip = new AffineMatrix(CoordSystem.MM_TO_PT, 0, 0, -CoordSystem.MM_TO_PT, 0,
-                context.getPageHeightMm() * CoordSystem.MM_TO_PT);
+        AffineMatrix flip = new AffineMatrix(CoordSystem.CONTENT_MM_TO_PT, 0, 0, -CoordSystem.CONTENT_MM_TO_PT, 0,
+                context.getPageHeightMm() * CoordSystem.CONTENT_MM_TO_PT);
         return objectToOfd.multiply(flip);
+    }
+
+    /**
+     * 计算带旋转/斜切 CTM 的图像「单位正方形 → 页面坐标」矩阵
+     * <p>
+     * 图像对象空间是单位正方形，OFD 的 {@code CTM} 完成旋转、缩放与镜像；外接矩形只用于定位，
+     * 其左上角仍是图像落点的锚点。变换按以下口径构造（与基准 PDF 的 {@code cm} 矩阵一致）：
+     * <ol>
+     *     <li>取 CTM 线性部分，并按 PDF 的 Y 轴向上约定翻转 {@code b}、{@code c}；</li>
+     *     <li>把变换后的单位正方形外接框的左上角对齐到 {@code Boundary} 左上角；</li>
+     *     <li>mm→pt 换算。</li>
+     * </ol>
+     * 轴对齐 CTM 不走本方法（直接按外接矩形 {@code drawImage} 即可），避免改变既有正确样本的落点。
+     *
+     * @param ctm      图元 CTM（行向量），可为空表示单位矩阵
+     * @param boundary 图元外接矩形，可为空
+     * @param context  渲染上下文，不能为空
+     * @return 单位正方形对象空间 → 页面坐标 (pt) 的矩阵
+     */
+    public static AffineMatrix rotatedUnitSquareToPage(org.ofdrw.core.basicType.ST_Array ctm,
+                                                       org.ofdrw.core.basicType.ST_Box boundary,
+                                                       RenderContext context) {
+        if (context == null) {
+            throw new IllegalArgumentException("渲染上下文不能为空");
+        }
+        AffineMatrix element = elementCtm(ctm);
+        double k = CoordSystem.CONTENT_MM_TO_PT;
+        // PDF 坐标 Y 轴向上：CTM 的 b、c 分量取反后才是 PDF 用户空间中的方向
+        double a = element.getA() * k;
+        double b = -element.getB() * k;
+        double c = -element.getC() * k;
+        double d = element.getD() * k;
+        // 外接框左上角对齐 Boundary 左上角（页面框偏移计入）
+        double bx = boundaryX(boundary) + context.getPageX0Mm();
+        double by = boundaryY(boundary) + context.getPageY0Mm();
+        double e = bx * k - Math.min(0, Math.min(a, c));
+        double f = (context.getPageHeightMm() - by) * k - Math.max(0, Math.max(b, d));
+        return new AffineMatrix(a, b, c, d, e, f);
+    }
+
+    /**
+     * 判断图元 CTM 是否为轴对齐（仅缩放，无旋转/斜切）
+     *
+     * @param ctm 图元 CTM，可为空
+     * @return true 表示轴对齐；CTM 为空或非 6 个操作数时同样视为轴对齐
+     */
+    public static boolean isAxisAligned(org.ofdrw.core.basicType.ST_Array ctm) {
+        if (ctm == null || ctm.size() != 6) {
+            return true;
+        }
+        Double[] values = ctm.toDouble();
+        double b = values[1] == null ? 0 : values[1];
+        double c = values[2] == null ? 0 : values[2];
+        return Math.abs(b) < 1e-9 && Math.abs(c) < 1e-9;
     }
 
     /**
@@ -215,7 +269,7 @@ public final class ImageGeometry {
             return 1;
         }
         // 图像对象空间是单位正方形，其“对象空间 1 单位”由矩阵线性部分直接给出，不依赖平移；
-        // 容器 CTM 的 mm→pt 比例（MM_TO_PT）已经体现在矩阵里
+        // 容器 CTM 的 mm→pt 比例（CONTENT_MM_TO_PT）已经体现在矩阵里
         return Math.hypot(toPage.getA(), toPage.getB());
     }
 

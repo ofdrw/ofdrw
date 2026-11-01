@@ -4,6 +4,7 @@ import org.ofdrw.converter.pdf.CoordSystem;
 import org.ofdrw.converter.pdf.model.Box;
 import org.ofdrw.converter.pdf.model.ContentCommand;
 import org.ofdrw.converter.pdf.model.PatternCommand;
+import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.pageDescription.color.pattern.CT_Pattern;
 import org.ofdrw.core.pageDescription.color.pattern.ReflectMethod;
 import org.ofdrw.core.pageDescription.color.pattern.RelativeTo;
@@ -145,21 +146,75 @@ public final class PatternRenderer implements ContentRenderer {
         double xStepMm = step(pattern.getXStep(), widthMm, "XStep");
         double yStepMm = step(pattern.getYStep(), heightMm, "YStep");
 
-        List<ContentCommand> cellCommands = cellRenderer.render(pattern.getCellContent(), context);
+        /*
+         * 单元格使用独立坐标系：原点在单元格左上角，X 向右、Y 向下，单位 mm（CellContent 类注释）。
+         * 单元内容的渲染上下文必须把“页高”换成单元格高度，否则 Y 翻转会按整页高度计算，
+         * 图元被推到格子之外（表现为图案内容整体偏到页面顶部）。
+         */
+        double widthPt = CoordSystem.mmToPt(widthMm);
+        double heightPt = CoordSystem.mmToPt(heightMm);
+        List<ContentCommand> cellCommands = cellRenderer.render(pattern.getCellContent(),
+                new RegionShift(context, heightMm));
         if (cellCommands == null || cellCommands.isEmpty()) {
             warnOnce("empty-cell-content", "底纹单元内容没有可绘制的图元，已跳过");
             return null;
         }
         // 单元尺寸换算为页面坐标下的 pt；XStep/YStep 大于单元尺寸时单元本身仍只占 Width×Height
-        double widthPt = CoordSystem.mmToPt(widthMm);
-        double heightPt = CoordSystem.mmToPt(heightMm);
         double xStepPt = CoordSystem.mmToPt(xStepMm);
         double yStepPt = CoordSystem.mmToPt(yStepMm);
         if (Math.abs(xStepPt - widthPt) > 1e-9 || Math.abs(yStepPt - heightPt) > 1e-9) {
             warnOnce("cell-gap", "底纹单元间距与单元尺寸不同（XStep=" + xStepMm + "、YStep=" + yStepMm
                     + "，单元 " + widthMm + "x" + heightMm + " mm），写入器需按步进平铺、单元内容只占单元尺寸");
         }
-        return new PatternCommand("Pattern", new Box(0, 0, widthPt, heightPt), cellCommands, approximate);
+        double[] tilingMatrix = tilingMatrix(pattern.getCTM(), heightPt, context);
+        return new PatternCommand("Pattern", new Box(0, 0, widthPt, heightPt), cellCommands, approximate,
+                null, tilingMatrix, xStepPt, yStepPt);
+    }
+
+    /**
+     * 计算 PDF 平铺矩阵（{@code /Matrix}）
+     * <p>
+     * 页面正文中的底纹直接沿用 OFD {@code Pattern/@CTM}（首版行为，保持既有样本不变）。
+     * <p>
+     * 注释外观内的底纹必须换一套锚定方式：外观有自己的坐标系，其内容先在外观空间排版再定位到页面。
+     * 实测基准（带 45° 水印的注释外观）的 {@code /Matrix} 为
+     * {@code [2.0044 2.0044 -2.0044 2.0044 52.5662 963.7161]}，而“把 CTM 直接当页面坐标”得到的
+     * 平移为 {@code (52.565, 368.393)}，纵坐标相差 595.32pt —— 恰好一个页宽。也就是说外观空间的
+     * Y 轴锚点是在“页面右侧”起算的，等价于外观坐标系相对页面旋转了 90°：
+     * <pre>
+     * x' = a·x − c·y + c·h + 2.8346·e
+     * y' = −b·x + d·y + (W − (c·h + 2.8346·e)) + 2.8346·f
+     * </pre>
+     * 其中 {@code h} 为单元高度（pt）、{@code W} 为页宽（pt）、{@code [a b c d e f]} 为 OFD CTM
+     * （平移分量单位 mm）。
+     *
+     * @param ctm         OFD 底纹 CTM；为空或长度非法时返回 {@code null}
+     * @param cellHeightPt 单元高度，单位 pt
+     * @param context     渲染上下文（用于取页宽与“是否注释外观”）
+     * @return 平铺矩阵；CTM 缺失时返回 {@code null}
+     */
+    private static double[] tilingMatrix(ST_Array ctm, double cellHeightPt, RenderContext context) {
+        if (ctm == null || ctm.size() != 6) {
+            return null;
+        }
+        Double[] v = ctm.toDouble();
+        double[] m = new double[6];
+        for (int i = 0; i < 6; i++) {
+            m[i] = v[i] == null ? 0 : v[i];
+        }
+        if (!context.isAppearanceContext()) {
+            return m;
+        }
+        double xAnchor = m[2] * cellHeightPt + CoordSystem.mmToPt(m[4]);
+        double pageWidthPt = CoordSystem.mmToPt(context.getPageWidthMm());
+        return new double[]{
+                m[0],
+                -m[1],
+                -m[2],
+                m[3],
+                xAnchor,
+                pageWidthPt - xAnchor + CoordSystem.mmToPt(m[5])
+        };
     }
 
     /**

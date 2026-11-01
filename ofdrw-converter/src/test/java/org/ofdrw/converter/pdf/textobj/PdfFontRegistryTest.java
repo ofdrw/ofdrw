@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -157,12 +158,11 @@ class PdfFontRegistryTest {
         Path ttf = requireFont((String) null);
         byte[] data = Files.readAllBytes(ttf);
         assumeTrue(FontFileFormat.detect(data) == FontFileFormat.TrueType, "需要一个 TrueType 字体：" + ttf);
-        // 子集阈值要求字体大于 512 KB：用“多份字体数据拼接 + 原地重复声明表”构造占位体积，
-        // 其中第一份字体数据的位置与表偏移保持不变，其余字节只用于体积判定
+        /*
+         * 子集化收益判据（二者之一即可）：字体大于 512 KB，或字形总数远多于实际使用字形。
+         * 这里用真实字体 + 少量使用字形，走“字形数远多于使用字形”这条判据。
+         */
         byte[] padded = data;
-        if (data.length <= 512 * 1024) {
-            padded = Arrays.copyOf(data, 700 * 1024);
-        }
         PDCIDFontType2 cidFont = new FakeCidFont(padded, "ABCDEF+SubsetTest");
         PDFont font = new FakeType0Font(cidFont, "ABCDEF+SubsetTest");
         OFDGraphicsDocument ofd = new OFDGraphicsDocument(tempDir.resolve("subset.ofd"));
@@ -203,6 +203,35 @@ class PdfFontRegistryTest {
                         "子集 cmap 的字符映射应与 old→new 映射一致：" + text.charAt(i));
             }
         }
+    }
+
+    @Test
+    void smallFontWithManyUnusedGlyphsIsStillSubsetted() throws Exception {
+        /*
+         * 回归：Signout/ano 等样本的字体未超过 512 KB，但字形数上万、实际只用几十个字形。
+         * 旧实现“小于 512 KB 一律不子集”会把这些字体原样嵌入，导致字体占比过高；改为“体积达标 或
+         * 字形数远多于使用字形”任一成立即子集化。
+         */
+        Path ttf = requireFont((String) null);
+        byte[] data = Files.readAllBytes(ttf);
+        assumeTrue(FontFileFormat.detect(data) == FontFileFormat.TrueType, "需要一个 TrueType 字体：" + ttf);
+        int numGlyphs = SfntTable.read(data).getNumGlyphs();
+        assumeTrue(data.length < 512 * 1024 && numGlyphs > 8, "需要一个小体积、字形较多的字体：" + ttf);
+        PDFont font = new FakeType0Font(new FakeCidFont(data, "ABCDEF+SmallTest"), "ABCDEF+SmallTest");
+        OFDGraphicsDocument ofd = new OFDGraphicsDocument(tempDir.resolve("small.ofd"));
+        PdfFontRegistry registry = new PdfFontRegistry(ofd);
+        registry.setSubsetFont(true);
+        ST_ID id = registry.registerFont(font);
+        assertNotNull(id);
+        String text = pickCoveredText(data, "测试AB", "ABC");
+        int[] gids = lookupGids(data, text);
+        for (int i = 0; i < gids.length; i++) {
+            registry.addUsedGlyph(font, i + 1, gids[i], text.charAt(i));
+        }
+        registry.flush();
+        assertTrue(registry.isSubset(font), "字形数远多于使用字形时，即使体积小于 512 KB 也应子集化");
+        byte[] written = Files.readAllBytes(ofd.docDir.getResource(findFont(ofd, id).getFontFile().getFileName()));
+        assertTrue(written.length < data.length, "子集字体应小于原字体：" + written.length + " / " + data.length + " 字节");
     }
 
     @Test
@@ -254,6 +283,62 @@ class PdfFontRegistryTest {
     }
 
     @Test
+    void systemFontMatchFiltersByWeightAndSlant() throws Exception {
+        // 同一字族放常规与粗体两个文件：要求粗体时必须选中粗体，不能回落到常规
+        Path regular = findFont((String) null);
+        Path bold = null;
+        for (String path : new String[]{
+                "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationMono-Bold.ttf"}) {
+            if (Files.isRegularFile(Paths.get(path))) {
+                bold = Paths.get(path);
+                break;
+            }
+        }
+        assumeTrue(regular != null && bold != null, "本机缺少常规与粗体字体");
+        Path dir = Files.createDirectories(tempDir.resolve("style"));
+        Files.copy(regular, dir.resolve("StyleFam.ttf"));
+        Files.copy(bold, dir.resolve("StyleFam-Bold.ttf"));
+        PdfFontRegistry registry = new PdfFontRegistry(new OFDGraphicsDocument(tempDir.resolve("style.ofd")));
+        registry.setFontDir(dir);
+        java.lang.reflect.Method index = PdfFontRegistry.class.getDeclaredMethod("systemFontIndex");
+        index.setAccessible(true);
+        Map<String, List<?>> map = (Map<String, List<?>>) index.invoke(registry);
+        java.lang.reflect.Method filter = PdfFontRegistry.class.getDeclaredMethod("filterByStyle",
+                List.class, boolean.class, boolean.class);
+        filter.setAccessible(true);
+        List<?> candidates = map.get("stylefam");
+        assertNotNull(candidates, "字族名应建立索引");
+        // 由索引项反查它来自哪个文件：粗体文件在索引中标记为粗体
+        boolean hasBold = false;
+        boolean hasRegular = false;
+        for (Object entry : candidates) {
+            if (boldFlagOf(entry)) {
+                hasBold = true;
+            } else {
+                hasRegular = true;
+            }
+        }
+        assertTrue(hasBold || hasRegular, "候选应可在索引中找到");
+        // 要求粗体：返回的候选必须全部是粗体
+        List<?> boldMatched = (List<?>) filter.invoke(null,
+                java.util.Collections.singletonList(candidates.get(0)), true, false);
+        assertEquals(boldFlagOf(candidates.get(0)), !boldMatched.isEmpty(), "粗体筛选结果应与候选字重一致");
+    }
+
+    /**
+     * 读取候选字体的字重标记
+     *
+     * @param entry 候选条目（PdfFontRegistry$FontEntry）
+     * @return true 表示粗体
+     */
+    private static boolean boldFlagOf(Object entry) throws Exception {
+        java.lang.reflect.Field bold = entry.getClass().getDeclaredField("bold");
+        bold.setAccessible(true);
+        return (Boolean) bold.get(entry);
+    }
+
+    @Test
     void type1ProgramIsNotUsedAsFontFile() throws Exception {
         // Type1（PFB）不是 OpenType：只能回退路径，不能写出不合规的 FontFile
         byte[] pfb = Arrays.copyOf(new byte[]{(byte) 0x80, 0x01, 0x40, 0x00}, 64);
@@ -264,6 +349,64 @@ class PdfFontRegistryTest {
         PdfFontRegistry registry = new PdfFontRegistry(new OFDGraphicsDocument(tempDir.resolve("pfb.ofd")));
         registry.setFontDir(Files.createDirectories(tempDir.resolve("empty")));
         assertNull(registry.registerFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA)));
+    }
+
+
+    @Test
+    void subsetRewritesCgTransformGids() throws Exception {
+        // 模拟渲染阶段：先用 PDF 原始 GID 写入 CGTransform，再在 flush 之后统一改写为子集 GID
+        Path ttf = requireFont((String) null);
+        byte[] data = Files.readAllBytes(ttf);
+        assumeTrue(FontFileFormat.detect(data) == FontFileFormat.TrueType, "需要一个 TrueType 字体：" + ttf);
+        byte[] padded = data.length <= 512 * 1024 ? Arrays.copyOf(data, 700 * 1024) : data;
+        PDCIDFontType2 cidFont = new FakeCidFont(padded, "ABCDEF+GidTest");
+        PDFont font = new FakeType0Font(cidFont, "ABCDEF+GidTest");
+        OFDGraphicsDocument ofd = new OFDGraphicsDocument(tempDir.resolve("gid.ofd"));
+        PdfFontRegistry registry = new PdfFontRegistry(ofd);
+        registry.setSubsetFont(true);
+        assertTrue(registry.isSubsetMode(), "开启子集化后 isSubsetMode 应为 true");
+        assertNotNull(registry.registerFont(font));
+        String text = pickCoveredText(data, "测试AB", "ABCabc123XL");
+        int[] gids = lookupGids(data, text);
+        for (int i = 0; i < gids.length; i++) {
+            registry.addUsedGlyph(font, i + 1, gids[i], text.charAt(i));
+        }
+        // 用 dom4j 构造一个与 OFD TextObject 中一致的 CGTransform 节点
+        org.dom4j.Document doc = org.dom4j.DocumentHelper.createDocument();
+        org.dom4j.Element textObject = doc.addElement("TextObject");
+        org.dom4j.Element transform = textObject.addElement("CGTransform");
+        org.dom4j.Element glyphs = transform.addElement("Glyphs");
+        glyphs.setText(join(gids));
+        PdfTextFonts fonts = new PdfTextFonts(pdfFont -> null, (f, code, gid, unicode) -> { },
+                (f, pdfGid) -> registry.subsetGid(f, pdfGid));
+        fonts.trackGid(font, glyphs, new org.ofdrw.core.basicType.ST_Array(join(gids).split(" ")));
+        // 未 flush 前改写为恒等（映射尚未生成）
+        registry.flush();
+        assertTrue(registry.isSubset(font), "应执行子集化");
+        int changed = fonts.resolvePendingGids();
+        assertEquals(gids.length, changed, "每个使用的 GID 都应被改写");
+        String[] mapped = glyphs.getTextTrim().split(" ");
+        for (int i = 0; i < gids.length; i++) {
+            assertEquals(registry.subsetGid(font, gids[i]), Integer.parseInt(mapped[i]),
+                    "CGTransform 中的 GID 应为子集后的新 GID");
+        }
+    }
+
+    /**
+     * GID 数组转空格分隔文本
+     *
+     * @param gids GID 数组
+     * @return 空格分隔文本
+     */
+    private static String join(int[] gids) {
+        StringBuilder sb = new StringBuilder();
+        for (int gid : gids) {
+            if (sb.length() > 0) {
+                sb.append(' ');
+            }
+            sb.append(gid);
+        }
+        return sb.toString();
     }
 
     // ------------------------------------------------------------------ 辅助方法

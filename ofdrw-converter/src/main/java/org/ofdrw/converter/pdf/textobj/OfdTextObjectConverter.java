@@ -54,6 +54,16 @@ public final class OfdTextObjectConverter {
     private final PdfTextWarningCollector warnings = new PdfTextWarningCollector();
 
     /**
+     * CGTransform GID 延迟登记函数（传给页面绘制器），可为 null
+     */
+    private final OfdPageDrawer.GidTracker trackFinalGid;
+
+    /**
+     * 注释单元字体登记函数（允许系统字体兜底），可为 null
+     */
+    private final java.util.function.BiFunction<PDFont, java.util.Set<Integer>, ST_ID> annotationFontRegistrar;
+
+    /**
      * 已登记字体 → 字体资源 ID
      */
     private final Map<PDFont, ST_ID> registeredFonts = new LinkedHashMap<>();
@@ -69,16 +79,78 @@ public final class OfdTextObjectConverter {
     private boolean flushed = false;
 
     /**
-     * 创建文字对象化转换器
+     * 创建文字对象化转换器（默认：GID 不变、不登记字形使用）
      *
-     * @param document    PDF 文档
-     * @param ofdDoc      OFD 文档
+     * @param document      PDF 文档
+     * @param ofdDoc        OFD 文档
      * @param fontRegistrar 字体登记函数：返回字体资源 ID，无法嵌入时返回 null
      * @param fontFlusher   字体结束动作：在 OFD 打包前调用，可为 null
      */
     public OfdTextObjectConverter(PDDocument document, OFDGraphicsDocument ofdDoc,
                                   Function<PDFont, ST_ID> fontRegistrar,
                                   BiConsumer<OFDGraphicsDocument, Map<PDFont, ST_ID>> fontFlusher) {
+        this(document, ofdDoc, fontRegistrar, fontFlusher, null, null);
+    }
+
+    /**
+     * 创建文字对象化转换器
+     *
+     * @param document      PDF 文档
+     * @param ofdDoc        OFD 文档
+     * @param fontRegistrar 字体登记函数：返回字体资源 ID，无法嵌入时返回 null
+     * @param fontFlusher   字体结束动作：在 OFD 打包前调用，可为 null
+     * @param gidResolver   “PDF 原始 GID → 最终 GID”解析器（字体子集化后 CGTransform 必须用它），
+     *                      可为 null（GID 不变）
+     * @param glyphRegistrar 字形使用登记函数（记录 PDF 原始 GID 与 Unicode，供子集化重建 cmap），可为 null
+     */
+    public OfdTextObjectConverter(PDDocument document, OFDGraphicsDocument ofdDoc,
+                                  Function<PDFont, ST_ID> fontRegistrar,
+                                  BiConsumer<OFDGraphicsDocument, Map<PDFont, ST_ID>> fontFlusher,
+                                  GidResolver gidResolver,
+                                  OfdPageDrawer.GlyphUsageRegistrar glyphRegistrar) {
+        this(document, ofdDoc, fontRegistrar, fontFlusher, gidResolver, glyphRegistrar, false);
+    }
+
+    /**
+     * 创建文字对象化转换器（带 CGTransform GID 延迟改写）
+     *
+     * @param document       PDF 文档
+     * @param ofdDoc         OFD 文档
+     * @param fontRegistrar  字体登记函数：返回字体资源 ID，无法嵌入时返回 null
+     * @param fontFlusher    字体结束动作：在 OFD 打包前调用，可为 null
+     * @param gidResolver    “PDF 原始 GID → 最终 GID”解析器（子集化时必须非 null）
+     * @param glyphRegistrar 字形使用登记函数，可为 null
+     * @param rewriteGidAfterSubset true 表示字体子集化：登记 CGTransform 节点，字体写出后改写为最终 GID
+     */
+    public OfdTextObjectConverter(PDDocument document, OFDGraphicsDocument ofdDoc,
+                                  Function<PDFont, ST_ID> fontRegistrar,
+                                  BiConsumer<OFDGraphicsDocument, Map<PDFont, ST_ID>> fontFlusher,
+                                  GidResolver gidResolver,
+                                  OfdPageDrawer.GlyphUsageRegistrar glyphRegistrar,
+                                  boolean rewriteGidAfterSubset) {
+        this(document, ofdDoc, fontRegistrar, fontFlusher, gidResolver, glyphRegistrar, rewriteGidAfterSubset, null);
+    }
+
+    /**
+     * 创建文字对象化转换器（带注释单元字体登记）
+     *
+     * @param document                  PDF 文档
+     * @param ofdDoc                    OFD 图形文档
+     * @param fontRegistrar             正文字体登记函数
+     * @param fontFlusher               字体写出函数
+     * @param gidResolver               GID 解析器
+     * @param glyphRegistrar            字形使用登记
+     * @param rewriteGidAfterSubset     是否在子集化后改写 GID
+     * @param annotationFontRegistrar   注释单元字体登记函数（允许系统字体兜底），可为 null
+     */
+    public OfdTextObjectConverter(PDDocument document, OFDGraphicsDocument ofdDoc,
+                                  Function<PDFont, ST_ID> fontRegistrar,
+                                  BiConsumer<OFDGraphicsDocument, Map<PDFont, ST_ID>> fontFlusher,
+                                  GidResolver gidResolver,
+                                  OfdPageDrawer.GlyphUsageRegistrar glyphRegistrar,
+                                  boolean rewriteGidAfterSubset,
+                                  java.util.function.BiFunction<PDFont, java.util.Set<Integer>, ST_ID> annotationFontRegistrar) {
+        this.annotationFontRegistrar = annotationFontRegistrar;
         this.document = document;
         this.ofdDoc = ofdDoc;
         this.fontFlusher = fontFlusher;
@@ -88,7 +160,16 @@ public final class OfdTextObjectConverter {
                 registeredFonts.putIfAbsent(font, id);
             }
             return id;
-        }, null, null);
+        }, (font, unicodes) -> {
+            ST_ID id = annotationFontRegistrar == null ? null : annotationFontRegistrar.apply(font, unicodes);
+            if (id != null) {
+                registeredFonts.putIfAbsent(font, id);
+            }
+            return id;
+        }, glyphRegistrar == null ? null
+                : (font, code, gid, unicode) -> glyphRegistrar.register(font, code, gid, unicode), gidResolver);
+        this.trackFinalGid = rewriteGidAfterSubset
+                ? (font, glyphsElement, pdfGids) -> fonts.trackGid(font, glyphsElement, pdfGids) : null;
     }
 
     /**
@@ -101,7 +182,7 @@ public final class OfdTextObjectConverter {
      */
     public void renderPage(int pageIndex, OFDPageGraphics2D pageGraphics, float scale) throws IOException {
         if (renderer == null) {
-            renderer = new TextObjectPdfRenderer(document, fonts, warnings);
+            renderer = new TextObjectPdfRenderer(document, fonts, warnings, trackFinalGid);
         }
         renderer.renderPage(pageIndex, pageGraphics, scale);
     }
@@ -113,7 +194,7 @@ public final class OfdTextObjectConverter {
      */
     public void setRenderingHints(java.awt.RenderingHints hints) {
         if (renderer == null) {
-            renderer = new TextObjectPdfRenderer(document, fonts, warnings);
+            renderer = new TextObjectPdfRenderer(document, fonts, warnings, trackFinalGid);
         }
         renderer.setRenderingHints(hints);
     }
@@ -134,6 +215,20 @@ public final class OfdTextObjectConverter {
             fontFlusher.accept(ofdDoc, registeredFonts);
         } catch (RuntimeException e) {
             logger.warn("PDF 字体写入 OFD 失败，相关文字仍以文字对象保留（可能依赖查看器字体替换）", e);
+        }
+        /*
+         * 字体子集化的 old→new 映射在字体写出后才确定，而文字对象在渲染阶段已写入页面内容，
+         * 因此这里在 flush 之后统一把 CGTransform 的 GID 改写为最终值（未子集化时为恒等，不产生改动）。
+         */
+        if (trackFinalGid != null) {
+            try {
+                int changed = fonts.resolvePendingGids();
+                if (changed > 0) {
+                    logger.debug("CGTransform GID 已按子集字体改写：{} 个", changed);
+                }
+            } catch (RuntimeException e) {
+                logger.warn("CGTransform GID 改写失败，子集化字体可能导致字形错位", e);
+            }
         }
     }
 

@@ -167,22 +167,41 @@ public final class GraphicsStateResolver {
     }
 
     /**
-     * 生成描边样式指令
+     * 生成描边样式指令（无图元 CTM 缩放，按 mm→pt 换算线宽）
      *
      * @param param 有效绘制参数，不能为空
      * @return 描边样式指令（线宽与虚线已换算为 pt）
      */
     public static StrokeStyle toStrokeStyle(EffectiveDrawParam param) {
+        return toStrokeStyle(param, 1d);
+    }
+
+    /**
+     * 生成描边样式指令
+     *
+     * <p>线宽是“对象空间长度”，必须与坐标一样经过图元 CTM 缩放：参考实现把 {@code LineWidth}
+     * 原值写在 mm 空间中（外层 {@code 2.8346 cm}），生效线宽由 {S} 命令时的总 CTM 决定，
+     * 例如 0.5mm 边框写作 {@code 1.4173 w}（CTM 合计 1.0，有效 1.4173pt），而无图元 CTM 的
+     * {@code .12 w}（CTM 合计 2.8346）有效线宽是 0.34pt。因此这里按图元 CTM 的线性缩放倍数
+     * （已含 mm→pt）换算，避免整页统一乘或统一乘 2.8346 造成的三倍粗细偏差。</p>
+     *
+     * @param param    有效绘制参数，不能为空
+     * @param ctmScale 图元 CTM 到页面 pt 的线性缩放倍数（mm→pt 已包含在内），正数
+     * @return 描边样式指令（线宽与虚线已换算为 pt）
+     */
+    public static StrokeStyle toStrokeStyle(EffectiveDrawParam param, double ctmScale) {
         if (param == null) {
             throw new IllegalArgumentException("绘制参数不能为空");
         }
+        double scale = ctmScale > 0d && !Double.isNaN(ctmScale) ? ctmScale : 1d;
         double[] dashes = param.getDashPattern().getDashArray();
         double[] inPt = new double[dashes.length];
         for (int i = 0; i < dashes.length; i++) {
-            inPt[i] = CoordSystem.mmToPt(dashes[i]);
+            inPt[i] = CoordSystem.mmToPt(dashes[i]) * scale;
         }
-        DashPattern dashInPt = new DashPattern(inPt, CoordSystem.mmToPt(param.getDashPattern().getDashPhase()));
-        return new StrokeStyle(CoordSystem.mmToPt(param.getLineWidthMm()),
+        DashPattern dashInPt = new DashPattern(inPt,
+                CoordSystem.mmToPt(param.getDashPattern().getDashPhase()) * scale);
+        return new StrokeStyle(param.getLineWidthMm() * scale,
                 param.getLineCap(), param.getLineJoin(), param.getMiterLimit(), dashInPt);
     }
 
@@ -196,6 +215,46 @@ public final class GraphicsStateResolver {
      * @return 展开后的参数（已填充默认值）
      */
     private EffectiveDrawParam resolveChain(String id) {
+        List<CT_DrawParam> chain = chainOf(id);
+        EffectiveDrawParam result = EffectiveDrawParam.defaults();
+        // 链尾是最基础参数，链头（起始参数）最贴近图元，因此从链尾向链头依次覆盖
+        for (int i = chain.size() - 1; i >= 0; i--) {
+            result = apply(chain.get(i), result);
+        }
+        return result;
+    }
+
+    /**
+     * 解析图元的绘制参数，并把图层（容器）绘制参数作为继承基准
+     * <p>
+     * OFD 8.2.1 就近原则：图元属性 &gt; 图元 DrawParam &gt; 图层 DrawParam &gt; {@code Relative} 链 &gt; 默认值。
+     * 与 {@link #resolve(ST_RefID)} 的差别在于基准不是默认值而是图层参数：图元未定义的字段
+     * 会继续沿用图层声明的值（例如图层统一声明的描边色、线宽）。
+     *
+     * @param parent 图层有效绘制参数（已展开 Relative 链），可为空（为空等价于 {@link #resolve(ST_RefID)}）
+     * @param ref    图元绘制参数引用，可为空
+     * @return 有效绘制参数
+     */
+    public EffectiveDrawParam resolveInherited(EffectiveDrawParam parent, ST_RefID ref) {
+        EffectiveDrawParam base = parent == null ? EffectiveDrawParam.defaults() : parent;
+        String id = idOf(ref);
+        if (id == null) {
+            return base;
+        }
+        List<CT_DrawParam> chain = chainOf(id);
+        for (int i = chain.size() - 1; i >= 0; i--) {
+            base = apply(chain.get(i), base);
+        }
+        return base;
+    }
+
+    /**
+     * 展开绘制参数 {@code Relative} 链
+     *
+     * @param id 起始绘制参数 ID
+     * @return 从起始参数到链尾的参数列表
+     */
+    private List<CT_DrawParam> chainOf(String id) {
         List<CT_DrawParam> chain = new ArrayList<>(4);
         Set<String> visited = new HashSet<>();
         String current = id;
@@ -217,13 +276,7 @@ public final class GraphicsStateResolver {
             String next = idOf(param.getRelative());
             current = next;
         }
-        EffectiveDrawParam result = EffectiveDrawParam.defaults();
-        // 链尾是最基础参数，链头（起始参数）最贴近图元，因此从链尾向链头依次覆盖
-        for (int i = chain.size() - 1; i >= 0; i--) {
-            result = apply(chain.get(i), result);
-        }
-        // 链头（最贴近图元的参数）最后应用，其已定义字段优先生效
-        return result;
+        return chain;
     }
 
     /**

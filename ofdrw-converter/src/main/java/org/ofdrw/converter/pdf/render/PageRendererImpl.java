@@ -12,6 +12,8 @@ import org.ofdrw.converter.pdf.font.FontSelectorImpl;
 import org.ofdrw.converter.pdf.font.TrueTypePdfFont;
 import org.ofdrw.converter.pdf.model.AffineMatrix;
 import org.ofdrw.converter.pdf.model.ContentCommand;
+import org.ofdrw.converter.pdf.model.RestoreState;
+import org.ofdrw.converter.pdf.model.SaveState;
 import org.ofdrw.converter.pdf.model.PdfPageContent;
 import org.ofdrw.core.annotation.pageannot.Annot;
 import org.ofdrw.core.annotation.pageannot.Appearance;
@@ -178,6 +180,11 @@ public final class PageRendererImpl implements PageRenderer {
     private final Set<String> reported = ConcurrentHashMap.newKeySet();
 
     /**
+     * 绘制参数解析器，可为空；用于解析图层声明的 DrawParam（含 Relative 链）
+     */
+    private final GraphicsStateResolver stateResolver;
+
+    /**
      * 构造页面渲染器
      *
      * @param reader        OFD 读取器，可为空
@@ -187,9 +194,24 @@ public final class PageRendererImpl implements PageRenderer {
      */
     public PageRendererImpl(OFDReader reader, PathRenderer pathRenderer, TextRenderer textRenderer,
                             ImageRenderer imageRenderer) {
+        this(reader, pathRenderer, textRenderer, imageRenderer, null);
+    }
+
+    /**
+     * 构造页面渲染器（带绘制参数解析器）
+     *
+     * @param reader         OFD 读取器，可为空
+     * @param pathRenderer   路径渲染器，不能为空
+     * @param textRenderer   文字渲染器，可为空
+     * @param imageRenderer  图像渲染器，不能为空
+     * @param stateResolver  绘制参数解析器，可为空（为空时图层 DrawParam 继承链路不生效）
+     */
+    public PageRendererImpl(OFDReader reader, PathRenderer pathRenderer, TextRenderer textRenderer,
+                            ImageRenderer imageRenderer, GraphicsStateResolver stateResolver) {
         if (pathRenderer == null || imageRenderer == null) {
             throw new IllegalArgumentException("路径渲染器与图像渲染器不能为空");
         }
+        this.stateResolver = stateResolver;
         this.reader = reader;
         this.pathRenderer = pathRenderer;
         this.textRenderer = textRenderer;
@@ -310,7 +332,12 @@ public final class PageRendererImpl implements PageRenderer {
                 ? new FontSelectorImpl(null, registry)
                 : new FontSelectorImpl(reader.getResourceLocator(), registry)
                 .fontResolver(id -> reader.getResMgt() == null ? null : reader.getResMgt().getFont(id));
-        PageRendererImpl pageRenderer = new PageRendererImpl(reader, pathRenderer, textRenderer, imageRenderer);
+        PageRendererImpl pageRenderer = new PageRendererImpl(reader, pathRenderer, textRenderer, imageRenderer,
+                stateResolver);
+        // 底纹单元格内的图元（文字/路径/图像）必须由页面渲染器分派渲染，
+        // 否则 PatternRenderer 拿不到单元格内容，整个底纹会因“单元内容为空”被跳过
+        pathRenderer.usePatternCellRenderer(
+                (content, cellContext) -> pageRenderer.renderCellContent(content, cellContext));
         return new RenderPipeline(pageRenderer, fontSelector, registry);
     }
 
@@ -348,7 +375,7 @@ public final class PageRendererImpl implements PageRenderer {
         if (annots == null || annots.isEmpty()) {
             return content;
         }
-        RenderContext context = RenderContexts.create(pageBox.getX0(), pageBox.getY0(),
+        RenderContext context = RenderContexts.createAppearance(pageBox.getX0(), pageBox.getY0(),
                 pageBox.getWidth(), pageBox.getHeight(), content, fontSelector);
         for (Annot annot : annots) {
             renderAppearance(annot, context);
@@ -569,9 +596,16 @@ public final class PageRendererImpl implements PageRenderer {
                 warnOnce("template-missing-" + id, "模板页不存在，已跳过：ID=" + id);
                 return;
             }
-            // 模板页是独立页面描述：其内容坐标以模板页自身的物理页面区域（mm）为基准，
-            // 因此进入模板时用模板页的页面框替换容器页面框（否则模板内容会按父页面高度做 Y 翻转而错位）
-            PageBox templateBox = pageBox(entity.getPage(), this.reader);
+            /*
+             * 模板页有自身 Area 时以其物理页面区域为基准；没有 Area 时必须沿用宿主页面的页面框，
+             * 因为此时模板内容就是用宿主页面的坐标系绘制的。若回退到文档级 PageArea（如 A4 297mm），
+             * 模板内容会按错误的页高做 Y 翻转而整体落到页面之外（实测整页模板文字/边框消失）。
+             */
+            PageBox templateBox = entity.getPage().getArea() != null
+                    && physicalBoxOf(entity.getPage().getArea()) != null
+                    ? pageBox(entity.getPage(), this.reader)
+                    : new PageBox(context.getPageX0Mm(), context.getPageY0Mm(),
+                    context.getPageWidthMm(), context.getPageHeightMm());
             RenderContext templateContext = RenderContexts.create(templateBox.getX0(), templateBox.getY0(),
                     templateBox.getWidth(), templateBox.getHeight(), context.getPageContent(),
                     context.getFontSelector()).withCtm(context.getCurrentCtm());
@@ -589,7 +623,17 @@ public final class PageRendererImpl implements PageRenderer {
      * @param depth   当前递归深度
      */
     private void renderLayer(CT_Layer layer, RenderContext context, int depth) {
-        List<ContentCommand> block = renderBlock(layer, context, depth);
+        // 图层声明的 DrawParam 是子图元绘制参数的继承基准（OFD 8.2.1 就近原则）：
+        // 不向下传递时，图层统一声明的描边色/线宽对子图元不可见，整层线宽与颜色退回默认值
+        RenderContext layerContext = context;
+        org.ofdrw.core.basicType.ST_RefID layerRef = layer.getDrawParam();
+        if (layerRef != null && stateResolver != null) {
+            EffectiveDrawParam layerParam = stateResolver.resolve(layerRef);
+            if (layerParam != null) {
+                layerContext = context.withInheritedDrawParam(layerParam);
+            }
+        }
+        List<ContentCommand> block = renderBlock(layer, layerContext, depth);
         if (block.isEmpty()) {
             return;
         }
@@ -624,6 +668,23 @@ public final class PageRendererImpl implements PageRenderer {
             commands.addAll(renderUnit(child, context, depth));
         }
         return commands;
+    }
+
+    /**
+     * 渲染底纹单元格内的图元
+     * <p>
+     * {@code CellContent} 继承自 {@code CT_PageBlock}，其坐标以单元格左上角为原点，
+     * 由各图元渲染器统一按对象空间处理，因此这里直接复用 {@link #renderUnit}。
+     *
+     * @param content 单元格内容（OFD {@code CellContent}）
+     * @param context 单元格对应的渲染上下文
+     * @return 指令序列；内容为空或不支持时返回空列表
+     */
+    List<ContentCommand> renderCellContent(Object content, RenderContext context) {
+        if (!(content instanceof CT_PageBlock) || context == null) {
+            return Collections.emptyList();
+        }
+        return renderUnit((PageBlockType) content, context, 0);
     }
 
     /**
@@ -700,7 +761,16 @@ public final class PageRendererImpl implements PageRenderer {
         RenderContext inner = context.withCtm(ctm.multiply(context.getCurrentCtm()));
         List<ContentCommand> commands = new ArrayList<>();
         commands.addAll(renderBlock(content, inner, depth + 1));
-        return commands;
+        /*
+         * 组合对象的裁剪区坐标以组合对象自身的外接矩形为原点，需先叠加组合对象的 CTM 才能落到页面；
+         * 在坐标换算补齐之前，这里只保留图形状态隔离（q/Q），不写出裁剪路径，
+         * 避免坐标尚未换算的裁剪区把组合内容整块裁掉。
+         */
+        List<ContentCommand> wrapped = new ArrayList<>(commands.size() + 2);
+        wrapped.add(SaveState.INSTANCE);
+        wrapped.addAll(commands);
+        wrapped.add(RestoreState.INSTANCE);
+        return wrapped;
     }
 
     /**

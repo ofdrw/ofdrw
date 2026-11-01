@@ -180,8 +180,13 @@ class TrueTypePdfFontTest {
     }
 
     @Test
-    @DisplayName("资源登记表：资源名递增、字体按对象复用、换页清空")
+    @DisplayName("资源登记表：资源名递增、字体按对象复用、跨页累积")
     void registry() throws IOException {
+        /*
+         * 契约：资源名全局唯一、字体表跨页累积（不随 newPage() 清空）。
+         * 原因：同一字体在多页出现时是同一个 TrueTypePdfFont 实例，其“字形 → Unicode”映射随页面推进不断追加，
+         * 保存前需要据此统一刷新 ToUnicode；因此 newPage() 不清空字体表，资源名也继续递增。
+         */
         TrueTypePdfFont.Registry registry = new TrueTypePdfFont.Registry();
         assertEquals("F1", registry.allocateResourceName());
         assertEquals("F2", registry.allocateResourceName());
@@ -196,8 +201,9 @@ class TrueTypePdfFontTest {
         registry.register(font);
         assertEquals(1, registry.getFonts().size());
         registry.newPage();
-        assertTrue(registry.getFonts().isEmpty());
-        assertEquals("F1", registry.allocateResourceName());
+        // 换页不清空字体表：跨页累积是设计行为（全文档统一刷新 ToUnicode），资源名继续递增
+        assertEquals(1, registry.getFonts().size(), "newPage 后字体表应保留（跨页累积）");
+        assertEquals("F3", registry.allocateResourceName(), "资源名全局唯一、跨页继续递增");
         assertThrows(IllegalArgumentException.class, () -> registry.register(null));
     }
 

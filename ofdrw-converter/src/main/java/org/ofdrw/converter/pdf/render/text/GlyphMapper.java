@@ -39,13 +39,34 @@ public final class GlyphMapper {
      * @param fontSizePt  字号，单位 pt
      * @param baseMatrix  容器 CTM 与页面换算组成的页内坐标 → 页面坐标矩阵（mm→pt 与 Y 翻转已在其中）；
      *                    字形原点取自 TextCode 的绝对坐标，故其中不得再叠加外接矩形平移
+     * @param orientation 字形方向矩阵（单位旋转/镜像，来自图元与容器 CTM 的旋转分量），可为空表示无旋转
      * @param color       文字颜色
      * @param warnings    降级事件收集器
      * @return 文字指令；没有可写出的字形时返回 null
      */
     public TextCommand map(OfdText text, TextLayout layout, TrueTypePdfFont font, double fontSizePt,
-                           AffineMatrix baseMatrix, PdfColor color,
+                           AffineMatrix baseMatrix, AffineMatrix orientation, PdfColor color,
                            List<String> warnings) {
+        return map(text, layout, font, fontSizePt, baseMatrix, orientation, color, warnings, 0);
+    }
+
+    /**
+     * 把布局结果映射为文字指令（带加粗描边线宽）
+     *
+     * @param text          文字图元视图
+     * @param layout        布局结果
+     * @param font          字体引用
+     * @param fontSizePt    字号，单位 pt
+     * @param baseMatrix    基础矩阵（页面坐标）
+     * @param orientation   字形方向矩阵
+     * @param color         文字颜色
+     * @param warnings      告警收集器
+     * @param strokeWidthPt 加粗描边线宽，单位 pt；0 表示不描边
+     * @return 文字指令，无字形时返回 null
+     */
+    public TextCommand map(OfdText text, TextLayout layout, TrueTypePdfFont font, double fontSizePt,
+                           AffineMatrix baseMatrix, AffineMatrix orientation, PdfColor color,
+                           List<String> warnings, double strokeWidthPt) {
         if (layout == null || layout.isEmpty()) {
             return null;
         }
@@ -63,14 +84,19 @@ public final class GlyphMapper {
          *    Tm 的线性部分不能带 mm→pt 缩放，否则字号会被二次放大。
          */
         AffineMatrix direction = rotationMatrix(text.getCharDirectionDeg());
+        if (orientation != null) {
+            // 先按字符方向旋转字形，再叠加图元/容器 CTM 的方向
+            direction = direction.multiply(orientation);
+        }
         TextLayout.PlacedGlyph first = layout.getGlyphs().get(0);
         /*
          * 首字形原点的页面坐标（pt）：页内绝对坐标经 baseMatrix 换算而来，作为 Tm 的平移量。
          * 不能直接取 baseMatrix 的平移量：它对应页内坐标原点，不含 TextCode 的 X/Y，文字会全部堆到页角。
          */
         double[] origin = baseMatrix.transform(first.getX(), first.getY());
-        // Tm = 首字形页面原点 × 字符方向旋转；线性部分不带 mm→pt 缩放
-        AffineMatrix textMatrix = new AffineMatrix(1, 0, 0, 1, origin[0], origin[1]).multiply(direction);
+        // Tm = 首字形页面原点 + 方向旋转；线性部分不带 mm→pt 缩放（缩放已折算进字号）
+        AffineMatrix textMatrix = new AffineMatrix(direction.getA(), direction.getB(),
+                direction.getC(), direction.getD(), origin[0], origin[1]);
         /*
          * 字形定位：baseMatrix 只把页内坐标差换算为“相对首字形”的页面位移，
          * 再叠加字符方向旋转得到文本空间位移。首字形位移为 0，其余字形按各自的绝对位置相对首字形给出，
@@ -97,7 +123,7 @@ public final class GlyphMapper {
             font.registerDocumentAdvance(glyphIds.get(i)[0], (float) (advancePt * 1000d / fontSizePt));
             runs.add(new GlyphRun(glyphIds.get(i)[0], glyph.getText(), local[0], local[1], advancePt));
         }
-        return new TextCommand(font.getResourceName(), fontSizePt, textMatrix, runs, color);
+        return new TextCommand(font.getResourceName(), fontSizePt, textMatrix, runs, color, strokeWidthPt);
     }
 
     /**

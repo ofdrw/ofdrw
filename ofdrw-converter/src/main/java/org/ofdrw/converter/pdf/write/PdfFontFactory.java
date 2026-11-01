@@ -210,22 +210,12 @@ public final class PdfFontFactory {
         }
         COSArray widths = new COSArray();
         int count = 0;
-        java.util.Map<Integer, Float> documented = font.documentAdvances();
-        if (!documented.isEmpty()) {
-            // 只写本页真正用到的字形（文档已给出步进）：字宽表越小，阅读器判词边界越稳，
-            // 未列出的字形由 /DW 兜底，不影响渲染位置（位置由显式 Tm 决定）
-            for (java.util.Map.Entry<Integer, Float> e : new java.util.TreeMap<Integer, Float>(documented).entrySet()) {
-                if (e.getKey() == null || e.getValue() == null || e.getValue() <= 0f) {
-                    continue;
-                }
-                COSArray one = new COSArray();
-                one.add(new org.apache.pdfbox.cos.COSFloat(e.getValue()));
-                widths.add(COSInteger.get(e.getKey()));
-                widths.add(one);
-                count++;
-            }
-            return count == 0 ? null : widths;
-        }
+        /*
+         * 使用字体真实字宽（hmtx）而非文档 Delta：写入侧用同一口径计算 TJ 字距修正，
+         * 阅读器推进与修正量一致，字形位置由 TJ 精确补偿到 OFD 声明的位置；
+         * 结合 TJ 整数量化后，字形落点与参考实现一致（按文档 Delta 写 /W 会改变量化基准，
+         * 实测 doc1File/manual 等样本的像素差反而变大）。
+         */
         int lastNonZero = -1;
         for (int gid = 0; gid < MAX_WIDTH_GLYPHS; gid++) {
             float width = metrics.getAdvanceWidth(gid);

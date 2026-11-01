@@ -111,7 +111,10 @@ public final class ImageRendererImpl implements ImageRenderer {
             }
             // 图像的对象空间是单位正方形 (0,0)-(1,1)：CTM 已把单位正方形拉伸到外接矩形的宽高并平移到其左上角，
             // 因此落点矩形由单位正方形的四个角经变换得到，不能再把 Boundary 的 mm 宽高参与变换（会与 CTM 缩放叠加）
-            AffineMatrix toPage = ImageGeometry.unitSquareToPage(imageObject.getCTM(), imageObject.getBoundary(), context);
+            // 旋转/斜切 CTM 必须用完整矩阵绘制，否则旋转分量会被当成纯缩放（方向与尺寸都错）
+            AffineMatrix toPage = ImageGeometry.isAxisAligned(imageObject.getCTM())
+                    ? ImageGeometry.unitSquareToPage(imageObject.getCTM(), imageObject.getBoundary(), context)
+                    : ImageGeometry.rotatedUnitSquareToPage(imageObject.getCTM(), imageObject.getBoundary(), context);
             Box placement = ImageGeometry.unitSquareBox(toPage);
             if (placement == null) {
                 warnOnce("image-boundary", "图像图元缺少有效外接矩形，已跳过："
@@ -121,6 +124,7 @@ public final class ImageRendererImpl implements ImageRenderer {
             ST_RefID resourceId = imageObject.getResourceID();
             if (resourceId == null) {
                 warnOnce("image-no-resource", "图像图元缺少资源引用，已跳过：" + imageObject.getBoundary());
+                context.getPageContent().markImageResourceMissing();
                 return Collections.emptyList();
             }
             String id = GraphicsStateResolver.idOf(resourceId);
@@ -136,6 +140,7 @@ public final class ImageRendererImpl implements ImageRenderer {
             ImageResourceLoader.ImageData main = load(id);
             if (main == null) {
                 // 资源缺失：整条指令序列作废（不产生半截的 q/Q），由调用方跳过该图元，告警已在 load 中输出
+                context.getPageContent().markImageResourceMissing();
                 return Collections.emptyList();
             }
             if (imageObject.getSubstitution() != null) {
@@ -145,7 +150,8 @@ public final class ImageRendererImpl implements ImageRenderer {
             if (mask != null) {
                 commands.add(toCommand(mask, placement, true, toPage));
             }
-            commands.add(toCommand(main, placement, mask != null, toPage));
+            // 主图必须以非蒙版指令写出：写入器会把它与紧邻的蒙版指令配对为 /SMask，若主图也标记为蒙版则两边都无法绘制
+            commands.add(toCommand(main, placement, false, toPage));
             ContentCommand border = borderCommand(imageObject, context, toPage, placement);
             if (border != null) {
                 commands.add(border);
@@ -248,7 +254,7 @@ public final class ImageRendererImpl implements ImageRenderer {
             warnOnce("image-border-width", "图像边框线宽无效，已跳过边框绘制：" + lineWidthMm);
             return null;
         }
-        double scale = ImageGeometry.unitScale(toPage) / CoordSystem.MM_TO_PT;
+        double scale = ImageGeometry.unitScale(toPage) / CoordSystem.CONTENT_MM_TO_PT;
         double lineWidthPt = CoordSystem.mmToPt(lineWidthMm) * scale;
         // 圆角半径同样只在显式声明时生效（避免属性缺失时读到非零默认值把直角画成圆角）
         Double explicitH = explicitAttribute(border, "HorizonalCornerRadius");

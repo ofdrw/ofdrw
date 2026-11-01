@@ -15,6 +15,7 @@ import org.ofdrw.converter.pdf.render.text.OfdTextAdapter;
 import org.ofdrw.converter.pdf.render.text.TextLayout;
 import org.ofdrw.converter.pdf.render.text.TextLayoutEngine;
 import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
+import org.ofdrw.core.text.text.Weight;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +42,11 @@ import java.util.List;
 public final class TextRendererImpl implements TextRenderer {
 
     private static final Logger logger = LoggerFactory.getLogger(TextRendererImpl.class);
+
+    /**
+     * 粗体描边宽度相对字号的比率（参考实现以 1.82% 的字号描边模拟粗体）
+     */
+    private static final double BOLD_STROKE_RATIO = 0.0182d;
 
     /**
      * 颜色解析器（P3）：把文字填充色按颜色空间解析，CMYK 不转 RGB
@@ -141,7 +147,13 @@ public final class TextRendererImpl implements TextRenderer {
          * 不作用于外接矩形锚点（实测 testImageNotFound：位置 x 与 Boundary.x 完全相等），
          * 因此字形的紧凑程度由“字号 × 缩放”决定。Size=1mm、CTM 缩放 9.1722 时 ≈ 26pt，与基准一致。
          */
-        double fontSizePt = CoordSystem.mmToPt(text.getSizeMm()) * elementScale(text);
+        /*
+         * 字号 = OFD Size × 图元 CTM 线性缩放 × 容器 CTM 线性缩放。
+         * 容器（复合对象/图层）CTM 同时作用于字形位置，字号必须同步缩放；否则位置正确而字形被放大，
+         * 表现为文字互相压叠（复合对象 CTM 0.3528 时字号偏大约 2.83 倍）。
+         */
+        double fontSizePt = CoordSystem.mmToPt(text.getSizeMm()) * elementScale(text)
+                * matrixScale(context.getCurrentCtm());
         double nominalAdvancePt = font.nominalAdvancePt(fontSizePt) * text.getHScale();
         TextLayout layout = layoutEngine.layout(text, CoordSystem.ptToMm(nominalAdvancePt));
         // 图元 CTM 只作用于字形偏移（TextCode 的 X/Y 与 Delta），锚点保持外接矩形角点不变
@@ -165,15 +177,20 @@ public final class TextRendererImpl implements TextRenderer {
 
         // 4) 颜色（决策 2/3.4）：颜色空间保持原样（CMYK 不转 RGB），
         //    颜色自身的 Alpha × 图元 Alpha（图元显式优先，其次 DrawParam 链，缺省不透明）
-        Integer unitAlpha = effectiveAlpha(textObject);
-        PdfColor color = textColor(textObject, unitAlpha);
+        EffectiveDrawParam inherited = context.getInheritedDrawParam();
+        Integer unitAlpha = effectiveAlpha(textObject, inherited);
+        PdfColor color = textColor(textObject, unitAlpha, inherited);
         // 颜色自身的 Alpha 已在 PdfColor.opacity 中，与图元 Alpha 相乘后的最终不透明度
         float alpha = color.getOpacity();
 
-        // 5) 字形映射
+        // 5) 字形方向：图元/容器 CTM 的旋转分量必须写入文本矩阵，否则字按错误方向排布
+        AffineMatrix orientation = textOrientation(text, base);
+
+        // 6) 字形映射（Weight≥700 时参考实现用描边模拟粗体）
         List<String> warnings = new ArrayList<>();
+        double strokeWidthPt = boldStrokeWidthPt(textObject, fontSizePt);
         TextCommand command = glyphMapper.map(text, scaled, font, fontSizePt,
-                base, color, warnings);
+                base, orientation, color, warnings, strokeWidthPt);
         if (command == null) {
             return Collections.emptyList();
         }
@@ -198,6 +215,35 @@ public final class TextRendererImpl implements TextRenderer {
         commands.add(command);
         commands.add(org.ofdrw.converter.pdf.model.RestoreState.INSTANCE);
         return commands;
+    }
+
+    /**
+     * 计算粗体描边线宽
+     * <p>
+     * OFD 的 {@code Weight}（默认 400）达到 700 视为粗体；参考实现不使用粗体字体，
+     * 而是以“填充+描边”（{@code 2 Tr}）模拟粗体。描边宽度恒为字号的
+     * {@link #BOLD_STROKE_RATIO}（1.82%），与图元是否声明 {@code LineWidth} 无关：
+     * keyword 水印（无显式值，Size=11.17mm）基准写 {@code .2031 w}，manual 表头
+     * （显式 {@code LineWidth=0.02}，Size=1mm、CTM 4.2333）基准写 {@code .0182 w}，
+     * 两者都等于 1.82% × {@code Size}，显式值并不参与。
+     *
+     * @param textObject  文字对象
+     * @param fontSizePt  字号，单位 pt（已含图元 CTM 缩放）
+     * @return 描边线宽，单位 pt；非粗体返回 0
+     */
+    private static double boldStrokeWidthPt(TextObject textObject, double fontSizePt) {
+        Weight weight;
+        try {
+            weight = textObject.getWeight();
+        } catch (RuntimeException e) {
+            logger.warn("[{}] 文字图元 {} 的 Weight 无法识别，按非粗体处理：{}", RenderContext.DIAGNOSTIC_TAG,
+                    textObject.getObjID(), e.getMessage());
+            return 0;
+        }
+        if (weight == null || weight.getWeight() == null || weight.getWeight() < 700) {
+            return 0;
+        }
+        return BOLD_STROKE_RATIO * fontSizePt;
     }
 
     /**
@@ -227,6 +273,54 @@ public final class TextRendererImpl implements TextRenderer {
                     bx + moved[0], by + moved[1], g.getAdvanceMm(), g.isShared()));
         }
         return new TextLayout(glyphs, layout.getWarnings());
+    }
+
+    /**
+     * 计算文字字形在页面坐标中的方向矩阵（单位旋转/镜像，不含缩放）
+     * <p>
+     * OFD 的图元 CTM 定义在 Y 轴向下的页面坐标系中，换算到 PDF 页面（Y 轴向上）需要做一次坐标轴共轭，
+     * 即同时取反线性部分的 {@code b}、{@code c} 分量。缩放分量由字号承担（{@link #elementScale}），
+     * 这里返回的矩阵只保留方向，供文本矩阵使用。
+     *
+     * @param text 文字图元视图，提供图元 CTM
+     * @param base 容器 CTM → 页面坐标的换算矩阵（包含 mm→pt 与 Y 翻转）
+     * @return 单位方向矩阵；无旋转/镜像时为单位矩阵
+     */
+    private static AffineMatrix textOrientation(OfdText text, AffineMatrix base) {
+        AffineMatrix element = text.getCtm() == null
+                ? AffineMatrix.IDENTITY
+                : CoordSystem.fromCtm(text.getCtm());
+        // 共轭：取反 b、c，使方向从 OFD（Y 轴向下）换算到 PDF（Y 轴向上）
+        AffineMatrix elementDirection = new AffineMatrix(element.getA(), -element.getB(),
+                -element.getC(), element.getD(), 0, 0);
+        // base 的线性部分为「容器 CTM × 页面换算」，共轭后取反 c、d 即得到容器方向
+        AffineMatrix containerDirection = new AffineMatrix(base.getA(), base.getB(),
+                -base.getC(), -base.getD(), 0, 0);
+        AffineMatrix direction = elementDirection.multiply(containerDirection);
+        double sx = Math.hypot(direction.getA(), direction.getB());
+        double sy = Math.hypot(direction.getC(), direction.getD());
+        double scale = (sx + sy) / 2d;
+        if (scale <= 0 || Math.abs(scale - 1d) < 1e-12) {
+            return direction;
+        }
+        return new AffineMatrix(direction.getA() / scale, direction.getB() / scale,
+                direction.getC() / scale, direction.getD() / scale, 0, 0);
+    }
+
+    /**
+     * 计算容器 CTM 的等效线性缩放
+     *
+     * @param ctm 容器 CTM，可为空
+     * @return 缩放倍数（无量纲）；为空时返回 1
+     */
+    private static double matrixScale(AffineMatrix ctm) {
+        if (ctm == null) {
+            return 1d;
+        }
+        double sx = Math.hypot(ctm.getA(), ctm.getB());
+        double sy = Math.hypot(ctm.getC(), ctm.getD());
+        double scale = (sx + sy) / 2d;
+        return scale <= 0 ? 1d : scale;
     }
 
     /**
@@ -282,13 +376,13 @@ public final class TextRendererImpl implements TextRenderer {
      * @param textObject 文字对象
      * @return Alpha，取值 0~255；无法确定时返回 255
      */
-    private Integer effectiveAlpha(TextObject textObject) {
+    private Integer effectiveAlpha(TextObject textObject, EffectiveDrawParam inherited) {
         Integer explicit = textObject.getAlphaExplicit();
         if (stateResolver == null) {
             return explicit == null ? 255 : explicit;
         }
         EffectiveDrawParam params = stateResolver.applyUnitAttributes(
-                stateResolver.resolve(textObject.getDrawParam()),
+                stateResolver.resolveInherited(inherited, textObject.getDrawParam()),
                 textObject.getLineWidth(), textObject.getCapExplicit(), textObject.getJoinExplicit(),
                 textObject.getMiterLimit(), textObject.getDashPattern(), explicit);
         return params.getAlpha();
@@ -308,8 +402,15 @@ public final class TextRendererImpl implements TextRenderer {
      * @param unitAlpha  图元 Alpha，可为空
      * @return 文字颜色；颜色缺失时返回黑色
      */
-    private PdfColor textColor(TextObject textObject, Integer unitAlpha) {
+    private PdfColor textColor(TextObject textObject, Integer unitAlpha, EffectiveDrawParam inherited) {
         org.ofdrw.core.pageDescription.color.color.CT_Color fillColor = textObject.getFillColor();
+        if (fillColor == null && inherited != null) {
+            // 图层声明的填充色优先级低于图元自身的 DrawParam 链，但高于规范默认黑色
+            Object layerFill = inherited.getFillColor();
+            if (layerFill instanceof org.ofdrw.core.pageDescription.color.color.CT_Color) {
+                fillColor = (org.ofdrw.core.pageDescription.color.color.CT_Color) layerFill;
+            }
+        }
         if (fillColor == null && stateResolver != null) {
             fillColor = drawParamFillColor(textObject.getDrawParam());
         }

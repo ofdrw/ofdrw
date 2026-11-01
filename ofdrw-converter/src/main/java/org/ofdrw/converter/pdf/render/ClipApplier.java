@@ -117,6 +117,22 @@ public final class ClipApplier {
      * @return 裁剪指令序列（一个 Clip 一条指令）；无裁剪时返回空列表
      */
     public List<ClipCommand> apply(Object clips, RenderContext context) {
+        return apply(clips, context, null);
+    }
+
+    /**
+     * 把 OFD 裁剪目标转换为裁剪指令序列（可指定所属图元的外接矩形）
+     * <p>
+     * 裁剪路径以外接矩形左上角为原点：外接矩形原点为 (0, 0) 时无法表达绝对位置，
+     * 说明其坐标相对<b>所属图元</b>，需要叠加图元外接矩形位移（否则裁剪区域会落在页面左上角）；
+     * 外接矩形原点非 (0, 0) 时坐标已自带绝对位置，不再叠加，避免二次平移。
+     *
+     * @param clips          OFD 裁剪目标（{@link Clips}），可为空
+     * @param context        渲染上下文
+     * @param ownerBoundary 所属图元的外接矩形，单位 mm，可为空
+     * @return 裁剪指令序列（一个 Clip 一条指令）；无裁剪时返回空列表
+     */
+    public List<ClipCommand> apply(Object clips, RenderContext context, Box ownerBoundary) {
         if (!(clips instanceof Clips) || context == null) {
             return Collections.emptyList();
         }
@@ -127,7 +143,7 @@ public final class ClipApplier {
         AffineMatrix toPage = objectToPage(context);
         List<ClipCommand> commands = new ArrayList<>(clipList.size());
         for (CT_Clip clip : clipList) {
-            commands.addAll(applyClip(clip, toPage, context));
+            commands.addAll(applyClip(clip, toPage, context, ownerBoundary));
         }
         return commands;
     }
@@ -140,7 +156,7 @@ public final class ClipApplier {
      * @param context 渲染上下文
      * @return 裁剪指令列表（0 或 1 条）
      */
-    public List<ClipCommand> applyClip(CT_Clip clip, AffineMatrix toPage, RenderContext context) {
+    public List<ClipCommand> applyClip(CT_Clip clip, AffineMatrix toPage, RenderContext context, Box ownerBoundary) {
         if (clip == null) {
             return Collections.emptyList();
         }
@@ -153,7 +169,7 @@ public final class ClipApplier {
         int areaCount = 0;
         for (Area area : areas) {
             try {
-                AffineMatrix areaToPage = areaToPage(area, toPage, context);
+                AffineMatrix areaToPage = areaToPage(area, toPage, context, ownerBoundary);
                 Object clipObj = area.getClipObj();
                 List<PathSegment> segments;
                 if (clipObj instanceof CT_Path) {
@@ -209,7 +225,21 @@ public final class ClipApplier {
      * @return 隔离后的指令序列，可直接加入 {@link org.ofdrw.converter.pdf.model.PdfPageContent}
      */
     public List<ContentCommand> render(Object clips, RenderContext context, List<? extends ContentCommand> content) {
-        List<ClipCommand> clipCommands = apply(clips, context);
+        return render(clips, context, content, null);
+    }
+
+    /**
+     * 把裁剪指令包裹到内容指令外层（可附加页面坐标平移）
+     *
+     * @param clips      OFD 裁剪目标，可为空
+     * @param context    渲染上下文
+     * @param content    被裁剪的内容指令
+     * @param ownerBoundary 所属图元的外接矩形，单位 mm，可为空
+     * @return 包裹后的指令序列
+     */
+    public List<ContentCommand> render(Object clips, RenderContext context,
+                                       List<? extends ContentCommand> content, Box ownerBoundary) {
+        List<ClipCommand> clipCommands = apply(clips, context, ownerBoundary);
         if (clipCommands.isEmpty()) {
             return content == null ? Collections.emptyList() : new ArrayList<ContentCommand>(content);
         }
@@ -234,13 +264,20 @@ public final class ClipApplier {
      * @param context 渲染上下文
      * @return 区域坐标 → 页面坐标矩阵
      */
-    private AffineMatrix areaToPage(Area area, AffineMatrix toPage, RenderContext context) {
+    private AffineMatrix areaToPage(Area area, AffineMatrix toPage, RenderContext context, Box ownerBoundary) {
         AffineMatrix combined = toPage;
         Object clipObj = area.getClipObj();
         if (clipObj instanceof CT_Path) {
             org.ofdrw.core.basicType.ST_Box boundary = ((CT_Path) clipObj).getBoundary();
             if (boundary != null && boundary.getTopLeftX() != null && boundary.getTopLeftY() != null) {
-                combined = AffineMatrix.translate(boundary.getTopLeftX(), boundary.getTopLeftY()).multiply(toPage);
+                double x = boundary.getTopLeftX();
+                double y = boundary.getTopLeftY();
+                if (x == 0d && y == 0d && ownerBoundary != null) {
+                    // 原点为 (0,0)：坐标相对所属图元，叠加图元外接矩形左上角
+                    x += ownerBoundary.getX();
+                    y += ownerBoundary.getY();
+                }
+                combined = AffineMatrix.translate(x, y).multiply(toPage);
             }
         }
         ST_Array ctm = area.getCTM();

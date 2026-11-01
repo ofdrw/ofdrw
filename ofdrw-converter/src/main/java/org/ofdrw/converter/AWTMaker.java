@@ -91,6 +91,16 @@ import java.util.*;
  */
 public abstract class AWTMaker {
 
+    /**
+     * Unicode 回退时优先使用的无衬线中文字体（路径可带 {@code #TTC索引}）。
+     * 仅当内嵌字体无效或没有 cmap 时使用，避免影响正常内嵌/系统字体。
+     */
+    private static final String[] CJK_SANS_FALLBACK_PATHS = {
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc#2",
+            "/mnt/c/Windows/Fonts/simhei.ttf"
+    };
+
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 
@@ -1101,13 +1111,42 @@ public abstract class AWTMaker {
                      * 但若替代字体根本不具备文档文字（例如宿主系统无中文字体），
                      * 跳过与绘制 .notdef 同样无法还原文字，保留既有绘制行为（上方已有告警）。
                      */
-                    boolean glyphIndexInvalid = fontWrapper.isUseSimulatedGlyphIndex()
-                            && fontWrapper.isReplacementSupportsText();
+                    boolean glyphIndexInvalid = fontWrapper.isEmbedded()
+                            && !hasDrawableGlyph(typeFont, glyphIndexArr);
                     if (glyphIndexInvalid) {
-                        logger.warn("字体已替换为相似字体或默认字体，字形索引失效，跳过字形绘制, 字体ID: {}, 内嵌字体: {}, gid: {}",
+                        /*
+                         * 内嵌字体损坏（例如 intro-数科 的 font_128 头为 01 00 04 03）时，
+                         * FontLoader 会回退到相似字体或默认字体，文档中的 GID 与替代字体不一致。
+                         * 此时按 TextCode 字符重新走 Unicode cmap，而不是整段跳过：
+                         * 中文字符可由 SimSun/Noto 等替代字体正常呈现，避免整段文字消失。
+                         */
+                        logger.warn("字体已替换为相似字体或默认字体，字形索引失效，改用 Unicode cmap 回退, 字体ID: {}, 内嵌字体: {}, gid: {}",
                                 textObject.getFont(), fontWrapper.isEmbedded(), Arrays.toString(glyphIndexArr));
-                        tbDrawChars.add(null);
-                        tbDrawGids.add(-1);
+                        typeFont = unicodeCapableFont(typeFont);
+                        for (int i = 0; i < codeCount && offset + i < len; i++) {
+                            final char c = content.charAt(offset + i);
+                            /*
+                             * 只补绘 CJK 字符：无效字体中的拉丁字符在参照 PDF 里多由其它字体
+                             * （如 HelveticaNeue）承担，若这里用回退字体重绘会改变字重/字宽，
+                             * 反而让原本正常的页面产生新差异。非 CJK 字符保持原来的跳过行为。
+                             */
+                            if (!isCjkChar(c)) {
+                                tbDrawChars.add(null);
+                                tbDrawGids.add(-1);
+                                continue;
+                            }
+                            GeneralPath unicodePath = null;
+                            int unicodeGid = -1;
+                            try {
+                                GlyphData glyphData = typeFont.getUnicodeGlyph(c);
+                                unicodePath = glyphData == null ? null : glyphData.getPath();
+                                unicodeGid = typeFont.getUnicodeCmapLookup().getGlyphId(c);
+                            } catch (Exception e) {
+                                logger.debug("Unicode cmap 回退失败: 字符 '{}'", c, e);
+                            }
+                            tbDrawChars.add(unicodePath);
+                            tbDrawGids.add(unicodeGid);
+                        }
                     } else {
                         for (int gid : glyphIndexArr) {
                             GeneralPath drawPath;
@@ -1198,6 +1237,79 @@ public abstract class AWTMaker {
             }
         }
         logger.debug("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛");
+    }
+
+    /**
+     * 判断字体能否绘制给定字形索引中的任意一个。
+     * <p>
+     * 裸 CFF 字体可能没有 cmap 或对应轮廓，按 GID 绘制会全部得到空路径；此时应改用替代字体的 Unicode cmap。
+     *
+     * @param font 当前字体
+     * @param gids 文档给出的字形索引
+     * @return true 表示至少有一个字形可绘制
+     */
+    /**
+     * 判断字符是否属于 CJK 统一表意文字及常用兼容区。
+     *
+     * @param c 待判断字符
+     * @return true 表示中文/日文/韩文表意字符
+     */
+    private static boolean isCjkChar(char c) {
+        return (c >= 0x3400 && c <= 0x4DBF)
+                || (c >= 0x4E00 && c <= 0x9FFF)
+                || (c >= 0xF900 && c <= 0xFAFF)
+                || (c >= 0x3000 && c <= 0x303F)   // CJK 标点：、。〈〉《》「」等
+                || (c >= 0xFF00 && c <= 0xFFEF)   // 全角形式：（）、，。；：！？等
+                || (c >= 0x2000 && c <= 0x206F)   // 通用标点：—…“”‘’等
+                || (c >= 0x20000 && c <= 0x2FA1F);
+    }
+
+    private static boolean hasDrawableGlyph(TrueTypeFont font, int[] gids) {
+        for (int gid : gids) {
+            try {
+                GeneralPath path = font.getPath(gid);
+                if (path != null && !path.getBounds2D().isEmpty()) {
+                    return true;
+                }
+            } catch (Exception ignored) {
+                // 单个字形异常按不可绘制处理，继续检查其余字形
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 获取具备 Unicode cmap 的字体；当前字体没有 cmap 时回退到默认字体。
+     *
+     * @param font 当前字体
+     * @return 可按 Unicode 字符取字形的字体
+     */
+    private static TrueTypeFont unicodeCapableFont(TrueTypeFont font) {
+        try {
+            if (font.getUnicodeCmapLookup() != null) {
+                return font;
+            }
+        } catch (Exception ignored) {
+            // 无 cmap，继续使用默认字体
+        }
+        /*
+         * 替换字体优先选用无衬线中文字体：PDF 参照中的 PingFangSC-Regular 属于无衬线体，
+         * 若退回宋体/衬线体会让补绘文字的笔画宽度与字面尺寸偏差变大。
+         * 该偏好只用于无效内嵌字体/无 cmap 字体的 Unicode 回退，不影响正常字体加载。
+         */
+        for (String path : CJK_SANS_FALLBACK_PATHS) {
+            try {
+                TrueTypeFont fallback = FontLoader.getInstance().loadExternalFont(
+                        path, "Noto Sans CJK SC", "NotoSansCJKsc-Regular");
+                if (fallback != null && fallback.getUnicodeCmapLookup() != null) {
+                    return fallback;
+                }
+            } catch (Exception ignored) {
+                // 当前候选不可用时继续尝试下一个
+            }
+        }
+        TrueTypeFont fallback = FontLoader.getInstance().loadDefaultFont();
+        return fallback == null ? font : fallback;
     }
 
     /**

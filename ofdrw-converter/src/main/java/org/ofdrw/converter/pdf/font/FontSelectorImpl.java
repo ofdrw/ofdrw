@@ -192,7 +192,21 @@ public final class FontSelectorImpl implements FontSelector {
         boolean italic = Boolean.TRUE.equals(ctFont.getItalic());
         boolean serif = Boolean.TRUE.equals(ctFont.getSerif());
 
-        // 1) 字族名与字体名直接匹配
+        // 1) 字族名/字体名就是系统字体文件路径（部分生成器直接把路径写进 FamilyName）
+        for (String name : new String[]{family, fontName}) {
+            Path direct = existingFontFile(name);
+            if (direct != null) {
+                return direct;
+            }
+        }
+        // 2) 常见中文字族名 → 字体文件名（与 fontconfig 的别名等价，属于通用字体替换规则）
+        for (String name : new String[]{family, fontName}) {
+            Path found = matchAlias(name, bold, italic);
+            if (found != null) {
+                return found;
+            }
+        }
+        // 3) 字族名与字体名直接匹配文件名
         for (String name : new String[]{family, fontName}) {
             if (name == null || name.isEmpty()) {
                 continue;
@@ -222,6 +236,91 @@ public final class FontSelectorImpl implements FontSelector {
     }
 
     /**
+     * 系统字体目录（含 WSL 挂载的 Windows 字体目录）
+     */
+    private static final String[] SYSTEM_FONT_ROOTS = {
+            "/usr/share/fonts", "/usr/local/share/fonts", "/mnt/c/Windows/Fonts",
+            "/Library/Fonts", "C:/Windows/Fonts"};
+
+    /**
+     * 常见中文字族名到字体文件名的别名表
+     * <p>
+     * OFD 字体资源通常只声明 {@code FontName}/{@code FamilyName}（如“宋体”“黑体”），
+     * 系统字体目录里的文件名则是 {@code simsun.ttc}/{@code simhei.ttf}，两者需要别名才能对应。
+     * 别名按通用字体族给出，不针对具体文档。
+     */
+    private static final String[][] CJK_FONT_ALIASES = {
+            {"宋体", "simsun"}, {"新宋体", "simsun"}, {"simsun", "simsun"},
+            {"黑体", "simhei"}, {"simhei", "simhei"},
+            {"楷体", "simkai"}, {"楷体_gb2312", "simkai"}, {"kaiti", "simkai"}, {"simkai", "simkai"},
+            {"仿宋", "simfang"}, {"仿宋_gb2312", "simfang"}, {"simfang", "simfang"},
+            {"微软雅黑", "msyh"}, {"microsoftyahei", "msyh"},
+            {"等线", "deng"}, {"dengxian", "deng"},
+            {"隶书", "simli"}, {"幼圆", "simyou"}, {"华文行楷", "stxingka"},
+            {"华文楷体", "stkaiti"}, {"华文宋体", "stsong"}, {"华文黑体", "stheiti"},
+            // 常见西文字族：系统中通常以 Liberation/DejaVu 字体的同度量版本存在
+            {"couriernew", "liberationmono"}, {"courier", "liberationmono"},
+            {"arial", "liberationsans"}, {"helvetica", "liberationsans"},
+            {"timesnewroman", "liberationserif"}, {"times", "liberationserif"},
+    };
+
+    /**
+     * 判断名称是否为可用的字体文件路径
+     *
+     * @param name 字族名或字体名
+     * @return 字体文件路径；不是路径、文件不存在或格式不支持时返回 null
+     */
+    private static Path existingFontFile(String name) {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
+        String candidate = name.trim();
+        boolean looksLikePath = candidate.indexOf('/') >= 0 || candidate.indexOf('\\') >= 0
+                || candidate.matches("^[A-Za-z]:.*");
+        if (!looksLikePath) {
+            return null;
+        }
+        Path path = Paths.get(candidate);
+        if (Files.isRegularFile(path)) {
+            return path;
+        }
+        /*
+         * 路径可能来自其它平台（如 /usr/share/fonts/fonts/simhei.ttf）：
+         * 用文件名在系统字体目录中再找一次，仍找不到则放弃。
+         */
+        Path fileName = path.getFileName();
+        return fileName == null ? null : matchByName(fileName.toString(), false, false);
+    }
+
+    /**
+     * 按中文字族名别名匹配字体文件
+     *
+     * @param name   字族名或字体名
+     * @param bold   是否需要粗体
+     * @param italic 是否需要斜体
+     * @return 字体文件路径；没有别名或文件不存在时返回 null
+     */
+    private static Path matchAlias(String name, boolean bold, boolean italic) {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
+        String lower = name.trim().toLowerCase().replaceAll("\\s+", "");
+        for (String[] alias : CJK_FONT_ALIASES) {
+            if (!lower.equals(alias[0])) {
+                continue;
+            }
+            String stem = alias[1];
+            String boldStem = bold ? stem + "bd" : stem;
+            Path found = matchByName(boldStem, bold, italic);
+            if (found == null && bold) {
+                found = matchByName(stem, false, italic);
+            }
+            return found;
+        }
+        return null;
+    }
+
+    /**
      * 按字族名匹配系统字体文件
      *
      * @param name   字族名或字体名
@@ -231,7 +330,7 @@ public final class FontSelectorImpl implements FontSelector {
      */
     private static Path matchByName(String name, boolean bold, boolean italic) {
         String lower = name.toLowerCase();
-        String[] roots = {"/usr/share/fonts", "/Library/Fonts", "C:/Windows/Fonts"};
+        String[] roots = SYSTEM_FONT_ROOTS;
         for (String root : roots) {
             Path dir = Paths.get(root);
             if (!Files.isDirectory(dir)) {

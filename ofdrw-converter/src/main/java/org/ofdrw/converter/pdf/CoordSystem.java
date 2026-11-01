@@ -47,6 +47,19 @@ public final class CoordSystem {
      */
     public static final double PT_TO_MM = MM_PER_INCH / PT_PER_INCH;
 
+    /**
+     * 内容坐标（图元、文字、图像、注释）的毫米到点换算比例：{@code 2.8346}
+     * <p>
+     * 与页面框不同，参考实现把内容坐标按 1mm = 2.8346pt 换算后写入内容流（页面框仍按 72/25.4 精确换算）。
+     * 两者相差约 1.6e-5，但该差异会改变图像重采样与字形栅格化的相位，逐像素对比时影响显著。
+     */
+    public static final double CONTENT_MM_TO_PT = 2.8346d;
+
+    /**
+     * 内容坐标的点到毫米换算比例：{@code 1 / 2.8346}
+     */
+    public static final double CONTENT_PT_TO_MM = 1d / CONTENT_MM_TO_PT;
+
     private CoordSystem() {
     }
 
@@ -57,7 +70,7 @@ public final class CoordSystem {
      * @return 长度，单位 pt
      */
     public static double mmToPt(double mm) {
-        return mm * MM_TO_PT;
+        return mm * CONTENT_MM_TO_PT;
     }
 
     /**
@@ -67,7 +80,7 @@ public final class CoordSystem {
      * @return 长度，单位 mm
      */
     public static double ptToMm(double pt) {
-        return pt * PT_TO_MM;
+        return pt * CONTENT_PT_TO_MM;
     }
 
     /**
@@ -78,7 +91,7 @@ public final class CoordSystem {
      * @return PDF 纵坐标，单位 pt
      */
     public static double yToPt(double yMm, double pageHMm) {
-        return (pageHMm - yMm) * MM_TO_PT;
+        return (pageHMm - yMm) * CONTENT_MM_TO_PT;
     }
 
     /**
@@ -89,7 +102,7 @@ public final class CoordSystem {
      * @return OFD 纵坐标，单位 mm
      */
     public static double yFromPt(double yPt, double pageHMm) {
-        return pageHMm - yPt * PT_TO_MM;
+        return pageHMm - yPt * CONTENT_PT_TO_MM;
     }
 
     /**
@@ -139,8 +152,10 @@ public final class CoordSystem {
      */
     public static Box pageBoxToPt(double x0Mm, double y0Mm, double widthMm, double heightMm) {
         // 页面框自身即为其坐标系，下边界 y0Mm + heightMm 翻转后左下角纵向值恒为 y0Mm
-        double y = mmToPt(y0Mm);
-        return new Box(mmToPt(x0Mm), y, mmToPt(widthMm), mmToPt(heightMm));
+        // 页面框按 72/25.4 精确换算（内容坐标使用 CONTENT_MM_TO_PT，见该常量说明）
+        final double k = PT_PER_INCH / MM_PER_INCH;
+        double y = y0Mm * k;
+        return new Box(x0Mm * k, y, widthMm * k, heightMm * k);
     }
 
     /**
@@ -181,7 +196,7 @@ public final class CoordSystem {
         AffineMatrix translate = AffineMatrix.translate(bx + pageX0Mm, by + pageY0Mm);
         AffineMatrix objectToOfd = (ctm == null ? AffineMatrix.IDENTITY : ctm).multiply(translate);
         // 2) OFD 页面坐标 (mm, Y 向下) → PDF 页面坐标 (pt, Y 向上)：y_pdf = (pageH - y) × k
-        AffineMatrix flip = new AffineMatrix(MM_TO_PT, 0, 0, -MM_TO_PT, 0, pageHMm * MM_TO_PT);
+        AffineMatrix flip = new AffineMatrix(CONTENT_MM_TO_PT, 0, 0, -CONTENT_MM_TO_PT, 0, pageHMm * CONTENT_MM_TO_PT);
         return objectToOfd.multiply(flip);
     }
 

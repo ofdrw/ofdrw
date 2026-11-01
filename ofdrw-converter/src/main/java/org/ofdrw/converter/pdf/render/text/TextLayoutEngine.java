@@ -68,6 +68,7 @@ public final class TextLayoutEngine {
             double cursorX = origin[0] + code.getX();
             double cursorY = origin[1] + code.getY();
             Map<Integer, CgTransform> transforms = indexTransforms(code.getCgTransforms());
+            int codeStart = glyphs.size();
 
             int charIndex = 0;
             // 当前 TextCode 内的字符序号（从 0 起），DeltaX/DeltaY 队列按它取值
@@ -82,6 +83,16 @@ public final class TextLayoutEngine {
                 CgTransform transform = findTransform(transforms, charIndex);
                 boolean skipDelta = transform != null && isSkipPosition(transform, charIndex);
                 int[] explicitGids = explicitGlyphs(transform, charIndex);
+                /*
+                 * 多对一：CodeCount 个字符对应 1 个字形，该字形已经代表整个字符簇，
+                 * 簇内其余字符不再生成字形（否则会按替代码位画出多余字形并覆盖同一 GID 的 Unicode，
+                 * 提取文本出现重复字符或乱码），也不推进游标。
+                 */
+                if (transform != null && transform.getGlyphs().size() == 1 && transform.getCodeCount() > 1
+                        && charIndex > transform.getCodePosition()) {
+                    charIndex++;
+                    continue;
+                }
 
                 // =========> 位置推进（DeltaX/DeltaY 队列按“所属 TextCode 内字符序号”取值，表 46：首字符不偏移；
                 // 不同 TextCode 的队列互不共享，charIndex 仅用于 CGTransform 查找，不能参与 Delta 取值）
@@ -102,14 +113,23 @@ public final class TextLayoutEngine {
                 double localY = cursorY;
 
                 // =========> 生成字形（CGTransform 一对多时展开为多个附属字形）
-                String unicode = unescape(charText);
+                /*
+                 * 一对多 / 多对多（GlyphCount > CodeCount）没有“字形→码位”的反函数，
+                 * 参考实现直接把这些簇的源码元写进 UniGB-UCS2-H 内容串、且不生成 ToUnicode，
+                 * 文本层提取为空。这里同样不给簇内字形登记 Unicode，避免凭空多出泰文/泰米尔字符。
+                 * 多对一（GlyphCount < CodeCount）仍保留首字符，与参考“fi 连字提取为 f”一致。
+                 */
+                boolean expandedCluster = isExpandedCluster(transform, charIndex);
+                String unicode = expandedCluster ? "" : unescape(charText);
                 if (explicitGids.length == 0) {
                     glyphs.add(new TextLayout.PlacedGlyph(unicode, placeholder(charText, codePoint),
                             -1, localX, localY, advance, false));
                 } else {
                     for (int i = 0; i < explicitGids.length; i++) {
                         if (i == 0) {
-                            glyphs.add(new TextLayout.PlacedGlyph(unicode, new int[]{codePoint}, explicitGids[i],
+                            // 展开簇不登记 Unicode（参考实现同样不生成 ToUnicode）
+                            int[] codePoints = expandedCluster ? new int[0] : new int[]{codePoint};
+                            glyphs.add(new TextLayout.PlacedGlyph(unicode, codePoints, explicitGids[i],
                                     localX, localY, advance, false));
                         } else {
                             // 一对多：附属字形与首字形同址，不携带文字
@@ -119,6 +139,30 @@ public final class TextLayoutEngine {
                     }
                 }
                 charIndex++;
+            }
+            /*
+             * 字形步进 = 到下一个字形的实际位移（DeltaX/DeltaY 的结果）。
+             * 该值会作为 /W 与 TJ 修正量的统一口径：若用字体标称步进代替，
+             * 阅读器按标称字宽推进、实际字距却由 Delta 决定，提取文本会在字间插入空格/拆词。
+             */
+            for (int gi = codeStart; gi < glyphs.size(); gi++) {
+                TextLayout.PlacedGlyph glyph = glyphs.get(gi);
+                if (glyph.isShared()) {
+                    continue;
+                }
+                double step = nominalAdvanceMm;
+                for (int gj = gi + 1; gj < glyphs.size(); gj++) {
+                    TextLayout.PlacedGlyph next = glyphs.get(gj);
+                    if (next.isShared()) {
+                        continue;
+                    }
+                    step = Math.hypot(next.getX() - glyph.getX(), next.getY() - glyph.getY());
+                    break;
+                }
+                if (step > 0 && step != glyph.getAdvanceMm()) {
+                    glyphs.set(gi, new TextLayout.PlacedGlyph(glyph.getText(), glyph.getCodePoints(),
+                            glyph.getExplicitGlyphId(), glyph.getX(), glyph.getY(), step, false));
+                }
             }
         }
         return new TextLayout(glyphs, warnings);
@@ -226,6 +270,22 @@ public final class TextLayoutEngine {
     private static boolean isSkipPosition(CgTransform transform, int charIndex) {
         return transform.getGlyphCount() < transform.getCodeCount()
                 && transform.contains(charIndex) && charIndex > transform.getCodePosition();
+    }
+
+    /**
+     * 判断字符是否属于“字形多于字符”的展开簇（一对多 / 多对多）
+     *
+     * <p>这类簇没有“字形→码位”的反函数，参考实现不为其生成 ToUnicode，文本层提取为空；
+     * 若按字形逐个登记 Unicode，会在文本层凭空多出原文档没有的字符（如泰文、泰米尔文）。</p>
+     *
+     * @param transform 字形变换，可为 null
+     * @param charIndex 字符位置
+     * @return true 表示该字符所在簇的字形数多于字符数
+     */
+    private static boolean isExpandedCluster(CgTransform transform, int charIndex) {
+        return transform != null
+                && transform.getGlyphs().size() > transform.getCodeCount()
+                && transform.contains(charIndex);
     }
 
     /**

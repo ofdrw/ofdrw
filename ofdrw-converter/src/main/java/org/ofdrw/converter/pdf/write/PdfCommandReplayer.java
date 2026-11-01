@@ -12,6 +12,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
 import org.ofdrw.converter.pdf.font.ImageEncoding;
+import org.ofdrw.converter.pdf.model.AffineMatrix;
 import org.ofdrw.converter.pdf.model.Box;
 import org.ofdrw.converter.pdf.model.ContentCommand;
 import org.ofdrw.converter.pdf.model.DashPattern;
@@ -19,6 +20,7 @@ import org.ofdrw.converter.pdf.model.ImageBorderCommand;
 import org.ofdrw.converter.pdf.model.ImageCommand;
 import org.ofdrw.converter.pdf.model.LineCap;
 import org.ofdrw.converter.pdf.model.LineJoin;
+import org.ofdrw.converter.pdf.model.ClipCommand;
 import org.ofdrw.converter.pdf.model.ConcatMatrix;
 import org.ofdrw.converter.pdf.model.FillRule;
 import org.ofdrw.converter.pdf.model.MarkerCommand;
@@ -84,6 +86,21 @@ public final class PdfCommandReplayer {
     private PDImageXObject pendingMaskXObject;
 
     /**
+     * 底纹（平铺图案）写入器
+     */
+    private final PdfPatternWriter patternWriter;
+
+    /**
+     * 文字写入器，可为空：底纹单元内的文字必须写进图案内容流，由本回放器转交
+     */
+    private PdfTextWriter textWriter;
+
+    /**
+     * 字体登记表，可为空：底纹单元内的文字需要按资源名查出字体
+     */
+    private org.ofdrw.converter.pdf.font.TrueTypePdfFont.Registry fontRegistry;
+
+    /**
      * 资源名序号（旋转图像以 cm + Do 绘制时使用）
      */
     private int imageIndex = 1;
@@ -93,7 +110,25 @@ public final class PdfCommandReplayer {
      *
      * @param pathFactory 路径工厂，不能为空
      */
+    /**
+     * 注入底纹内文字所需的写入器与字体登记表
+     *
+     * @param textWriter   文字写入器，可为空
+     * @param fontRegistry 字体登记表，可为空
+     */
+    public void usePatternText(PdfTextWriter textWriter,
+                               org.ofdrw.converter.pdf.font.TrueTypePdfFont.Registry fontRegistry) {
+        this.textWriter = textWriter;
+        this.fontRegistry = fontRegistry;
+    }
+
+    /**
+     * 构造回放器
+     *
+     * @param pathFactory 路径工厂，不能为空
+     */
     public PdfCommandReplayer(PdfPathFactory pathFactory) {
+        this.patternWriter = new PdfPatternWriter(pathFactory);
         if (pathFactory == null) {
             throw new IllegalArgumentException("路径工厂不能为空");
         }
@@ -190,25 +225,50 @@ public final class PdfCommandReplayer {
                     stream.addRect((float) rect.getRect().getX(), (float) rect.getRect().getY(),
                             (float) rect.getRect().getWidth(), (float) rect.getRect().getHeight());
                     stream.fill();
+                } else if (command instanceof ClipCommand) {
+                    // OFD 的 Clips 必须在绘制前落成 PDF 裁剪路径，否则超出的填充/图像会溢出图元（如徽标方框）
+                    ClipCommand clip = (ClipCommand) command;
+                    pathFactory.clip(stream, clip.getSegments(), clip.getFillRule());
                 } else if (command instanceof PathCommand) {
                     PathCommand path = (PathCommand) command;
-                    if (path.getFillColor() != null) {
-                        setFillColor(stream, path.getFillColor());
+                    // 颜色自带的 Alpha 只作用于本次绘制：必须在绘制前落到图形状态，
+                    // 并在绘制后恢复，否则会污染同一 q/Q 作用域内的后续图元
+                    float fillAlpha = path.getFillColor() == null ? 1f : path.getFillColor().getOpacity();
+                    float strokeAlpha = path.getStrokeColor() == null ? 1f : path.getStrokeColor().getOpacity();
+                    logger.debug("[{}] PathCommand 颜色透明度 fill={}, stroke={}", "OFD2PDF", fillAlpha, strokeAlpha);
+                    boolean alphaOverride = fillAlpha < 1f || strokeAlpha < 1f;
+                    if (alphaOverride) {
+                        stream.saveGraphicsState();
+                        /*
+                         * 透明度必须走 ExtGState（{@code /GSn gs}）：{@code ca}/{@code CA} 是图形状态字典的键，
+                         * 不是内容流算子，裸写会让阅读器报 "Unknown operator" 并直接忽略透明度。
+                         */
+                        setAlphaState(stream, fillAlpha, strokeAlpha);
                     }
-                    if (path.getStrokeColor() != null) {
-                        setStrokeColor(stream, path.getStrokeColor());
+                    try {
+                        if (path.getFillColor() != null) {
+                            setFillColor(stream, path.getFillColor());
+                        }
+                        if (path.getStrokeColor() != null) {
+                            setStrokeColor(stream, path.getStrokeColor());
+                        }
+                        pathFactory.append(stream, path.getSegments());
+                        fillOrStroke(stream, path);
+                    } finally {
+                        if (alphaOverride) {
+                            stream.restoreGraphicsState();
+                        }
                     }
-                    pathFactory.append(stream, path.getSegments());
-                    fillOrStroke(stream, path);
                 } else if (command instanceof ShadingCommand) {
                     ShadingCommand shading = (ShadingCommand) command;
                     PDShading pdShading = new PdfShadingWriter(pathFactory).createShading(document, shading);
                     pathFactory.clip(stream, shading.getArea(), shading.getFillRule());
                     stream.shadingFill(pdShading);
                 } else if (command instanceof PatternCommand) {
-                    // 嵌套底纹：按单元内容回放（不递归平铺），避免无限递归
-                    logger.warn("[{}] 底纹单元内的嵌套底纹已按单元内容直接绘制（不做二次平铺）", "OFD2PDF");
-                    replay(document, stream, resources, ((PatternCommand) command).getCellCommands());
+                    // PatternCommand 自带填充区域，必须写成 PDF Tiling Pattern 才能平铺；
+                    // 直接回放单元内容会把图案只画一次（且落在错误位置）
+                    patternWriter.write(document, stream, resources, (PatternCommand) command,
+                            ((PatternCommand) command).getArea(), 1f, null, textWriter, fontRegistry);
                 } else if (command instanceof ImageCommand) {
                     drawImage(document, stream, resources, (ImageCommand) command);
                 } else if (command instanceof ImageBorderCommand) {
@@ -260,6 +320,26 @@ public final class PdfCommandReplayer {
     }
 
     /**
+     * 写入透明度图形状态（ExtGState）
+     * <p>
+     * {@code ca}/{@code CA} 是 ExtGState 字典中的键，必须通过 {@code /GSn gs} 引用；
+     * 直接把 {@code 0.4 ca} 写进内容流属于非法算子，阅读器会忽略并保持不透明。
+     *
+     * @param stream    内容流
+     * @param fillAlpha 非描边（填充）不透明度，0~1
+     * @param strokeAlpha 描边不透明度，0~1
+     * @throws IOException 写入失败
+     */
+    static void setAlphaState(PDPageContentStream stream, float fillAlpha, float strokeAlpha)
+            throws IOException {
+        org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState state =
+                new org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState();
+        state.setNonStrokingAlphaConstant(fillAlpha);
+        state.setStrokingAlphaConstant(strokeAlpha);
+        stream.setGraphicsStateParameters(state);
+    }
+
+    /**
      * 线端点样式 → PDF 的 {@code J} 操作符取值
      *
      * @param cap 线端点样式
@@ -302,7 +382,7 @@ public final class PdfCommandReplayer {
                            ImageCommand command) throws IOException {
         if (command.isMasked()) {
             /*
-             * 蒙版图像：渲染器为 ImageMask 单独产出一条同落点的指令，顺序为「主图 → 蒙版」。
+             * 蒙版图像：渲染器为 ImageMask 单独产出一条同落点的指令，顺序为「蒙版 → 主图」。
              * 这里先缓存蒙版，等紧随的主图到达时合成 /SMask，蒙版本身不单独绘制
              * （否则会在页面上画出黑白的蒙版图）。
              */
@@ -362,6 +442,18 @@ public final class PdfCommandReplayer {
         // 把图像登记到页面资源字典：PDFBox 的 drawImage 只写内联图像，资源字典需显式登记，
         // 否则 /SMask 等字典项与后续复用都无从引用
         registerImage(document, resources, command, image);
+        AffineMatrix placementMatrix = command.getPlacementMatrix();
+        if (placementMatrix != null && !isAxisAligned(placementMatrix, placement)) {
+            // 旋转/镜像图像：cm 施加完整放置矩阵，再在单位正方形上绘制（drawImage 的 x/y/w/h 会丢失旋转）
+            stream.saveGraphicsState();
+            stream.transform(new org.apache.pdfbox.util.Matrix(
+                    (float) placementMatrix.getA(), (float) placementMatrix.getB(),
+                    (float) placementMatrix.getC(), (float) placementMatrix.getD(),
+                    (float) placementMatrix.getE(), (float) placementMatrix.getF()));
+            stream.drawImage(image, 0f, 0f, 1f, 1f);
+            stream.restoreGraphicsState();
+            return;
+        }
         stream.drawImage(image, (float) placement.getX(), (float) placement.getY(),
                 (float) placement.getWidth(), (float) placement.getHeight());
     }
@@ -421,10 +513,12 @@ public final class PdfCommandReplayer {
         }
         double eps = 1e-6;
         boolean noSkew = Math.abs(matrix.getB()) < eps && Math.abs(matrix.getC()) < eps;
-        boolean positive = matrix.getA() > 0 && matrix.getD() > 0;
+        // 放置矩阵由渲染阶段生成，已包含“OFD 的 Y 向下 → PDF 的 Y 向上”翻转，因此 d 恒为负；
+        // 轴对齐判定不能要求 d > 0，否则所有普通图像都会走完整矩阵分支而被上下颠倒。
+        boolean positiveX = matrix.getA() > 0;
         boolean matches = Math.abs(matrix.getA() - placement.getWidth()) < 1e-3
                 && Math.abs(Math.abs(matrix.getD()) - placement.getHeight()) < 1e-3;
-        return noSkew && positive && matches;
+        return noSkew && positiveX && matches;
     }
 
     /**
@@ -445,19 +539,206 @@ public final class PdfCommandReplayer {
                     org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB.INSTANCE);
         }
         if (command.getEncoding() == ImageEncoding.JBIG2) {
-            return rawImage(document, data, COSName.JBIG2_DECODE, command,
-                    org.apache.pdfbox.pdmodel.graphics.color.PDDeviceGray.INSTANCE);
+            return jbig2Image(document, data, command);
         }
         if (command.getEncoding() == ImageEncoding.CCITT) {
             return rawImage(document, data, COSName.CCITTFAX_DECODE, command,
                     org.apache.pdfbox.pdmodel.graphics.color.PDDeviceGray.INSTANCE);
+        }
+        if (isGif(data)) {
+            // GIF 是索引色格式，PDFBox 无法原样嵌入：按参考实现转为 RGB JPEG，并附加不透明 /SMask
+            return gifImage(document, data);
         }
         // PNG 等其余格式交给 PDFBox 解码后无损重建（决策 23 的“其余无损”分支）
         BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(data));
         if (bufferedImage == null) {
             throw new IOException("无法解码图像数据：" + command.getResourceKey());
         }
+        /*
+         * 带 alpha 通道但整体完全不透明的位图：参考实现会压平为 RGB 后按 JPEG（质量 0.75）嵌入，
+         * 并附加全不透明 /SMask（与 GIF 分支同一策略）。真实含透明像素的位图仍走无损嵌入，
+         * 否则透明区域与边缘抗锯齿会丢失。
+         */
+        if (isOpaqueAlpha(bufferedImage)) {
+            return lossyOpaqueImage(document, bufferedImage);
+        }
         return LosslessFactory.createFromImage(document, bufferedImage);
+    }
+
+    /**
+     * 判断位图的 alpha 通道是否整体不透明
+     *
+     * @param image 已解码位图，不能为空
+     * @return true 表示带 alpha 通道且所有像素 alpha 均为 255
+     */
+    private static boolean isOpaqueAlpha(BufferedImage image) {
+        if (!image.getColorModel().hasAlpha()) {
+            return false;
+        }
+        int width = image.getWidth();
+        int height = image.getHeight();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if ((image.getRGB(x, y) >>> 24) != 0xFF) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 压平为 RGB 后以 JPEG 嵌入，并附加全不透明 /SMask
+     *
+     * @param document PDF 文档
+     * @param decoded  带 alpha 但不透明的位图
+     * @return 图像对象
+     * @throws IOException 写入失败
+     */
+    private static PDImageXObject lossyOpaqueImage(PDDocument document, BufferedImage decoded) throws IOException {
+        int width = decoded.getWidth();
+        int height = decoded.getHeight();
+        BufferedImage rgb = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        java.awt.Graphics2D graphics = rgb.createGraphics();
+        try {
+            graphics.setColor(java.awt.Color.WHITE);
+            graphics.fillRect(0, 0, width, height);
+            graphics.drawImage(decoded, 0, 0, null);
+        } finally {
+            graphics.dispose();
+        }
+        PDImageXObject image = JPEGFactory.createFromImage(document, rgb, 0.75f);
+        image.getCOSObject().setItem(COSName.SMASK, opaqueSmask(document, width, height));
+        return image;
+    }
+
+    /**
+     * 判断是否为 GIF 数据
+     *
+     * @param data 图像原始字节
+     * @return true 表示 GIF89a/GIF87a
+     */
+    private static boolean isGif(byte[] data) {
+        return data != null && data.length > 6
+                && data[0] == 'G' && data[1] == 'I' && data[2] == 'F'
+                && data[3] == '8' && (data[4] == '7' || data[4] == '9') && data[5] == 'a';
+    }
+
+    /**
+     * 将 GIF 图像转为 PDF 图像对象
+     * <p>
+     * 无透明通道时以 RGB JPEG 嵌入并附加全不透明 /SMask（与参考 PDF 的图像结构一致）；
+     * 带透明通道时按无损方式嵌入，由 PDFBox 生成真实 /SMask。
+     *
+     * @param document PDF 文档
+     * @param data     GIF 原始字节
+     * @return 图像对象
+     * @throws IOException 解码或写入失败
+     */
+    private static PDImageXObject gifImage(PDDocument document, byte[] data) throws IOException {
+        BufferedImage decoded = ImageIO.read(new ByteArrayInputStream(data));
+        if (decoded == null) {
+            throw new IOException("无法解码 GIF 图像");
+        }
+        if (decoded.getColorModel().hasAlpha()) {
+            return LosslessFactory.createFromImage(document, decoded);
+        }
+        int width = decoded.getWidth();
+        int height = decoded.getHeight();
+        BufferedImage rgb = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        java.awt.Graphics2D graphics = rgb.createGraphics();
+        try {
+            graphics.setColor(java.awt.Color.WHITE);
+            graphics.fillRect(0, 0, width, height);
+            graphics.drawImage(decoded, 0, 0, null);
+        } finally {
+            graphics.dispose();
+        }
+        PDImageXObject image = JPEGFactory.createFromImage(document, rgb, 0.75f);
+        image.getCOSObject().setItem(COSName.SMASK, opaqueSmask(document, width, height));
+        return image;
+    }
+
+    /**
+     * 创建全不透明 /SMask
+     *
+     * @param document PDF 文档
+     * @param width    宽度，单位像素
+     * @param height   高度，单位像素
+     * @return 灰度图像流，所有像素值为 255
+     * @throws IOException 写入失败
+     */
+    private static COSStream opaqueSmask(PDDocument document, int width, int height) throws IOException {
+        COSStream stream = document.getDocument().createCOSStream();
+        stream.setItem(COSName.TYPE, COSName.XOBJECT);
+        stream.setItem(COSName.SUBTYPE, COSName.IMAGE);
+        stream.setInt(COSName.WIDTH, width);
+        stream.setInt(COSName.HEIGHT, height);
+        stream.setInt(COSName.BITS_PER_COMPONENT, 8);
+        stream.setItem(COSName.COLORSPACE, org.apache.pdfbox.pdmodel.graphics.color.PDDeviceGray.INSTANCE);
+        stream.setItem(COSName.FILTER, COSName.FLATE_DECODE);
+        byte[] alphas = new byte[width * height];
+        java.util.Arrays.fill(alphas, (byte) 0xFF);
+        java.io.OutputStream out = stream.createOutputStream(COSName.FLATE_DECODE);
+        try {
+            out.write(alphas);
+        } finally {
+            out.close();
+        }
+        return stream;
+    }
+
+    /**
+     * 嵌入 JBIG2 二值图像
+     * <p>
+     * PDF 7.4.7 规定 {@code JBIG2Decode} 内嵌流<b>不得包含 JBIG2 文件头</b>（8 字节魔数
+     * {@code 97 4A 42 32 0D 0A 1A 0A} + 1 字节文件组织标志）。OFD 的 {@code .jb2} 资源是完整文件，
+     * 直接原样嵌入会让解码器把魔数当成段类型（jbig2dec 报 “page has no image”），二维码因此不显示。
+     *
+     * @param document PDF 文档
+     * @param data     JBIG2 资源字节
+     * @param command  图像指令（提供像素尺寸）
+     * @return 图像对象
+     * @throws IOException 写入失败
+     */
+    private static PDImageXObject jbig2Image(PDDocument document, byte[] data, ImageCommand command)
+            throws IOException {
+        byte[] payload = stripJbig2FileHeader(data);
+        PDImageXObject image = new PDImageXObject(document, new ByteArrayInputStream(payload),
+                COSName.JBIG2_DECODE, command.getPixelWidth(), command.getPixelHeight(), 1,
+                org.apache.pdfbox.pdmodel.graphics.color.PDDeviceGray.INSTANCE);
+        return image;
+    }
+
+    /**
+     * 去掉 JBIG2 文件头（魔数 + 文件组织标志）
+     *
+     * @param data JBIG2 资源字节
+     * @return 去掉文件头后的段数据；非 JBIG2 文件或已剥离时原样返回
+     */
+    static byte[] stripJbig2FileHeader(byte[] data) {
+        byte[] magic = {(byte) 0x97, 0x4A, 0x42, 0x32, 0x0D, 0x0A, 0x1A, 0x0A};
+        if (data == null || data.length <= 9) {
+            return data;
+        }
+        for (int i = 0; i < magic.length; i++) {
+            if (data[i] != magic[i]) {
+                return data;
+            }
+        }
+        /*
+         * 文件头 = 8 字节魔数 + 1 字节文件组织标志；顺序组织（标志最低位为 1）时，
+         * 每个段头前还多 4 字节段号，PDF 内嵌流同样要求去掉它，否则解码器把段号当成段头解析
+         * （jbig2dec 报 “Too few symbols in JBIG2 symbol dictionary”），二维码无法还原。
+         */
+        boolean sequential = (data[8] & 0x01) != 0;
+        int header = 9 + (sequential ? 4 : 0);
+        if (data.length <= header) {
+            return data;
+        }
+        byte[] payload = new byte[data.length - header];
+        System.arraycopy(data, header, payload, 0, payload.length);
+        return payload;
     }
 
     /**

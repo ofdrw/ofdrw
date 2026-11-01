@@ -2,6 +2,10 @@
 
 本目录存放**本地手动执行**的回归脚本，不属于构建流程，也不进入 CI（设计文档第 7.2.1 节、决策 22）。
 
+> **方向说明**：本目录的脚本验证的是 **OFD → PDF**（导出方向），与 **PDF → OFD** 的转换实现无关。
+> PDF → OFD 有两套实现（`PDFConverter` 文字对象化 / `PDFGraphicsConverter` 图形化），
+> 其对比与选择见 [《转换OFD》](../doc/CONVERTER.md#pdf转换ofd)；本目录脚本**不适用于**它们。
+
 ## local-pdf-match.sh
 
 读取不入库的 `ofd_pdf_match/`（58 组 `<样本名>.ofd` + 基准 `<样本名>.pdf`），

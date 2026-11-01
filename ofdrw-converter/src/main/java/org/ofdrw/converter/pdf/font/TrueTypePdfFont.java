@@ -80,6 +80,7 @@ public final class TrueTypePdfFont implements PdfFontRef {
      */
     private final ToUnicodeCMap toUnicode;
 
+
     /**
      * 码位字节数：默认按字形总数（&gt; 255 时为 2，否则为 1），生成 ToUnicode 后以 CMap 的码位宽度为准
      */
@@ -201,6 +202,27 @@ public final class TrueTypePdfFont implements PdfFontRef {
     }
 
     /**
+     * 取字形在文本空间中的自然前进量（来自字体 hmtx），用于 TJ 中的字距修正
+     * <p>
+     * 必须与 {@link PdfFontFactory#buildWidths} 写入 PDF 的 {@code /W} 采用同一口径，
+     * 否则阅读器的文本推进与写入器的字距修正不一致，字距会累积漂移。
+     *
+     * @param gid        字形索引
+     * @param fontSizePt 字号，单位 pt
+     * @return 前进量，单位 pt；字体没有字宽表时按 0.5 em 估算
+     */
+    public double glyphAdvancePt(int gid, double fontSizePt) {
+        if (metrics != null && metrics.hasAdvanceWidth()) {
+            float width = metrics.getAdvanceWidth(gid);
+            if (width > 0f) {
+                return width / 1000d * fontSizePt;
+            }
+        }
+        return 0.5d * fontSizePt;
+    }
+
+
+    /**
      * 用于估算标称步进的字形（取空格与 'M' 之外的首个有宽度字形，退化为 1 号字形）
      *
      * @return 字形索引
@@ -263,7 +285,15 @@ public final class TrueTypePdfFont implements PdfFontRef {
             return NOTDEF_GLYPH;
         }
         int codePoint = codePoints == null || codePoints.length == 0 ? 0 : codePoints[0];
-        GlyphIndexProvider.GlyphSelection selection = glyphIndexProvider.resolve(explicitGid, codePoint);
+        /*
+         * 替代字体不能沿用显式字形编号：CGTransform 的 GID 属于 OFD 声明的原字体，
+         * 替代字体的字形表与它没有对应关系（实测同一 GID 在替代字体里是另一个轮廓，或落在子集之外，
+         * 表现为文字整块消失/乱字）。替代字体带 Unicode cmap 时一律按字符查表取字形；
+         * OFD 内嵌的原字体（substituted=false）仍以显式 GID 优先，保持视觉一致。
+         */
+        int effectiveExplicitGid = substituted && hasUnicodeCmap() ? -1 : explicitGid;
+        GlyphIndexProvider.GlyphSelection selection =
+                glyphIndexProvider.resolve(effectiveExplicitGid, codePoint);
         if (selection.isSubstituted() && warnings != null) {
             warnings.add(describeSubstitution(codePoint, selection));
         }
@@ -308,7 +338,7 @@ public final class TrueTypePdfFont implements PdfFontRef {
      * @return 步进，单位 pt
      */
     public double advancePt(double advanceMm, double fontSizePt) {
-        return advanceMm * CoordSystem.MM_TO_PT;
+        return advanceMm * CoordSystem.CONTENT_MM_TO_PT;
     }
 
     /**
@@ -376,7 +406,14 @@ public final class TrueTypePdfFont implements PdfFontRef {
         if (codePoints == null || codePoints.length == 0) {
             return this;
         }
-        toUnicode.add(gid, codePoints);
+        /*
+         * 同一字形可能被多个字符引用（连字、替换字形、多对一 CGTransform），
+         * 参考实现只保留首次登记的字符（例如 fi 连字提取为 f），后登记的字符不得覆盖，
+         * 否则提取文本会出现与原文无关的字符。
+         */
+        if (!toUnicode.contains(gid)) {
+            toUnicode.add(gid, codePoints);
+        }
         return this;
     }
 
@@ -595,11 +632,15 @@ public final class TrueTypePdfFont implements PdfFontRef {
         }
 
         /**
-         * 开始新的页面：清空页面资源表
+         * 开始新的页面
+         * <p>
+         * 资源名在整个文档内全局唯一，不清空登记表、也不重置序号：
+         * 若按页清空并用 {@code F1..Fn} 重新分配，跨页复用的字体实体会带着旧资源名命中
+         * 新页面同名的另一款字体，导致字形与编码错配（CJK 变成豆腐块）。
+         * 每个 PDF 页面的资源字典只登记该页实际引用的字体，因此全局唯一名不会增加页面开销。
          */
         public void newPage() {
-            fonts.clear();
-            nextIndex = 1;
+            // 资源名全局唯一：不清理字体表，避免跨页同名资源冲突
         }
 
         /**

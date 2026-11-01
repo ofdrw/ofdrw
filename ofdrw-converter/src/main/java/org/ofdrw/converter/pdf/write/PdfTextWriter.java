@@ -88,32 +88,92 @@ public final class PdfTextWriter {
         }
         // 图形状态显式成对（设计约束 1）：q/Q 包裹文字绘制，颜色与字体状态不残留到后续图元
         stream.saveGraphicsState();
+        /*
+         * 颜色自带的不透明度必须在文字绘制前落到图形状态，否则水印等半透明文字会被画成实心。
+         * 参考实现只把 FillColor 的 Alpha 写入 **ca**，没有显式描边 Alpha 时 **CA=0**：
+         * 半透明文字用 `2 Tr` 绘制时描边不可见，若把 ca 同时写给 CA 会让水印描边画实而变粗
+         * （keyword 水印基准 `<< /CA 0 /ca .3137 >>`）。
+         */
+        if (command.getColor() != null && command.getColor().getOpacity() < 1f) {
+            float opacity = command.getColor().getOpacity();
+            PdfCommandReplayer.setAlphaState(stream, opacity, 0f);
+        }
+        /*
+         * 粗体：参考实现不切换粗体字体，而是“填充+描边”（2 Tr）加粗字形。
+         * 线宽与描边色同样属于图形状态，必须在 BT 之前落到内容流。
+         */
+        boolean bold = command.isBold();
+        if (bold) {
+            setStrokeColor(stream, command.getColor());
+            stream.setLineWidth((float) command.getStrokeWidthPt());
+        }
         stream.beginText();
         setFillColor(stream, command.getColor());
+        if (bold) {
+            stream.appendRawCommands("2 Tr\n");
+        }
         stream.setFont(pdfFont, (float) command.getFontSizePt());
-        org.ofdrw.converter.pdf.model.AffineMatrix tm = command.getTextMatrix();
-        stream.setTextMatrix(new Matrix((float) tm.getA(), (float) tm.getB(), (float) tm.getC(),
-                (float) tm.getD(), (float) tm.getE(), (float) tm.getF()));
+        /*
+         * 同一行（文本空间 Y 相同）的字形合并成一个 TJ 数组：
+         * 只用 TJ 数值修正与字体自然字宽的差值，而不是逐字形重设 Tm。
+         * 逐字形 Tm 会让文本层被拆成大量独立“单词”，pdftotext 等工具按位置重排后顺序错乱、
+         * 复制/检索结果与原文不一致；TJ 数组则保留一个连续文本串，阅读顺序与内容一致。
+         */
         List<GlyphRun> glyphs = command.getGlyphs();
-        for (int i = 0; i < glyphs.size(); i++) {
-            GlyphRun glyph = glyphs.get(i);
-            if (i > 0) {
-                /*
-                 * 逐字形定位：字形给出的是相对首字形的文本空间位移（单位 pt），换算成绝对文本矩阵。
-                 * 不用 Td 累加增量：Td 的单位是文本空间用户单位，会被 Tf 字号放大，字距失真。
-                 */
-                stream.setTextMatrix(absoluteMatrix(command.getTextMatrix(), glyph));
-            }
-            if (glyph.getGlyphId() < 0) {
-                logger.warn("字形缺少索引，已跳过：{}", glyph);
+        int index = 0;
+        while (index < glyphs.size()) {
+            GlyphRun first = glyphs.get(index);
+            if (!first.hasGlyphId()) {
+                logger.warn("字形缺少索引，已跳过：{}", first);
+                index++;
                 continue;
             }
+            stream.setTextMatrix(absoluteMatrix(command.getTextMatrix(), first));
+            StringBuilder tj = new StringBuilder(16 + glyphs.size() * 5);
+            tj.append('[');
+            appendGlyph(tj, font, first.getGlyphId());
+            double prevX = first.getX();
+            double prevY = first.getY();
+            int prevGid = first.getGlyphId();
+            index++;
+            while (index < glyphs.size()) {
+                GlyphRun glyph = glyphs.get(index);
+                if (!glyph.hasGlyphId()) {
+                    logger.warn("字形缺少索引，已跳过：{}", glyph);
+                    index++;
+                    break;
+                }
+                // 换行/换列（文本空间 Y 变化）时结束当前数组，用新的 Tm 重新开始
+                if (Math.abs(glyph.getY() - prevY) > 1e-3) {
+                    break;
+                }
+                double advance = font.glyphAdvancePt(prevGid, command.getFontSizePt());
+                double fontSizePt = command.getFontSizePt();
+                /*
+                 * TJ 修正量 = 目标落点与“上一字落点 + 字体自然字宽”之差，按 1/1000 em 向下取整。
+                 * 逐字修正（不回灌残差）在 63 组基准上最稳定：参考实现的 TJ 分块与残差桶由内部
+                 * chunker 决定，无法从 OFD 字段推导（见 spec/tj-spec.md 1.4），强行复刻
+                 * “每字 -1”会让替换字体行持续加宽（doc1File 由 pass 退化为 fail）。
+                 */
+                double adjustment = -((glyph.getX() - (prevX + advance)) * 1000d / fontSizePt);
+                double nearest = Math.rint(adjustment);
+                long quantized = Math.abs(adjustment - nearest) < 1e-6
+                        ? (long) nearest
+                        : (long) Math.floor(adjustment);
+                if (quantized != 0) {
+                    tj.append(quantized).append(' ');
+                }
+                appendGlyph(tj, font, glyph.getGlyphId());
+                prevX = glyph.getX();
+                prevY = glyph.getY();
+                prevGid = glyph.getGlyphId();
+                index++;
+            }
+            tj.append("] TJ");
             try {
-                // 字形以 CID 字节序列直接写入内容流（PDF 2.0 的 UTF-8 文本串与 Type0 的编码语义无关，
-                // 使用非 UTF-8 的 ISO-8859-1 视图可保证字节原样输出，不会被 PDFBox 按 Unicode 重新编码）
-                writeGlyphs(stream, font, glyph.getGlyphId());
+                stream.appendRawCommands(tj.append('\n').toString());
             } catch (IOException | RuntimeException e) {
-                logger.warn("字形 {} 无法写入文字流，已跳过：{}", glyph.getGlyphId(), e.getMessage());
+                logger.warn("文字阵列写入失败，已跳过部分字形：{}", e.getMessage());
             }
         }
         stream.endText();
@@ -121,31 +181,34 @@ public final class PdfTextWriter {
     }
 
     /**
-     * 把字形索引写入内容流
+     * 把字形追加到 TJ 数组（十六进制 CID 字符串）
      * <p>
-     * Type0 字体使用 Identity-H 编码时，内容流中的字符串即 CID 序列，与 Unicode 文本串的 UTF-8 语义无关；
-     * PDFBox 的 {@link PDPageContentStream#showText(String)} 会按 Unicode 重新编码，
-     * 因此这里以 ISO-8859-1 逐字节还原后直接写 {@code Tj}（字节 0x00~0xFF 与 CID 一一对应）。
+     * Type0 字体使用 Identity-H 编码时，内容流中的字符串即 CID 序列；直接写十六进制串可保证字节原样输出，
+     * 不会被 PDFBox 按 Unicode 重新编码。
      *
-     * @param stream 内容流
+     * @param target TJ 数组文本
      * @param font   字体引用
      * @param gid    字形索引
-     * @throws IOException 写入失败
      */
-    private static void writeGlyphs(PDPageContentStream stream, TrueTypePdfFont font, int gid) throws IOException {
+    private static void appendGlyph(StringBuilder target, TrueTypePdfFont font, int gid) {
         int cid = font.encodeGlyph(gid);
-        byte[] bytes = font.getCodeByteLength() == 1
-                ? new byte[]{(byte) (cid & 0xFF)}
-                : new byte[]{(byte) ((cid >> 8) & 0xFF), (byte) (cid & 0xFF)};
-        // 字符串字面量 + 显式十六进制编码的 Tj 操作符：0x00~0xFF 逐字节原样写入内容流
-        // （不能用 showText(String)，PDFBox 会按 Unicode 重新编码）
-        StringBuilder literal = new StringBuilder(bytes.length * 3 + 6);
-        literal.append('<');
-        for (byte b : bytes) {
-            literal.append(HEX[(b >> 4) & 0x0F]).append(HEX[b & 0x0F]);
+        int byteLength = font.getCodeByteLength();
+        target.append('<');
+        for (int shift = (byteLength - 1) * 8; shift >= 0; shift -= 8) {
+            int b = (cid >> shift) & 0xFF;
+            target.append(HEX[(b >> 4) & 0x0F]).append(HEX[b & 0x0F]);
         }
-        literal.append("> Tj\n");
-        stream.appendRawCommands(literal.toString());
+        target.append('>');
+    }
+
+    /**
+     * 格式化 TJ 数值，避免本地化小数点并抑制科学计数法
+     *
+     * @param value 数值
+     * @return 最多三位小数的十进制文本
+     */
+    private static String formatNumber(double value) {
+        return String.format(java.util.Locale.ROOT, "%.3f ", value);
     }
 
     /**
@@ -188,6 +251,32 @@ public final class PdfTextWriter {
             return new byte[]{(byte) (cid & 0xFF)};
         }
         return new byte[]{(byte) ((cid >> 8) & 0xFF), (byte) (cid & 0xFF)};
+    }
+
+    /**
+     * 设置文字描边颜色（粗体描边与填充同色）
+     *
+     * @param stream 内容流
+     * @param color  颜色
+     * @throws IOException 写入失败
+     */
+    private static void setStrokeColor(PDPageContentStream stream, PdfColor color) throws IOException {
+        if (color == null) {
+            return;
+        }
+        switch (color.getColorSpace()) {
+            case GRAY:
+                stream.setStrokingColor(color.getChannel(0));
+                break;
+            case CMYK:
+                stream.setStrokingColor(color.getChannel(0), color.getChannel(1),
+                        color.getChannel(2), color.getChannel(3));
+                break;
+            case RGB:
+            default:
+                stream.setStrokingColor(color.getChannel(0), color.getChannel(1), color.getChannel(2));
+                break;
+        }
     }
 
     /**

@@ -459,23 +459,13 @@ public final class PdfStructureWriter {
             link.setBorderStyle(border);
             return link;
         }
-        PDAnnotation annotation;
-        if ("Highlight".equals(target.getPdfAnnotationType())) {
-            PDAnnotationHighlight highlight = new PDAnnotationHighlight();
-            highlight.setQuadPoints(new float[]{
-                    (float) rect[0], (float) rect[3], (float) rect[2], (float) rect[3],
-                    (float) rect[0], (float) rect[1], (float) rect[2], (float) rect[1]});
-            annotation = highlight;
-        } else {
-            annotation = new PDAnnotationRubberStamp();
-        }
-        applyRectangle(annotation, rect);
-        annotation.setPrinted(true);
-        // 外观已按 Appearance 重绘到页面内容：这里不再设置外观流，避免与页面内容重复绘制
-        if (target.getRemark() != null && !target.getRemark().trim().isEmpty()) {
-            annotation.setContents(target.getRemark());
-        }
-        return annotation;
+        /*
+         * 水印/图章类注释的外观已由页面内容流重绘（见 PageRendererImpl#renderAnnotations），
+         * 若再写出没有 /AP 的 /Stamp 注释，阅读器会合成默认外观（poppler 会绘制整页 "Draft"），
+         * 既覆盖重绘内容又污染文本层。PDF 规范要求注释的可视外观由 /AP 承载，
+         * 在没有可复用外观流时只能省略注释对象，视觉与文本层均由页面内容保证。
+         */
+        return null;
     }
 
     /**

@@ -1299,6 +1299,11 @@ public class OFDPageGraphics2D extends Graphics2D {
     }
 
     /**
+     * 裁剪区判定容差，单位 mm（用于“裁剪区是否覆盖图形”的兜底判断）
+     */
+    private static final double CLIP_TOLERANCE_MM = 0.01d;
+
+    /**
      * 构造裁剪区域
      * <p>
      * 如果图形完全处于裁剪区域中，那么不裁剪
@@ -1320,14 +1325,34 @@ public class OFDPageGraphics2D extends Graphics2D {
                 bounds.getY() + 0.000001,
                 w < 0 ? 0 : w,
                 h < 0 ? 0 : h);
-        if (this.drawParam.clip.contains(bounds)) {
+        /*
+         * 裁剪区包围盒外扩 0.01mm 后再判断是否覆盖图形：PDF 生成器常给每行文字加一个紧贴字形的
+         * re W n 裁剪框，字形正好落在框内（浮点误差会让严格 contains 判定失败），
+         * 这种“裁剪区并没有真正裁掉内容”的场景不应写出 Clips。
+         */
+        Rectangle2D clipBounds = this.drawParam.clip.getBounds2D();
+        boolean clipCoversShape = clipBounds.getX() - CLIP_TOLERANCE_MM <= bounds.getX()
+                && clipBounds.getY() - CLIP_TOLERANCE_MM <= bounds.getY()
+                && clipBounds.getMaxX() + CLIP_TOLERANCE_MM >= bounds.getMaxX()
+                && clipBounds.getMaxY() + CLIP_TOLERANCE_MM >= bounds.getMaxY();
+        if (this.drawParam.clip.contains(bounds) || clipCoversShape) {
             // 若图形外边框都处于裁剪区域内部，那么忽略裁剪区域
         } else {
             Clips clips = new Clips();
             org.ofdrw.core.pageDescription.clips.Area area = new org.ofdrw.core.pageDescription.clips.Area();
-            CT_Path clipObj = new CT_Path().setAbbreviatedData(OFDShapes.path(new GeneralPath(this.drawParam.clip)));
+            /*
+             * Clips 中的路径使用“对象坐标系”（相对 Path.Boundary 左上角），因此这里把裁剪区
+             * 平移到自身包围盒原点，并把 Boundary 设为该包围盒；
+             * 早期实现用整页 Boundary + 页面绝对坐标，查看器按对象坐标系解释时会裁错，导致内容整块消失。
+             */
+            GeneralPath clipPath = new GeneralPath(this.drawParam.clip);
+            Path2D translated = new Path2D.Double();
+            translated.append(clipPath.getPathIterator(
+                    AffineTransform.getTranslateInstance(-clipBounds.getX(), -clipBounds.getY())), false);
+            CT_Path clipObj = new CT_Path().setAbbreviatedData(OFDShapes.path(translated));
             clipObj.setFill(true);
-            clipObj.setBoundary(this.size);
+            clipObj.setBoundary(new ST_Box(clipBounds.getX(), clipBounds.getY(),
+                    clipBounds.getWidth(), clipBounds.getHeight()));
 
            try {
                // 【文字】、【矢量图形】，其坐标与剪裁区域的坐标，通过变换，已经提前位于设备空间，无需进行逆变换；
@@ -1374,6 +1399,45 @@ public class OFDPageGraphics2D extends Graphics2D {
      */
     public ST_ID newObjectId() {
         return doc.newID();
+    }
+
+    /**
+     * 取得当前页所属的文档工作目录
+     * <p>
+     * 供需要写入页面注释（如 {@code Annots/}）等非页面内容资源的调用方使用；
+     * 文档打包时整目录入包，因此写入该目录下的文件会随文档一起输出。
+     *
+     * @return 文档工作目录
+     */
+    public org.ofdrw.pkg.container.OFDDir getOfdDir() {
+        return doc.ofdDir;
+    }
+
+    /**
+     * 取得当前页所属文档对象
+     * <p>
+     * 供调用方登记文档级条目（例如 {@code Annotations} 注释索引）。
+     *
+     * @return 文档对象
+     */
+    public org.ofdrw.core.basicStructure.doc.Document getDocument() {
+        return doc.document;
+    }
+
+    /**
+     * 把位图登记为文档图片资源
+     * <p>
+     * 供需要引用图片资源但又不直接绘制图片的调用方使用（例如水印单元缩略图）。
+     *
+     * @param image 位图（非空）
+     * @return 图片资源 ID
+     * @throws java.io.IOException 编码或写盘失败
+     */
+    public ST_ID addImageResource(BufferedImage image) throws java.io.IOException {
+        if (image == null) {
+            return null;
+        }
+        return doc.addResImg(image);
     }
 
     /**

@@ -45,5 +45,10 @@ target
 .sesearch/
 ### 调研/临时目录，不入库 ###
 /.research/
+### Python 虚拟环境，不入库 ###
+/.venv/
 ofdrw-reader/DOC_0_copy/
 src_material/
+.snapshots/
+scripts/
+.ci

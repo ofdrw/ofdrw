@@ -70,6 +70,23 @@ final class CffFontData {
      */
     static byte[] wrap(byte[] cff, int numGlyphs, int[] widths, float[] fontBBox, String postScriptName)
             throws IOException {
+        return wrap(cff, numGlyphs, widths, fontBBox, postScriptName, null);
+    }
+
+    /**
+     * 把裸 CFF 包装为 OpenType 字体（带字形名，供合成 cmap 使用）
+     *
+     * @param cff             裸 CFF 数据
+     * @param numGlyphs       字形数量，单位为个
+     * @param widths          每个字形的前进宽度，单位为 1/1000 em
+     * @param fontBBox        字体包围盒 [llx, lly, urx, ury]，单位为 1/1000 em；为 null 时取 0
+     * @param postScriptName  字体名（name 表 nameID=6）
+     * @param glyphNames      每个字形名（按 GID 顺序），可为 null；非 null 时按字形名反查 Unicode 并合成 cmap
+     * @return OpenType（CFF 轮廓）字体数据，单位为字节
+     * @throws IOException 裸 CFF 数据过短或无法合成
+     */
+    static byte[] wrap(byte[] cff, int numGlyphs, int[] widths, float[] fontBBox, String postScriptName,
+                       String[] glyphNames) throws IOException {
         if (!isBareCff(cff)) {
             throw new IOException("不是裸 CFF 数据（首 4 字节应为 0x01000402 / 0x01000403），无法包装为 OpenType");
         }
@@ -93,10 +110,200 @@ final class CffFontData {
         tableMap.put("loca", loca);
         tableMap.put("maxp", maxp);
         tableMap.put("name", name);
+        byte[] cmap = buildCmap(glyphNames);
+        if (cmap != null) {
+            // 由字形名反查 Unicode 合成的 cmap：查看器不必依赖 CGTransform 也能定位字形
+            tableMap.put("cmap", cmap);
+        }
         // 写出表目录后回读一次：重算每张表的 checkSum 与 head.checkSumAdjustment
-        String[] keep = {"CFF ", "OS/2", "head", "hhea", "hmtx", "loca", "maxp", "name"};
+        String[] keep = {"CFF ", "cmap", "OS/2", "head", "hhea", "hmtx", "loca", "maxp", "name"};
         return SfntTable.rebuild(SfntTable.read(writeSfnt(tableMap)), java.util.Arrays.asList(keep));
     }
+
+    /**
+     * 按字形名反查 Unicode，构造 format 4（BMP）+ format 12（含增补平面）的 cmap 表
+     * <p>
+     * 字形名使用 Adobe Glyph List 规则：{@code uniXXXX}、{@code uXXXX[XX]}、{@code A} 等单字符名。
+     * 同一 Unicode 优先取 GID 最小的字形。
+     *
+     * @param glyphNames 每个字形名（按 GID 顺序），可为 null
+     * @return cmap 表数据；没有可解析的字形名时返回 null（此时查看器必须依赖 CGTransform）
+     */
+    private static byte[] buildCmap(String[] glyphNames) {
+        if (glyphNames == null || glyphNames.length == 0) {
+            return null;
+        }
+        java.util.TreeMap<Integer, Integer> unicodeToGid = new java.util.TreeMap<>();
+        for (int gid = 0; gid < glyphNames.length; gid++) {
+            Integer code = unicodeOfGlyphName(glyphNames[gid]);
+            if (code != null) {
+                unicodeToGid.putIfAbsent(code, gid);
+            }
+        }
+        if (unicodeToGid.isEmpty()) {
+            return null;
+        }
+        // format 4：BMP 内每个字符单独成段（idDelta 可精确表达），末尾 0xFFFF 哨兵
+        java.util.List<int[]> singles = new java.util.ArrayList<>();
+        for (java.util.Map.Entry<Integer, Integer> entry : unicodeToGid.entrySet()) {
+            if (entry.getKey() <= 0xFFFF) {
+                singles.add(new int[]{entry.getKey(), entry.getValue()});
+            }
+        }
+        int segCount = singles.size() + 1;
+        int entrySelector = 31 - Integer.numberOfLeadingZeros(segCount);
+        int searchRange = 2 * (1 << entrySelector);
+        int endCodesPos = 14;
+        int startCodesPos = endCodesPos + 2 * segCount + 2;
+        int idDeltaPos = startCodesPos + 2 * segCount;
+        int idRangePos = idDeltaPos + 2 * segCount;
+        int length = idRangePos + 2 * segCount;
+        byte[] fmt4 = new byte[length];
+        writeU16(fmt4, 0, 4);
+        writeU16(fmt4, 2, length);
+        writeU16(fmt4, 4, 0);
+        writeU16(fmt4, 6, 2 * segCount);
+        writeU16(fmt4, 8, searchRange);
+        writeU16(fmt4, 10, entrySelector);
+        writeU16(fmt4, 12, 2 * segCount - searchRange);
+        for (int i = 0; i < singles.size() + 1; i++) {
+            int code = i < singles.size() ? singles.get(i)[0] : 0xFFFF;
+            int gid = i < singles.size() ? singles.get(i)[1] : 0;
+            writeU16(fmt4, endCodesPos + 2 * i, code);
+            writeU16(fmt4, startCodesPos + 2 * i, code);
+            writeS16(fmt4, idDeltaPos + 2 * i, (gid - code) & 0xFFFF);
+            writeU16(fmt4, idRangePos + 2 * i, 0);
+        }
+        // format 12：全部字符（含增补平面），按“码位连续且 GID 连续”分组
+        java.util.List<int[]> groupsList = new java.util.ArrayList<>();
+        for (java.util.Map.Entry<Integer, Integer> entry : unicodeToGid.entrySet()) {
+            int code = entry.getKey();
+            int gid = entry.getValue();
+            if (!groupsList.isEmpty()) {
+                int[] last = groupsList.get(groupsList.size() - 1);
+                if (code == last[1] + 1 && gid == last[2] + (code - last[0])) {
+                    last[1] = code;
+                    continue;
+                }
+            }
+            groupsList.add(new int[]{code, code, gid});
+        }
+        byte[] fmt12 = new byte[16 + 12 * groupsList.size()];
+        writeU16(fmt12, 0, 12);
+        writeU16(fmt12, 2, 0);
+        writeU32(fmt12, 4, fmt12.length);
+        writeU32(fmt12, 8, 0);
+        writeU32(fmt12, 12, groupsList.size());
+        for (int i = 0; i < groupsList.size(); i++) {
+            int[] group = groupsList.get(i);
+            writeU32(fmt12, 16 + 12 * i, group[0]);
+            writeU32(fmt12, 20 + 12 * i, group[1]);
+            writeU32(fmt12, 24 + 12 * i, group[2]);
+        }
+        // cmap 头：version(2) numTables(2) + 2 条编码记录(8*n) + 子表
+        int header = 4 + 8 * 2;
+        byte[] cmap = new byte[header + fmt4.length + fmt12.length];
+        writeU16(cmap, 0, 0);
+        writeU16(cmap, 2, 2);
+        // 记录 1：Windows Unicode BMP（platform 3 / encoding 1）
+        writeU16(cmap, 4, 3);
+        writeU16(cmap, 6, 1);
+        writeU32(cmap, 8, header);
+        // 记录 2：Windows Unicode 全平面（platform 3 / encoding 10）
+        writeU16(cmap, 12, 3);
+        writeU16(cmap, 14, 10);
+        writeU32(cmap, 16, header + fmt4.length);
+        System.arraycopy(fmt4, 0, cmap, header, fmt4.length);
+        System.arraycopy(fmt12, 0, cmap, header + fmt4.length, fmt12.length);
+        return cmap;
+    }
+
+    /**
+     * 按 Adobe Glyph List 规则从字形名反查 Unicode
+     *
+     * @param glyphName 字形名，可为 null
+     * @return Unicode 码位；无法解析时返回 null
+     */
+    static Integer unicodeOfGlyphName(String glyphName) {
+        if (glyphName == null || glyphName.isEmpty()) {
+            return null;
+        }
+        if (glyphName.length() == 1) {
+            return (int) glyphName.charAt(0);
+        }
+        if (glyphName.startsWith("uni") && glyphName.length() >= 7) {
+            try {
+                return Integer.parseInt(glyphName.substring(3, 7), 16);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        if (glyphName.startsWith("u") && glyphName.length() >= 5 && glyphName.length() <= 7) {
+            try {
+                return Integer.parseInt(glyphName.substring(1), 16);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return GLYPH_LIST_LOOKUP.apply(glyphName);
+    }
+
+    /**
+     * 字形名 → Unicode 的兜底查表（常见标点与拉丁字母，不含版权字体专有字形名）
+     */
+    private static final java.util.function.Function<String, Integer> GLYPH_LIST_LOOKUP = name -> {
+        switch (name) {
+            case "space": return 0x20;
+            case "exclam": return 0x21;
+            case "quotedbl": return 0x22;
+            case "numbersign": return 0x23;
+            case "dollar": return 0x24;
+            case "percent": return 0x25;
+            case "ampersand": return 0x26;
+            case "quotesingle": return 0x27;
+            case "quoteright": return 0x2019;
+            case "quoteleft": return 0x2018;
+            case "parenleft": return 0x28;
+            case "parenright": return 0x29;
+            case "asterisk": return 0x2A;
+            case "plus": return 0x2B;
+            case "comma": return 0x2C;
+            case "hyphen": return 0x2D;
+            case "period": return 0x2E;
+            case "slash": return 0x2F;
+            case "colon": return 0x3A;
+            case "semicolon": return 0x3B;
+            case "less": return 0x3C;
+            case "equal": return 0x3D;
+            case "greater": return 0x3E;
+            case "question": return 0x3F;
+            case "at": return 0x40;
+            case "bracketleft": return 0x5B;
+            case "backslash": return 0x5C;
+            case "bracketright": return 0x5D;
+            case "asciicircum": return 0x5E;
+            case "underscore": return 0x5F;
+            case "grave": return 0x60;
+            case "braceleft": return 0x7B;
+            case "bar": return 0x7C;
+            case "braceright": return 0x7D;
+            case "asciitilde": return 0x7E;
+            case "bullet": return 0x2022;
+            case "endash": return 0x2013;
+            case "emdash": return 0x2014;
+            case "quotedblleft": return 0x201C;
+            case "quotedblright": return 0x201D;
+            case "ellipsis": return 0x2026;
+            case "yen": return 0xA5;
+            case "copyright": return 0xA9;
+            case "registered": return 0xAE;
+            case "degree": return 0xB0;
+            case "plusminus": return 0xB1;
+            case "multiply": return 0xD7;
+            case "divide": return 0xF7;
+            default: return null;
+        }
+    };
 
     /**
      * 构造 head 表（54 字节）

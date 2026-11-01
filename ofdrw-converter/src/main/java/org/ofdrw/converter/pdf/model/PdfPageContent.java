@@ -40,6 +40,13 @@ public final class PdfPageContent {
     private final List<ContentCommand> commands = new ArrayList<>();
 
     /**
+     * 是否存在无法解析的图像资源
+     * <p>
+     * 图像引用缺失（资源 ID 为空、资源不存在或文件不可读）时置位，供导出侧按参考实现做整页栅格回退。
+     */
+    private boolean imageResourceMissing;
+
+    /**
      * 构造页面内容
      *
      * @param widthPt  页面宽度，单位 pt，必须大于 0
@@ -104,6 +111,22 @@ public final class PdfPageContent {
             return this;
         }
         return add(RestoreState.INSTANCE);
+    }
+
+    /**
+     * 标记本页存在无法解析的图像资源
+     */
+    public void markImageResourceMissing() {
+        imageResourceMissing = true;
+    }
+
+    /**
+     * 判断本页是否存在无法解析的图像资源
+     *
+     * @return true 表示有图像引用无法解析
+     */
+    public boolean isImageResourceMissing() {
+        return imageResourceMissing;
     }
 
     /**

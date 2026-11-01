@@ -13,6 +13,7 @@ import org.ofdrw.converter.pdf.model.ContentCommand;
 import org.ofdrw.converter.pdf.model.FillRule;
 import org.ofdrw.converter.pdf.model.PathCommand;
 import org.ofdrw.converter.pdf.model.PathSegment;
+import org.ofdrw.converter.pdf.model.PatternCommand;
 import org.ofdrw.converter.pdf.model.PdfColor;
 import org.ofdrw.converter.pdf.model.RestoreState;
 import org.ofdrw.converter.pdf.model.SaveState;
@@ -91,7 +92,12 @@ public final class PathRenderer implements ContentRenderer {
     /**
      * 底纹渲染器（P3），可为空（此时底纹填充按默认黑色处理并告警）
      */
-    private final PatternRenderer patternRenderer;
+    /**
+     * 全透明填充色（用于复杂填充的占位路径）
+     */
+    private static final PdfColor TRANSPARENT_COLOR = PdfColor.rgb(0f, 0f, 0f).withOpacity(0f);
+
+    private PatternRenderer patternRenderer;
 
     /**
      * 紧缩图形数据转换器（按实例隔离告警去重）
@@ -132,9 +138,36 @@ public final class PathRenderer implements ContentRenderer {
         this.patternRenderer = new PatternRenderer(null);
     }
 
+    /**
+     * 注入底纹单元格内容渲染器
+     * <p>
+     * 底纹（{@code Pattern}）的单元内容可包含任意图元，必须由页面渲染器分派渲染；
+     * 未注入时底纹会因“单元内容为空”被整体跳过。
+     *
+     * @param cellRenderer 单元格内容渲染器，不能为空
+     */
+    void usePatternCellRenderer(PatternRenderer.CellContentRenderer cellRenderer) {
+        if (cellRenderer == null) {
+            throw new IllegalArgumentException("底纹单元格渲染器不能为空");
+        }
+        this.patternRenderer = new PatternRenderer(cellRenderer);
+    }
+
     @Override
     public String getName() {
         return "PathRenderer";
+    }
+
+    /**
+     * 用 OFD 裁剪目标包裹任意内容（供组合对象等非路径图元复用同一套裁剪语义）
+     *
+     * @param clips   裁剪目标（{@code Clips}），可为空
+     * @param context 被裁剪内容所在的渲染上下文
+     * @param content 需要被裁剪的内容指令，可为空
+     * @return {@code q 裁剪指令 内容 Q}；无裁剪时返回原内容
+     */
+    List<ContentCommand> withClips(Object clips, RenderContext context, List<ContentCommand> content) {
+        return clipApplier.render(clips, context, content);
     }
 
     /**
@@ -163,14 +196,18 @@ public final class PathRenderer implements ContentRenderer {
                 warnOnce("empty-path", "路径对象没有可用的紧缩图形数据，已跳过：" + path.getGraphicName());
                 return Collections.emptyList();
             }
-            PathCommand command = buildCommand(path, segments);
+            // 填充色为渐变/底纹时，路径本身不能再以默认黑色实心填充：
+            // 后续的底纹/渐变绘制是“叠加”在路径之上的，实心底层会把它整个盖住（整页变黑）
+            EffectiveDrawParam params = effectiveDrawParam(path, context.getInheritedDrawParam());
+            PathCommand command = isComplexFill(path)
+                    ? transparentCommand(segments, fillRule(path.getRule()))
+                    : buildCommand(path, segments, params);
             if (command == null) {
                 return Collections.emptyList();
             }
             List<ContentCommand> content = new ArrayList<>(8);
             content.add(SaveState.INSTANCE);
-            EffectiveDrawParam params = effectiveDrawParam(path);
-            content.add(GraphicsStateResolver.toStrokeStyle(params));
+            content.add(GraphicsStateResolver.toStrokeStyle(params, linearScale(toPage)));
             /*
              * 不透明度 = 颜色 Alpha × 图元 Alpha（决策 2）。
              * 纯色填充/描边的颜色 Alpha 已由 ColorResolver 解析进 PdfColor.opacity，
@@ -182,7 +219,15 @@ public final class PathRenderer implements ContentRenderer {
             content.add(command);
             content.addAll(complexFill);
             content.add(RestoreState.INSTANCE);
-            return clipApplier.render(path.getClips(), context, content);
+            if (isComplexFill(path)) {
+                /*
+                 * 渐变/底纹填充按图元外接矩形着色，必须用 Clips 裁剪回图形本身，
+                 * 否则颜色会铺满整个外接矩形（典型现象：圆形徽标被画成红色方块）。
+                 * 纯色填充/描边的填充路径就是图元自身轮廓，不依赖裁剪，保持既有输出不变。
+                 */
+                return clipApplier.render(path.getClips(), context, content, boundaryOf(path));
+            }
+            return content;
         } catch (RuntimeException e) {
             warnOnce("path-error", "路径图元渲染失败，已跳过：" + e.getMessage());
             return Collections.emptyList();
@@ -199,7 +244,22 @@ public final class PathRenderer implements ContentRenderer {
      * @return 有效绘制参数
      */
     public EffectiveDrawParam effectiveDrawParam(CT_Path path) {
-        EffectiveDrawParam base = stateResolver.resolve(path.getDrawParam());
+        return effectiveDrawParam(path, null);
+    }
+
+    /**
+     * 解析路径对象的有效绘制参数（含图层继承）
+     * <p>
+     * 基准为图层声明的 DrawParam（可为空），再按 {@code Relative} 链与图元同名属性逐级覆盖。
+     *
+     * @param path                 路径对象，不能为空
+     * @param inheritedDrawParam   图层继承的绘制参数，可为空
+     * @return 有效绘制参数
+     */
+    public EffectiveDrawParam effectiveDrawParam(CT_Path path, EffectiveDrawParam inheritedDrawParam) {
+        EffectiveDrawParam base = inheritedDrawParam == null
+                ? stateResolver.resolve(path.getDrawParam())
+                : stateResolver.resolveInherited(inheritedDrawParam, path.getDrawParam());
         // Cap/Join 使用“显式书写”访问器：getCap()/getJoin() 在属性缺失时返回规范默认值，
         // 会把默认值当成“图元已声明”，从而覆盖 DrawParam 与 Relative 链（GB/T 33190 8.2/8.5 就近原则）
         // Alpha 使用“仅取显式书写”的访问器：getAlpha() 在缺失时返回 255，
@@ -218,6 +278,24 @@ public final class PathRenderer implements ContentRenderer {
      * @param context 渲染上下文，不能为空
      * @return 换算矩阵
      */
+    /**
+     * 计算仿射矩阵的线性缩放倍数
+     *
+     * <p>取矩阵行列式的平方根，等价于均匀缩放的倍数；非均匀缩放时按面积等效处理。
+     * 用于把对象空间的线宽换算到页面 pt 空间（例如 {@code 2.8346 × 0.3527 ≈ 1.0}）。</p>
+     *
+     * @param matrix 仿射矩阵，不能为空
+     * @return 非负缩放倍数；矩阵退化时返回 1
+     */
+    static double linearScale(AffineMatrix matrix) {
+        if (matrix == null) {
+            return 1d;
+        }
+        double det = matrix.getA() * matrix.getD() - matrix.getB() * matrix.getC();
+        double scale = Math.sqrt(Math.abs(det));
+        return scale > 0d && !Double.isNaN(scale) ? scale : 1d;
+    }
+
     public static AffineMatrix objectToPage(CT_Path path, RenderContext context) {
         AffineMatrix combined = elementCtm(path.getCTM()).multiply(context.getCurrentCtm());
         // 外接矩形平移、页面框偏移、mm→pt 与 Y 翻转统一由 CoordSystem 完成，避免各渲染器手写翻转
@@ -269,13 +347,45 @@ public final class PathRenderer implements ContentRenderer {
     }
 
     /**
+     * 判断路径的填充色是否为渐变或底纹
+     * <p>
+     * 这类填充由 {@link ShadingRenderer}/{@link PatternRenderer} 以独立指令“叠加”绘制，
+     * 基础路径不能再做实心填充，否则会把叠加层整个盖住（表现为整页变黑）。
+     *
+     * @param path 路径对象，不能为空
+     * @return {@code true} 表示填充色由复杂填充渲染器接管
+     */
+    private static boolean isComplexFill(CT_Path path) {
+        CT_Color fillColor = path.getFillColor();
+        if (fillColor == null) {
+            return false;
+        }
+        Object cluster = fillColor.getColorByType();
+        return cluster instanceof CT_AxialShd || cluster instanceof CT_RadialShd || cluster instanceof CT_Pattern;
+    }
+
+    /**
+     * 构造“占位”路径指令：透明填充，仅建立几何供底纹/渐变等叠加层使用
+     * <p>
+     * {@link PathCommand} 要求至少填充或描边之一，因此用透明填充代替“不绘制”，
+     * 视觉上没有影响，也不会覆盖之后叠加的底纹/渐变。
+     *
+     * @param segments 已换算为页面坐标的路径段，不能为空
+     * @param rule     填充规则
+     * @return 透明填充路径指令
+     */
+    private static PathCommand transparentCommand(List<PathSegment> segments, FillRule rule) {
+        return new PathCommand(segments, true, false, rule, TRANSPARENT_COLOR, null);
+    }
+
+    /**
      * 根据路径对象的填充/描边属性与颜色生成 {@link PathCommand}
      *
      * @param path     路径对象，不能为空
      * @param segments 已换算为页面坐标的路径段，不能为空
      * @return 路径指令；既不填充也不描边时返回 {@code null}
      */
-    private PathCommand buildCommand(CT_Path path, List<PathSegment> segments) {
+    private PathCommand buildCommand(CT_Path path, List<PathSegment> segments, EffectiveDrawParam params) {
         // OFD 表 41：Fill 缺省 false，Stroke 缺省 true（getStroke() 在缺省时返回 true）
         boolean fill = Boolean.TRUE.equals(path.getFill());
         boolean stroke = !Boolean.FALSE.equals(path.getStroke());
@@ -283,9 +393,25 @@ public final class PathRenderer implements ContentRenderer {
             warnOnce("invisible-path", "路径对象既未填充也未描边，已跳过：" + path.getGraphicName());
             return null;
         }
-        PdfColor fillColor = fill ? defaultIfNull(resolveColor(path.getFillColor(), "填充")) : null;
-        PdfColor strokeColor = stroke ? defaultIfNull(resolveColor(path.getStrokeColor(), "描边")) : null;
+        // 颜色同样遵循就近原则：图元自身颜色 > 图元/图层 DrawParam 链上的颜色 > 默认黑色
+        org.ofdrw.core.pageDescription.color.color.CT_Color fillDef = path.getFillColor() != null
+                ? path.getFillColor() : paramColor(params.getFillColor());
+        org.ofdrw.core.pageDescription.color.color.CT_Color strokeDef = path.getStrokeColor() != null
+                ? path.getStrokeColor() : paramColor(params.getStrokeColor());
+        PdfColor fillColor = fill ? defaultIfNull(resolveColor(fillDef, "填充")) : null;
+        PdfColor strokeColor = stroke ? defaultIfNull(resolveColor(strokeDef, "描边")) : null;
         return new PathCommand(segments, fill, stroke, fillRule(path.getRule()), fillColor, strokeColor);
+    }
+
+    /**
+     * 取出绘制参数中的颜色定义
+     *
+     * @param color 绘制参数保存的颜色对象，可为空
+     * @return OFD 颜色定义；非颜色对象或为空时返回 {@code null}
+     */
+    private static org.ofdrw.core.pageDescription.color.color.CT_Color paramColor(Object color) {
+        return color instanceof org.ofdrw.core.pageDescription.color.color.CT_Color
+                ? (org.ofdrw.core.pageDescription.color.color.CT_Color) color : null;
     }
 
     /**
@@ -318,9 +444,12 @@ public final class PathRenderer implements ContentRenderer {
         }
         Object cluster = fillColor.getColorByType();
         if (cluster instanceof CT_AxialShd || cluster instanceof CT_RadialShd) {
+            // 渐变坐标以外接矩形左上角为原点、单位 mm，且不叠加图元自身 CTM（11.2 节对象空间）
+            AffineMatrix gradientToPage = CoordSystem.objectToPage(boundaryOf(path), context.getCurrentCtm(),
+                    context.getPageX0Mm(), context.getPageY0Mm(), context.getPageHeightMm());
             ShadingCommand shading = cluster instanceof CT_AxialShd
-                    ? shadingRenderer.axial((CT_AxialShd) cluster, context)
-                    : shadingRenderer.radial((CT_RadialShd) cluster, context);
+                    ? shadingRenderer.axial((CT_AxialShd) cluster, context, gradientToPage)
+                    : shadingRenderer.radial((CT_RadialShd) cluster, context, gradientToPage);
             if (shading == null) {
                 warnOnce("shading-failed", "渐变填充解析失败，已按无填充处理：" + path.getGraphicName());
                 return Collections.emptyList();
@@ -329,7 +458,8 @@ public final class PathRenderer implements ContentRenderer {
                     new ShadingCommand(shading.getShadingType(), shading.getStops(), shading.getExtend(),
                             segments, fillRule(path.getRule()),
                             shading.getStartX(), shading.getStartY(), shading.getEndX(), shading.getEndY(),
-                            shading.getEccentricity(), shading.getAngleDeg()), alpha);
+                            shading.getEccentricity(), shading.getAngleDeg(),
+                            shading.getStartRadiusPt(), shading.getEndRadiusPt()), alpha);
         }
         if (cluster instanceof CT_Pattern) {
             List<ContentCommand> patternCommands = patternRenderer.render(cluster, context);
@@ -337,7 +467,19 @@ public final class PathRenderer implements ContentRenderer {
                 warnOnce("pattern-failed", "底纹填充解析失败，已按无填充处理：" + path.getGraphicName());
                 return Collections.emptyList();
             }
-            return patternCommands;
+            // 底纹必须带上填充区域，写入侧才能生成“以图案着色”的 f 操作
+            List<ContentCommand> withArea = new ArrayList<>(patternCommands.size());
+            for (ContentCommand pc : patternCommands) {
+                if (pc instanceof PatternCommand) {
+                    PatternCommand src = (PatternCommand) pc;
+                    withArea.add(new PatternCommand(src.getName(), src.getCell(), src.getCellCommands(),
+                            src.isApproximate(), segments, src.getTilingMatrix(),
+                            src.getXStepPt(), src.getYStepPt()));
+                } else {
+                    withArea.add(pc);
+                }
+            }
+            return withArea;
         }
         warnOnce("fill-unsupported", "不支持的填充色对象（" + cluster.getClass().getSimpleName()
                 + "），已按默认黑色处理：" + path.getGraphicName());

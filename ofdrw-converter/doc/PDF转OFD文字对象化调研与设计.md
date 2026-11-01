@@ -308,6 +308,22 @@ linear   = N 的线性部分 / em                   // y 列长度为 1；x 列�
 > **实测依据**：参考 OFD `dense-text-perf.ofd` 的全部 147 个 `TextObject` 均为 `Boundary="8 4.5 70.9083 2.54"`、`Size="2.1167"`、无 `CTM`、`TextCode X="0" Y="2.1167"`，可确认 Y 取“相对 Boundary 顶部的一个 em”，而非页面绝对纵坐标。早期版本的本节写成“绝对页面坐标”，已据此更正。
 >
 > 对最常见的水平未旋转文字：`CTM` 省略，`Boundary = (originX, originY − asc) …`，`X=0`、`Y=originY − boundary.y`。
+>
+> **CTM 不得携带平移**：GB/T 33190-2016 表 34/46 规定 `X/Y` 为对象坐标系下第一个字形原点的坐标，`CTM` 是对象空间内的图元变换矩阵。把平移写进 `CTM` 并令 `X=Y=0` 虽然部分查看器能渲染，但属于依赖查看器行为的非标准写法，第三方兼容性无保障。
+>
+> **旋转/镜像文字为何仍走路径回退（实测结论，2024-10 补充）**：按上述标准写法实现 CTM 分支后，用 ofdrw-viewer 0.1.5 做单对象对照实验。
+>
+> 1. 查看器的对象包围盒按 `Boundary + CTM` 计算，符合 GB/T 语义；
+> 2. 但文字路径只画出基线附近 1~2 px（`Boundary="150 100 …"`、无 CTM、`Y=2.5` 的同一对象可完整渲染，加上任意 CTM 后整块空白）；
+> 3. 根因在查看器字体运行时段：它把 `findResource(0x40)` 视为“翻转标记”并从 `FT_Matrix` 中剔除，缺少该标记时字形单位矩阵按字体单位（1em→1px）解释，再被 `Size/unitsPerEm`（如 2.822/1000）压扁到约 2 px。
+>
+> 结论：带 `CTM` 的 `TextObject` 对当前参考查看器不可见，属查看器缺陷。为保证“对象化后仍可在参考查看器正确渲染”，**旋转/镜像文字继续回退路径绘制**，`TextRunBuilder` 的 CTM 分支保留待查看器修复后启用。
+>
+> 进一步地，**无 CTM** 的文字对象在参考查看器里也只画出基线附近 1~2 px：把仓库内参考 OFD `文字横向-数科.ofd` 的 `Size` 与 `CTM` 同比放大 10 倍后，字形依旧是细线，说明是同一个“字形单位矩阵按字体单位解释”的缺陷，与是否写 CTM 无关；同一查看器渲染该参考 OFD（未放大）时文字完整，是因为 `Size` 很小（≈0.02 mm）时压扁量不可见。参考语料 63 个 OFD 中共 7,021 个 `<ofd:TextObject>` 使用非单位 `CTM`，可见 CTM 写法本身是这类文档的常见形态。
+>
+> **PDF 的翻转位**：PDF 用户空间 y 向上、OFD 页面 y 向下，字形矩阵需翻转，而 PDFBox `PageDrawer` 以 `Matrix` 的 SFNT 资源位 `0x40` 传递该标记（矩阵本身不含此信息）。对 `ofd_pdf_match` 全部 63 个 PDF 逐字形统计（`target/pdf-textobj/p2src/probe3/FlipProbe.java`）：152,638 个字形（5 个样本为纯图片、无字形）全部按 `Matrix` 数值判定为“需翻转”，0 个携带该标记，说明按 `Matrix` 数值统一翻转对现有语料是安全的。
+>
+> **竖排文字（WMode=1）继续回退**：临时实验显示，PDF 竖排字形以 90° 基线竖直排列，而 OFD `TextObject` 只支持 `ReadDirection` 0/90/180/270 的整体方向，无法表达“每个字形自身旋转 90°、基线竖直”的组合；对象化后参考查看器直接不显示这些文字（`文字横向-数科.pdf` 竖排标题），故保持路径回退。
 
 #### 5.4.2 DeltaX / DeltaY
 
@@ -442,6 +458,22 @@ Glyphs        = [GID]
 2. GID 保持 PDF 原值，`CGTransform` 直接使用 `PDType0Font/PDTrueTypeFont.codeToGID()`，不存在“旧 GID → 新 GID”映射；
 3. 每个内嵌字体需标注来源类型，便于验证与排查：`embedded-verbatim` / `ttc-extracted` / `system-matched` / `path-fallback`；
 4. 整字体嵌入导致的体积增量只做**记录**，不改变默认行为。
+
+**P3 实测结论（`ofd_pdf_match` 63 个样本，2026-10）**
+
+1. **CFF / 裸 CFF（`FontFile3` Subtype=Type1C）**：样本中共 3 条（`intro-数科`：HiraginoSansGB-W6 4,006 B、PingFangSC-Regular 79,986 B、DINPro-Black；`signout`：MinionPro-Regular 583 B），
+   全部由 `PdfFontRegistry` 读取并包装为最小 OpenType 外壳（`head/hhea/hmtx/loca/maxp/OS2/name` + `CFF ` 原样数据，无 cmap），写出为 `Res/<PS名>-<hash>.otf`；
+   `ofdrw-viewer` 能解析该包结构，但**文字对象化当前仍对 CFF 走路径回退**——`OfdPageDrawer#unsupportedReason` 只接受 TrueType 轮廓（`PDCIDFontType2`），
+   这是因为「字素 → GID」只有 TrueType 路径有验证过的取数（`codeToGID`），CFF 需要 `codeToName` + CFF charset 解析。CFF 资源已嵌入，后续放开时只需增加 GID 取数；
+2. **Chrome 导出的 `FontFile3 /Subtype /OpenType`**（`fontTools` 的静默改造）：`intro-数科` 中 9 条此类字体（含 PingFangSC-Semibold 103,140 B、HelveticaNeue 系列）字节头为 `0x00010000`/`0x74727565`，
+   实际是 TrueType 轮廓的 OpenType，按 **TrueType 原样嵌入**，GID 与 PDF 一致；
+3. **Type1（PFB）**：`发票监制章-数科` 的 Helvetica 为 Base14 未内嵌，无字体程序 → `path-fallback`；PFB 本身不是 OpenType，仍不写 `FontFile`；
+4. **非内嵌字体 + 字体目录精确匹配（可选，默认关闭）**：`PdfFontRegistry#setFontDir` / `PDFConverter#setFontDir` 需显式调用；
+   实测开启后 63 个样本中 40+ 个由 `path-fallback` 转为 `system-matched`，但**体积从 107.5 MB 增至 427 MB**（每份 ~10 MB 完整 CJK 字体逐样本嵌入），
+   渲染与 PDF 一致（`hello`/`1-1` 与参考 OFD 逐像素比较 MAE < 1）；因此保持默认关闭，作为“有本地字体授权且可接受体积”场景的可选项；
+   匹配到字体后按**原样嵌入**（与内嵌字体同一策略），只有开启 `subsetFont` 时才参与子集化；
+5. **子集化 + GID 重映射（`subsetFont=true`，默认关闭）**：`1-1` 样本从 12.7 MB（两个 ~10 MB 完整字体）降到 **4.6 KB**，CGTransform 的 GID 在打包前按 old→new 改写
+   （`PdfTextFonts#resolvePendingGids`），viewer 渲染与未子集化结果逐像素一致（MAE 0.71/255，仅抗锯齿差异）。
 
 #### 5.6.3 子集化策略（可选能力，默认关闭）
 
@@ -584,6 +616,25 @@ fontbox 已提供按表读取能力：`TrueTypeFont#getTables()`、`TTFTable#get
 - 代价：文字不可选中/搜索；查看器对大量 `CompositeObject` 的渲染性能未知；
 - 因此只作为 Type3/CFF/授权受限字体的降级，不作为主方案。
 
+**P3 可行性度量结论：暂不落地**
+
+| 场景 | 当前回退路径体积 | 复用方案（估算） | 结论 |
+|---|---|---|---|
+| `intro-数科`（CFF 3 条，18,607 次字形） | 35.3 MB（其中路径约 1.5 MB，其余为图片与已嵌入字体） | 需先按 CFF charset 取 GID 才能复用 glyph 轮廓，否则只能复用“渲染后的轮廓”，每个字体约 0.6 MB 轮廓 + 35 万次引用 × 60 B ≈ 21 MB | 体积反而变大，不落地 |
+| Type1/Base14（`发票监制章-数科` 220 个路径） | 37 KB | 约 220 次引用 × 60 B + 少量轮廓 ≈ 15 KB | 体积收益有限，但需新增 `CT_VectorG` 资源管理与查看器兼容验证 |
+| `dense-text-perf`（参考数据） | — | 636 字形 × 0.3 KB + 3 万引用 × 60 B ≈ 0.3 MB | 文字对象化已能做到 0.13 MB，复用方案无优势 |
+
+判定依据：
+
+1. **可复用的前提是“同一字体的同一字形可以取到稳定轮廓”**。CFF 目前走路径回退，正是因为取不到 GID；
+   若要复用，必须先实现 CFF 的 `codeToName + charset` 解析（与让 CFF 直接文字对象化的工作量相同），而后者收益更大（文字可选中/可搜索）；
+2. 复用方案的**每个引用仍需 `Boundary + CTM`**，体积与路径压缩后的单个字形相当，只在“同一字形出现数百次”时才有明显收益，
+   而这类文本（如密集 CJK）在字体可嵌入时已直接走文字对象化；
+3. 查看器对大量 `CompositeObject` 的渲染性能未验证，且文字不可选中，与“文字对象化”目标冲突。
+
+**结论**：优先级低于“补 CFF 的 GID 取数（让 CFF 直接文字对象化）”；在 CFF 仍无法对象化且单字体轮廓重复次数 > 50 的样本上，
+可作为 P4 的备选优化重新评估，当前不实现。
+
 ### 5.10 二次优化（文字模式之后）
 
 1. **字体去重**：同一字体程序只嵌入一次；
@@ -606,6 +657,35 @@ fontbox 已提供按表读取能力：`TrueTypeFont#getTables()`、`TTFTable#get
 5. 诊断信息沿用仓库习惯：warning 日志，按“原因 + 字体 + 页”聚合；不新增 Result 对象；
 6. **回退路径仍然保留**（Type3、不可嵌入字体、文字裁剪等），但回退是“文字对象化内部的技术降级”，不是“兼容旧实现”，不需要为此保留旧的行为契约；
 7. 测试与验证不再要求 `PATH_ONLY` 输出与旧版逐字节一致；旧实现仅用于 A/B 体积与像素对照。
+
+### 5.11.1 两套实现并存（文字对象化 vs 图形化）
+
+> **后续修订**：第 1 条"不需要兼容旧实现"指的是**不保留旧的默认行为契约**。实际交付时，旧版"整页路径渲染"以**另一个独立类**的形式保留下来，作为与 `PDFConverter` 并列的可选实现，供"只要视觉一致、不需要文本检索"的场景使用。两套实现互不复用、互不影响。
+
+| | `PDFConverter`（推荐，默认方案） | `PDFGraphicsConverter`（可选，图形化） |
+|:--|:--|:--|
+| 所在包 | `org.ofdrw.converter.ofdconverter` | 同左，与 `PDFConverter` 并列 |
+| 实现方式 | `OfdPageDrawer extends PageDrawer`，在 `showFontGlyph` 拦截并输出 `TextObject` | `PDFRenderer.renderPageToGraphics(index, OFDPageGraphics2D, scale)`，纯 `Graphics2D` 接口 |
+| 文本 | `TextObject` + 内嵌字体 + `CGTransform` | 全部展开为 `PathObject`，**无 `TextObject`** |
+| 字体资源 | 内嵌字体（可子集化） | **完全不嵌入字体** |
+| 文本可检索/可复制 | 支持 | **不支持**（字形已是路径） |
+| 体积（`dense-text-perf`） | 305 KB | **9 MB（约 30 倍）** |
+| 依赖 | PDFBox `PageDrawer` 子类 + 字体嵌入链路 | 仅 `ofdrw-graphics2d` |
+| 页面旋转 `/Rotate` 90/270 | 由 PDFBox 渲染管线处理，页面尺寸交换宽高 | 同左（显式交换宽高） |
+
+**设计理由**：文字对象化解决的是"PDF 转 OFD 后文字仍可检索、体积可控"的核心诉求，但它的可用性依赖字体能否嵌入。对字形无法嵌入、或调用方只要"看起来一样"的可视化归档场景，保留一条纯 `Graphics2D` 的渲染路径更简单也更稳妥——这条路径不碰字体、不碰文字定位，因此不会引入文字对象化侧的回归。
+
+**适用场景划分**：
+
+| 场景 | 推荐实现 |
+|:--|:--|
+| 正式文档归档、需要全文检索或复制文本 | `PDFConverter` |
+| 追求体积最小 | `PDFConverter` |
+| 字形无法嵌入（非内嵌且无系统字体匹配）、或字体嵌入后仍显示异常 | `PDFGraphicsConverter` |
+| 只要视觉一致的截图式归档 | `PDFGraphicsConverter` |
+| 对转换结果做像素级对照（A/B 验证） | 两者都可用，`PDFGraphicsConverter` 更接近"旧基线" |
+
+**约束**：新增 `PDFGraphicsConverter` 不改动 `PDFConverter`、`OfdPageDrawer`、`TextRunBuilder`、`OFDPageGraphics2D` 的任何行为；两套实现可在同一工程内并行使用。
 
 ### 5.12 关键伪代码
 
@@ -758,14 +838,26 @@ private void flushRun() {
 
 | 指标 | 阈值 |
 |---|---|
-| `dense-text-perf` OFD 体积 | ≤ 0.6 MB（当前 9.06 MB，参考 213 KB） |
+| `dense-text-perf` OFD 体积 | ≤ 0.6 MB（当前 9.06 MB，参考 213 KB；实测已达成 294,766 B） |
 | 纯文字样本平均体积 | ≤ 当前的 1/10 |
 | 像素差异（72 dpi） | 不以绝对 0.5% 为门禁；以“参考文字 OFD / 当前路径 OFD”为基线，文字模式不劣于基线；辅以 SSIM/边缘对比 |
+| **文字基线位置** | **按“行内字形像素位置 / 行重心”判定**（见下方说明），**不以“提取基线绝对值”为准** |
 | 文字包围盒偏差 | ≤ 2 pt |
-| 文本相似度 | ≥ 0.99（有 ToUnicode 样本） |
-| 字体解析 | 100% 子集字体可被 `TTFParser` 解析；不含 `EBDT/EBLC/vmtx` 等冗余表 |
+| 文本相似度 | ≥ 0.99（有 ToUnicode 样本；实测 dense 达到 1.0000） |
+| 字体解析 | 100% 内嵌字体可被 `TTFParser` 解析（原样嵌入，不要求裁剪 `EBDT/EBLC/vmtx`） |
+| 字体来源 | 默认态只用 PDF 内嵌字体（`embedded-verbatim` / `ttc-extracted`）；无内嵌字体走 `path-fallback`；系统字体匹配默认关闭 |
 | 回退 | 不支持场景不出现缺字/错位/重复绘制 |
 | 输出契约 | 默认即文字对象化；旧实现仅作 A/B 基线，不要求逐字节一致 |
+
+> **基线位置门禁为什么改口径（实测结论）**
+>
+> P1 阶段实测基线偏差均值 0.850 mm、最大 1.021 mm，曾按“≤0.2 mm”判为未达标。排查后确认这不是实现缺陷：
+>
+> 1. `TextObject` 已按 `Boundary` 顶端 = `origin − ascender`、`TextCode.Y ≈ ascender` 构造，语义与参考 OFD 一致；
+> 2. ofdrw-viewer 按 `baseline = Boundary.y + Y` 定位，受控实验（把 Y 递增 0.1/0.2/0.3 mm）验证文字整体随之平移，公式与实现自洽；
+> 3. 剩余差值来自 PDF 行距（1.95 mm）与字形高（约 1.1 mm）不整除时落在行间的剩余量；若继续抬高 Y 让“提取基线”对齐，字形会在行内上移，**与原 PDF 视觉错位，MAE 反而变差**（已实测）。
+>
+> 因此基线门禁改为衡量“字形在所在行内的像素位置 / 行重心”，衡量的是视觉对齐而非提取坐标绝对值。
 
 ### 7.4 ofdrw-viewer-cli 对照验证（本次已做）
 
@@ -830,6 +922,60 @@ POC 文件：`target/probe/textobject-poc.ofd`；渲染结果：`target/probe/re
 1. `TTFSubsetter.getGIDMap()` 返回 **new → old**，不是 old → new；`CGTransform` 使用前必须反转。
 2. 只用 `addGlyphIds` 不会重建 cmap，可能保留 2.8 万条指向旧 GID 的失效映射；必须对每个 Unicode 字符调用 `add(unicode)`，否则只能完全依赖 `CGTransform`。
 3. `TTFSubsetter` 会保留 `EBDT/EBLC/vmtx`，完整 SimSun 子集 6.52 MB；裁剪后 192 KB，这一步不能省。
+
+### 7.5 图形化实现 `PDFGraphicsConverter` 验证（§5.11.1 配套）
+
+对并存的图形化实现做独立验证，确认它作为"当作图片"的定位成立，且不影响文字对象化方案。
+
+#### 7.5.1 输出结构（"当作图片"的判定依据）
+
+| 样本 | `TextObject` | `PathObject` | 内嵌字体 | 输出体积 |
+|---|---:|---:|---:|---:|
+| `helloworld` | **0** | 22 | **0** | 5,270 B |
+| `dense-text-perf` | **0** | 29,068 | **0** | **9,058,629 B** |
+| `透明度文字` | **0** | 102 | **0** | 26,695 B |
+
+`TextObject` 与内嵌字体均为 0，文字全部展开为路径——与设计定位一致。
+
+#### 7.5.2 与文字对象化方案的对照（`dense-text-perf`，96 dpi）
+
+| 指标 | `PDFConverter`（文字对象化） | `PDFGraphicsConverter`（图形化） |
+|:--|--:|--:|
+| 输出体积 | 305 KB | **9,058,629 B（9 MB）** |
+| `TextObject` 数量 | 8,478 | **0** |
+| 内嵌字体 | 有 | **无** |
+| MAE（vs 期望 OFD，96 dpi） | 6.99 | **7.64** |
+| 墨迹比（转换/期望） | 1.000 | **0.9995** |
+| 文本可检索 | 支持 | **不支持** |
+| 渲染效果 | 完整清晰 | 完整清晰 |
+
+**结论**：体积约为前者的 **30 倍**，文本不可检索；但视觉一致性（MAE 7.64、墨迹比 0.9995）与文字对象化方案同一量级。体积与可检索性的损失是"文字转路径"的**固有代价**，不做优化。
+
+#### 7.5.3 页面旋转验证
+
+数据集内没有 `/Rotate` 为 90/270 的 PDF，因此**构造**一份 A4 纵向（595.2756 × 841.8898 pt）且 `/Rotate 90` 的 PDF 单独验证：
+
+| 输入 | 输出 OFD `PhysicalBox` | 结论 |
+|:--|:--|:--|
+| A4 纵向 + `/Rotate 90` | `0 0 297.005 210.003`（mm） | **正确生成横向页**，旧版本缺陷（commit `57c65e32`）未复现 |
+
+实现方式：读取 `page.getRotation()`，为 90/270 时交换 `BBox` 的宽高后再创建 OFD 页面。
+
+#### 7.5.4 与源 PDF 的视觉对照（96 dpi MAE）
+
+| 样本 | MAE |
+|:--|--:|
+| `helloworld` | 0.06 |
+| `multiKeywordInTextCode` | 0.26 |
+| `透明度文字` | 0.39 |
+| `dense-text-perf`（第 1/2 页） | 7.64 / 4.34 |
+
+密集文字样本的 MAE 偏高，来自纯路径渲染与期望 OFD（文字对象）在抗锯齿/字体 hinting 上的差异，与 §7.4.1 记录的"参考文字 OFD 自身也存在 25.70% 像素差"同源，不作为门禁。
+
+#### 7.5.5 回归隔离
+
+- `PDFGraphicsConverter` **未改动** `PDFConverter`、`OfdPageDrawer`、`TextRunBuilder`、`TextObjectPdfRenderer`、`OFDPageGraphics2D` 的任何代码（以文件修改时间与 diff 核实）；除新增类与文档外无其它改动。
+- 单元测试 `PDFGraphicsConverterTest` 6 个用例覆盖：产物无 `TextObject`/无字体、页面尺寸、`/Rotate 90` 横向页、指定页码（乱序/重复）、越界页码抛异常、图形化产物无 `TextObject`。
 
 ---
 

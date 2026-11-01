@@ -69,6 +69,16 @@ public final class ShadingCommand extends AbstractCommand {
     private final double eccentricity;
 
     /**
+     * 径向渐变：起始圆半径，单位 pt；负数表示“由起止圆心距离推导”
+     */
+    private final double startRadiusPt;
+
+    /**
+     * 径向渐变：结束圆半径，单位 pt；负数表示“由起止圆心距离推导”
+     */
+    private final double endRadiusPt;
+
+    /**
      * 径向渐变：旋转角度，单位度
      */
     private final double angleDeg;
@@ -92,6 +102,34 @@ public final class ShadingCommand extends AbstractCommand {
                           List<PathSegment> area, FillRule fillRule,
                           double startX, double startY, double endX, double endY,
                           double eccentricity, double angleDeg) {
+        this(shadingType, stops, extend, area, fillRule, startX, startY, endX, endY, eccentricity, angleDeg, -1, -1);
+    }
+
+    /**
+     * 构造渐变指令（显式指定径向渐变的起止圆半径）
+     * <p>
+     * OFD 的径向渐变以 {@code StartRadius}/{@code EndRadius} 描述圆半径，允许起止圆心重合
+     * （同心圆渐变）；仅用圆心距表示半径时，同心圆会退化为半径 0、整块区域不着色。
+     *
+     * @param shadingType   渐变类型，不能为空
+     * @param stops         颜色停止点，至少 2 个
+     * @param extend        扩展方式，为空按 {@link Extend#NONE}
+     * @param area          填充区域路径，不能为空，首元素必须是 {@link MoveTo}
+     * @param fillRule      填充规则，为空按 {@link FillRule#NON_ZERO}
+     * @param startX        起点横坐标，单位 pt
+     * @param startY        起点纵坐标，单位 pt
+     * @param endX          终点横坐标，单位 pt
+     * @param endY          终点纵坐标，单位 pt
+     * @param eccentricity  离心率，正圆为 1
+     * @param angleDeg      旋转角度，单位度
+     * @param startRadiusPt 起始圆半径，单位 pt；负数表示由圆心距推导
+     * @param endRadiusPt   结束圆半径，单位 pt；负数表示由圆心距推导
+     */
+    public ShadingCommand(ShadingType shadingType, List<ColorStop> stops, Extend extend,
+                          List<PathSegment> area, FillRule fillRule,
+                          double startX, double startY, double endX, double endY,
+                          double eccentricity, double angleDeg,
+                          double startRadiusPt, double endRadiusPt) {
         super(CoordSpace.PAGE);
         if (shadingType == null) {
             throw new IllegalArgumentException("渐变类型不能为空");
@@ -116,6 +154,8 @@ public final class ShadingCommand extends AbstractCommand {
         this.endY = endY;
         this.eccentricity = eccentricity <= 0 ? 1 : eccentricity;
         this.angleDeg = angleDeg;
+        this.startRadiusPt = startRadiusPt;
+        this.endRadiusPt = endRadiusPt;
     }
 
     /**
@@ -179,6 +219,20 @@ public final class ShadingCommand extends AbstractCommand {
      */
     public double getEndY() {
         return endY;
+    }
+
+    /**
+     * @return 径向渐变起始圆半径，单位 pt；负数表示未指定（由圆心距推导）
+     */
+    public double getStartRadiusPt() {
+        return startRadiusPt;
+    }
+
+    /**
+     * @return 径向渐变结束圆半径，单位 pt；负数表示未指定（由圆心距推导）
+     */
+    public double getEndRadiusPt() {
+        return endRadiusPt;
     }
 
     /**

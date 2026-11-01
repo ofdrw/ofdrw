@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * 资源管理器（只读）
@@ -74,6 +75,11 @@ public class ResourceManage {
      * 所有资源和ID的映射表
      */
     private final Map<String, OFDElement> allResMap = new HashMap<>();
+
+    /**
+     * 多媒体文件路径回退缓存：声明路径 -> 实际路径
+     */
+    private final Map<String, Path> mediaFallbackCache = new HashMap<>();
 
     /**
      * 文档公共数据结构
@@ -314,7 +320,7 @@ public class ResourceManage {
         final ResourceLocator rl = ofdReader.getResourceLocator();
         rl.save();
         try {
-            final Path imgPath = rl.getFile(loc);
+            final Path imgPath = resolveMediaFile(rl, loc);
             try (InputStream in = Files.newInputStream(imgPath)) {
                 final String fileName = loc.getFileName().toLowerCase();
                 if (fileName.endsWith(".jb2") || fileName.endsWith(".gbig2")) {
@@ -346,7 +352,7 @@ public class ResourceManage {
         final ResourceLocator rl = ofdReader.getResourceLocator();
         rl.save();
         try {
-            final Path imgPath = rl.getFile(loc);
+            final Path imgPath = resolveMediaFile(rl, loc);
             try (InputStream in = Files.newInputStream(imgPath)) {
                 return IOUtils.toByteArray(in);
             }
@@ -597,6 +603,54 @@ public class ResourceManage {
         } finally {
             rl.restore();
         }
+    }
+
+    /**
+     * 解析多媒体文件的真实路径。
+     * <p>
+     * 部分 OFD 文档声明的资源通用存储路径（Res_0）与实际目录（Res）不一致，
+     * 直接按声明路径读取会失败。此时从声明路径向上找到第一个存在的目录，
+     * 再在该目录下按文件名查找同名文件，避免图片资源整体丢失。
+     *
+     * @param rl  资源加载器
+     * @param loc 资源文件中声明的多媒体文件路径
+     * @return 可读取的文件路径；找不到时返回按声明路径解析的结果，由调用方报告 IO 异常
+     * @throws IOException 路径解析异常
+     */
+    private Path resolveMediaFile(ResourceLocator rl, ST_Loc loc) throws IOException {
+        Path declared;
+        try {
+            declared = rl.getFile(loc);
+        } catch (RuntimeException e) {
+            // 声明的目录不存在时 ResourceLocator 会直接抛出路径异常；改用虚拟容器绝对路径继续查找同名文件
+            declared = ofdReader.getOFDDir().getFileAbs(loc.getLoc());
+        }
+        if (Files.exists(declared)) {
+            return declared;
+        }
+        final String key = declared.toString();
+        final Path cached = mediaFallbackCache.get(key);
+        if (cached != null && Files.exists(cached)) {
+            return cached;
+        }
+        Path dir = declared.getParent();
+        while (dir != null && !Files.isDirectory(dir)) {
+            dir = dir.getParent();
+        }
+        if (dir == null) {
+            return declared;
+        }
+        final String fileName = declared.getFileName().toString();
+        try (Stream<Path> walk = Files.walk(dir)) {
+            final Path found = walk.filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().equals(fileName))
+                    .findFirst().orElse(null);
+            if (found != null) {
+                mediaFallbackCache.put(key, found);
+                return found;
+            }
+        }
+        return declared;
     }
 
     /**

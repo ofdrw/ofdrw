@@ -33,6 +33,27 @@ public final class RenderContexts {
     }
 
     /**
+     * 创建注释外观渲染上下文
+     * <p>
+     * 与页面级上下文唯一的差别是 {@link RenderContext#isAppearanceContext()} 返回 true：
+     * 外观内的底纹需要按外观坐标系锚定，见 {@code PatternRenderer#tilingMatrix}。
+     *
+     * @param pageX0Mm     页面框左上角横坐标，单位 mm
+     * @param pageY0Mm     页面框左上角纵坐标，单位 mm
+     * @param pageWidthMm  页面宽度，单位 mm
+     * @param pageHeightMm 页面高度，单位 mm
+     * @param pageContent  页面内容累积器，不能为空
+     * @param fontSelector 字体选择器，可为空
+     * @return 新的渲染上下文
+     */
+    public static RenderContext createAppearance(double pageX0Mm, double pageY0Mm, double pageWidthMm,
+                                                 double pageHeightMm, PdfPageContent pageContent,
+                                                 FontSelector fontSelector) {
+        return new DefaultRenderContext(pageWidthMm, pageHeightMm, pageX0Mm, pageY0Mm,
+                AffineMatrix.IDENTITY, pageContent, fontSelector, true);
+    }
+
+    /**
      * 创建一个带有页面框偏移的页面级渲染上下文（对应决策 26：{@code MediaBox = CropBox = PhysicalBox}）
      *
      * @param pageX0Mm     页面框左上角横坐标，单位 mm

@@ -7,9 +7,11 @@ import org.ofdrw.core.basicStructure.pageObj.layer.block.TextObject;
 import org.ofdrw.core.basicType.ST_Array;
 import org.ofdrw.core.basicType.ST_Box;
 import org.ofdrw.core.basicType.ST_ID;
+import org.ofdrw.core.pageDescription.clips.Clips;
 import org.ofdrw.core.pageDescription.color.color.CT_Color;
 import org.ofdrw.core.text.CT_CGTransform;
 import org.ofdrw.core.text.TextCode;
+import org.ofdrw.graphics2d.OFDPageGraphics2D;
 
 import java.io.IOException;
 
@@ -49,6 +51,11 @@ public final class TextRunBuilder {
     static final String PLACEHOLDER = "\u00A4";
 
     /**
+     * 旋转文字对象坐标系包围盒的最小外扩量，单位 mm（只作用于对象坐标系分支，补偿取整误差）
+     */
+    private static final double PADDING_MM = 0.01d;
+
+    /**
      * 包围盒外扩比例（1%），避免查看器因浮点误差裁掉边缘
      */
     private static final double BOUNDARY_PADDING = 0.01;
@@ -64,6 +71,24 @@ public final class TextRunBuilder {
     private final TextRunStyle style;
 
     /**
+     * 页面画布（用于把字形包围盒换算到页面坐标系）
+     */
+    private final OFDPageGraphics2D pageGraphics;
+
+    /**
+     * CGTransform 的 GID 延迟改写登记：PDF 原始 GID 依次对应 {@link #build} 产出的每个 CGTransform 节点
+     * <p>
+     * 子集化时 old→new 映射在字体写出之后才确定；这里先按 PDF 原始 GID 写出 CGTransform，
+     * 同时把节点交给 {@link PdfTextFonts#trackGid}，在 OFD 打包前统一改写为最终 GID。
+     */
+    private final List<Object[]> pendingGidNodes = new ArrayList<>();
+
+    /**
+     * 本 run 生效的裁剪区，null 表示不裁剪
+     */
+    private Clips clips = null;
+
+    /**
      * 字形集合
      */
     private final List<Glyph> glyphs = new ArrayList<>();
@@ -75,6 +100,14 @@ public final class TextRunBuilder {
     private double minY = Double.MAX_VALUE;
     private double maxX = -Double.MAX_VALUE;
     private double maxY = -Double.MAX_VALUE;
+
+    /**
+     * 字形基线点在对象坐标系下的包围盒并集（仅在有 CTM 时维护）
+     */
+    private double minObjX = 0d;
+    private double maxObjX = 0d;
+    private double minObjY = 0d;
+    private double maxObjY = 0d;
 
     /**
      * 字形原点在页面毫米下的包围盒并集（minOriginX, minOriginY, maxOriginX, maxOriginY）
@@ -105,9 +138,19 @@ public final class TextRunBuilder {
      * @param font  字体
      * @param style 绘制属性快照
      */
-    TextRunBuilder(PDFont font, TextRunStyle style) {
+    TextRunBuilder(PDFont font, TextRunStyle style, OFDPageGraphics2D pageGraphics) {
         this.font = font;
         this.style = style;
+        this.pageGraphics = pageGraphics;
+    }
+
+    /**
+     * 设置本 run 生效的裁剪区（由调用方按 PDF 图形状态生成）
+     *
+     * @param clips 裁剪区；null 表示不裁剪
+     */
+    void setClips(Clips clips) {
+        this.clips = clips;
     }
 
     /**
@@ -139,6 +182,10 @@ public final class TextRunBuilder {
     void add(Glyph glyph) {
         if (first == null) {
             first = glyph;
+            minObjX = 0d;
+            maxObjX = 1d;
+            minObjY = 0d;
+            maxObjY = 0d;
         }
         ascent = Math.max(ascent, glyph.ascent);
         descent = Math.max(descent, glyph.descent);
@@ -149,6 +196,17 @@ public final class TextRunBuilder {
             minY = Math.min(minY, glyph.box.getMinY());
             maxX = Math.max(maxX, glyph.box.getMaxX());
             maxY = Math.max(maxY, glyph.box.getMaxY());
+        }
+        // 累加对象坐标系基线盒（有 CTM 时用于把 Boundary 换成页面坐标）
+        try {
+            Point2D o = glyph.linear.createInverse().deltaTransform(
+                    new Point2D.Double(glyph.originX - first.originX, glyph.originY - first.originY), null);
+            minObjX = Math.min(minObjX, o.getX());
+            minObjY = Math.min(minObjY, o.getY());
+            maxObjX = Math.max(maxObjX, o.getX() + 1d);
+            maxObjY = Math.max(maxObjY, o.getY());
+        } catch (NoninvertibleTransformException e) {
+            // 线性部分不可逆时忽略对象坐标系累计（退化为页面坐标盒）
         }
         // 累加基线盒：为空格等无轮廓字形提供兜底，保证 origin 一定落在盒内
         minOriginX = Math.min(minOriginX, Math.min(glyph.originX, glyph.originX + glyph.em));
@@ -167,6 +225,19 @@ public final class TextRunBuilder {
      * @return 文字对象
      */
     TextObject build(ST_ID id, boolean forceCgTransform) {
+        return build(id, forceCgTransform, null);
+    }
+
+    /**
+     * 构造 OFD 文字对象（带 CGTransform GID 延迟改写登记）
+     *
+     * @param id               文字对象 ID
+     * @param forceCgTransform 是否强制写 CGTransform（CID/Identity 字体总是 true）
+     * @param gidTracker       CGTransform 节点登记函数：{@code (PDF 字体, Glyphs 节点, PDF 原始 GID 列表)}，
+     *                         可为 null；子集化时由调用方登记，在 OFD 打包前改写为最终 GID
+     * @return 文字对象
+     */
+    TextObject build(ST_ID id, boolean forceCgTransform, OfdPageDrawer.GidTracker gidTracker) {
         TextObject text = new TextObject(id);
         Glyph g0 = first;
         double size = g0.em;
@@ -191,19 +262,35 @@ public final class TextRunBuilder {
         double h = boxMaxY - boxMinY;
         double padX = Math.abs(w) * BOUNDARY_PADDING + 1e-4;
         double padY = Math.abs(h) * BOUNDARY_PADDING + 1e-4;
-        text.setBoundary(new ST_Box(nz(boxMinX - padX), nz(boxMinY - padY), nz(w + 2 * padX), nz(h + 2 * padY)));
 
-        double bx = nz(boxMinX - padX);
-        double by = nz(boxMinY - padY);
+        // 文字定位：TextCode 的 X/Y 是首个字形原点相对 Boundary 左上角的偏移（GB/T 33190-2016 表 46），
+        // 且在<b>对象坐标系</b>中给出；有 CTM 时对象坐标系经 CTM 映射到页面坐标系
+        double stampX;
+        double stampY;
         if (!isIdentityLinear(g0.linear)) {
-            // 旋转/镜像/剪切/缩放：线性部分写入 CTM，平移量取首个字形原点
+            /*
+             * 旋转/镜像/剪切/非等比缩放：CTM 只写<b>纯线性矩阵</b>（GB/T 33190 表 34/46：文字对象的 CTM 不含平移），
+             * 对象坐标系与页面坐标系同尺度、无平移；Boundary 与 TextCode.X/Y 都在对象坐标系中给出。
+             */
             text.setCTM(new ST_Array(nz(g0.linear.getScaleX()), nz(g0.linear.getShearY()),
-                    nz(g0.linear.getShearX()), nz(g0.linear.getScaleY()),
-                    nz(g0.originX), nz(g0.originY)));
+                    nz(g0.linear.getShearX()), nz(g0.linear.getScaleY()), 0d, 0d));
+            // 对象坐标系的轴对齐包围盒：基线点 + 字体上下伸部，再外扩 1%
+            double objMinX = Math.min(minObjX, 0d) - PADDING_MM;
+            double objMaxX = Math.max(maxObjX, 1d) + PADDING_MM;
+            double objTop = Math.max(-ascent, Math.min(minObjY, 0d)) - PADDING_MM;
+            double objBottom = Math.max(maxObjY, 0d) + descent + PADDING_MM;
+            text.setBoundary(new ST_Box(nz(objMinX), nz(objTop), nz(objMaxX - objMinX), nz(objBottom - objTop)));
+            // 首个字形在对象坐标系中恒为 (0,0)；TextCode.X/Y 是“相对 Boundary 左上角的偏移”，
+            // 与无 CTM 分支同一约定：左上角为 (0,0) 时偏移为 0
+            stampX = 0d;
+            stampY = 0d;
+        } else {
+            double bx = nz(boxMinX - padX);
+            double by = nz(boxMinY - padY);
+            text.setBoundary(new ST_Box(bx, by, nz(w + 2 * padX), nz(h + 2 * padY)));
+            stampX = nz(g0.originX - bx);
+            stampY = nz(g0.originY - by);
         }
-        // 文字定位：TextCode 的 X/Y 是首个字形原点相对 Boundary 左上角的偏移（GB/T 33190-2016 表 46）
-        double stampX = nz(g0.originX - bx);
-        double stampY = nz(g0.originY - by);
 
         // 2. TextCode：Unicode 文本 + Delta（相邻字形 origin 之差反变换到对象坐标系）
         StringBuilder content = new StringBuilder();
@@ -227,26 +314,14 @@ public final class TextRunBuilder {
             code.setDeltaX(toArray(dx));
             code.setDeltaY(toArray(dy));
         }
-        text.addTextCode(code);
 
-        // 3. CGTransform：按字体给出的最终 GID 写，字符位置为 UTF-16 偏移
-        int[] codePositions = new int[glyphs.size()];
-        int[] codeCounts = new int[glyphs.size()];
-        int pos = 0;
-        for (int i = 0; i < glyphs.size(); i++) {
-            Glyph g = glyphs.get(i);
-            codePositions[i] = pos;
-            codeCounts[i] = g.unicode.length();
-            pos += g.unicode.length();
-        }
-        if (forceCgTransform || needsCgTransform(codeCounts)) {
-            for (CT_CGTransform transform : makeTransforms(codePositions, codeCounts, glyphs)) {
-                text.addCGTransform(transform);
-            }
-        }
-        // 简单字体且映射一对一、无占位符时不写 CGTransform，由查看器按内嵌字体 cmap 定位
-
-        // 4. 绘制属性
+        /*
+         * 子元素顺序按 GB/T 33190-2016 表 16 排列：
+         * FillColor → StrokeColor → CGTransform → TextCode。
+         * dom4j 的 add() 只是追加，顺序完全由调用顺序决定；TextCode 必须最后加入，
+         * 否则查看器按顺序解析时会在遇到 TextCode 前结束对象，导致文字整体不渲染。
+         */
+        // 3. 绘制属性（颜色先于文字内容）
         text.setFill(style.fill);
         text.setStroke(style.stroke);
         if (style.fillColor != null) {
@@ -260,6 +335,36 @@ public final class TextRunBuilder {
         }
         if (style.alpha < 255) {
             text.setAlpha(style.alpha);
+        }
+
+        // 4. CGTransform：按字体给出的最终 GID 写，字符位置为 UTF-16 偏移
+        int[] codePositions = new int[glyphs.size()];
+        int[] codeCounts = new int[glyphs.size()];
+        int pos = 0;
+        for (int i = 0; i < glyphs.size(); i++) {
+            Glyph g = glyphs.get(i);
+            codePositions[i] = pos;
+            codeCounts[i] = g.unicode.length();
+            pos += g.unicode.length();
+        }
+        if (forceCgTransform || needsCgTransform(codeCounts)) {
+            for (CT_CGTransform transform : makeTransforms(codePositions, codeCounts, glyphs)) {
+                text.addCGTransform(transform);
+                if (gidTracker != null) {
+                    org.dom4j.Element glyphsElement = transform.getOFDElement("Glyphs");
+                    if (glyphsElement != null) {
+                        gidTracker.track(font, glyphsElement, transform.getGlyphs());
+                    }
+                }
+            }
+        }
+        // 简单字体且映射一对一、无占位符时不写 CGTransform，由查看器按内嵌字体 cmap 定位
+
+        // 5. TextCode 必须最后写入（表 16 顺序）
+        text.addTextCode(code);
+
+        if (clips != null) {
+            text.setClips(clips);
         }
 
         return text;
@@ -341,16 +446,32 @@ public final class TextRunBuilder {
     }
 
     /**
-     * 判断线性部分是否近似单位矩阵
+     * 判断线性部分是否表示"无需 CTM 的普通文字朝向"
+     * <p>
+     * 普通横排文字的线性部分为 {@code (1, 0, 0, -1)}：x 轴向右、y 轴翻转。
+     * OFD 文字对象在没有 CTM 时按对象坐标系直接书写，其字号向上方向与页面 y 轴向下相反，
+     * 因此 {@code (1, 0, 0, -1)} 与单位矩阵都属于"普通朝向"，不应写 CTM；
+     * 只有旋转、剪切、非等比缩放等必须由 CTM 表达的形态才进入 CTM 分支。
      *
-     * @param linear 线性部分
-     * @return true - 近似单位矩阵
+     * @param linear 线性部分（无平移）
+     * @return true - 普通朝向（单位矩阵或 y 轴翻转的横排）
      */
     static boolean isIdentityLinear(AffineTransform linear) {
-        return Math.abs(linear.getScaleX() - 1) < 1e-6
-                && Math.abs(linear.getScaleY() - 1) < 1e-6
-                && Math.abs(linear.getShearX()) < 1e-6
-                && Math.abs(linear.getShearY()) < 1e-6;
+        /*
+         * 容差取 1e-3：linear 是“N / em”的归一化结果，浮点误差与字体度量取整都会带来 1e-5 量级的抖动，
+         * 用过紧的容差会把普通横排误判成需要 CTM（实测 zsbk 等样本的 (1,0,0,-1) 偏差达 1e-4 量级），
+         * 进而写出 Boundary=-0.01 的对象坐标系包围盒。
+         */
+        final double tol = 1e-3;
+        boolean identity = Math.abs(linear.getScaleX() - 1) < tol
+                && Math.abs(linear.getScaleY() - 1) < tol
+                && Math.abs(linear.getShearX()) < tol
+                && Math.abs(linear.getShearY()) < tol;
+        boolean flipped = Math.abs(linear.getScaleX() - 1) < tol
+                && Math.abs(linear.getScaleY() + 1) < tol
+                && Math.abs(linear.getShearX()) < tol
+                && Math.abs(linear.getShearY()) < tol;
+        return identity || flipped;
     }
 
     /**

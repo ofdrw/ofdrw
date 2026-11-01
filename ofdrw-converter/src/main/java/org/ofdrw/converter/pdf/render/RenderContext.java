@@ -82,6 +82,41 @@ public interface RenderContext {
     PdfPageContent getPageContent();
 
     /**
+     * 获取当前容器（图层）继承下来的绘制参数
+     * <p>
+     * OFD 8.2.1 的就近原则为：图元属性 &gt; 图元 DrawParam &gt; 图层 DrawParam &gt; Relative 链 &gt; 默认值。
+     * 图层声明的 {@code DrawParam} 必须传给子图元作为继承基准，否则图元只能拿到默认值（典型现象：
+     * 图层统一声明的描边色/线宽丢失，整页线全部变黑）。
+     *
+     * @return 图层有效绘制参数；未声明时返回 {@code null}
+     */
+    default EffectiveDrawParam getInheritedDrawParam() {
+        return null;
+    }
+
+    /**
+     * 派生出“继承指定图层绘制参数”的新上下文
+     *
+     * @param param 图层有效绘制参数，可为空
+     * @return 新的渲染上下文；不支持继承的实现返回自身
+     */
+    default RenderContext withInheritedDrawParam(EffectiveDrawParam param) {
+        return this;
+    }
+
+    /**
+     * 是否处于注释外观（Appearance）渲染上下文
+     * <p>
+     * 注释外观的坐标系与页面正文不同：外观内容先按外观自身坐标系排版，再由注释定位到页面。
+     * 底纹等“以坐标空间为锚点”的特性必须据此选择锚定方式，否则平铺相位与基准相差一整段偏移。
+     *
+     * @return true 表示当前正在渲染注释外观
+     */
+    default boolean isAppearanceContext() {
+        return false;
+    }
+
+    /**
      * 获取字体选择器
      * <p>
      * 文字渲染需要把 OFD 字体映射为 PDF 字体引用，字体选择结果由 {@code org.ofdrw.converter.pdf.font} 包负责，

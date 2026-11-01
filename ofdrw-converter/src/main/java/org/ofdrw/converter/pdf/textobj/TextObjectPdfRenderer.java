@@ -47,11 +47,28 @@ final class TextObjectPdfRenderer extends PDFRenderer {
      * @param warnings 降级告警聚合器
      */
     TextObjectPdfRenderer(PDDocument document, PdfTextFonts fonts,
-                                 PdfTextWarningCollector warnings) {
+                          PdfTextWarningCollector warnings) {
+        this(document, fonts, warnings, null);
+    }
+
+    /**
+     * @param document  PDF 文档
+     * @param fonts     字体映射
+     * @param warnings  降级告警聚合器
+     * @param trackFinalGid CGTransform GID 延迟登记函数，可为 null（GID 不变）
+     */
+    TextObjectPdfRenderer(PDDocument document, PdfTextFonts fonts,
+                          PdfTextWarningCollector warnings, OfdPageDrawer.GidTracker trackFinalGid) {
         super(document);
         this.fonts = fonts;
         this.warnings = warnings == null ? new PdfTextWarningCollector() : warnings;
+        this.trackFinalGid = trackFinalGid;
     }
+
+    /**
+     * CGTransform GID 延迟登记函数
+     */
+    private final OfdPageDrawer.GidTracker trackFinalGid;
 
     /**
      * 渲染指定页到 OFD 页面画布
@@ -69,8 +86,23 @@ final class TextObjectPdfRenderer extends PDFRenderer {
 
     @Override
     protected PageDrawer createPageDrawer(PageDrawerParameters parameters) throws IOException {
-        return new OfdPageDrawer(parameters, pageGraphics,
-                this::registerFont, this::registerGlyph, warnings, pageNumber);
+        OfdPageDrawer drawer = new OfdPageDrawer(parameters, pageGraphics,
+                this::registerFont, this::registerGlyph, warnings, pageNumber, null, trackFinalGid);
+        // 注释/底纹单元允许系统字体兜底（正文仍走严格策略）
+        drawer.setAnnotationFontRegistrar(this::registerAnnotationFont);
+        return drawer;
+    }
+
+    /**
+     * 登记注释单元（平铺底纹/水印）的字体
+     * <p>
+     * 与 {@link #registerFont} 分离：单元字体常无内嵌程序，允许在配置了字体目录时用系统字体替代。
+     *
+     * @param font PDF 字体
+     * @return OFD 字体资源 ID；无法登记时返回 null
+     */
+    private ST_ID registerAnnotationFont(PDFont font, java.util.Set<Integer> usedUnicodes) {
+        return fonts == null ? null : fonts.registerAnnotationFont(font, usedUnicodes);
     }
 
     /**
@@ -86,13 +118,14 @@ final class TextObjectPdfRenderer extends PDFRenderer {
     /**
      * 记录字形使用
      *
-     * @param font PDF 字体
-     * @param code PDF 字符编码
-     * @param gid  PDF 原始字形索引
+     * @param font    PDF 字体
+     * @param code    PDF 字符编码
+     * @param gid     PDF 原始字形索引
+     * @param unicode 该字形对应的 Unicode 码位，未知时为 -1
      */
-    private void registerGlyph(PDFont font, int code, int gid) {
+    private void registerGlyph(PDFont font, int code, int gid, int unicode) {
         if (fonts != null) {
-            fonts.use(font, code, gid);
+            fonts.use(font, code, gid, unicode);
         }
     }
 }

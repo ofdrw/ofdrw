@@ -126,22 +126,29 @@ converter.close();
 目前DocConverter支持转换为以下类型：
 
 - 图片：`ImageConverter`
-- PDF文档：`PDFConverter`
+- PDF文档：`PDFConverter`（文字对象化，推荐）、`PDFGraphicsConverter`（图形化，把PDF当作图片）
 - 纯文本：`TextConverter`
 
 不同的转换实现结合目标类型特性具有不同的接口，下面将介绍各种转换器的使用方式，以及特有方法。
 
 ### PDF转换OFD
 
-将PDF中页面转换为OFD页面，采用PDFBox `PDFRenderer`接口，以AWT
-graphics2d接口桥接，并通过[ofdrw-graphics2d](../../ofdrw-graphics2d) 模块完成转换功能。
+将PDF中页面转换为OFD页面。
+
+本库提供**两套实现**，按是否需要文本检索选择：
+
+| 实现类 | 方式 | 文本可检索 | 体积（密集文字样本） | 适用 |
+|:--|:--|:--:|--:|:--|
+| `PDFConverter`（推荐） | 文字对象化（`TextObject` + 内嵌字体） | 支持 | 约 0.3 MB | 正式文档归档、需检索或复制文本 |
+| `PDFGraphicsConverter` | 图形化（PDF 当图片，字形转路径） | 不支持 | 约 9 MB | 视觉保真归档、字形无法嵌入的 PDF |
+
+下面先讲 `PDFConverter`，图形化实现见[下一节](#图形化转换把pdf当作图片)。
 
 实现类：`org.ofdrw.converter.ofdconverter.PDFConverter`
 
 注意事项：
 
 - 转换后的页面将采用PDF中页面尺寸。
-- **目前该转换器任然有改进空间**，可能存在部分特性在转换过程中丢失，显示效果与原PDF文档不一致。
 
 示例：
 
@@ -159,8 +166,52 @@ System.out.println(">> " + dst.toAbsolutePath());
 | `void setEnableCopyAttachFiles(boolean enableCopyAttachFiles)` | 设置是否复制附件（默认复制）。     |
 | `void setEnableCopyBookmarks(boolean enableCopyBookmarks)`     | 设置是否复制书签（默认复制）。     |
 | `void setUUPMM(double UUPMM)`                                  | 设置毫米表示的用户单元数（PDF单位） |
+| `void setSubsetFont(boolean subsetFont)`                        | 是否对完整 CJK 字体做子集化（默认关闭：原样嵌入）。 |
+| `void setFontDir(Path fontDir)`                                 | 非内嵌字体的系统字体精确匹配目录（默认关闭）。 |
 
-> 详见 [测试用例](../src/test/java/org/ofdrw/converter/ofdconverter/PDFConverterTest.java)
+> 详见 [测试用例](../src/test/java/org/ofdrw/converter/ofdconverter/PDFConverterTest.java)，
+> 图形化实现的测试用例见 [PDFGraphicsConverterTest](../src/test/java/org/ofdrw/converter/ofdconverter/PDFGraphicsConverterTest.java)。
+
+#### 图形化转换（把PDF当作图片）
+
+实现类：`org.ofdrw.converter.ofdconverter.PDFGraphicsConverter`
+
+基于 `ofdrw-graphics2d`，通过 PDFBox 的 `PDFRenderer.renderPageToGraphics` 把页面**直接渲染到
+`OFDPageGraphics2D`**：字形全部展开为路径，产物只包含 OFD 的路径与图片图元，**不产生文字对象、不嵌入字体**。
+
+两套实现并行存在、互不影响，可按需选择：
+
+| 对比项        | `PDFConverter`（文字对象化） | `PDFGraphicsConverter`（图形化） |
+|:-----------|:--------------------|:-------------------------|
+| 文字         | `TextObject` + 内嵌字体 | 全部转为 `PathObject`        |
+| 文本可搜索/可复制  | 支持                  | 不支持                       |
+| 字体依赖       | 需要字体可嵌入             | 无（不依赖任何字体）               |
+| 体积（密集文字样本） | 约 0.3 MB            | 约 9 MB                    |
+| 适用场景       | 需要检索、归档、二次编辑        | 只要"看起来一样"的可视化归档、字形无法嵌入的PDF |
+
+示例：
+
+```
+Path src = Paths.get("src/test/resources/Test.pdf");
+Path dst = Paths.get("target/convert-graphics.ofd");
+try (PDFGraphicsConverter converter = new PDFGraphicsConverter(dst)) {
+    converter.convert(src);            // 全部页
+    // converter.convert(src, 0, 2);   // 只转换指定页（从0起，支持乱序与重复）
+}
+System.out.println(">> " + dst.toAbsolutePath());
+```
+
+| 特有方法                          | 用途                                        |
+|:------------------------------|:------------------------------------------|
+| `void setUUPMM(double UUPMM)` | 设置毫米表示的用户单元数（PDF单位），默认 2.8346。            |
+| `void setImageScale(double imageScale)` | 图片内容的额外渲染缩放倍数（默认 1.0），仅影响图片类资源，不影响矢量内容。 |
+| `void setRenderingHints(RenderingHints hints)` | 设置渲染提示（抗锯齿、插值等），默认与 `PDFConverter` 一致。    |
+
+注意事项：
+
+- 转换后的页面采用 PDF 页面尺寸，`/Rotate` 为 90/270 的页面会正确生成为横向页面。
+- 产物体积明显大于文字对象化方案，这是"文字转路径"的固有代价。
+
 
 ### 图片转换OFD
 

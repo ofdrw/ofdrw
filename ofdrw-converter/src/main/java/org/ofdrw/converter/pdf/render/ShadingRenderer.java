@@ -127,6 +127,21 @@ public final class ShadingRenderer implements ContentRenderer {
      * @return 渐变指令；数据非法时返回 {@code null}
      */
     public ShadingCommand axial(CT_AxialShd axial, RenderContext context) {
+        return axial(axial, context, effectMatrix(context));
+    }
+
+    /**
+     * 轴向渐变（显式指定渐变坐标 → 页面坐标的矩阵）
+     * <p>
+     * OFD 渐变坐标以外接矩形左上角为原点、单位 mm（11.2 节对象空间），与图元自身 {@code CTM}
+     * 无关；由调用方传入“外接矩形平移 + 页面换算”的矩阵，避免渐变落点与图元错位。
+     *
+     * @param axial        OFD 轴向渐变
+     * @param context      渲染上下文
+     * @param effectToPage 渐变坐标 → 页面坐标矩阵
+     * @return 渐变指令；数据非法时返回 {@code null}
+     */
+    public ShadingCommand axial(CT_AxialShd axial, RenderContext context, AffineMatrix effectToPage) {
         ST_Pos start = axial.getStartPoint();
         ST_Pos end = axial.getEndPoint();
         if (start == null || end == null) {
@@ -137,7 +152,7 @@ public final class ShadingRenderer implements ContentRenderer {
         if (stops == null) {
             return null;
         }
-        AffineMatrix toPage = effectMatrix(context);
+        AffineMatrix toPage = effectToPage == null ? effectMatrix(context) : effectToPage;
         double[] p0 = toPage.transform(start.getX(), start.getY());
         double[] p1 = toPage.transform(end.getX(), end.getY());
         mapTypeNotice(axial.getMapType(), axial.getMapUnit(), "轴向渐变");
@@ -165,6 +180,18 @@ public final class ShadingRenderer implements ContentRenderer {
      * @return 渐变指令；数据非法时返回 {@code null}
      */
     public ShadingCommand radial(CT_RadialShd radial, RenderContext context) {
+        return radial(radial, context, effectMatrix(context));
+    }
+
+    /**
+     * 径向渐变（显式指定渐变坐标 → 页面坐标的矩阵）
+     *
+     * @param radial       OFD 径向渐变
+     * @param context      渲染上下文
+     * @param effectToPage 渐变坐标 → 页面坐标矩阵
+     * @return 渐变指令；数据非法时返回 {@code null}
+     */
+    public ShadingCommand radial(CT_RadialShd radial, RenderContext context, AffineMatrix effectToPage) {
         ST_Pos start = radial.getStartPoint();
         ST_Pos end = radial.getEndPoint();
         if (start == null || end == null) {
@@ -188,12 +215,20 @@ public final class ShadingRenderer implements ContentRenderer {
          * 写入器在绘制该指令时先用 {@link #ellipticalTransform} 对填充区域与着色做同一线性变换，
          * 圆形径向渐变即呈现为原椭圆；变换的推导与近似误差见 ellipticalTransform 的注释。
          */
-        AffineMatrix toPage = effectMatrix(context);
+        AffineMatrix toPage = effectToPage == null ? effectMatrix(context) : effectToPage;
         double[] p0 = toPage.transform(start.getX(), start.getY());
         double[] p1 = toPage.transform(end.getX(), end.getY());
         mapTypeNotice(radial.getMapType(), radial.getMapUnit(), "径向渐变");
+        /*
+         * 半径必须取自 EndRadius/StartRadius 而不是“起止圆心距”：同心圆径向渐变（StartPoint 与
+         * EndPoint 重合）的圆心距为 0，按圆心距推导会得到半径 0，整块区域不着色（典型现象：红色
+         * 徽标只剩下纸张底纹上的金色轮廓）。半径与坐标同处渐变空间，一并经 toPage 的线性缩放换算。
+         */
+        double scale = PathRenderer.linearScale(toPage);
+        double startRadiusPt = radial.getStartRadius() == null ? 0d : radial.getStartRadius() * scale;
+        double endRadiusPt = radial.getEndRadius() == null ? -1d : radial.getEndRadius() * scale;
         return new ShadingCommand(ShadingCommand.ShadingType.RADIAL, stops, extend(radial.getExtend()), area(),
-                FillRule.NON_ZERO, p0[0], p0[1], p1[0], p1[1], eccentricity, angle);
+                FillRule.NON_ZERO, p0[0], p0[1], p1[0], p1[1], eccentricity, angle, startRadiusPt, endRadiusPt);
     }
 
     /**

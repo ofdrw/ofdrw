@@ -107,6 +107,7 @@ public class HelloWorld {
 - [OFD R&W 签名签章快速入门](./ofdrw-sign/doc/quickstart/README.md)
 - [OFD R&W 加密 完整性保护协议](./ofdrw-crypto/README.md)
 - [OFD R&W 转换OFD/OFD导出 ](./ofdrw-converter/README.md)（**不建议用于预览，也不建议导出 PDF**，预览请用 [ofdrw-viewer](https://github.com/ofdrw/ofdrw-viewer)）
+  - [PDF 转 OFD 的两种实现](./ofdrw-converter/doc/CONVERTER.md#pdf转换ofd)：`PDFConverter`（文字对象化，推荐）与 `PDFGraphicsConverter`（图形化，PDF 当图片）
   - [OFD 导出 PDF（`PDFExporter`）](./ofdrw-converter/doc/EXPORTER.md)：2.5.1 起 PDF 导出只保留这一种实现
   - [PDF 转换重构设计](./ofdrw-converter/doc/PDF转换重构设计.md)：坐标/文字/颜色/图像/结构映射的实现依据与验证方法
 - [OFD 模型默认值语义说明](./ofdrw-core/doc/OFD模型默认值语义说明.md)（可选属性“是否显式声明”必须用 `xxxExplicit()` 判断）

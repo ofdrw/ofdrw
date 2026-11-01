@@ -21,6 +21,29 @@ OFDRW 转换模块提供各类文档或媒体格式与OFD文档互相转换功�
 - [《转换OFD》](./doc/CONVERTER.md)
 - [《OFD导出》](./doc/EXPORTER.md)
 
+## PDF 转 OFD 的两种实现
+
+PDF 转 OFD 提供两套并行实现，按是否需要"文本可检索"来选择：
+
+| 实现类 | 转换方式 | 文本可检索 | 体积（密集文字样本） | 适用场景 |
+|:--|:--|:--:|--:|:--|
+| `PDFConverter` | 文字对象化：生成 `TextObject` + 内嵌字体 | 支持 | 约 0.3 MB | **推荐**，需要检索、归档、二次编辑的正式文档 |
+| `PDFGraphicsConverter` | 图形化：把 PDF 当作图片渲染，字形全部转为路径 | 不支持 | 约 9 MB | 只要"看起来一样"的可视化归档；字形无法嵌入时 |
+
+```java
+// 推荐：文字对象化（文字可搜索、体积小）
+try (PDFConverter converter = new PDFConverter(dst)) {
+    converter.convert(src);
+}
+
+// 可选：图形化（视觉保真、实现简单，但不支持文本检索、体积约为前者的 30 倍）
+try (PDFGraphicsConverter converter = new PDFGraphicsConverter(dst)) {
+    converter.convert(src);
+}
+```
+
+详见 [《转换OFD》](./doc/CONVERTER.md) 的「PDF转换OFD」与「图形化转换（把PDF当作图片）」章节。
+
 ## PDF 导出（2.5.1 起）
 
 PDF 导出统一使用 `org.ofdrw.converter.export.PDFExporter`：
