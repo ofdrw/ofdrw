@@ -1,11 +1,16 @@
 package org.ofdrw.font;
 
+import org.apache.fontbox.ttf.CmapLookup;
+import org.ofdrw.converter.font.TrueTypeFont;
+
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 字体
@@ -37,6 +42,25 @@ public class Font {
      * 缓存的AWT字体
      */
     private java.awt.Font fontObj;
+
+    /**
+     * 字体文件的字形度量数据（hmtx + cmap），按需解析并缓存
+     * <p>
+     * 为 null 表示尚未解析；解析失败后置为 {@link #GLYPH_METRICS_UNAVAILABLE} 以免重复尝试。
+     */
+    private volatile Object glyphMetrics;
+
+    /**
+     * 字符到 em 宽度比例的缓存，键为字符，值为占 em 的比例（1 表示 1 个 em）
+     * <p>
+     * 宽度比例与字号无关，因此同一字符在任意字号下都可以复用该缓存。
+     */
+    private final Map<Character, Double> charWidthScaleCache = new HashMap<>();
+
+    /**
+     * 字形度量不可用的标记值
+     */
+    private static final Object GLYPH_METRICS_UNAVAILABLE = new Object();
 
     /**
      * 是否可嵌入OFD文件包
@@ -137,6 +161,122 @@ public class Font {
     }
 
     /**
+     * 是否可以从字体文件中读取真实字形宽度
+     * <p>
+     * 当字体绑定了字体文件，且该文件的 hmtx 表与 cmap 表可以被解析时返回 true。
+     *
+     * @return true - 可以读取真实字形宽度；false - 不可以
+     */
+    public boolean hasRealGlyphWidth() {
+        return resolveGlyphMetrics() != null;
+    }
+
+    /**
+     * 获取字符的真实字形宽度占 em 的比例
+     * <p>
+     * 宽度取自字体文件 hmtx 表中该字符对应字形的 advance 宽度，除以字体每 em 的字体单位数换算为 em 比例，
+     * 因此与字号无关，可直接乘以字号（单位毫米）得到字符宽度（单位毫米）。
+     * <p>
+     * 字形数据不可用、或字符在字体文件中缺少对应字形（gid 为 0，即 .notdef）时返回 -1，
+     * 由调用方回退到字符宽度映射表或 AWT 测量，以保持不完整字体（如子集字体）的排版行为不变。
+     *
+     * @param c 字符
+     * @return 字符宽度占 em 的比例，1 表示 1 个 em；不可用时返回 -1
+     */
+    public double getRealCharWidthScale(char c) {
+        Double cached = charWidthScaleCache.get(c);
+        if (cached != null) {
+            return cached;
+        }
+        double scale = -1;
+        GlyphMetrics metrics = resolveGlyphMetrics();
+        if (metrics != null) {
+            int gid = metrics.lookup.getGlyphId(c);
+            // gid 为 0 表示字体中没有该字符的字形（.notdef），此时不使用字体的缺省字形宽度
+            if (gid > 0) {
+                int advance = metrics.font.getAdvanceWidth(gid);
+                if (advance > 0) {
+                    scale = advance / (double) metrics.unitsPerEm;
+                }
+            }
+        }
+        charWidthScaleCache.put(c, scale);
+        return scale;
+    }
+
+    /**
+     * 解析并缓存字体文件的字形度量数据
+     *
+     * @return 字形度量数据；字体未绑定文件或解析失败时返回 null
+     */
+    private GlyphMetrics resolveGlyphMetrics() {
+        Object cached = glyphMetrics;
+        if (cached != null) {
+            return cached == GLYPH_METRICS_UNAVAILABLE ? null : (GlyphMetrics) cached;
+        }
+        synchronized (this) {
+            cached = glyphMetrics;
+            if (cached != null) {
+                return cached == GLYPH_METRICS_UNAVAILABLE ? null : (GlyphMetrics) cached;
+            }
+            GlyphMetrics resolved = parseGlyphMetrics();
+            glyphMetrics = resolved == null ? GLYPH_METRICS_UNAVAILABLE : resolved;
+            return resolved;
+        }
+    }
+
+    /**
+     * 从字体文件解析字形度量数据
+     *
+     * @return 字形度量数据；字体未绑定文件或解析失败时返回 null
+     */
+    private GlyphMetrics parseGlyphMetrics() {
+        if (fontFile == null || Files.notExists(fontFile)) {
+            return null;
+        }
+        try {
+            // parse 返回解析后的新实例，必须使用其返回值
+            TrueTypeFont ttf = new TrueTypeFont().parse(fontFile);
+            float unitsPerEm = ttf.getUnitsPerEm();
+            if (unitsPerEm <= 0) {
+                return null;
+            }
+            CmapLookup lookup = ttf.getUnicodeCmapLookup();
+            if (lookup == null) {
+                return null;
+            }
+            return new GlyphMetrics(ttf, lookup, unitsPerEm);
+        } catch (Exception e) {
+            // 字体文件缺少 hmtx 或 cmap 表时无法获取字形宽度，退化为映射表方式
+            return null;
+        }
+    }
+
+    /**
+     * 字体文件的字形度量数据
+     */
+    private static final class GlyphMetrics {
+        /**
+         * 解析后的字体，用于读取 hmtx 表中的字形宽度
+         */
+        private final TrueTypeFont font;
+        /**
+         * Unicode 到字形索引的映射表
+         */
+        private final CmapLookup lookup;
+        /**
+         * 每 em 的字体单位数，单位为字体单位
+         */
+        private final float unitsPerEm;
+
+        private GlyphMetrics(TrueTypeFont font, CmapLookup lookup, float unitsPerEm) {
+            this.font = font;
+            this.lookup = lookup;
+            this.unitsPerEm = unitsPerEm;
+        }
+    }
+
+    /**
      * 获取字体全名
      *
      * @return 字体全名
@@ -188,6 +328,9 @@ public class Font {
      */
     public Font setFontFile(Path fontFile) {
         this.fontFile = fontFile;
+        // 字体文件变更后，此前解析的字形宽度数据不再有效
+        this.glyphMetrics = null;
+        this.charWidthScaleCache.clear();
         try (InputStream in = Files.newInputStream(fontFile)) {
             this.fontObj = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, in);
         } catch (FontFormatException | IOException e) {

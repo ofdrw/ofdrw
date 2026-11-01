@@ -667,6 +667,19 @@ public class TrueTypeFont implements GlyphDataProvider,FontDrawPathProvider {
     }
 
     /**
+     * 获取每 em 的字体单位数（unitsPerEm）
+     * <p>
+     * 用于把 {@link #getAdvanceWidth(int)} 返回的字体单位字宽换算为 em 比例：
+     * 字宽占 em 的比例 = 字宽（字体单位） / unitsPerEm。
+     *
+     * @return 每 em 的字体单位数，单位为字体单位；解析前或字体未提供有效值时返回 0
+     * @since 2.5.1
+     */
+    public float getUnitsPerEm() {
+        return unitsPerEm;
+    }
+
+    /**
      * 获取变换矩阵
      *
      * @return 矩阵序列

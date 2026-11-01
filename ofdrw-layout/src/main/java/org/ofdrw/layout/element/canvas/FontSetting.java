@@ -335,11 +335,21 @@ public class FontSetting implements Cloneable, TextFontInfo {
 
     /**
      * 返回文字所占空间
+     * <p>
+     * 字体绑定了字体文件时优先使用该文件的真实字形宽度，使测量结果与实际渲染的字体一致；
+     * 否则在存在预设字符宽度映射表时查表计算，最后退化为AWT字体测量。
      *
      * @param c 文字
      * @return 文字所占空间
      */
     public Rectangle2D box(char c) {
+        if (fontObj.hasRealGlyphWidth()) {
+            // 优先使用字体文件中的真实字形宽度
+            double scale = fontObj.getRealCharWidthScale(c);
+            if (scale >= 0) {
+                return new Rectangle2D.Double(0, 0, scale * fontSize, fontSize);
+            }
+        }
         if (fontObj.hasWidthMath()) {
             // 如果存在预设的字符映射表那么查表计算
             return new Rectangle2D.Double(0, 0, fontObj.getCharWidthScale(c) * fontSize, fontSize);

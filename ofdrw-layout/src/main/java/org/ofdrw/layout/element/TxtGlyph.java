@@ -33,11 +33,20 @@ public class TxtGlyph {
 
     /**
      * 返回字体宽度
+     * <p>
+     * 字体绑定了字体文件时优先使用该文件的真实字形宽度，与 {@link org.ofdrw.layout.element.canvas.FontSetting#box(char)}
+     * 的取值保持一致，避免排版宽度与实际渲染字体不符。
      *
      * @return 字符宽度(字符宽度 + 字间距)
      */
     public double getW() {
         Font font = textFontInfo.getFont();
+        if (font.hasRealGlyphWidth()) {
+            double scale = font.getRealCharWidthScale(txt);
+            if (scale >= 0) {
+                return textFontInfo.getLetterSpacing() + textFontInfo.getFontSize() * scale;
+            }
+        }
         if (font.hasWidthMath()) {
             double w = textFontInfo.getLetterSpacing();
             w += textFontInfo.getFontSize() * font.getCharWidthScale(txt);
