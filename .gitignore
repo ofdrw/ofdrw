@@ -52,3 +52,4 @@ src_material/
 .snapshots/
 scripts/
 .ci
+.m2-ci

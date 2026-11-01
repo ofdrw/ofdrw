@@ -1,0 +1,57 @@
+name: CI Build
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - 'feature/**'
+      - 'fix/**'
+  pull_request:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and Test (JDK ${{ matrix.java }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [ '8', '11', '17' ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # 根 pom 默认 skipTests=true 且 gpg 签名绑定在 verify 阶段，
+      # 这里显式开启测试并跳过签名，仅做编译、单元测试与打包验证（不发布）
+      - name: Compile
+        run: mvn -B clean compile -Dgpg.skip=true --no-transfer-progress
+
+      - name: Test
+        run: mvn -B test -DskipTests=false -Dgpg.skip=true --no-transfer-progress
+
+      - name: Package
+        run: mvn -B package -DskipTests -Dgpg.skip=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true --no-transfer-progress
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports-jdk${{ matrix.java }}
+          path: '*/target/surefire-reports/**'
+          retention-days: 7
+          if-no-files-found: ignore

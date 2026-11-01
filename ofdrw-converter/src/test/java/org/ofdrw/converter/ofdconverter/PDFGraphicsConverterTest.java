@@ -5,8 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.ofdrw.reader.OFDReader;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -44,7 +48,7 @@ class PDFGraphicsConverterTest {
     @Test
     @DisplayName("转换普通PDF：产物不含文字对象与字体，文字全部展开为路径")
     void convertProducesPathsOnly(@TempDir Path tempDir) throws Exception {
-        Path src = Path.of("src/test/resources/Test.pdf");
+        Path src = Paths.get("src/test/resources/Test.pdf");
         Path dst = tempDir.resolve("graphics-test.ofd");
         try (PDFGraphicsConverter converter = new PDFGraphicsConverter(dst)) {
             converter.convert(src);
@@ -68,7 +72,7 @@ class PDFGraphicsConverterTest {
     @Test
     @DisplayName("页面尺寸与PDF一致：A4页面转换为约210×297毫米")
     void pageSizeMatchesPdf(@TempDir Path tempDir) throws Exception {
-        Path src = Path.of("src/test/resources/Test.pdf");
+        Path src = Paths.get("src/test/resources/Test.pdf");
         Path dst = tempDir.resolve("graphics-size.ofd");
         try (PDFGraphicsConverter converter = new PDFGraphicsConverter(dst)) {
             converter.convert(src);
@@ -93,7 +97,7 @@ class PDFGraphicsConverterTest {
     @Test
     @DisplayName("页面旋转：/Rotate 90 的纵向页正确生成横向OFD页面")
     void rotatedPageBecomesLandscape(@TempDir Path tempDir) throws Exception {
-        Path src = Path.of("src/test/resources/xbrl-001.pdf");
+        Path src = Paths.get("src/test/resources/xbrl-001.pdf");
         Path dst = tempDir.resolve("graphics-rotate.ofd");
         try (PDFGraphicsConverter converter = new PDFGraphicsConverter(dst)) {
             converter.convert(src);
@@ -112,7 +116,7 @@ class PDFGraphicsConverterTest {
     @Test
     @DisplayName("指定页码转换：只输出选中页，支持乱序与重复")
     void convertSelectedPages(@TempDir Path tempDir) throws Exception {
-        Path src = Path.of("src/test/resources/pdf-textobj/dense-text-perf.pdf");
+        Path src = Paths.get("src/test/resources/pdf-textobj/dense-text-perf.pdf");
         Path dst = tempDir.resolve("graphics-pages.ofd");
         try (PDFGraphicsConverter converter = new PDFGraphicsConverter(dst)) {
             converter.convert(src, 1, 0, 0);
@@ -130,7 +134,7 @@ class PDFGraphicsConverterTest {
     @Test
     @DisplayName("页码越界：抛出异常并终止转换")
     void outOfRangePageRejected(@TempDir Path tempDir) {
-        Path src = Path.of("src/test/resources/Test.pdf");
+        Path src = Paths.get("src/test/resources/Test.pdf");
         Path dst = tempDir.resolve("graphics-bad.ofd");
         assertThrows(Exception.class, () -> {
             try (PDFGraphicsConverter converter = new PDFGraphicsConverter(dst)) {
@@ -151,7 +155,7 @@ class PDFGraphicsConverterTest {
     @Test
     @DisplayName("图形化产物无文字对象：全部为路径，与文字对象化方案区分")
     void graphicsOutputHasNoTextObject(@TempDir Path tempDir) throws Exception {
-        Path src = Path.of("src/test/resources/pdf-textobj/dense-text-perf.pdf");
+        Path src = Paths.get("src/test/resources/pdf-textobj/dense-text-perf.pdf");
         Path graphicsOut = tempDir.resolve("graphics.ofd");
 
         try (PDFGraphicsConverter graphics = new PDFGraphicsConverter(graphicsOut)) {
@@ -199,8 +203,8 @@ class PDFGraphicsConverterTest {
             }
             assertNotNull(entry, "应存在页面内容文件");
             String xml;
-            try (java.io.InputStream in = zip.getInputStream(entry)) {
-                xml = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            try (InputStream in = zip.getInputStream(entry)) {
+                xml = readFully(in);
             }
             java.util.regex.Matcher m = java.util.regex.Pattern
                     .compile("<ofd:PhysicalBox>([^<]+)</ofd:PhysicalBox>").matcher(xml);
@@ -226,13 +230,31 @@ class PDFGraphicsConverterTest {
                 if (!entry.getName().endsWith("Content.xml")) {
                     continue;
                 }
-                try (java.io.InputStream in = zip.getInputStream(entry)) {
-                    count += new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)
-                            .split(tagName, -1).length - 1;
+                try (InputStream in = zip.getInputStream(entry)) {
+                    count += readFully(in).split(tagName, -1).length - 1;
                 }
             }
             return count;
         }
+    }
+
+    /**
+     * 读取整个输入流并解码为 UTF-8 字符串
+     * <p>
+     * JDK 8 兼容：{@code InputStream.readAllBytes()} 为 JDK 9 新增 API，此处手工读取。
+     *
+     * @param in 输入流，由调用方负责关闭
+     * @return 输入流全部内容的 UTF-8 字符串
+     * @throws java.io.IOException 读取失败
+     */
+    private static String readFully(InputStream in) throws java.io.IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buf = new byte[8192];
+        int len;
+        while ((len = in.read(buf)) != -1) {
+            out.write(buf, 0, len);
+        }
+        return new String(out.toByteArray(), StandardCharsets.UTF_8);
     }
 
     /**
