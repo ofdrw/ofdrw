@@ -53,3 +53,4 @@ src_material/
 scripts/
 .ci
 .m2-ci
+.m2-deploy-check
