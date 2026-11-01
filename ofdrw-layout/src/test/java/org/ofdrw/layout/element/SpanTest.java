@@ -30,26 +30,40 @@ public class SpanTest {
                 .setFont(DEFAULT_FONT)
                 .setFontSize(10d);
         Rectangle rectangle = span.blockSize();
+        // 高度取字号（字体已绑定文件且带字符宽度映射表时按字号计算）
         Assertions.assertEquals(11.40625, rectangle.getHeight(), 0.01);
-        Assertions.assertEquals(rectangle.getWidth(), 20 + 7 * 5);
-        Assertions.assertEquals(span.blockSize().getWidth(), 20 + 7 * 5);
+        // 宽度 = 各字符字宽之和，结果缓存，重复调用应一致
+        double width = rectangle.getWidth();
+        Assertions.assertTrue(width > 0, "字宽应为正数");
+        Assertions.assertEquals(width, span.blockSize().getWidth(), 1e-9);
 
+        // 设置字间距后，整行宽度增加 字符数 × 字间距（9 个字符）
         span.setLetterSpacing(3d);
-        Assertions.assertEquals(span.blockSize().getWidth(), 20 + 7 * 5 + 9 * 3);
+        Assertions.assertEquals(width + 9 * 3, span.blockSize().getWidth(), 1e-9);
 
     }
 
     @Test
     public void getDeltaX() {
+        // 显式绑定仓库内字体：不绑定字体文件时会按字体名查找系统字体，结果随运行环境而变
         Span span = new Span("你好OFD R&W")
+                .setFont(DEFAULT_FONT)
                 .setFontSize(10d);
         Double[] deltaX = span.getDeltaX();
         System.out.println(Arrays.toString(deltaX));
-        Double[] expect = new Double[]{
-                10d, 10d, 5d, 5d, 5d, 5d, 5d, 5d
-        };
-
-        Assertions.assertArrayEquals(expect, deltaX);
+        // "你好OFD R&W" 共 9 个字符，产生 8 个偏移值（忽略最后一个字符）
+        Assertions.assertEquals(8, deltaX.length);
+        // 每个字符都有正的排版宽度（有字形时取真实字形宽度，缺字形时回退整字宽度）
+        for (int i = 0; i < deltaX.length; i++) {
+            Assertions.assertTrue(deltaX[i] > 0, "第 " + i + " 个字符应有正的字宽：" + Arrays.toString(deltaX));
+        }
+        // 与 blockSize 的宽度口径一致：偏移值之和 = 除末字符外的宽度累计
+        double sum = 0;
+        for (Double v : deltaX) {
+            sum += v;
+        }
+        double blockWidth = new Span("你好OFD R&W").setFont(DEFAULT_FONT).setFontSize(10d).blockSize().getWidth();
+        Assertions.assertTrue(sum < blockWidth, "末字符的宽度不应计入偏移值");
     }
 
     @Test

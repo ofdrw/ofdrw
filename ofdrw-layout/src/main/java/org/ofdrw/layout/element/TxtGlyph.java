@@ -53,11 +53,7 @@ public class TxtGlyph {
             return w;
         }
         if (this.bounds == null) {
-            // 分析字体大小
-            this.bounds = EnvFont.strBounds(font.getName(),
-                    font.getFamilyName(),
-                    String.valueOf(txt),
-                    textFontInfo.getFontSize());
+            this.bounds = measureBounds(font);
         }
         return textFontInfo.getLetterSpacing() + bounds.getWidth();
     }
@@ -73,12 +69,27 @@ public class TxtGlyph {
             return textFontInfo.getFontSize();
         }
         if (this.bounds == null) {
-            // 分析字体大小
-            this.bounds = EnvFont.strBounds(font.getName(),
-                    font.getFamilyName(),
-                    String.valueOf(txt),
-                    textFontInfo.getFontSize());
+            this.bounds = measureBounds(font);
         }
         return bounds.getHeight();
+    }
+
+    /**
+     * 测量字符外接矩形
+     * <p>
+     * 字体已绑定字体文件时用该文件测量，结果不随运行环境的系统字体而变；
+     * 未绑定字体文件时按字体名查找系统字体测量，找不到时回退默认字体。
+     *
+     * @param font 字体信息
+     * @return 字符外接矩形
+     */
+    private Rectangle2D measureBounds(Font font) {
+        java.awt.Font fontObj = font.getFontObj();
+        if (fontObj != null) {
+            return fontObj.deriveFont((float) textFontInfo.getFontSize().doubleValue())
+                    .getStringBounds(String.valueOf(txt), EnvFont.FRCtx());
+        }
+        return EnvFont.strBounds(font.getName(), font.getFamilyName(),
+                String.valueOf(txt), textFontInfo.getFontSize());
     }
 }
