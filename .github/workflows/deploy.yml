@@ -10,11 +10,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Set up Apache Maven Central
         uses: actions/setup-java@v5
@@ -33,3 +35,57 @@ jobs:
           SERVER_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           SERVER_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      # 发布成功后创建/更新对应 tag 的 GitHub Release，并附上变更日志
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          echo "当前发布标签：$TAG_NAME"
+
+          # 收集各模块产出的 jar，作为 Release 附件上传
+          # 排除 sources/javadoc 附件与 surefire 临时引导包，只取模块根 target 下的正式构件
+          JARS=$(find . -mindepth 3 -maxdepth 3 -path '*/target/*.jar' \
+                  ! -name '*-sources.jar' ! -name '*-javadoc.jar' -print)
+          echo "将要上传的构件："
+          echo "$JARS"
+
+          # 取上一个 tag 到本次 tag 之间的提交记录作为变更日志
+          # 按 tag 创建时间倒序，避免 v2.0.3 这类前缀标签干扰版本排序
+          PREV_TAG=$(git for-each-ref --sort=-creatordate \
+                       --format='%(refname:short)' \
+                       'refs/tags/*.*.*' | grep -v -x "$TAG_NAME" | head -1)
+          if [ -n "$PREV_TAG" ]; then
+            echo "变更范围：$PREV_TAG .. $TAG_NAME"
+            CHANGES=$(git log "$PREV_TAG..$TAG_NAME" --no-merges --pretty=format:'- %s (%h)')
+          else
+            echo "未找到上一个标签，使用全部提交历史"
+            CHANGES=$(git log --no-merges --pretty=format:'- %s (%h)' | head -50)
+          fi
+
+          {
+            echo "## 版本 $TAG_NAME"
+            echo ""
+            echo "已发布至 Maven Central：\`org.ofdrw:ofdrw:$TAG_NAME\`"
+            echo ""
+            echo "### 变更日志"
+            echo ""
+            echo "${CHANGES:-无变更记录}"
+          } > RELEASE_NOTES.md
+
+          cat RELEASE_NOTES.md
+
+          # 已存在同名 Release 则更新说明与附件，否则新建
+          if gh release view "$TAG_NAME" > /dev/null 2>&1; then
+            gh release edit "$TAG_NAME" --notes-file RELEASE_NOTES.md
+          else
+            gh release create "$TAG_NAME" \
+              --title "$TAG_NAME" \
+              --notes-file RELEASE_NOTES.md
+          fi
+
+          if [ -n "$JARS" ]; then
+            gh release upload "$TAG_NAME" $JARS --clobber
+          fi
