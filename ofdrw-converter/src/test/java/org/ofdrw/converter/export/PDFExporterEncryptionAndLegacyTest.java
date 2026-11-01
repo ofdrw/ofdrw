@@ -3,6 +3,7 @@ package org.ofdrw.converter.export;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.ofdrw.converter.GeneralConvertException;
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author 权观宇
  * @since 2.5.1
  */
+@Disabled("加密与旧版 PDF 导出集成用例，需真实样本。")
 class PDFExporterEncryptionAndLegacyTest {
 
     /**

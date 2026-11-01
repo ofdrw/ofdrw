@@ -1,6 +1,7 @@
 package org.ofdrw.converter.regression;
 
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.FontLoader;
 import org.ofdrw.converter.export.CanvasImageExporter;
@@ -48,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author ofdrw
  * @since 2.5.1
  */
+@Disabled("手工画布导出用例，依赖本地回归数据集。")
 class ManualCanvasImageExportTest {
 
     /**

@@ -2,6 +2,7 @@ package org.ofdrw.converter.regression;
 
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.export.OFDExporter;
 import org.ofdrw.converter.export.PDFExporter;
@@ -35,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author 权观宇
  * @since 2.5.1
  */
+@Disabled("手工 PDF 比对用例，依赖本地回归数据集。")
 class ManualPdfMatchTest {
 
     /**

@@ -1,5 +1,6 @@
 package org.ofdrw.converter.export;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -8,6 +9,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Disabled("SVG 导出集成用例，需真实 OFD 样本。")
 class SVGExporterTest {
 
     @Test

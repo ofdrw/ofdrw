@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.ConvertHelper;
 import org.ofdrw.converter.FontLoader;
@@ -14,6 +15,7 @@ import java.nio.file.Paths;
  * @author yuanfang
  * @since 2021-6-7 9:45
  */
+@Disabled("OFD2HTMLTest：OFD 转 HTML 的演示用例，无断言，仅生成产物文件供人工查看。")
 public class OFD2HTMLTest {
 
     @Test

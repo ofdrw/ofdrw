@@ -1,11 +1,13 @@
 package org.ofdrw.converter.export;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Disabled("iText 后端 PDF 导出集成用例，需真实 OFD 样本并生成 PDF。")
 class PDFExporterITextTest {
 
     /**

@@ -1,6 +1,7 @@
 package org.ofdrw.converter.ofdconverter;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.ofdrw.reader.OFDReader;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author ofdrw
  */
+@Disabled("PDF 转 OFD 图形化集成用例，需真实 PDF 样本并生成 OFD。")
 class PDFGraphicsConverterTest {
 
     /**

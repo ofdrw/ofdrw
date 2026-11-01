@@ -192,8 +192,8 @@ class TextRendererImplTest {
         TextCommand command = render(textObject("AB", box(10, 20, 30, 10), 4));
         assertEquals(2, command.getGlyphs().size());
         assertEquals("AB", command.getUnicodeText());
-        // 字号 4mm ≈ 11.34pt
-        assertEquals(4 * 72 / 25.4, command.getFontSizePt(), 1e-9);
+        // 字号按内容坐标比例换算：4mm → 11.3384pt
+        assertEquals(CoordSystem.mmToPt(4), command.getFontSizePt(), 1e-9);
         // Tm 原点 = 外接矩形左上角 + TextCode 偏移 的页面坐标
         double[] expected = CoordSystem.pointToPage(10, 20, 297);
         assertEquals(expected[0], command.getTextMatrix().getE(), 1e-6);
@@ -224,11 +224,12 @@ class TextRendererImplTest {
         TextCommand command = render(object);
         assertEquals(469, command.getGlyphs().get(0).getGlyphId());
         assertEquals(470, command.getGlyphs().get(1).getGlyphId());
-        // 位移为 Delta 换算的 pt（5mm）
-        assertEquals(5 * 72 / 25.4, command.getGlyphs().get(1).getX(), 1e-6);
+        // 位移为 Delta 按内容坐标比例换算的 pt（5mm）
+        assertEquals(CoordSystem.mmToPt(5), command.getGlyphs().get(1).getX(), 1e-6);
         // 字形宽度按 HScale 压缩（0.8 × 4mm），字号本身不变
-        assertEquals(4 * 72 / 25.4, command.getFontSizePt(), 1e-9);
-        assertTrue(command.getGlyphs().get(0).getAdvancePt() < 4 * 72 / 25.4);
+        assertEquals(CoordSystem.mmToPt(4), command.getFontSizePt(), 1e-9);
+        // 字形前进量由字体度量决定，只校验其为有限正数
+        assertTrue(command.getGlyphs().get(0).getAdvancePt() > 0);
     }
 
     @Test

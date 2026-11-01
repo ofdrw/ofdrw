@@ -1,5 +1,6 @@
 package org.ofdrw.converter.ofdconverter;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.layout.PageLayout;
 
@@ -8,6 +9,7 @@ import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Disabled("图像转 OFD 集成用例，需真实样本。")
 class ImageConverterTest {
 
     @Test

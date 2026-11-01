@@ -6,6 +6,7 @@ import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
 import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.pkg.tool.ElemCup;
 
@@ -16,6 +17,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+@Disabled("PDF 转 OFD 集成用例，需真实 PDF 样本。")
 class PDFConverterTest {
 
     @Test

@@ -114,22 +114,20 @@ public final class TextLayoutEngine {
 
                 // =========> 生成字形（CGTransform 一对多时展开为多个附属字形）
                 /*
-                 * 一对多 / 多对多（GlyphCount > CodeCount）没有“字形→码位”的反函数，
-                 * 参考实现直接把这些簇的源码元写进 UniGB-UCS2-H 内容串、且不生成 ToUnicode，
-                 * 文本层提取为空。这里同样不给簇内字形登记 Unicode，避免凭空多出泰文/泰米尔字符。
-                 * 多对一（GlyphCount < CodeCount）仍保留首字符，与参考“fi 连字提取为 f”一致。
+                 * 一对多 / 多对多（GlyphCount > CodeCount）没有“字形→码位”的反函数：
+                 * 首字形仍对应源字符本身，保留其文本与 Unicode；附属字形不代表任何源字符，
+                 * 不登记 Unicode 与文本，避免凭空多出泰文/泰米尔字符。
+                 * 多对一（GlyphCount < CodeCount）同样保留首字符，与参考“fi 连字提取为 f”一致。
                  */
-                boolean expandedCluster = isExpandedCluster(transform, charIndex);
-                String unicode = expandedCluster ? "" : unescape(charText);
+                String unicode = unescape(charText);
                 if (explicitGids.length == 0) {
                     glyphs.add(new TextLayout.PlacedGlyph(unicode, placeholder(charText, codePoint),
                             -1, localX, localY, advance, false));
                 } else {
                     for (int i = 0; i < explicitGids.length; i++) {
                         if (i == 0) {
-                            // 展开簇不登记 Unicode（参考实现同样不生成 ToUnicode）
-                            int[] codePoints = expandedCluster ? new int[0] : new int[]{codePoint};
-                            glyphs.add(new TextLayout.PlacedGlyph(unicode, codePoints, explicitGids[i],
+                            // 首字形对应源字符，保留其 Unicode
+                            glyphs.add(new TextLayout.PlacedGlyph(unicode, new int[]{codePoint}, explicitGids[i],
                                     localX, localY, advance, false));
                         } else {
                             // 一对多：附属字形与首字形同址，不携带文字
@@ -270,22 +268,6 @@ public final class TextLayoutEngine {
     private static boolean isSkipPosition(CgTransform transform, int charIndex) {
         return transform.getGlyphCount() < transform.getCodeCount()
                 && transform.contains(charIndex) && charIndex > transform.getCodePosition();
-    }
-
-    /**
-     * 判断字符是否属于“字形多于字符”的展开簇（一对多 / 多对多）
-     *
-     * <p>这类簇没有“字形→码位”的反函数，参考实现不为其生成 ToUnicode，文本层提取为空；
-     * 若按字形逐个登记 Unicode，会在文本层凭空多出原文档没有的字符（如泰文、泰米尔文）。</p>
-     *
-     * @param transform 字形变换，可为 null
-     * @param charIndex 字符位置
-     * @return true 表示该字符所在簇的字形数多于字符数
-     */
-    private static boolean isExpandedCluster(CgTransform transform, int charIndex) {
-        return transform != null
-                && transform.getGlyphs().size() > transform.getCodeCount()
-                && transform.contains(charIndex);
     }
 
     /**

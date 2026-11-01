@@ -1,5 +1,6 @@
 package org.ofdrw.converter.export;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -7,6 +8,7 @@ import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Disabled("HTML 导出集成用例，需真实 OFD 样本。")
 class HTMLExporterTest {
 
     @Test

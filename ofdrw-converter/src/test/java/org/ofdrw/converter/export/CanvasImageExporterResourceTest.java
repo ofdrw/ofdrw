@@ -1,5 +1,6 @@
 package org.ofdrw.converter.export;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.ofdrw.converter.GeneralConvertException;
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *         应正常平铺渲染。</li>
  * </ol>
  */
+@Disabled("画布图像导出资源用例，需真实 OFD 样本。")
 class CanvasImageExporterResourceTest {
 
     static {

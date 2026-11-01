@@ -53,19 +53,24 @@ class LegacyPathExportTest {
         try (PDDocument document = Loader.loadPDF(pdf.toFile())) {
             /*
              * 旧实现把 OFD 的 mm 线宽直接写成 PDF 的 w（1.35467），把 Foxit 的像素坐标按 300dpi 猜成 pt；
-             * 新管线统一按 GB/T 33190 语义换算：线宽 1.35467mm → 3.8400pt，
-             * 路径点由 CTM(0.010948/0.010925) 与 Boundary 平移换算为页面 pt。
+             * 新管线统一按 GB/T 33190 语义换算：
+             *   坐标：路径点经图元 CTM(0.010948/0.010925) 缩放并叠加 Boundary 平移，再按 mm→pt 换算；
+             *   线宽：与坐标同属“对象空间长度”，同样乘以图元 CTM 的线性缩放倍数 0.010948。
              * 两个历史入口现在委托同一套实现（决策 4），因此断言语义一致。
              */
+            double ctmScale = 0.010948d;
+            // 内容坐标按 1mm = 2.8346pt 换算（与页面框的 72/25.4 不同，见 CoordSystem）
+            double mmToPt = 2.8346d;
             // PDFBox 3.x 不再提供 getTokens()，parse() 直接返回指令序列
             PDFStreamParser parser = new PDFStreamParser(document.getPage(0));
             List<Object> tokens = parser.parse();
-            assertEquals(1.35467d * 72d / 25.4d, operand(tokens, "w", 1, 0), 0.01d);
+            // 线宽：1.35467mm × CTM 缩放 0.010948 → 约 0.0420pt
+            assertEquals(1.35467d * ctmScale * mmToPt, operand(tokens, "w", 1, 0), 0.001d);
             // 起点：(456 × 0.010948 − 6.688669 + 38.438663) mm → pt
-            assertEquals((456d * 0.010948d - 6.688669d + 38.438663d) * 72d / 25.4d,
+            assertEquals((456d * ctmScale - 6.688669d + 38.438663d) * mmToPt,
                     operand(tokens, "m", 2, 0), 0.001d);
             // 终点：(486 × 0.010948 − 6.688669 + 38.438663) mm → pt
-            assertEquals((486d * 0.010948d - 6.688669d + 38.438663d) * 72d / 25.4d,
+            assertEquals((486d * ctmScale - 6.688669d + 38.438663d) * mmToPt,
                     operand(tokens, "l", 2, 0), 0.001d);
             // 线端/线连接保持 Round
             assertEquals(1d, operand(tokens, "J", 1, 0), 0.001d);

@@ -3,6 +3,7 @@ package org.ofdrw.converter.export;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.ofdrw.graphics2d.OFDGraphicsDocument;
@@ -16,6 +17,7 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Disabled("图像混合模式导出集成用例，需真实 OFD 样本。")
 class ImageBlendModeExportTest {
 
     static {

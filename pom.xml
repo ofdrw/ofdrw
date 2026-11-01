@@ -52,6 +52,8 @@
         <fontbox.version>3.0.8</fontbox.version>
         <slf4j.version>1.7.36</slf4j.version>
         <skipTests>false</skipTests>
+        <!-- 默认跳过 GPG 签名，本地 install 不需要私钥；发布流水线用 -Dgpg.skip=false 开启 -->
+        <gpg.skip>true</gpg.skip>
     </properties>
 
     <licenses>
@@ -144,6 +146,7 @@
             </plugin>
 
             <!-- GPG Plugin: Sign artifacts for Maven Central -->
+            <!-- 默认跳过签名，保证本地 install 无需 GPG 密钥；发布时用 -Dgpg.skip=false 开启 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
@@ -158,6 +161,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <skip>${gpg.skip}</skip>
                     <passphraseServerId>gpg.passphrase</passphraseServerId>
                     <gpgArguments>
                         <arg>--pinentry-mode</arg>
@@ -166,13 +170,16 @@
                 </configuration>
             </plugin>
 
-            <!-- Surefire Plugin: Skip tests during build -->
+            <!-- Surefire Plugin: 执行单元测试 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
                     <skipTests>${skipTests}</skipTests>
+                    <!-- 无图形环境（CI/服务器）下强制 headless：文字度量与图像渲染依赖 AWT，
+                         否则会因无法连接 X11 而抛 NoClassDefFoundError -->
+                    <argLine>-Djava.awt.headless=true</argLine>
                 </configuration>
             </plugin>
 

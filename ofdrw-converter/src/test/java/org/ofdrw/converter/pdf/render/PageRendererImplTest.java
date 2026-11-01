@@ -183,8 +183,8 @@ class PageRendererImplTest {
             // 渲染必须使用带 reader 的口径
             PageRendererImpl.RenderPipeline pipeline = PageRendererImpl.create(reader);
             PdfPageContent content = pipeline.pageRenderer().renderPage(page, pipeline.fontSelector());
-            assertEquals(CoordSystem.mmToPt(210), content.getWidthPt(), 1e-3);
-            assertEquals(CoordSystem.mmToPt(140), content.getHeightPt(), 1e-3);
+            assertEquals(210 * CoordSystem.MM_TO_PT, content.getWidthPt(), 1e-3);
+            assertEquals(140 * CoordSystem.MM_TO_PT, content.getHeightPt(), 1e-3);
             assertTrue(content.isBalanced());
         }
     }
@@ -230,8 +230,8 @@ class PageRendererImplTest {
             PdfPageContent content = pipeline.pageRenderer().renderAnnotations(page,
                     java.util.Collections.emptyList(), pipeline.fontSelector());
             // 注释层与正文层同尺寸（同一页面框口径）
-            assertEquals(CoordSystem.mmToPt(210), content.getWidthPt(), 1e-3);
-            assertEquals(CoordSystem.mmToPt(140), content.getHeightPt(), 1e-3);
+            assertEquals(210 * CoordSystem.MM_TO_PT, content.getWidthPt(), 1e-3);
+            assertEquals(140 * CoordSystem.MM_TO_PT, content.getHeightPt(), 1e-3);
         }
     }
 
@@ -243,8 +243,8 @@ class PageRendererImplTest {
             PageRendererImpl.RenderPipeline pipeline = PageRendererImpl.create(reader);
             PageRendererImpl.PageBox box = PageRendererImpl.pageBox(reader.getPage(1), reader);
             PdfPageContent content = pipeline.pageRenderer().renderPage(reader.getPage(1), pipeline.fontSelector());
-            assertEquals(CoordSystem.mmToPt(box.getWidth()), content.getWidthPt(), 1e-3);
-            assertEquals(CoordSystem.mmToPt(box.getHeight()), content.getHeightPt(), 1e-3);
+            assertEquals(box.getWidth() * CoordSystem.MM_TO_PT, content.getWidthPt(), 1e-3);
+            assertEquals(box.getHeight() * CoordSystem.MM_TO_PT, content.getHeightPt(), 1e-3);
             double pageH = content.getHeightPt();
             double pageW = content.getWidthPt();
             int paths = 0;
@@ -303,8 +303,8 @@ class PageRendererImplTest {
         assertEquals(100, box.getWidth(), EPS);
         assertEquals(100, box.getHeight(), EPS);
         Box pdf = box.toPdfBox();
-        assertEquals(CoordSystem.mmToPt(100), pdf.getWidth(), EPS);
-        assertEquals(CoordSystem.mmToPt(100), pdf.getHeight(), EPS);
+        assertEquals(100 * CoordSystem.MM_TO_PT, pdf.getWidth(), EPS);
+        assertEquals(100 * CoordSystem.MM_TO_PT, pdf.getHeight(), EPS);
     }
 
     @Test

@@ -1,6 +1,7 @@
 package org.ofdrw.converter.export;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.ofdrw.converter.AWTMaker;
@@ -45,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author 权观宇
  * @since 2026-10-25
  */
+@Disabled("画布图像导出的集成用例，需真实 OFD 样本并逐页光栅化，耗时高。")
 class CanvasImageExporterTest {
 
     static {

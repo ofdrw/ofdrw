@@ -219,15 +219,12 @@ public final class PathRenderer implements ContentRenderer {
             content.add(command);
             content.addAll(complexFill);
             content.add(RestoreState.INSTANCE);
-            if (isComplexFill(path)) {
-                /*
-                 * 渐变/底纹填充按图元外接矩形着色，必须用 Clips 裁剪回图形本身，
-                 * 否则颜色会铺满整个外接矩形（典型现象：圆形徽标被画成红色方块）。
-                 * 纯色填充/描边的填充路径就是图元自身轮廓，不依赖裁剪，保持既有输出不变。
-                 */
-                return clipApplier.render(path.getClips(), context, content, boundaryOf(path));
-            }
-            return content;
+            /*
+             * Clips 是图形对象的通用属性，对任意路径图元都生效（GB/T 33190 8.1.4）。
+             * 复杂填充（渐变/底纹）按图元外接矩形着色，尤其依赖裁剪回图形本身，
+             * 否则颜色会铺满整个外接矩形（典型现象：圆形徽标被画成红色方块）。
+             */
+            return clipApplier.render(path.getClips(), context, content, boundaryOf(path));
         } catch (RuntimeException e) {
             warnOnce("path-error", "路径图元渲染失败，已跳过：" + e.getMessage());
             return Collections.emptyList();

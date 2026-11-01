@@ -31,8 +31,8 @@ class CoordSystemTest {
     void millimetersToPoints() {
         assertEquals(72d / 25.4d, CoordSystem.MM_TO_PT, DELTA);
         assertEquals(25.4d / 72d, CoordSystem.PT_TO_MM, DELTA);
-        // A4 宽 210mm ≈ 595.2756pt
-        assertEquals(595.275590551, CoordSystem.mmToPt(210), 1e-9);
+        // 内容坐标按 1mm = 2.8346pt 换算，A4 宽 210mm → 595.266pt
+        assertEquals(595.266, CoordSystem.mmToPt(210), 1e-9);
         assertEquals(210, CoordSystem.ptToMm(CoordSystem.mmToPt(210)), DELTA);
         assertEquals(0, CoordSystem.mmToPt(0), DELTA);
     }
@@ -40,10 +40,10 @@ class CoordSystemTest {
     @Test
     @DisplayName("Y 轴翻转：OFD 左上原点 → PDF 左下原点")
     void yAxisFlip() {
-        // A4 高 297mm：顶部 y=0 对应 PDF y=841.89，底部 y=297 对应 PDF y=0
-        assertEquals(841.889763779, CoordSystem.yToPt(0, 297), 1e-9);
+        // A4 高 297mm：顶部 y=0 对应 PDF y=841.8762，底部 y=297 对应 PDF y=0
+        assertEquals(841.8762, CoordSystem.yToPt(0, 297), 1e-9);
         assertEquals(0, CoordSystem.yToPt(297, 297), DELTA);
-        assertEquals(420.944881889, CoordSystem.yToPt(148.5, 297), 1e-9);
+        assertEquals(420.9381, CoordSystem.yToPt(148.5, 297), 1e-9);
         // 逆变换自洽
         assertEquals(148.5, CoordSystem.yFromPt(CoordSystem.yToPt(148.5, 297), 297), DELTA);
     }
@@ -74,18 +74,19 @@ class CoordSystemTest {
         Box page = CoordSystem.pageBoxToPt(0, 0, 210, 297);
         assertEquals(0, page.getX(), DELTA);
         assertEquals(0, page.getY(), DELTA);
-        assertEquals(CoordSystem.mmToPt(210), page.getWidth(), DELTA);
-        assertEquals(CoordSystem.mmToPt(297), page.getHeight(), DELTA);
+        // 页面框按 72/25.4 精确换算
+        assertEquals(210 * CoordSystem.MM_TO_PT, page.getWidth(), DELTA);
+        assertEquals(297 * CoordSystem.MM_TO_PT, page.getHeight(), DELTA);
     }
 
     @Test
     @DisplayName("页面框：带偏移时保留偏移")
     void pageBoxWithOffset() {
         Box page = CoordSystem.pageBoxToPt(5, 7, 100, 50);
-        assertEquals(CoordSystem.mmToPt(5), page.getX(), DELTA);
-        assertEquals(CoordSystem.mmToPt(7), page.getY(), DELTA);
-        assertEquals(CoordSystem.mmToPt(100), page.getWidth(), DELTA);
-        assertEquals(CoordSystem.mmToPt(50), page.getHeight(), DELTA);
+        assertEquals(5 * CoordSystem.MM_TO_PT, page.getX(), DELTA);
+        assertEquals(7 * CoordSystem.MM_TO_PT, page.getY(), DELTA);
+        assertEquals(100 * CoordSystem.MM_TO_PT, page.getWidth(), DELTA);
+        assertEquals(50 * CoordSystem.MM_TO_PT, page.getHeight(), DELTA);
     }
 
     @Test
@@ -96,12 +97,12 @@ class CoordSystemTest {
         double[] origin = m.transform(0, 0);
         assertEquals(CoordSystem.mmToPt(10), origin[0], DELTA);
         assertEquals(CoordSystem.yToPt(20, 297), origin[1], DELTA);
-        // 对象空间 +Y 方向在 PDF 中是 -Y 方向
+        // 对象空间 +Y 方向在 PDF 中是 -Y 方向，单位长度按内容坐标比例换算
         double[] down = m.transform(0, 1);
-        assertEquals(-CoordSystem.MM_TO_PT, down[1] - origin[1], 1e-6);
+        assertEquals(-CoordSystem.CONTENT_MM_TO_PT, down[1] - origin[1], 1e-6);
         // 对象空间 +X 方向在 PDF 中保持 +X
         double[] right = m.transform(1, 0);
-        assertEquals(CoordSystem.MM_TO_PT, right[0] - origin[0], 1e-6);
+        assertEquals(CoordSystem.CONTENT_MM_TO_PT, right[0] - origin[0], 1e-6);
     }
 
     @Test

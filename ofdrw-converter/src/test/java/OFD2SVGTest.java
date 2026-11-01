@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.FontLoader;
 import org.ofdrw.converter.SVGMaker;
@@ -12,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 
+@Disabled("OFD2SVGTest：OFD 转 SVG 的演示用例，无断言，仅生成产物文件供人工查看。")
 public class OFD2SVGTest {
 
     @Test

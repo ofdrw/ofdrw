@@ -173,13 +173,14 @@ class TextLayoutEngineTest {
         OfdText text = new OfdText(new OfdBox(0, 0, 20, 5), 4, 1.0, 0, 0, null,
                 Collections.singletonList(run));
         TextLayout layout = engine.layout(text, 3d);
-        assertEquals(3, layout.getGlyphs().size());
+        // "AB" 聚成一个字形，故字形总数为 2（连字 A + 普通字符 C）
+        assertEquals(2, layout.getGlyphs().size());
         assertEquals(300, layout.getGlyphs().get(0).getExplicitGlyphId());
         assertEquals(0, layout.getGlyphs().get(0).getX(), 1e-9);
-        // 后续字符共享字形：不产生独立字形，位置仍按 Delta 推进（此处 Delta=1，被跳过）
-        // 第三个字符按 Delta 推进，并因前一个共享字符补足了 1 个字宽（3mm）
-        double thirdX = layout.getGlyphs().get(2).getX();
-        assertEquals(1 + 3, thirdX, 1e-9);
+        // 簇内后续字符 B 不产生字形，其 Delta 被跳过；字符 C 按 Delta 推进到 x=1，并由字体标称步进补足字宽
+        assertEquals("C", layout.getGlyphs().get(1).getText());
+        assertEquals(1, layout.getGlyphs().get(1).getX(), 1e-9);
+        assertEquals(3, layout.getGlyphs().get(1).getAdvanceMm(), 1e-9);
     }
 
     @Test

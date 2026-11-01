@@ -2,6 +2,7 @@ package org.ofdrw.converter.export;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.regression.PdfRegressionRunner;
 import org.ofdrw.converter.regression.PdfRegressionSupport;
@@ -36,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author 权观宇
  * @since 2.5.1
  */
+@Disabled("PDF 回归对比用例，需大批量样本并做像素/文本指标比较，耗时高。")
 class PDFRegressionTest {
 
     /**

@@ -248,20 +248,40 @@ class PdfFontRegistryTest {
 
     @Test
     void systemFontExactMatchIsUsed() throws Exception {
-        // Base14 Helvetica：无内嵌字体，只有字体名；把等名字体放到自定义目录模拟系统字体目录
+        // Base14 Helvetica：无内嵌字体，只有字体名；把同字重的字体改名放到自定义目录模拟系统字体目录
+        Path asset = regularSystemFont();
+        assumeTrue(asset != null, "本机缺少可用的 Regular 系统字体");
         Path fontDir = Files.createDirectories(tempDir.resolve("fonts"));
-        Path asset = requireFont((String) null);
         Files.copy(asset, fontDir.resolve("Helvetica.ttf"));
         OFDGraphicsDocument ofd = new OFDGraphicsDocument(tempDir.resolve("sysfont.ofd"));
         PdfFontRegistry registry = new PdfFontRegistry(ofd);
         registry.setFontDir(fontDir);
-        ST_ID id = registry.registerFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+        // 注释单元字体允许系统字体兜底；正文使用的 registerFont 走严格策略，不会做系统字体替代
+        ST_ID id = registry.registerAnnotationFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA));
         assertNotNull(id, "字体名精确匹配到系统字体时应登记成功");
         registry.flush();
         CT_Font ctFont = findFont(ofd, id);
         assertNotNull(ctFont.getFontFile(), "系统字体应写入 Res 目录");
         byte[] written = Files.readAllBytes(ofd.docDir.getResource(ctFont.getFontFile().getFileName()));
         assertArrayEquals(Files.readAllBytes(asset), written, "系统字体应原样嵌入（默认不做子集化，字节不变）");
+    }
+
+    /**
+     * 取一个常规字重（非 Bold/Italic）的系统字体文件
+     * <p>
+     * Helvetica 按 Regular 匹配候选，若拿 Bold 字体冒充会被字重过滤排除。
+     *
+     * @return 字体路径；本机无可用的 Regular 字体时返回 null
+     */
+    private static Path regularSystemFont() {
+        for (String path : new String[]{
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"}) {
+            if (Files.isRegularFile(Paths.get(path))) {
+                return Paths.get(path);
+            }
+        }
+        return null;
     }
 
     @Test

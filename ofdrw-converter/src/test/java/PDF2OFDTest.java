@@ -2,6 +2,7 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.graphics2d.OFDGraphicsDocument;
 import org.ofdrw.graphics2d.OFDPageGraphics2D;
@@ -13,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 
+@Disabled("PDF2OFDTest：PDF 转 OFD 的演示用例，无断言且耗时最长（约 137s），仅生成产物文件供人工查看。")
 public class PDF2OFDTest {
 
     @Test

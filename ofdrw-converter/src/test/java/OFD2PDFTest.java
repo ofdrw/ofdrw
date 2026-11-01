@@ -1,4 +1,5 @@
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.ConvertHelper;
 import org.ofdrw.converter.FontLoader;
@@ -16,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 
+@Disabled("OFD2PDFTest：OFD 转 PDF 的演示用例，仅 1 处断言，主要生成产物文件供人工查看。")
 public class OFD2PDFTest {
 
 

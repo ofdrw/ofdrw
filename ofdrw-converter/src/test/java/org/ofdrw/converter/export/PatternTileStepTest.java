@@ -1,5 +1,6 @@
 package org.ofdrw.converter.export;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.ofdrw.converter.GeneralConvertException;
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *         CTM 为 45° 旋转，用于断言整体密度不再显著偏大。</li>
  * </ul>
  */
+@Disabled("底纹平铺导出集成用例，需真实 OFD 样本。")
 class PatternTileStepTest {
 
     static {

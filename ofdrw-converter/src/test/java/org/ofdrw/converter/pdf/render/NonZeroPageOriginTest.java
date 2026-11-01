@@ -40,7 +40,8 @@ class NonZeroPageOriginTest {
     void absoluteCoordinatesIncludePageOrigin() {
         // 页内 (10,20) → 对象空间 (20,40) → 页面 pt：(20k, (297-40)k)
         double[] actual = CoordSystem.absoluteToPage(null, PAGE_X0, PAGE_Y0, PAGE_H).transform(10, 20);
-        double k = CoordSystem.MM_TO_PT;
+        // 内容坐标换算比例（与页面框的 MM_TO_PT 不同）
+        double k = CoordSystem.CONTENT_MM_TO_PT;
         assertEquals(20 * k, actual[0], 1e-6);
         assertEquals((PAGE_H - 40) * k, actual[1], 1e-6);
     }
@@ -50,7 +51,8 @@ class NonZeroPageOriginTest {
     void elementBoxIncludesPageOrigin() {
         Box box = CoordSystem.boundary(5, 6, 20, 10);
         double[] topLeft = CoordSystem.objectToPage(box, null, PAGE_X0, PAGE_Y0, PAGE_H).transform(0, 0);
-        double k = CoordSystem.MM_TO_PT;
+        // 内容坐标换算比例（与页面框的 MM_TO_PT 不同）
+        double k = CoordSystem.CONTENT_MM_TO_PT;
         assertEquals((PAGE_X0 + 5) * k, topLeft[0], 1e-6);
         assertEquals((PAGE_H - PAGE_Y0 - 6) * k, topLeft[1], 1e-6);
     }

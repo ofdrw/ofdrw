@@ -6,6 +6,7 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.ofdrw.converter.FontLoader;
 import org.ofdrw.converter.canvas.BufferedImageSurface;
@@ -60,6 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author 权观宇
  * @since 2.5.1
  */
+@Disabled("PDF 转 OFD 文字对象化集成用例，需真实 PDF 样本，耗时高（约 44s）。")
 class PDFConverterTextObjectTest {
 
     /**

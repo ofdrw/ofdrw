@@ -23,6 +23,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -193,7 +194,9 @@ class ImageRendererTest {
         ImageCommand mask = (ImageCommand) commands.get(1);
         ImageCommand main = (ImageCommand) commands.get(2);
         assertTrue(mask.isMasked());
-        assertTrue(main.isMasked());
+        // 主图必须是非蒙版指令：写入器把标记为蒙版的指令缓存为待用 /SMask 而不绘制，
+        // 若主图也标记则整张图不会被绘制
+        assertFalse(main.isMasked());
         assertEquals(mask.getPlacement(), main.getPlacement());
         assertNotEquals(mask.getResourceKey(), main.getResourceKey());
     }

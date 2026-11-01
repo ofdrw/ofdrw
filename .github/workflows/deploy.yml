@@ -29,8 +29,30 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: GPG_PASSPHRASE
 
+      # 发布前的质量门禁：编译、测试、文档、打包、签名依次执行，
+      # 任一环节失败即中断，不会进入发布步骤
+      - name: Compile
+        run: mvn -B clean compile -Dgpg.skip=true --no-transfer-progress
+
+      - name: Test
+        run: mvn -B test -Dgpg.skip=true --no-transfer-progress
+        env:
+          MAVEN_OPTS: -Djava.awt.headless=true
+
+      - name: Javadoc
+        run: mvn -B javadoc:javadoc -Ddoclint=none --no-transfer-progress
+
+      - name: Package
+        run: mvn -B package -DskipTests -Dgpg.skip=true --no-transfer-progress
+
+      # 独立校验签名可用性，确保 GPG 私钥与口令正确后再发布
+      - name: Verify GPG signing
+        run: mvn -B verify -DskipTests -Dgpg.skip=false --no-transfer-progress
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
       - name: Publish to Apache Maven Central
-        run: mvn clean deploy -DskipTests --no-transfer-progress
+        run: mvn -B deploy -DskipTests -Dgpg.skip=false --no-transfer-progress
         env:
           SERVER_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           SERVER_PASSWORD: ${{ secrets.OSSRH_TOKEN }}

@@ -236,7 +236,7 @@ class PdfStructureWriterTest {
     }
 
     @Test
-    @DisplayName("注释：Watermark 写入 /Stamp 注释，无动作时不写动作")
+    @DisplayName("注释：Watermark 作为页面内容绘制，不生成 PDF 注释对象")
     void writesWatermarkAnnotation() throws Exception {
         Annot annot = new Annot();
         annot.setID(new ST_ID(2L));
@@ -248,9 +248,10 @@ class PdfStructureWriterTest {
         annots.put("10", list);
 
         try (PDDocument reloaded = writeAndReload(source(null, null, null, annots), "10")) {
+            // 水印外观已由页面内容流重绘，不再写出 /Stamp 注释：
+            // 无 /AP 的 /Stamp 会让阅读器合成默认外观（poppler 整页 "Draft"），覆盖内容并污染文本层
             List<PDAnnotation> pageAnnots = reloaded.getPage(0).getAnnotations();
-            assertEquals(1, pageAnnots.size());
-            assertEquals("Stamp", pageAnnots.get(0).getSubtype());
+            assertTrue(pageAnnots.isEmpty());
         }
     }
 

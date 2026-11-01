@@ -173,7 +173,8 @@ public final class GraphicsStateResolver {
      * @return 描边样式指令（线宽与虚线已换算为 pt）
      */
     public static StrokeStyle toStrokeStyle(EffectiveDrawParam param) {
-        return toStrokeStyle(param, 1d);
+        // 无图元 CTM：缩放倍数即内容坐标的 mm→pt 比例
+        return toStrokeStyle(param, CoordSystem.CONTENT_MM_TO_PT);
     }
 
     /**
@@ -194,13 +195,15 @@ public final class GraphicsStateResolver {
             throw new IllegalArgumentException("绘制参数不能为空");
         }
         double scale = ctmScale > 0d && !Double.isNaN(ctmScale) ? ctmScale : 1d;
+        // scale 已含 mm→pt（由 CoordSystem.objectToPage 的 CONTENT_MM_TO_PT 提供），
+        // 线宽与虚线均为 mm 空间的长度，统一只乘 scale，避免虚线被重复换算
         double[] dashes = param.getDashPattern().getDashArray();
         double[] inPt = new double[dashes.length];
         for (int i = 0; i < dashes.length; i++) {
-            inPt[i] = CoordSystem.mmToPt(dashes[i]) * scale;
+            inPt[i] = dashes[i] * scale;
         }
         DashPattern dashInPt = new DashPattern(inPt,
-                CoordSystem.mmToPt(param.getDashPattern().getDashPhase()) * scale);
+                param.getDashPattern().getDashPhase() * scale);
         return new StrokeStyle(param.getLineWidthMm() * scale,
                 param.getLineCap(), param.getLineJoin(), param.getMiterLimit(), dashInPt);
     }

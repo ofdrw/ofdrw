@@ -1,5 +1,6 @@
 package org.ofdrw.converter.export;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -10,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * 测试导出为纯文本
  */
+@Disabled("文本导出集成用例，需真实 OFD 样本。")
 class TextExporterTest {
 
     @Test
