@@ -31,13 +31,13 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # 根 pom 默认 skipTests=true 且 gpg 签名绑定在 verify 阶段，
-      # 这里显式开启测试并跳过签名，仅做编译、单元测试与打包验证（不发布）
+      # 根 pom 已关闭 skipTests，测试默认执行；gpg 签名绑定在 verify 阶段，
+      # 此处跳过签名，仅做编译、单元测试与打包验证（不发布）
       - name: Compile
         run: mvn -B clean compile -Dgpg.skip=true --no-transfer-progress
 
       - name: Test
-        run: mvn -B test -DskipTests=false -Dgpg.skip=true --no-transfer-progress
+        run: mvn -B test -Dgpg.skip=true --no-transfer-progress
 
       - name: Package
         run: mvn -B package -DskipTests -Dgpg.skip=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true --no-transfer-progress
