@@ -149,6 +149,30 @@ public final class OfdPageDrawer extends PageDrawer {
     private PDFont runFont = null;
 
     /**
+     * 当前 run 的字号（首个字形的 1 em 在页面上的长度，单位 mm）
+     * <p>
+     * {@code TextObject.Size} 是对象级属性，同一文字对象内的所有字形共用首个字形的字号，
+     * 相邻字形字号不同时必须分属不同文字对象。
+     */
+    private double runEm = 0d;
+
+    /**
+     * 当前 run 的绘制属性快照
+     * <p>
+     * {@code TextObject} 的 Fill/FillColor/Stroke/StrokeColor/LineWidth/Alpha 均为对象级属性，
+     * 相邻字形的绘制属性不同时必须分属不同文字对象。
+     */
+    private TextRunBuilder.TextRunStyle runStyle = null;
+
+    /**
+     * 当前 run 的基线位置（首个字形原点的页面 y 坐标，单位 mm）
+     * <p>
+     * 一个文字对象内的字形按单条文字流排布，DeltaY 只表达同一阅读方向内的细微偏移；
+     * 跨基线的换行必须由另一个文字对象表达，否则查看器会按阅读方向错误累加偏移。
+     */
+    private double runBaselineY = 0d;
+
+    /**
      * 当前页的 PDF 用户空间页面框（单位 pt，原点在左下），每页开始时刷新
      */
     private Rectangle2D pageBox = null;
@@ -587,6 +611,9 @@ public final class OfdPageDrawer extends PageDrawer {
         started = false;
         run = null;
         runFont = null;
+        runEm = 0d;
+        runStyle = null;
+        runBaselineY = 0d;
         currentResolver = null;
         fontIds.clear();
         /*
@@ -738,15 +765,23 @@ public final class OfdPageDrawer extends PageDrawer {
             clips = FULL_PAGE_CLIPS;
         }
         int clipKey = clips.key;
-        if (run != null && runFont == font && runClipKey != clipKey) {
-            // 裁剪区变化：先收掉上一段，避免一个文字对象携带两段不同的裁剪
+        /*
+         * run 分流判据：文字对象只承载对象级属性且只表达单条文字流，以下任一变化都必须另起文字对象——
+         * 字体、裁剪区、字号（Size）、基线（换行），以及 Fill/FillColor/Stroke/StrokeColor/LineWidth/Alpha
+         * 等绘制属性；否则整段文字会按首个字形的字号与颜色绘制，出现字形重叠与颜色错误。
+         */
+        TextRunBuilder.TextRunStyle style = buildStyle(gs, mode, textRenderingMatrix);
+        boolean sameRun = run != null && runFont == font && runClipKey == clipKey
+                && sameSize(glyph.em, runEm)
+                && sameBaseline(glyph.originY, runBaselineY, glyph.em)
+                && runStyle.sameAs(style);
+        if (!sameRun) {
             flushRun();
-        }
-        if (run == null || runFont != font) {
-            flushRun();
-            TextRunBuilder.TextRunStyle style = buildStyle(gs, mode, textRenderingMatrix);
             run = new TextRunBuilder(font, style, pageGraphics);
             runFont = font;
+            runEm = glyph.em;
+            runStyle = style;
+            runBaselineY = glyph.originY;
             runClipKey = clipKey;
             runClipFullPage = clips.fullPage;
             runClipElement = clips.clips;
@@ -862,6 +897,36 @@ public final class OfdPageDrawer extends PageDrawer {
         // 旋转/非等比缩放需要 TextObject.CTM；参考查看器（ofdrw-viewer 0.1.5）不渲染带 CTM 的文字对象
         // （字形被按字体单位压扁后不可见），为保证视觉正确保持路径绘制，详见设计文档 5.4.1
         return "旋转/镜像文字需要 CTM";
+    }
+
+    /**
+     * 判断两个字号是否视为相同
+     * <p>
+     * 比较采用相对容差（{@code 1e-6}）：字形 em 由变换矩阵长度算出，同一字号在不同变换下会有末位抖动，
+     * 用精确相等会把同一段文字拆散；而真实字号差异（如 24pt 与 10pt）远大于该容差。
+     *
+     * @param a 字号，单位 mm
+     * @param b 字号，单位 mm
+     * @return true - 视为同一字号
+     */
+    private static boolean sameSize(double a, double b) {
+        double tol = 1e-6d * Math.max(Math.abs(a), Math.abs(b));
+        return Math.abs(a - b) <= tol;
+    }
+
+    /**
+     * 判断两个基线位置是否属于同一行
+     * <p>
+     * 容差取字号的一半：同一基线上的字形因字距调整或路径取整会有微小纵向差异，
+     * 而行间距（通常不小于 1 em）远大于该容差，据此区分"同一行内的字距"与"换行"。
+     *
+     * @param a  基线 y 坐标，单位 mm
+     * @param b  基线 y 坐标，单位 mm
+     * @param em 字号，单位 mm
+     * @return true - 视为同一行
+     */
+    private static boolean sameBaseline(double a, double b, double em) {
+        return Math.abs(a - b) <= Math.abs(em) * 0.5d;
     }
 
     /**
@@ -1227,6 +1292,9 @@ public final class OfdPageDrawer extends PageDrawer {
         PDFont font = runFont;
         run = null;
         runFont = null;
+        runEm = 0d;
+        runStyle = null;
+        runBaselineY = 0d;
         runClipKey = 0;
         runClipFullPage = false;
         runClipElement = null;

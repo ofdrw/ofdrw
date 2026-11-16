@@ -630,6 +630,57 @@ public final class TextRunBuilder {
         }
 
         /**
+         * 判断两个绘制属性快照是否等价
+         * <p>
+         * 逐字段比较写入 {@code TextObject} 的对象级属性：填充/描边开关、颜色、线宽与透明度。
+         * 颜色比较按最终写入 OFD 的取整 RGB 进行，避免浮点末位抖动把同一段文字拆散。
+         *
+         * @param other 另一个快照
+         * @return true - 二者渲染结果等价
+         */
+        boolean sameAs(TextRunStyle other) {
+            if (other == null || fill != other.fill || stroke != other.stroke || alpha != other.alpha) {
+                return false;
+            }
+            if (stroke && Math.abs(lineWidth - other.lineWidth) > 1e-6d) {
+                return false;
+            }
+            if (fill && !sameColor(fillColor, fillAwt, other.fillColor, other.fillAwt)) {
+                return false;
+            }
+            return !stroke || sameColor(strokeColor, strokeAwt, other.strokeColor, other.strokeAwt);
+        }
+
+        /**
+         * 判断两组颜色是否等价
+         *
+         * @param rgb1   第一组的 RGB 值（0~255），null 表示使用 AWT 近似
+         * @param awt1   第一组的 AWT 近似颜色
+         * @param rgb2   第二组的 RGB 值（0~255），null 表示使用 AWT 近似
+         * @param awt2   第二组的 AWT 近似颜色
+         * @return true - 写入 OFD 后的 RGB 值相同
+         */
+        private static boolean sameColor(float[] rgb1, java.awt.Color awt1, float[] rgb2, java.awt.Color awt2) {
+            int[] c1 = ofdRgb(rgb1, awt1);
+            int[] c2 = ofdRgb(rgb2, awt2);
+            return c1[0] == c2[0] && c1[1] == c2[1] && c1[2] == c2[2];
+        }
+
+        /**
+         * 取写入 OFD 的 RGB 整数值
+         *
+         * @param rgb   RGB 值（0~255），null 表示使用 AWT 近似
+         * @param approx AWT 近似颜色
+         * @return {r, g, b}，各分量 0~255
+         */
+        private static int[] ofdRgb(float[] rgb, java.awt.Color approx) {
+            if (rgb != null) {
+                return new int[]{Math.round(rgb[0]), Math.round(rgb[1]), Math.round(rgb[2])};
+            }
+            return new int[]{approx.getRed(), approx.getGreen(), approx.getBlue()};
+        }
+
+        /**
          * 构造 OFD 填充色
          *
          * @return 填充色
