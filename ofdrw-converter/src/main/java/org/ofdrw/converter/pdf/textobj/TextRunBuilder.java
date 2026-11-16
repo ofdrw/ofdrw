@@ -156,13 +156,86 @@ public final class TextRunBuilder {
     /**
      * 判断当前 run 能否接纳新字形
      * <p>
-     * 服务端字形逐字发出，任意相邻字形都可以处在同一 run 中（位置由 Delta 表达），
-     * 只限制单 run 的字形数量以控制单个对象体积。
+     * {@code TextObject} 是强约束对象：Size、CTM 与 Fill/FillColor/Stroke/StrokeColor/LineWidth/Alpha
+     * 均为对象级属性，由首个字形与构造时的绘制属性决定，对象内所有字形共享；
+     * 字形之间的差异只能由 DeltaX/DeltaY 表达，因此一个文字对象只能承载<b>同一基线</b>的一条文字流。
+     * <p>
+     * 接纳条件逐项对应一个对象级属性：
+     * <ul>
+     *     <li>字号：对应 {@code Size}；</li>
+     *     <li>基线：保证单条文字流（换行必须另起对象）；</li>
+     *     <li>线性部分：对应 {@code CTM}；</li>
+     *     <li>字形数量：控制单个对象体积。</li>
+     * </ul>
+     * 绘制属性在构造时已固定（见 {@link #style}），由调用方在构造前用
+     * {@link TextRunStyle#sameAs} 比较，不参与本判据。
      *
+     * @param glyph 待接纳的字形
      * @return true - 可以接纳
      */
-    boolean accepts() {
-        return glyphs.size() < MAX_GLYPHS_PER_RUN;
+    boolean accepts(Glyph glyph) {
+        if (glyph == null) {
+            return false;
+        }
+        if (glyphs.size() >= MAX_GLYPHS_PER_RUN) {
+            return false;
+        }
+        if (first == null) {
+            // 空 run 总是接纳首个字形
+            return true;
+        }
+        return sameSize(glyph.em, first.em)
+                && sameBaseline(glyph.originY, first.originY, first.em)
+                && sameLinear(glyph.linear, first.linear);
+    }
+
+    /**
+     * 判断两个字号是否视为相同
+     * <p>
+     * 同一字号经不同变换算出的 em 会有末位抖动，故用相对容差 {@code 1e-6} 比较；
+     * 真实字号差异（如 24pt 与 10pt）远大于该容差。
+     *
+     * @param a 字号，单位 mm
+     * @param b 字号，单位 mm
+     * @return true - 视为同一字号
+     */
+    private static boolean sameSize(double a, double b) {
+        double tol = 1e-6d * Math.max(Math.abs(a), Math.abs(b));
+        return Math.abs(a - b) <= tol;
+    }
+
+    /**
+     * 判断两个基线位置是否属于同一行
+     * <p>
+     * 容差取字号的一半：同一基线上的字形因字距调整或取整会有微小纵向差异，
+     * 而行间距通常不小于 1 em，据此区分"同一行内的字距"与"换行"。
+     *
+     * @param a  基线 y 坐标，单位 mm
+     * @param b  基线 y 坐标，单位 mm
+     * @param em 字号，单位 mm
+     * @return true - 视为同一行
+     */
+    private static boolean sameBaseline(double a, double b, double em) {
+        return Math.abs(a - b) <= Math.abs(em) * 0.5d;
+    }
+
+    /**
+     * 判断两个线性部分是否一致（对应 {@code TextObject.CTM}）
+     *
+     * @param a 线性部分
+     * @param b 线性部分
+     * @return true - 视为同一线性变换
+     */
+    private static boolean sameLinear(AffineTransform a, AffineTransform b) {
+        if (a == null || b == null) {
+            return a == b;
+        }
+        // 容差与 isIdentityLinear 一致：linear 已按 em 归一化，浮点抖动在 1e-4 量级
+        final double tol = 1e-3d;
+        return Math.abs(a.getScaleX() - b.getScaleX()) <= tol
+                && Math.abs(a.getShearY() - b.getShearY()) <= tol
+                && Math.abs(a.getShearX() - b.getShearX()) <= tol
+                && Math.abs(a.getScaleY() - b.getScaleY()) <= tol;
     }
 
     /**
