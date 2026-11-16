@@ -46,9 +46,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TextObjectTransformFallbackTest {
 
     /**
-     * 测试用 TrueType 字体（DejaVu Sans，随发行版字体包提供）
+     * 测试用 TrueType 字体（仓库测试资源，随用例分发，不依赖操作系统字体）
      */
-    private static final Path FONT = Paths.get("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+    private static final Path FONT = Paths.get("src/test/resources/font_13132_0_edit.ttf");
 
     /**
      * 页面尺寸换算：1 mm 对应的 PDF 用户空间单位（pt）
