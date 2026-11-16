@@ -826,9 +826,10 @@ public final class OfdPageDrawer extends PageDrawer {
         // 与 buildGlyph 同一口径：Pg 只取图像变换（pt → 页面 mm），y 向上
         AffineTransform n = new AffineTransform(pageTransform);
         n.concatenate(trmAwt);
-        // 页面变换为对角缩放（含整页 y 翻转），剔除它等价于把线性部分按列除以对应尺度
-        double px = n.getScaleX() / (pageTransform == null ? 1d : pageTransform.getScaleX());
-        double py = n.getScaleY() / (pageTransform == null ? 1d : pageTransform.getScaleY());
+        // 页面变换为对角缩放（含整页 y 翻转），剔除它等价于把线性部分按列除以页面尺度：
+        // 除数是页面变换自身的尺度，不能从 n 反算（n 的尺度已含文字矩阵，反算会把文字矩阵约掉）
+        double px = pageTransform == null ? 1d : pageTransform.getScaleX();
+        double py = pageTransform == null ? 1d : pageTransform.getScaleY();
         double a = n.getScaleX() / px;
         double b = n.getShearY() / px;
         double c = n.getShearX() / py;
