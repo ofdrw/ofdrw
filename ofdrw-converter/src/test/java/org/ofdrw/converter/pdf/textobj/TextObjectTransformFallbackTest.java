@@ -28,17 +28,16 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * PDF → OFD 非均匀缩放文字回退回归（Issue #415）
+ * PDF → OFD 文字变换分流回归
  * <p>
- * 非均匀缩放文字（横向拉宽 / 压扁）无法用 {@code Boundary} + {@code Delta} 表达，必须回退轮廓绘制；
- * 若误写成带 {@code CTM} 的 {@code TextObject}，参考查看器不渲染该对象，文字会丢失页面位置贴到左上角。
- * <p>
- * 本用例构造“普通横排 + 横向拉宽 + 压扁 + 旋转”四类文字并断言：
+ * 按文字变换形态决定走 {@code TextObject}（带 {@code CTM}）还是回退轮廓绘制：
  * <ul>
- *     <li>普通横排文字仍为 {@code TextObject}，且不带 {@code CTM}；</li>
- *     <li>拉宽、压扁、旋转文字回退为 {@code PathObject}，不再产生带 {@code CTM} 的文字对象；</li>
+ *     <li>普通横排文字：不带 {@code CTM} 的 {@code TextObject}；</li>
+ *     <li>仅轴向的非等比缩放（横向拉宽 / 压扁）：带 {@code CTM} 的 {@code TextObject}；</li>
+ *     <li>旋转、镜像：回退为 {@code PathObject}（旋转的 X/Y 定位语义未明，镜像在参考查看器中渲染空白）；</li>
  *     <li>回退轮廓的坐标落在页面内、与 PDF 中的摆放位置一致，未贴到页面左上角。</li>
  * </ul>
+ * 文字矩阵按 PDF 规则由 {@code Tf} 提供字号，{@code Tm} 只给出缩放/旋转，二者不重复相乘。
  *
  * @author 权观宇
  * @since 2.5.1
@@ -74,21 +73,24 @@ class TextObjectTransformFallbackTest {
                 cs.newLineAtOffset(60, 760);
                 cs.showText("NORMAL");
                 cs.endText();
-                // 横向拉宽：横纵缩放比约 1.29
+                // 横向拉宽 1.29 倍：字号由 Tf 提供，Tm 只给缩放
                 cs.beginText();
-                cs.setTextMatrix(new Matrix(11.75f, 0f, 0f, -9.14f, 120f, 680f));
+                cs.setFont(font, 12);
+                cs.setTextMatrix(new Matrix(1.29f, 0f, 0f, 1f, 120f, 680f));
                 cs.showText("WIDE");
                 cs.endText();
-                // 压扁：横纵缩放比约 0.5
+                // 压扁 0.5 倍
                 cs.beginText();
-                cs.setTextMatrix(new Matrix(6f, 0f, 0f, -12f, 120f, 580f));
+                cs.setFont(font, 12);
+                cs.setTextMatrix(new Matrix(0.5f, 0f, 0f, 1f, 120f, 580f));
                 cs.showText("NARROW");
                 cs.endText();
                 // 旋转 30 度
                 double rad = Math.toRadians(30);
                 cs.beginText();
-                cs.setTextMatrix(new Matrix((float) Math.cos(rad) * 12f, (float) Math.sin(rad) * 12f,
-                        (float) -Math.sin(rad) * 12f, (float) Math.cos(rad) * 12f, 260f, 520f));
+                cs.setFont(font, 12);
+                cs.setTextMatrix(new Matrix((float) Math.cos(rad), (float) Math.sin(rad),
+                        (float) -Math.sin(rad), (float) Math.cos(rad), 260f, 520f));
                 cs.showText("ROTATED");
                 cs.endText();
             }
@@ -111,23 +113,59 @@ class TextObjectTransformFallbackTest {
                 paths++;
             }
         }
-        assertEquals(1, texts.size(), "非均匀缩放与旋转文字必须回退轮廓，不应产生额外文字对象");
+        assertEquals(3, texts.size(), "普通横排与仅轴向的非等比缩放文字都应为文字对象，旋转文字回退");
         TextObject normal = texts.get(0);
         assertEquals("NORMAL", content(normal), "普通横排文字应保持文字对象");
         assertNull(normal.getCTM(), "普通横排文字不应带 CTM");
-        assertTrue(paths >= 3, "拉宽、压扁、旋转文字都应回退为轮廓路径，实际路径对象数：" + paths);
+        // 非等比缩放由 CTM 的 x 列表达
+        TextObject wide = texts.get(1);
+        assertEquals("WIDE", content(wide), "拉宽文字应为带 CTM 的文字对象");
+        assertNotNull(wide.getCTM(), "拉宽文字应带 CTM");
+        assertEquals(1.29d, wide.getCTM().get(0), 1e-2, "CTM 的 a 分量应等于横向缩放比");
+        TextObject narrow = texts.get(2);
+        assertEquals("NARROW", content(narrow), "压扁文字应为带 CTM 的文字对象");
+        assertEquals(0.5d, narrow.getCTM().get(0), 1e-2, "CTM 的 a 分量应等于横向缩放比");
+        assertTrue(paths >= 1, "旋转文字应回退为轮廓路径，实际路径对象数：" + paths);
 
-        // 4. 断言：回退轮廓落在页面内且位于 PDF 中的摆放位置，未贴到页面左上角
+        // 4. 断言：文字对象落在 PDF 中的实际摆放位置，未贴到页面左上角
         /*
          * OFD 页面 y 轴向下：PDF 基线 680pt（页面高 792pt）对应页面坐标 (792 - 680) / PT_PER_MM ≈ 39.5 mm，
          * 拉宽文字的字形从该基线向上延伸；x 从 PDF 摆放位置 120pt ≈ 42.3 mm 开始。
          * 若位置丢失，字形会被写到页面原点附近，本断言即失败。
          */
-        PathObject wide = pathIn(blocks, 40d, 50d, 35d, 45d);
-        assertNotNull(wide, "应在拉宽文字的实际摆放位置（x≈42.3 mm、y≈39.5 mm）找到轮廓路径，而非贴到页面左上角");
-        double[] box = dataBox(wide);
-        assertTrue(box[0] >= 40d && box[0] <= 50d, "拉宽文字轮廓的 x 应从 PDF 摆放位置开始，实际：" + box[0] + " mm");
-        assertTrue(box[1] >= 35d && box[1] <= 45d, "拉宽文字轮廓的 y 应位于 PDF 摆放的基线，实际：" + box[1] + " mm");
+        double[] wideOrigin = textOrigin(wide);
+        assertEquals(42.33d, wideOrigin[0], 0.5d, "拉宽文字的首字形页面 x 应与 PDF 摆放位置一致");
+        assertEquals(39.51d, wideOrigin[1], 0.5d, "拉宽文字的首字形页面 y 应与 PDF 摆放基线一致");
+
+        // 5. 断言：旋转文字回退为轮廓路径，且落在 PDF 中的摆放位置
+        PathObject rotated = pathIn(blocks, 85d, 120d, 85d, 105d);
+        assertNotNull(rotated, "旋转文字应回退为轮廓路径，并落在 PDF 摆放的基线附近");
+    }
+
+    /**
+     * 计算首个字形在页面上的坐标
+     * <p>
+     * 页面坐标 = 外接矩形左上角 + CTM · (TextCode.X, TextCode.Y)。
+     *
+     * @param text 文字对象
+     * @return {x, y}，单位 mm（OFD 页面坐标）
+     */
+    private static double[] textOrigin(TextObject text) {
+        org.ofdrw.core.basicType.ST_Box box = text.getBoundary();
+        org.ofdrw.core.text.TextCode code = text.getTextCodes().get(0);
+        double x = code.getX();
+        double y = code.getY();
+        if (text.getCTM() != null) {
+            double a = text.getCTM().get(0);
+            double b = text.getCTM().get(1);
+            double c = text.getCTM().get(2);
+            double d = text.getCTM().get(3);
+            double tx = a * x + c * y;
+            double ty = b * x + d * y;
+            x = tx;
+            y = ty;
+        }
+        return new double[]{box.getTopLeftX() + x, box.getTopLeftY() + y};
     }
 
     /**

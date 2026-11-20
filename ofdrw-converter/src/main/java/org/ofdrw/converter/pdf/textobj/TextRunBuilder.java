@@ -31,8 +31,14 @@ import java.util.List;
  *     <li>{@code TRM}：PDFBox 文字渲染矩阵，把文字空间（em 为单位）映射到 PDF 用户空间；</li>
  *     <li>{@code N = Pg × TRM}，对每个字形：{@code origin = N·(0,0)}、{@code em = |N·(0,1)|}；
  *     {@code linear} 为 {@code N} 的线性部分除以 {@code em}（y 列长度为 1，x 列长度即水平缩放）；</li>
+ *     <li>对象坐标系：{@code linear} 把对象坐标系单位（1 em 的字号、以及与页面同单位的位移）
+ *     映射到页面 mm；CTM 只写 {@code linear}，字形朝向与缩放由它表达；</li>
+ *     <li>{@code Size}、{@code TextCode.X/Y}、{@code DeltaX/DeltaY} 与 {@code Boundary}
+ *     一律在对象坐标系中给出（GB/T 33190-2016 表 45、表 46）；</li>
+ *     <li>{@code Size} 取页面 em 除以 {@code linear} y 列长度，即对象坐标系里的字号，单位 mm；</li>
  *     <li>Delta 为相邻字形 origin 之差经 {@code linear} 逆变换到对象坐标系的结果；</li>
- *     <li>首版不写 HScale：非等比缩放已包含在 {@code linear} 的 x 列中。</li>
+ *     <li>不写 HScale：非等比缩放已包含在 {@code linear} 的 x 列中，
+ *     查看器按 {@code Size × |CTM x 列|} 决定字形可见宽度。</li>
  * </ul>
  *
  * @author 权观宇
@@ -51,9 +57,14 @@ public final class TextRunBuilder {
     static final String PLACEHOLDER = "\u00A4";
 
     /**
-     * 旋转文字对象坐标系包围盒的最小外扩量，单位 mm（只作用于对象坐标系分支，补偿取整误差）
+     * 对象坐标系分支中包围盒的最小外扩量，单位同字号（即对象坐标系单位，补偿取整误差）
      */
     private static final double PADDING_MM = 0.01d;
+
+    /**
+     * 对象坐标系中 1 个字形占用的宽度，单位同字号
+     */
+    private static final double OBJECT_EM_WIDTH = 1d;
 
     /**
      * 包围盒外扩比例（1%），避免查看器因浮点误差裁掉边缘
@@ -163,7 +174,7 @@ public final class TextRunBuilder {
      * 接纳条件逐项对应一个对象级属性：
      * <ul>
      *     <li>字号：对应 {@code Size}；</li>
-     *     <li>基线：保证单条文字流（换行必须另起对象）；</li>
+     *     <li>基线：保证单条文字流（换行必须另起对象），判据在对象坐标系中计算；</li>
      *     <li>线性部分：对应 {@code CTM}；</li>
      *     <li>字形数量：控制单个对象体积。</li>
      * </ul>
@@ -185,7 +196,7 @@ public final class TextRunBuilder {
             return true;
         }
         return sameSize(glyph.em, first.em)
-                && sameBaseline(glyph.originY, first.originY, first.em)
+                && sameBaseline(glyph, first)
                 && sameLinear(glyph.linear, first.linear);
     }
 
@@ -205,18 +216,20 @@ public final class TextRunBuilder {
     }
 
     /**
-     * 判断两个基线位置是否属于同一行
+     * 判断两个字形是否落在同一条基线上
      * <p>
-     * 容差取字号的一半：同一基线上的字形因字距调整或取整会有微小纵向差异，
-     * 而行间距通常不小于 1 em，据此区分"同一行内的字距"与"换行"。
+     * 判据在<b>对象坐标系</b>中计算：把字形 origin 的页面位移经 {@code inverse(linear)} 反变换后，
+     * 比较其 y 分量。文字对象内部按对象坐标系排版，旋转文字的基线在对象坐标系中恒为 {@code y = 0}，
+     * 若在页面坐标系比较 {@code originY}，旋转文字每前进约 0.5 em 就会被判为换行而拆成多个对象。
+     * 容差取字号的一半：同一基线上的字形因字距调整或取整会有微小纵向差异，而行间距通常不小于 1 em。
      *
-     * @param a  基线 y 坐标，单位 mm
-     * @param b  基线 y 坐标，单位 mm
-     * @param em 字号，单位 mm
+     * @param glyph 待判断的字形
+     * @param base  run 的首个字形（对象坐标系原点）
      * @return true - 视为同一行
      */
-    private static boolean sameBaseline(double a, double b, double em) {
-        return Math.abs(a - b) <= Math.abs(em) * 0.5d;
+    private static boolean sameBaseline(Glyph glyph, Glyph base) {
+        double dy = linearCoord(base.linear, glyph.originX - base.originX, glyph.originY - base.originY, false);
+        return Math.abs(dy) <= Math.abs(base.em) * 0.5d;
     }
 
     /**
@@ -230,7 +243,10 @@ public final class TextRunBuilder {
         if (a == null || b == null) {
             return a == b;
         }
-        // 容差与 isIdentityLinear 一致：linear 已按 em 归一化，浮点抖动在 1e-4 量级
+        /*
+         * 容差与 isIdentityLinear 一致，取 1e-3：linear 是“N / em”的归一化结果，各分量量级为 1，
+         * 1e-3 对应字形位移上 0.1% 的相对误差，浮点抖动在 1e-5 量级，真实变换差异（如 1° 旋转）远超该值。
+         */
         final double tol = 1e-3d;
         return Math.abs(a.getScaleX() - b.getScaleX()) <= tol
                 && Math.abs(a.getShearY() - b.getShearY()) <= tol
@@ -255,10 +271,6 @@ public final class TextRunBuilder {
     void add(Glyph glyph) {
         if (first == null) {
             first = glyph;
-            minObjX = 0d;
-            maxObjX = 1d;
-            minObjY = 0d;
-            maxObjY = 0d;
         }
         ascent = Math.max(ascent, glyph.ascent);
         descent = Math.max(descent, glyph.descent);
@@ -270,13 +282,16 @@ public final class TextRunBuilder {
             maxX = Math.max(maxX, glyph.box.getMaxX());
             maxY = Math.max(maxY, glyph.box.getMaxY());
         }
-        // 累加对象坐标系基线盒（有 CTM 时用于把 Boundary 换成页面坐标）
+        /*
+         * 累加对象坐标系基线盒（有 CTM 时用于把 Boundary 换成对象坐标）：
+         * 首个字形原点即对象坐标原点；字形占用的 1 em 宽在页面上为 x 列长度，换算回对象坐标系恰为 1。
+         */
         try {
-            Point2D o = glyph.linear.createInverse().deltaTransform(
+            Point2D o = first.linear.createInverse().deltaTransform(
                     new Point2D.Double(glyph.originX - first.originX, glyph.originY - first.originY), null);
             minObjX = Math.min(minObjX, o.getX());
             minObjY = Math.min(minObjY, o.getY());
-            maxObjX = Math.max(maxObjX, o.getX() + 1d);
+            maxObjX = Math.max(maxObjX, o.getX() + OBJECT_EM_WIDTH);
             maxObjY = Math.max(maxObjY, o.getY());
         } catch (NoninvertibleTransformException e) {
             // 线性部分不可逆时忽略对象坐标系累计（退化为页面坐标盒）
@@ -313,22 +328,28 @@ public final class TextRunBuilder {
     TextObject build(ST_ID id, boolean forceCgTransform, OfdPageDrawer.GidTracker gidTracker) {
         TextObject text = new TextObject(id);
         Glyph g0 = first;
-        double size = g0.em;
+        boolean hasCtm = !isIdentityLinear(g0.linear);
 
-        // 1. 字号
-        text.setSize(size);
+        /*
+         * 1. 字号（单位 mm）：Size 与 Boundary、TextCode 一样按对象坐标系给出，
+         * 页面上的字号由查看器按 CTM 的缩放把它还原（见 objectSize）。
+         */
+        double size = objectSize(g0);
+        text.setSize(nz(size));
+
         /*
          * 包围盒：
-         * 1) 顶端取“首个字形基线 − 字体 ascent”，使 TextCode.Y ≈ ascent（与查看器按字体基线定位的行为一致，
-         *    避免 Boundary 贴着字形顶端导致基线系统性下移）；
+         * 1) 顶端取 min(字形轮廓顶, 首个字形基线 − 字体 ascent)，既保留基线定位口径，
+         *    又保证旋转/缩放后字形向基线之上延伸的部分不被外接矩形裁掉；
          * 2) 底端取 min(字形轮廓底, 基线 + 字体 descent)，保证下伸部不被裁掉；
          * 3) 左右覆盖字形轮廓与全部字形 origin（末位空格）；
          * 4) 四边外扩 1%，吸收浮点误差与查看器的取整差异。
+         * 以上均为页面坐标系，仅在无 CTM 时使用。
          */
         double topY = g0.originY - ascent;
         double bottomY = Math.max(maxY, maxOriginY + descent);
         double boxMinX = Math.min(minX, minOriginX);
-        double boxMinY = Math.min(topY, bottomY);
+        double boxMinY = Math.min(minY, topY);
         double boxMaxX = Math.max(maxX, maxOriginX);
         double boxMaxY = Math.max(bottomY, topY);
         double w = boxMaxX - boxMinX;
@@ -336,31 +357,34 @@ public final class TextRunBuilder {
         double padX = Math.abs(w) * BOUNDARY_PADDING + 1e-4;
         double padY = Math.abs(h) * BOUNDARY_PADDING + 1e-4;
 
-        // 文字定位：TextCode 的 X/Y 是首个字形原点相对 Boundary 左上角的偏移（GB/T 33190-2016 表 46），
-        // 且在<b>对象坐标系</b>中给出；有 CTM 时对象坐标系经 CTM 映射到页面坐标系
+        /*
+         * 文字定位：TextCode 的 X/Y 是首个字形原点相对 Boundary 左上角的偏移（表 46）。
+         * Boundary 采用当前空间坐标系（GB/T 33190-2016 表 34），即页面的 mm：外接矩形必须覆盖整个字形轮廓，
+         * 否则查看器会按外接矩形裁掉字形。两种情形共用同一套页面包围盒。
+         */
+        double bx = nz(boxMinX - padX);
+        double by = nz(boxMinY - padY);
+        text.setBoundary(new ST_Box(bx, by, nz(w + 2 * padX), nz(h + 2 * padY)));
         double stampX;
         double stampY;
-        if (!isIdentityLinear(g0.linear)) {
+        if (hasCtm) {
             /*
-             * 旋转/镜像/剪切/非等比缩放：CTM 只写<b>纯线性矩阵</b>（GB/T 33190 表 34/46：文字对象的 CTM 不含平移），
-             * 对象坐标系与页面坐标系同尺度、无平移；Boundary 与 TextCode.X/Y 都在对象坐标系中给出。
+             * 旋转/镜像/剪切/非等比缩放：CTM 承载<b>纯线性矩阵</b>（表 34：CTM 是对象空间内的图元变换矩阵）。
+             * 对象坐标系到页面坐标系的映射为 {@code y 翻转 × ctmLinear}：{@code linear} 自身带着 PDF 的
+             * y 轴翻转（普通横排为 {@code (1,0,0,-1)}），而 OFD 不写 CTM 时查看器已按 y 向下排布字形，
+             * 该翻转被缺省约定吸收；显式写出时须把它剔除，否则字形上下颠倒。
              */
-            text.setCTM(new ST_Array(nz(g0.linear.getScaleX()), nz(g0.linear.getShearY()),
-                    nz(g0.linear.getShearX()), nz(g0.linear.getScaleY()), 0d, 0d));
-            // 对象坐标系的轴对齐包围盒：基线点 + 字体上下伸部，再外扩 1%
-            double objMinX = Math.min(minObjX, 0d) - PADDING_MM;
-            double objMaxX = Math.max(maxObjX, 1d) + PADDING_MM;
-            double objTop = Math.max(-ascent, Math.min(minObjY, 0d)) - PADDING_MM;
-            double objBottom = Math.max(maxObjY, 0d) + descent + PADDING_MM;
-            text.setBoundary(new ST_Box(nz(objMinX), nz(objTop), nz(objMaxX - objMinX), nz(objBottom - objTop)));
-            // 首个字形在对象坐标系中恒为 (0,0)；TextCode.X/Y 是“相对 Boundary 左上角的偏移”，
-            // 与无 CTM 分支同一约定：左上角为 (0,0) 时偏移为 0
-            stampX = 0d;
-            stampY = 0d;
+            ST_Array ctm = ctmLinear(g0.linear);
+            text.setCTM(ctm);
+            /*
+             * X/Y 与 CTM 必须使用同一套对象坐标系：CTM 已剔除 y 翻转（见 ctmLinear），
+             * 故页面偏移按其逆变换换算，才能与 CTM 一起还原出正确的页面位置。
+             */
+            AffineTransform objectToPage = new AffineTransform(
+                    ctm.get(0), ctm.get(1), ctm.get(2), ctm.get(3), 0d, 0d);
+            stampX = nz(linearCoord(objectToPage, g0.originX - bx, g0.originY - by, true));
+            stampY = nz(linearCoord(objectToPage, g0.originX - bx, g0.originY - by, false));
         } else {
-            double bx = nz(boxMinX - padX);
-            double by = nz(boxMinY - padY);
-            text.setBoundary(new ST_Box(bx, by, nz(w + 2 * padX), nz(h + 2 * padY)));
             stampX = nz(g0.originX - bx);
             stampY = nz(g0.originY - by);
         }
@@ -376,6 +400,7 @@ public final class TextRunBuilder {
         code.setContent(content.toString());
         code.setCoordinate(stampX, stampY);
         if (glyphs.size() > 1) {
+            // Delta 表示相邻文字之间的偏移（GB/T 33190-2016 表 46），n 个文字只有 n−1 个间隔
             double[] dx = new double[glyphs.size() - 1];
             double[] dy = new double[glyphs.size() - 1];
             for (int i = 1; i < glyphs.size(); i++) {
@@ -500,13 +525,49 @@ public final class TextRunBuilder {
     }
 
     /**
+     * 构造写入 {@code TextObject.CTM} 的线性矩阵
+     * <p>
+     * {@link Glyph#linear} 是对象坐标系到页面的完整线性映射，其中含 PDF 的 y 轴翻转；
+     * OFD 查看器在不写 CTM 时已按 y 向下排布字形（等价于该翻转），因此显式写 CTM 时必须把它剔除：
+     * 取 {@code y翻转 × linear}，即左乘 {@code diag(1, -1)}：{@code a} 不变，{@code b}、{@code c}、{@code d} 取反。
+     * 普通横排文字的 linear 为 {@code (1,0,0,-1)}，剔除后得到单位矩阵 {@code (1,0,0,1)}；
+     * 逆时针 30° 的 linear 为 {@code (0.866,-0.5,-0.5,-0.866)}，剔除后为 {@code (0.866,-0.5,0.5,0.866)}。
+     *
+     * @param linear 对象坐标系到页面坐标系的线性部分
+     * @return CTM 线性部分
+     */
+    private static ST_Array ctmLinear(AffineTransform linear) {
+        // linear 的矩阵为 [[a, c], [b, d]]；左乘 diag(1, -1) 后 b、c、d 取反，a 不变
+        return new ST_Array(nz(linear.getScaleX()), nz(-linear.getShearY()),
+                nz(linear.getShearX()), nz(-linear.getScaleY()), 0d, 0d);
+    }
+
+    /**
+     * 计算对象坐标系下的字号
+     * <p>
+     * {@link Glyph#em} 是 1 em 在页面上的长度，而 {@code linear} 的 y 列把对象坐标系的 1 个字号单位映射为
+     * 页面上的 {@code |y 列|} mm，故对象坐标系中的字号为页面 em 除以该长度。
+     * 例：CTM {@code 0.3528 0 0 0.3528 0 0}、页面 em 3.726 mm 时对象字号为 10.56 mm，查看器按
+     * {@code 10.56 × 0.3528} 得到页面 em。
+     * 字形高度只由 y 列决定，故字号取 y 列长度；x 列长度与 y 列不等时，字形宽度差异由 CTM 的 x 列表达
+     * （如横向拉宽 1.25 倍时 CTM 形如 {@code 1.25 0 0 1 0 0}）。
+     *
+     * @param glyph run 的首个字形
+     * @return 对象坐标系下的字号，单位 mm；线性部分 y 列退化时返回页面 em
+     */
+    private static double objectSize(Glyph glyph) {
+        double unit = Math.hypot(glyph.linear.getShearX(), glyph.linear.getScaleY());
+        return unit > 1e-9d ? glyph.em / unit : glyph.em;
+    }
+
+    /**
      * 计算对象坐标系下与页面位移对应的坐标分量：{@code inverse(linear) · (dx, dy)}
      *
      * @param linear 对象坐标系到页面坐标系的线性部分
      * @param dx     页面 x 方向位移，单位 mm
      * @param dy     页面 y 方向位移，单位 mm
      * @param x      为 true 取 x 分量，否则取 y 分量
-     * @return 对象坐标系下的分量
+     * @return 对象坐标系下的分量，单位同字号
      */
     static double linearCoord(AffineTransform linear, double dx, double dy, boolean x) {
         try {
@@ -548,7 +609,7 @@ public final class TextRunBuilder {
     }
 
     /**
-     * 数值归一化：避免 -0.0 与过长尾数
+     * 数值归一化：保留 3 位小数，避免 -0.0 与过长尾数
      *
      * @param v 数值
      * @return 归一化后的数值

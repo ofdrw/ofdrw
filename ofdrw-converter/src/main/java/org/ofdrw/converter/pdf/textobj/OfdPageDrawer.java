@@ -837,7 +837,8 @@ public final class OfdPageDrawer extends PageDrawer {
         // 页面变换为对角缩放（含整页 y 翻转），剔除它等价于把线性部分按列除以页面尺度：
         // 除数是页面变换自身的尺度，不能从 n 反算（n 的尺度已含文字矩阵，反算会把文字矩阵约掉）
         double px = pageTransform == null ? 1d : pageTransform.getScaleX();
-        double py = pageTransform == null ? 1d : pageTransform.getScaleY();
+        // 只取页面变换的缩放倍数：y 列本身带负号（PDF 用户空间 y 向上），符号由下方的镜像判定处理
+        double py = pageTransform == null ? 1d : Math.abs(pageTransform.getScaleY());
         double a = n.getScaleX() / px;
         double b = n.getShearY() / px;
         double c = n.getShearX() / py;
@@ -857,19 +858,26 @@ public final class OfdPageDrawer extends PageDrawer {
         if (plain) {
             return null;
         }
-        boolean rotated = Math.abs(b) > tolerance || Math.abs(c) > tolerance;
         /*
-         * y 轴方向不参与判定：这里只关心“旋转 / 剪切 / 非等比缩放”。
-         * PDF 用户空间 y 向上、OFD 页面 y 向下，二者之间的固定翻转由线性部分 (1,0,0,-1) 表达，
-         * 属于所有普通横排文字的共性，不应视为需要 CTM 的镜像。
+         * 旋转/剪切：正交的 x、y 轴被扭斜。旋转文字在参考查看器中位置偏差未解决，保持路径绘制。
          */
-        boolean nonUniform = Math.abs(a / em - 1d) > tolerance;
-        if (!rotated && !nonUniform) {
-            return null;
+        boolean rotated = Math.abs(b) > tolerance || Math.abs(c) > tolerance;
+        if (rotated) {
+            return "旋转文字";
         }
-        // 旋转/非等比缩放需要 TextObject.CTM；参考查看器（ofdrw-viewer 0.1.5）不渲染带 CTM 的文字对象
-        // （字形被按字体单位压扁后不可见），为保证视觉正确保持路径绘制，详见设计文档 5.4.1
-        return "旋转/镜像文字需要 CTM";
+        /*
+         * 镜像判定：普通横排文字为 a > 0、d < 0（d 为负是 PDF 用户空间 y 轴向上的常态，不是镜像）；
+         * a < 0 表示 x 轴取反、d > 0 表示 y 轴同向，二者都属于镜像。
+         * 参考查看器对镜像 CTM 渲染为空白，比路径绘制更糟，故保持回退。
+         */
+        if (a < 0 || d > 0) {
+            return "镜像文字";
+        }
+        /*
+         * 其余情形为仅轴向缩放（b、c 约为 0）的文字：普通横排文字在上面已提前返回，
+         * 走到这里即非等比缩放，由 CTM 的 x 列表达横向缩放。
+         */
+        return null;
     }
 
     /**
